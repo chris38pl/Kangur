@@ -1,0 +1,2 @@
+-- M01: empty init migration (no domain models yet — first models in M03).
+-- Proves Neon + Prisma migrate path with datasource-only schema.

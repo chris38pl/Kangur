@@ -1,0 +1,13 @@
+// This is your Prisma schema file.
+// First domain models arrive in M03 — keep datasource + generator only for M01.
+// Neon: DATABASE_URL = pooled, DIRECT_URL = direct (migrations). No Prisma Accelerate.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}

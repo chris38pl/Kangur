@@ -1,0 +1,32 @@
+{
+  "tabs": {
+    "home": "Start",
+    "history": "Historia",
+    "workspace": "Przestrzeń",
+    "profile": "Profil"
+  },
+  "home": {
+    "title": "Kangur",
+    "subtitle": "Asystent zakupów AI",
+    "placeholder": "Aktywne listy pojawią się tutaj."
+  },
+  "history": {
+    "title": "Historia",
+    "placeholder": "Minione listy zakupów pojawią się tutaj."
+  },
+  "workspace": {
+    "title": "Przestrzeń",
+    "placeholder": "Członkowie, zaproszenia i AI Credits pojawią się tutaj."
+  },
+  "profile": {
+    "title": "Profil",
+    "language": "Język",
+    "demo": "Demo tokenów designu + i18n",
+    "switchToPl": "Przełącz na polski",
+    "switchToEn": "Przełącz na angielski",
+    "healthCheck": "Sprawdź API",
+    "healthOk": "API działa",
+    "healthFail": "Brak API — ustaw EXPO_PUBLIC_API_URL",
+    "apiUrlMissing": "Brak EXPO_PUBLIC_API_URL"
+  }
+}

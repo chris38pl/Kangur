@@ -58,7 +58,8 @@ kangur/
 └── docs/
     ├── prd.md
     ├── architecture.md
-    └── cursor-rules.md
+    ├── cursor-rules.md
+    └── roadmap.md
 ```
 
 Alternative: `apps/mobile` + `apps/backend` — still **without** `packages/`.

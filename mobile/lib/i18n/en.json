@@ -1,0 +1,32 @@
+{
+  "tabs": {
+    "home": "Home",
+    "history": "History",
+    "workspace": "Workspace",
+    "profile": "Profile"
+  },
+  "home": {
+    "title": "Kangur",
+    "subtitle": "AI Shopping Assistant",
+    "placeholder": "Active lists will appear here."
+  },
+  "history": {
+    "title": "History",
+    "placeholder": "Past shopping lists will appear here."
+  },
+  "workspace": {
+    "title": "Workspace",
+    "placeholder": "Members, invites, and AI Credits will appear here."
+  },
+  "profile": {
+    "title": "Profile",
+    "language": "Language",
+    "demo": "Design tokens + i18n demo",
+    "switchToPl": "Switch to Polish",
+    "switchToEn": "Switch to English",
+    "healthCheck": "Check API health",
+    "healthOk": "API healthy",
+    "healthFail": "API unreachable — set EXPO_PUBLIC_API_URL",
+    "apiUrlMissing": "EXPO_PUBLIC_API_URL is not set"
+  }
+}

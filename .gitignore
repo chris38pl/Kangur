@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+!backend/.env.example
+!mobile/.env.example
+
+# Next.js
+backend/.next/
+backend/out/
+
+# Expo
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+
+# Prisma
+backend/prisma/*.db
+backend/prisma/*.db-journal
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*.pem
+
+# Debug / logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+coverage/

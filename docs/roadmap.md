@@ -72,7 +72,7 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 
 | ID | Milestone | Status |
 |----|-----------|--------|
-| M01 | Bootstrap | pending |
+| M01 | Bootstrap | done |
 | M02 | Auth (Clerk) | pending |
 | M03 | Workspace | pending |
 | M04 | Lists CRUD | pending |
