@@ -1,9 +1,9 @@
 # Kangur — Cursor Rules
 
 **Purpose:** Persistent guidance for AI-assisted development in Cursor.  
-**Docs allowed:** `prd.md`, `architecture.md`, `cursor-rules.md` only.
+**Docs allowed:** `prd.md`, `architecture.md`, `cursor-rules.md`, `roadmap.md` only.
 
-Read the PRD and architecture before large changes.
+Read the PRD, architecture, and [roadmap.md](./roadmap.md) before large changes. Follow milestone order in the roadmap.
 
 ---
 
@@ -18,8 +18,8 @@ Read the PRD and architecture before large changes.
 
 ## Must-build UX (do not skip in MVP design)
 
-- **AI Review:** low confidence, merge conflicts, unknown products, accept all / edit / reject.
-- **Shopping Mode:** larger targets, swipe, huge checkboxes, optional keep-awake, minimal chrome.
+- **AI Review:** low confidence, merges, unknown; accept all / **accept individual** / **reject individual** / edit.
+- **Shopping Mode:** larger targets, swipe, huge checkboxes, optional keep-awake, minimal chrome; **confirm exit** (block accidental back); **Floating Add Button**.
 - **Finish Shopping → Summary** (bought / unavailable / removed) → Archive.
 - **Import:** Screenshot | Text | Clipboard (clipboard offer on return, esp. Android).
 - **Repeat List** from History (MVP = copy; AI cleanup later).
@@ -38,7 +38,10 @@ Read the PRD and architecture before large changes.
 
 - `mobile/` + `backend/` + `docs/` (or `apps/*` without `packages/`).
 - Feature-first: `auth`, `workspace`, `shopping-list`, `shopping-item`, `billing`, `ai`, `profile`, `settings`.
-- Backend = platform REST `/api/v1` + **OpenAPI** (for humans and codegen — not vanity).
+- Backend = platform REST `/api/v1` + **OpenAPI generated from Zod only** (never hand-edit).
+- Auth: Clerk **email/password**, **Google**, **Apple**.
+- DB: **Neon** + Prisma. **No Prisma Accelerate** for MVP. Prefer Neon branching for preview/schema work.
+- Ship complete `.env.example` (backend + mobile) from M01 — every expected var listed.
 - No Expo imports in backend.
 
 ---
@@ -81,15 +84,16 @@ Read the PRD and architecture before large changes.
 
 ## Implementation order
 
-1. Bootstrap (Expo, Next, Prisma, Clerk, OpenAPI)  
-2. Workspace (+ avatar)  
-3. CRUD  
-4. Manual + Shopping Mode + Finish summary  
-5. **AI** + AI Review + AI Credits  
-6. Polling sync  
-7. History + Repeat List  
-8. Premium  
-9. Polish  
+See [roadmap.md](./roadmap.md) (source of truth). Summary:
+
+1. Bootstrap (Expo, Next, Prisma, **Neon**, OpenAPI-from-Zod, complete `.env.example`) → 2. Auth (email/password, Google, Apple) → 3. Workspace  
+4. Lists CRUD → 5. Items + events  
+6. **AI** (Import → Processing → Review → Apply) → 7. AI Credits  
+8. Shopping Mode (back confirm, FAB) → 9. Invites → 10. Polling  
+11. History + Repeat → 12. Settings → 13. Premium → 14. Polish  
+
+OpenAPI: generate from Zod only — never hand-edit.  
+DB: Neon + Prisma; **no Prisma Accelerate** on MVP.  
 
 ---
 
@@ -99,4 +103,4 @@ Read the PRD and architecture before large changes.
 - Thin routes; named use-cases (`applyAiReview`, `finishShopping`, `debitAiCredits`, `repeatList`, …).
 - Secrets only on backend; workspace AuthZ on every tenant op.
 - No UploadThing / permanent screenshots unless a later feature needs durable media.
-- Do not add extra `docs/*.md` without an explicit human request.
+- Do not add docs beyond `prd.md`, `architecture.md`, `cursor-rules.md`, `roadmap.md` without an explicit human request.

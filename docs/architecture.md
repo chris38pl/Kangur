@@ -1,6 +1,6 @@
 # Kangur — Architecture
 
-**Companion to:** [prd.md](./prd.md) · [cursor-rules.md](./cursor-rules.md)  
+**Companion to:** [prd.md](./prd.md) · [cursor-rules.md](./cursor-rules.md) · [roadmap.md](./roadmap.md)  
 **Status:** Greenfield MVP architecture  
 **Last updated:** 2026-07-16
 
@@ -22,27 +22,27 @@ Kangur Platform (Next.js REST + OpenAPI)
 | Layer | Choice |
 |-------|--------|
 | Mobile | React Native, Expo, Expo Router, TypeScript, NativeWind |
-| Platform API | Next.js App Router — versioned REST `/api/v1/...` + **OpenAPI** |
+| Platform API | Next.js App Router — versioned REST `/api/v1/...` + **OpenAPI generated from Zod** (never hand-edited) |
 | Forms / validation | React Hook Form, Zod |
 | Client data | **TanStack Query** + React local state; optional light Zustand |
 | Client data — forbidden | **No Redux, MobX, Saga, Context-everywhere** |
-| DB | PostgreSQL + Prisma (JSONB for AI raw + event payloads) |
-| Auth | Clerk (email, Google) |
+| DB | **Neon** (serverless Postgres) + Prisma — **no Prisma Accelerate** for MVP |
+| Auth | Clerk (email/password, Google, Apple) |
 | Payments | Stripe (subscription on Workspace) |
 | AI | OpenAI via AI SDK — vision + structured outputs + Zod |
 | Sync (MVP) | Smart polling behind `RealtimeProvider` |
 | Sync (later) | Ably / Supabase Realtime / SSE — undecided; cost-driven |
 | Storage | No permanent screenshots; no UploadThing unless justified later |
 
-**Docs only:** `prd.md`, `architecture.md`, `cursor-rules.md`.
+**Docs only:** `prd.md`, `architecture.md`, `cursor-rules.md`, `roadmap.md`.
 
 ---
 
 ## 2. Platform vs client
 
 - Backend exposes a **stable REST API** with Zod-validated contracts.
-- Maintain an **OpenAPI** spec (generated from Zod/handlers or hand-kept in sync — pick one approach and stick to it).
-- OpenAPI exists primarily so Cursor/Claude/Copilot and codegen can produce typed clients — not for vanity Swagger UI.
+- **OpenAPI is generated from Zod only** (registry + generate script). Never hand-edit the OpenAPI file; fix Zod if it drifts.
+- OpenAPI exists so Cursor/Claude/Copilot and codegen can produce typed clients — not for vanity Swagger UI.
 - Expo is the first consumer; web/admin must be able to use the same `/api/v1` without rewriting domain logic.
 - Prefer Route Handlers for mobile-facing operations.
 - No Expo imports in `backend/`.
@@ -298,48 +298,66 @@ Roles: owner / admin / member — invites & billing: owner + admin.
 
 ---
 
-## 13. Deployment
+## 13. Deployment & database (Neon)
 
-Backend → Vercel (or Node). Postgres managed. Mobile → EAS.  
-Vendors: Clerk, Stripe, OpenAI.  
-Prisma migrate in CI. Environments: development, preview, production.
+| Piece | Target |
+|-------|--------|
+| Backend | **Vercel** |
+| Database | **Neon** (serverless Postgres) |
+| Mobile | EAS Build / Submit |
+| Vendors | Clerk, Stripe, OpenAI |
+
+### Why Neon
+
+- Known stack from prior projects (Esteo): Prisma migrations, pooling, envs, Vercel integration — near-zero learning cost.
+- Fits **Vercel → Next.js → Prisma → Neon** serverless path.
+- **Branching:** Production / Preview / Local DB branches for safer schema work.
+- MVP cost: effectively free for a long time at household scale.
+
+### Prisma Accelerate
+
+**Do not use for MVP.** Direct Neon connection (+ pooled URL when needed for serverless). Revisit Accelerate only if connection limits become a measured problem.
+
+### Neon branching (recommended workflow)
+
+```
+Production branch
+  → Preview branch (per PR / schema experiment)
+  → Local development branch or shared dev branch
+```
+
+Use Neon pooler connection string for serverless runtimes (`DATABASE_URL` with pooler host). Keep a direct URL for migrations if Neon docs recommend splitting (`DATABASE_URL` pooled vs `DIRECT_URL` for Prisma migrate).
+
+Prisma migrate in CI. Environments: development, preview, production — separate Clerk/Stripe/OpenAI keys; Neon branches mapped accordingly.
 
 ---
 
 ## 14. Environment variables
 
-### Backend
+**From day one:** complete `.env.example` files so a fresh clone is minutes of setup, not archaeology. Copy → fill → run.
 
-```
-DATABASE_URL=
-CLERK_SECRET_KEY=
-CLERK_PUBLISHABLE_KEY=
-OPENAI_API_KEY=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-STRIPE_PRICE_PREMIUM_MONTHLY=
-APP_URL=
-AI_FREE_MONTHLY_CREDITS=
-```
+Canonical templates (keep in sync with these docs):
 
-### Mobile
+- [backend/.env.example](../backend/.env.example) — Neon, Vercel notes, Clerk, OpenAI, Stripe, AI Credits
+- [mobile/.env.example](../mobile/.env.example) — `EXPO_PUBLIC_*` only
 
-```
-EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=
-EXPO_PUBLIC_API_URL=
-```
+On Vercel: set secrets in Project → Environment Variables (Production / Preview / Development). Prefer **Neon Vercel integration** for `DATABASE_URL` / `DIRECT_URL`. System vars (`VERCEL_URL`, `VERCEL_ENV`, …) are auto-injected — do not paste them into `.env` locally unless a script needs them.
+
+`DIRECT_URL` is for Prisma migrate against Neon’s non-pooled host. **No Prisma Accelerate** on MVP.
+
+No OpenAI, Stripe secrets, Clerk secret, or database URLs on mobile.
 
 ---
 
 ## 15. Development workflow
 
-1. Bootstrap mobile + backend + Prisma + Clerk + OpenAPI skeleton  
-2. Vertical feature slices  
-3. AI: schema → ingest proposal → Review UI → apply → AI Credits  
-4. Shopping Mode + Finish summary  
-5. Polling sync  
-6. Stripe locally via CLI  
-7. Update only the three docs when decisions change  
+1. Bootstrap mobile + backend + Prisma + **Neon** + OpenAPI skeleton (complete `.env.example` first)
+2. Vertical feature slices
+3. AI: schema → ingest proposal → Review UI → apply → AI Credits
+4. Shopping Mode + Finish summary
+5. Polling sync
+6. Stripe locally via CLI
+7. Update docs when decisions change (`prd`, `architecture`, `cursor-rules`, `roadmap` only)
 
 Typed API client: generate from OpenAPI where practical.
 
@@ -360,6 +378,8 @@ Typed API client: generate from OpenAPI where practical.
 
 Household scale first. Later: archive old events, tighten AI cost, swap `RealtimeProvider`. No microservices for MVP.
 
+Neon pooler handles serverless connections. **Do not add Prisma Accelerate** until connection limits are a measured problem.
+
 ---
 
 ## 18. Risks
@@ -376,14 +396,17 @@ Household scale first. Later: archive old events, tighten AI cost, swap `Realtim
 
 ## 19. Implementation order
 
-1. Repo + CI + Expo + Next + Prisma + Clerk + OpenAPI skeleton  
-2. Workspace (avatar, members, invites)  
-3. Lists + items CRUD  
-4. Manual list + **Shopping Mode** + **Finish summary**  
-5. **AI** import (screenshot / text / clipboard) + **AI Review** + AI Credits  
-6. Live sync (smart polling + activity log)  
-7. History + **Repeat List** (copy)  
-8. Premium (Stripe)  
-9. Polish (i18n, design system, mascot, motion, a11y)  
+Source of truth: [roadmap.md](./roadmap.md).
 
-AI Review and Shopping Mode land before sync vendor experiments — they define the product.
+```
+M01 Bootstrap → M02 Auth → M03 Workspace → M04 Lists → M05 Items/events
+→ M06 AI (Import→Processing→Review→Apply) → M07 AI Credits
+→ M08 Shopping Mode (back confirm, FAB, Finish) → M09 Invites → M10 Polling
+→ M11 History/Repeat → M12 Settings → M13 Stripe → M14 Polish
+```
+
+Database: **Neon** (no Prisma Accelerate). Complete `.env.example` from M01.  
+Auth providers: email/password, Google, Apple.  
+AI Review: accept/reject all **and** per-item.  
+Shopping Mode: confirm exit + floating add.  
+AI Credits: screenshot 2, text/clipboard 1, free 30/month.
