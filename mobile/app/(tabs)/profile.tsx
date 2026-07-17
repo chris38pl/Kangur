@@ -1,9 +1,12 @@
+import { useAuth } from "@clerk/clerk-expo";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
+import { useMe } from "@/features/auth/useMe";
 import { fetchHealth, hasApiUrl } from "@/lib/api/client";
 import i18n from "@/lib/i18n";
 
@@ -11,6 +14,9 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+  const { signOut, userId } = useAuth();
+  const { data: me } = useMe();
+  const queryClient = useQueryClient();
   const [healthMessage, setHealthMessage] = useState<string | null>(null);
 
   const toggleLanguage = () => {
@@ -31,6 +37,12 @@ export default function ProfileScreen() {
     }
   };
 
+  const onSignOut = async () => {
+    console.info("[auth]", "SignOut", { clerkId: userId });
+    await signOut();
+    queryClient.removeQueries({ queryKey: ["me"] });
+  };
+
   return (
     <View
       className="flex-1"
@@ -39,15 +51,17 @@ export default function ProfileScreen() {
       <Text style={{ ...typography.title, color: theme.text }}>
         {t("profile.title")}
       </Text>
-      <Text
-        style={{
-          ...typography.caption,
-          color: theme.textMuted,
-          marginTop: spacing[2],
-        }}
-      >
-        {t("profile.demo")}
-      </Text>
+      {me ? (
+        <Text
+          style={{
+            ...typography.body,
+            color: theme.textMuted,
+            marginTop: spacing[2],
+          }}
+        >
+          {me.email}
+        </Text>
+      ) : null}
 
       <Text
         style={{
@@ -105,6 +119,22 @@ export default function ProfileScreen() {
           {healthMessage}
         </Text>
       ) : null}
+
+      <Pressable
+        onPress={() => void onSignOut()}
+        style={{
+          marginTop: spacing[8],
+          backgroundColor: theme.danger,
+          paddingVertical: spacing[3],
+          paddingHorizontal: spacing[4],
+          borderRadius: radius.md,
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ ...typography.label, color: "#FFFFFF" }}>
+          {t("auth.signOut")}
+        </Text>
+      </Pressable>
     </View>
   );
 }

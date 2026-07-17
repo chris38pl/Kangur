@@ -73,13 +73,14 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 | ID | Milestone | Status |
 |----|-----------|--------|
 | M01 | Bootstrap | done |
-| M02 | Auth (Clerk) | pending |
-| M03 | Workspace | pending |
-| M04 | Lists CRUD | pending |
-| M05 | Items + events | pending |
-| M06 | AI full path | pending |
-| M07 | AI Credits | pending |
-| M08 | Shopping Mode | pending |
+| M02 | Auth (Clerk) | done |
+| M03 | Workspace | done |
+| M04 | Lists CRUD | done |
+| M05 | Items + events | done |
+| M06 | AI full path | done |
+| M07 | AI Credits | done |
+| M08 | Shopping Mode | done |
+| M08.5 | Data Sync Engine | done |
 | M09 | Invites | pending |
 | M10 | Smart polling | pending |
 | M11 | History + Repeat | pending |
@@ -121,58 +122,61 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 
 ## M02 — Authentication (Clerk)
 
-**Goal:** Sign up / sign in via **email/password**, **Google**, and **Apple**; authenticated API calls from mobile.
+**Goal:** Sign up / sign in via **email/password** and **Google**; Bearer JWT → `requireUser()` → `UserContext`; `GET /api/v1/me`.
+
+**Status:** done (2026-07-16)  
+**Deferred:** Apple Sign In (architecture-ready; implement before App Store path)
 
 **Creates:**
-- `backend/lib/auth/clerk.ts`, `backend/lib/auth/requireUser.ts`
-- `backend/app/api/v1/me/route.ts`
-- `backend/features/auth/*` (upsert helpers)
-- `mobile/features/auth/sign-in-screen.tsx`, `mobile/app/(auth)/sign-in.tsx`
-- Clerk providers in `mobile/app/_layout.tsx` (and backend middleware if used)
-- Clerk Dashboard / Expo config for Apple Sign In (bundle IDs, capability) documented in `.env.example` / README
-- Env keys in both `.env.example` files
+- Prisma `User` (`clerkId`, `email`, nullable `locale`, timestamps)
+- `backend/lib/auth/clerk.ts`, `requireUser.ts` → `UserContext`, `errors.ts`
+- `backend/app/api/v1/me/route.ts` + OpenAPI from Zod
+- `mobile` ClerkProvider + secure token cache, `(auth)` screens, route guards, `useMe()`, Profile sign out
+- Env keys / Google redirect notes in `.env.example` + README (Apple deferred)
 
 **Depends on:** M01  
 **Complexity:** M  
 
 **Acceptance:**
-- [ ] Email/password sign-up and sign-in work
-- [ ] Google OAuth works on device/simulator
-- [ ] Apple Sign In works on iOS (required path for App Store); Android/web behavior per Clerk/Apple constraints documented
-- [ ] `GET /api/v1/me` rejects unauthenticated; returns Clerk-linked identity when valid
-- [ ] Signed-out users cannot reach main tabs
+- [x] Email/password sign-up and sign-in (Clerk + mobile screens)
+- [x] Google OAuth (mobile; Clerk Dashboard + `kangur://` redirect)
+- [x] Apple Sign In **deferred** (not in M02)
+- [x] `GET /api/v1/me` → 401 `{ code, message }` unauthenticated; 200 user DTO when valid; upsert + `updatedAt` touch; locale from device when null
+- [x] Signed-out users redirected from tabs → auth; session restore via secure store
+- [x] `requireUser` returns `UserContext`; single `useMe()`; auth `console.info` logs
 
 ---
 
 ## M03 — Workspace core (provision, avatar, switcher)
 
-**Goal:** On first login, upsert `User` + default Home workspace; create/list/switch workspaces with emoji avatar.
+**Goal:** On first login, upsert `User` + default Home workspace; create/list/switch workspaces with icon id.
+
+**Status:** done (2026-07-16)
 
 **Creates (backend):**
-- Prisma: `User`, `Workspace`, `WorkspaceMember`, `WorkspaceSettings`, `Subscription` (free stub), `AIUsage` (stub)
-- `backend/features/workspace/createWorkspace.ts`, `listWorkspaces.ts`, `getWorkspace.ts`
-- `backend/app/api/v1/workspaces/route.ts`, `backend/app/api/v1/workspaces/[workspaceId]/route.ts`
-- `backend/lib/authorize.ts`
-- Register workspace Zod schemas in OpenAPI registry (regenerate; do not hand-write paths)
+- Prisma: `Workspace`, `WorkspaceMember` (`joinedAt`), `WorkspaceSettings`, optional `Subscription` (Premium only). **No AIUsage in M03.**
+- `shared/workspace-icons.ts` — `{ id, emoji }[]` allowlist
+- `backend/features/workspace/*`, `backend/lib/authorize.ts`
+- `GET/POST /api/v1/workspaces`, `GET /api/v1/workspaces/:id` + OpenAPI from Zod
 
 **Creates (mobile):**
-- `mobile/features/workspace/workspace-switcher.tsx`, `create-workspace-sheet.tsx`
-- `mobile/features/workspace/api.ts`, TanStack Query hooks
-- Workspace tab wired to real data
+- Switcher, create sheet, active workspace (AsyncStorage), Workspace tab wired to API
 
 **Depends on:** M02  
 **Complexity:** M  
 
 **Acceptance:**
-- [ ] First login creates user + default workspace (avatar e.g. house emoji)
-- [ ] Create second workspace with custom avatar; switcher updates active context
-- [ ] All workspace routes enforce membership
+- [x] First login creates user + default Home (`icon: "home"`)
+- [x] Create second workspace with custom icon; switcher updates active context
+- [x] All workspace routes enforce membership (404)
 
 ---
 
 ## M04 — Shopping lists CRUD
 
 **Goal:** Create/rename/list active lists in a workspace; open list screen (empty items OK).
+
+**Status:** done (2026-07-16)
 
 **Creates:**
 - Prisma: `ShoppingList`
@@ -184,15 +188,17 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 **Complexity:** S–M  
 
 **Acceptance:**
-- [ ] CRUD active lists scoped to workspace
-- [ ] Cross-workspace list IDs return 404/403
-- [ ] Home shows lists for active workspace only
+- [x] CRUD active lists scoped to workspace
+- [x] Cross-workspace list IDs return 404/403
+- [x] Home shows lists for active workspace only
 
 ---
 
 ## M05 — Shopping items CRUD + activity log writes
 
 **Goal:** Manual add/edit/status; closed category enum; append `ShoppingEvent` on mutations (no polling yet). Baseline list so AI has something to merge into.
+
+**Status:** done (2026-07-16)
 
 **Creates:**
 - Prisma: `ShoppingItem`, `ShoppingEvent`
@@ -207,16 +213,18 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 **Complexity:** M  
 
 **Acceptance:**
-- [ ] Add/edit item; statuses pending/bought/unavailable/removed
-- [ ] Category only from closed enum
-- [ ] Each mutation creates a `ShoppingEvent` row
-- [ ] Events endpoint returns cursor-friendly results
+- [x] Add/edit item; statuses pending/bought/unavailable/removed
+- [x] Category only from closed enum
+- [x] Each mutation creates a `ShoppingEvent` row
+- [x] Events endpoint returns cursor-friendly results
 
 ---
 
 ## M06 — AI feature (Import → Processing → Review → Apply)
 
 **Goal:** Ship the **entire killer path as one feature**. Solo user can go: import → AI → ready list.
+
+**Status:** done (2026-07-16)
 
 **Flow:**
 
@@ -255,14 +263,14 @@ Import (Screenshot | Text | Clipboard)
 **Complexity:** L (2–3 Cursor sessions OK; still one milestone)
 
 **Acceptance:**
-- [ ] Screenshot, text, and clipboard entry points work
-- [ ] Clipboard offer when returning with text (Android priority)
-- [ ] Ingest returns structured proposal only (never free-text parse)
-- [ ] Categories from closed enum; no invented quantities/brands in schema rules
-- [ ] Review shows low confidence, merges, unknown items
-- [ ] Accept all, accept individual, reject individual, and edit all work
-- [ ] Apply writes only accepted rows + events + raw JSONB; abandon before apply leaves list unchanged
-- [ ] Screenshots not persisted after the request
+- [x] Screenshot, text, and clipboard entry points work
+- [x] Clipboard offer when returning with text (Android priority)
+- [x] Ingest returns structured proposal only (never free-text parse)
+- [x] Categories from closed enum; no invented quantities/brands in schema rules
+- [x] Review shows low confidence, merges, unknown items
+- [x] Accept all, accept individual, reject individual, and edit all work
+- [x] Apply writes only accepted rows + events + raw JSONB; abandon before apply leaves list unchanged
+- [x] Screenshots not persisted after the request
 
 ---
 
@@ -289,9 +297,9 @@ Import (Screenshot | Text | Clipboard)
 **Complexity:** S–M  
 
 **Acceptance:**
-- [ ] Screenshot apply debits **2**; text/clipboard apply debits **1**
-- [ ] Exhausted Free balance blocks ingest; list CRUD still works
-- [ ] Product copy says “AI Credits”
+- [x] Screenshot apply debits **2**; text/clipboard apply debits **1**
+- [x] Exhausted Free balance blocks ingest; list CRUD still works
+- [x] Product copy says “AI Credits”
 
 ---
 
@@ -318,12 +326,30 @@ Import (Screenshot | Text | Clipboard)
 **Complexity:** M  
 
 **Acceptance:**
-- [ ] Start shopping enters Shopping Mode (large targets, minimal chrome)
-- [ ] Accidental back does not silently exit; user gets confirm exit
-- [ ] Floating Add Button opens manual add and returns to Shopping Mode
-- [ ] Optional keep-screen-on (default off until settings; hardcode toggle OK)
-- [ ] Finish shows Bought / Unavailable / Removed counts
-- [ ] Archive from summary removes list from Home active set
+- [x] Start shopping enters Shopping Mode (large targets, minimal chrome)
+- [x] Accidental back does not silently exit; user gets confirm exit
+- [x] Floating Add Button opens manual add and returns to Shopping Mode
+- [x] Optional keep-screen-on (default off until settings; hardcode toggle OK)
+- [x] Finish shows Bought / Unavailable / Removed counts
+- [x] Archive from summary removes list from Home active set
+
+---
+
+## M08.5 — Data Sync Engine + Shopping Session
+
+**Goal:** Network is transport. UI stays instant. Engine reusable beyond shopping.
+
+**Creates:**
+- `mobile/features/data-sync-engine/` (façade: Queue, Worker, Persistence, Connectivity, Conflict stub)
+- `mobile/features/shopping-list/session/` (Session SM; UI never mutates SessionState)
+- `mobile/features/offline/OfflineStatusBanner.tsx`
+
+**Acceptance:**
+- [x] DataSyncEngine façade; modules independently testable
+- [x] Events informational; no business logic on event order
+- [x] Persistence meets durability (AsyncStorage; MMKV/SQLite swappable)
+- [x] Time-sortable op ids; compress rules; single worker; 1s debounce; restart-safe flush
+- [x] Session SM; Resume Continue/Discard; OfflineStatusBanner; Finish anyway local hide
 
 ---
 

@@ -1,22 +1,37 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import "react-native-gesture-handler";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/components/useColorScheme";
+import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
+import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { Stack } from "expo-router";
+import {
+  DefaultTheme,
+  ThemeProvider,
+} from "expo-router/react-navigation";
+import * as SplashScreen from "expo-splash-screen";
+import { type ReactNode, useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+
 import { colors } from "@/design-system/tokens";
+import { useDataSyncEngineBootstrap } from "@/features/data-sync-engine/useBootstrap";
 import { AppQueryProvider } from "@/lib/query/client";
+import { suppressClerkDevKeysWarning } from "@/lib/suppress-clerk-dev-warning";
 
 import "../global.css";
 import "@/lib/i18n";
 
+suppressClerkDevKeysWarning();
+
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: "index",
 };
 
 SplashScreen.preventAutoHideAsync();
+
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 const lightTheme = {
   ...DefaultTheme,
@@ -27,35 +42,61 @@ const lightTheme = {
     card: colors.light.surface,
     text: colors.light.text,
     border: colors.light.border,
+    notification: colors.light.primary,
   },
 };
 
-const darkTheme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    primary: colors.dark.primary,
-    background: colors.dark.bg,
-    card: colors.dark.surface,
-    text: colors.dark.text,
-    border: colors.dark.border,
-  },
-};
+function AuthGate({ children }: { children: ReactNode }) {
+  const { isLoaded } = useAuth();
+  useDataSyncEngineBootstrap();
+
+  useEffect(() => {
+    if (isLoaded) {
+      void SplashScreen.hideAsync();
+    }
+  }, [isLoaded]);
+
+  if (!isLoaded) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: colors.light.bg,
+        }}
+      >
+        <ActivityIndicator color={colors.light.primary} />
+      </View>
+    );
+  }
+
+  return <>{children}</>;
+}
 
 export default function RootLayout() {
-  useEffect(() => {
-    void SplashScreen.hideAsync();
-  }, []);
-
-  const colorScheme = useColorScheme();
+  if (!publishableKey) {
+    throw new Error("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY");
+  }
 
   return (
-    <AppQueryProvider>
-      <ThemeProvider value={colorScheme === "dark" ? darkTheme : lightTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-      </ThemeProvider>
-    </AppQueryProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <ClerkLoaded>
+          <AppQueryProvider>
+            <ThemeProvider value={lightTheme}>
+              <AuthGate>
+                <Stack>
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="list/[listId]" />
+                </Stack>
+              </AuthGate>
+            </ThemeProvider>
+          </AppQueryProvider>
+        </ClerkLoaded>
+      </ClerkProvider>
+    </GestureHandlerRootView>
   );
 }

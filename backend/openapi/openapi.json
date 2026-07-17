@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kangur Platform API",
-    "version": "0.1.0",
+    "version": "0.3.0",
     "description": "AUTO-GENERATED from Zod via openapi:generate. Do not hand-edit."
   },
   "servers": [
@@ -11,6 +11,13 @@
     }
   ],
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {
       "HealthResponse": {
         "type": "object",
@@ -30,6 +37,1046 @@
           "status",
           "timestamp"
         ]
+      },
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "clerkId": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "locale": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "pl",
+              "en",
+              null
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "clerkId",
+          "email",
+          "locale",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTH_REQUIRED",
+              "INVALID_TOKEN",
+              "TOKEN_EXPIRED",
+              "NOT_FOUND",
+              "VALIDATION_ERROR",
+              "FORBIDDEN",
+              "CONFLICT",
+              "INSUFFICIENT_CREDITS"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "WorkspaceListResponse": {
+        "type": "object",
+        "properties": {
+          "workspaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceDTO"
+            }
+          }
+        },
+        "required": [
+          "workspaces"
+        ]
+      },
+      "WorkspaceDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/WorkspaceRole"
+          },
+          "isOwner": {
+            "type": "boolean"
+          },
+          "memberCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "plan": {
+            "$ref": "#/components/schemas/WorkspacePlan"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "icon",
+          "role",
+          "isOwner",
+          "memberCount",
+          "plan",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "WorkspaceRole": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "admin",
+          "member"
+        ]
+      },
+      "WorkspacePlan": {
+        "type": "string",
+        "enum": [
+          "free",
+          "premium"
+        ]
+      },
+      "CreateWorkspaceBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "icon": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "icon"
+        ]
+      },
+      "ShoppingListListResponse": {
+        "type": "object",
+        "properties": {
+          "lists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShoppingListDTO"
+            }
+          }
+        },
+        "required": [
+          "lists"
+        ]
+      },
+      "ShoppingListDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "emoji": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ShoppingListStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "name",
+          "emoji",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ShoppingListStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "archived"
+        ]
+      },
+      "CreateShoppingListBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "emoji": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateShoppingListBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "emoji": {
+            "type": "string"
+          }
+        }
+      },
+      "ShoppingItemListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShoppingItemDTO"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ShoppingItemDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "listId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "normalizedName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "amount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "$ref": "#/components/schemas/ShoppingCategory"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ItemStatus"
+          },
+          "sortOrder": {
+            "type": "integer"
+          },
+          "addedByUserId": {
+            "type": "string"
+          },
+          "updatedByUserId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "clientId",
+          "listId",
+          "name",
+          "normalizedName",
+          "amount",
+          "note",
+          "category",
+          "status",
+          "sortOrder",
+          "addedByUserId",
+          "updatedByUserId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ShoppingCategory": {
+        "type": "string",
+        "enum": [
+          "produce",
+          "fruit",
+          "vegetables",
+          "dairy",
+          "meat",
+          "fish",
+          "bakery",
+          "frozen",
+          "drinks",
+          "alcohol",
+          "snacks",
+          "household",
+          "cleaning",
+          "baby",
+          "pets",
+          "pharmacy",
+          "cosmetics",
+          "electronics",
+          "office",
+          "garden",
+          "diy",
+          "other"
+        ]
+      },
+      "ItemStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "bought",
+          "unavailable",
+          "removed"
+        ]
+      },
+      "CreateShoppingItemBody": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "amount": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "category": {
+            "$ref": "#/components/schemas/ShoppingCategory"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateShoppingItemBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "amount": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "category": {
+            "$ref": "#/components/schemas/ShoppingCategory"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ItemStatus"
+          }
+        }
+      },
+      "ShoppingEventListResponse": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShoppingEventDTO"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "events",
+          "nextCursor"
+        ]
+      },
+      "ShoppingEventDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "listId": {
+            "type": "string"
+          },
+          "actorUserId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "list_created",
+              "item_created",
+              "item_updated",
+              "item_status_changed",
+              "ai_applied"
+            ]
+          },
+          "payload": {},
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "listId",
+          "actorUserId",
+          "type",
+          "createdAt"
+        ]
+      },
+      "AiCreditsBalance": {
+        "type": "object",
+        "properties": {
+          "used": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "exclusiveMinimum": 0
+          },
+          "remaining": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "unlimited": {
+            "type": "boolean"
+          },
+          "periodStart": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "used",
+          "limit",
+          "remaining",
+          "unlimited",
+          "periodStart"
+        ]
+      },
+      "AiIngestResponse": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "promptVersion": {
+            "type": "string"
+          },
+          "durationMs": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/AiProposal"
+          },
+          "fastPath": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "runId",
+          "model",
+          "promptVersion",
+          "durationMs",
+          "proposal",
+          "fastPath"
+        ]
+      },
+      "AiProposal": {
+        "type": "object",
+        "properties": {
+          "operations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiProposalOperation"
+            }
+          }
+        },
+        "required": [
+          "operations"
+        ]
+      },
+      "AiProposalOperation": {
+        "type": "object",
+        "properties": {
+          "proposalRowId": {
+            "type": "string"
+          },
+          "op": {
+            "type": "string",
+            "enum": [
+              "create",
+              "merge",
+              "update",
+              "ignore"
+            ]
+          },
+          "targetItemId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "clientId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "amount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "produce",
+              "fruit",
+              "vegetables",
+              "dairy",
+              "meat",
+              "fish",
+              "bakery",
+              "frozen",
+              "drinks",
+              "alcohol",
+              "snacks",
+              "household",
+              "cleaning",
+              "baby",
+              "pets",
+              "pharmacy",
+              "cosmetics",
+              "electronics",
+              "office",
+              "garden",
+              "diy",
+              "other"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "proposalRowId",
+          "op",
+          "name",
+          "category",
+          "confidence"
+        ]
+      },
+      "ApplyAiProposalResponse": {
+        "type": "object",
+        "properties": {
+          "applied": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "clientId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "listId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "normalizedName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "amount": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "note": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "category": {
+                  "type": "string",
+                  "enum": [
+                    "produce",
+                    "fruit",
+                    "vegetables",
+                    "dairy",
+                    "meat",
+                    "fish",
+                    "bakery",
+                    "frozen",
+                    "drinks",
+                    "alcohol",
+                    "snacks",
+                    "household",
+                    "cleaning",
+                    "baby",
+                    "pets",
+                    "pharmacy",
+                    "cosmetics",
+                    "electronics",
+                    "office",
+                    "garden",
+                    "diy",
+                    "other"
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "bought",
+                    "unavailable",
+                    "removed"
+                  ]
+                },
+                "sortOrder": {
+                  "type": "integer"
+                },
+                "addedByUserId": {
+                  "type": "string"
+                },
+                "updatedByUserId": {
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "clientId",
+                "listId",
+                "name",
+                "normalizedName",
+                "amount",
+                "note",
+                "category",
+                "status",
+                "sortOrder",
+                "addedByUserId",
+                "updatedByUserId",
+                "createdAt",
+                "updatedAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "applied",
+          "items"
+        ]
+      },
+      "ApplyAiProposalBody": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "operations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplyOperation"
+            }
+          }
+        },
+        "required": [
+          "runId",
+          "operations"
+        ]
+      },
+      "ApplyOperation": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "create"
+                ]
+              },
+              "proposalRowId": {
+                "type": "string"
+              },
+              "clientId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "amount": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "produce",
+                  "fruit",
+                  "vegetables",
+                  "dairy",
+                  "meat",
+                  "fish",
+                  "bakery",
+                  "frozen",
+                  "drinks",
+                  "alcohol",
+                  "snacks",
+                  "household",
+                  "cleaning",
+                  "baby",
+                  "pets",
+                  "pharmacy",
+                  "cosmetics",
+                  "electronics",
+                  "office",
+                  "garden",
+                  "diy",
+                  "other"
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "proposalRowId",
+              "name",
+              "category"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "merge"
+                ]
+              },
+              "proposalRowId": {
+                "type": "string"
+              },
+              "targetItemId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "amount": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "produce",
+                  "fruit",
+                  "vegetables",
+                  "dairy",
+                  "meat",
+                  "fish",
+                  "bakery",
+                  "frozen",
+                  "drinks",
+                  "alcohol",
+                  "snacks",
+                  "household",
+                  "cleaning",
+                  "baby",
+                  "pets",
+                  "pharmacy",
+                  "cosmetics",
+                  "electronics",
+                  "office",
+                  "garden",
+                  "diy",
+                  "other"
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "proposalRowId",
+              "targetItemId"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "update"
+                ]
+              },
+              "proposalRowId": {
+                "type": "string"
+              },
+              "targetItemId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "amount": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "produce",
+                  "fruit",
+                  "vegetables",
+                  "dairy",
+                  "meat",
+                  "fish",
+                  "bakery",
+                  "frozen",
+                  "drinks",
+                  "alcohol",
+                  "snacks",
+                  "household",
+                  "cleaning",
+                  "baby",
+                  "pets",
+                  "pharmacy",
+                  "cosmetics",
+                  "electronics",
+                  "office",
+                  "garden",
+                  "diy",
+                  "other"
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "bought",
+                  "unavailable",
+                  "removed"
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "proposalRowId",
+              "targetItemId"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "ignore"
+                ]
+              },
+              "proposalRowId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "proposalRowId"
+            ]
+          }
+        ]
       }
     },
     "parameters": {}
@@ -48,6 +1095,971 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "summary": "Current authenticated user",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated user (upserted, idempotent except updatedAt)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces": {
+      "get": {
+        "summary": "List workspaces for the current user",
+        "tags": [
+          "Workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Memberships with role, memberCount, plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a workspace",
+        "tags": [
+          "Workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created workspace (caller is owner)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspaceId}": {
+      "get": {
+        "summary": "Get a workspace by id",
+        "tags": [
+          "Workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace DTO for members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspaceId}/lists": {
+      "get": {
+        "summary": "List active shopping lists for a workspace",
+        "tags": [
+          "Shopping Lists"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active shopping lists for the workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a shopping list",
+        "tags": [
+          "Shopping Lists"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShoppingListBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created shopping list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}": {
+      "get": {
+        "summary": "Get a shopping list by id",
+        "tags": [
+          "Shopping Lists"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "listId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shopping list DTO",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update a shopping list",
+        "tags": [
+          "Shopping Lists"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "listId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateShoppingListBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated shopping list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Archive a shopping list",
+        "tags": [
+          "Shopping Lists"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "listId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Shopping list archived"
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}/items": {
+      "get": {
+        "summary": "List shopping items for a list",
+        "tags": [
+          "Shopping Items"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "listId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shopping items for the list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingItemListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a shopping item",
+        "tags": [
+          "Shopping Items"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "listId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShoppingItemBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created shopping item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingItemDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Client id conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/items/{itemId}": {
+      "patch": {
+        "summary": "Update a shopping item",
+        "tags": [
+          "Shopping Items"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "itemId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateShoppingItemBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated shopping item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingItemDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Client id conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}/events": {
+      "get": {
+        "summary": "List shopping events after a cursor",
+        "tags": [
+          "Shopping Events"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "listId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "after",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shopping events page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingEventListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspaceId}/ai-credits": {
+      "get": {
+        "summary": "Get AI Credits balance for a workspace",
+        "tags": [
+          "Billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI Credits balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiCreditsBalance"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}/ai/ingest": {
+      "post": {
+        "summary": "Create an AI proposal from text, clipboard, or screenshot",
+        "tags": [
+          "AI"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "listId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI proposal created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiIngestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient AI Credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}/ai/apply": {
+      "post": {
+        "summary": "Apply reviewed AI operations to a list",
+        "tags": [
+          "AI"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "listId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyAiProposalBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Applied AI operations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyAiProposalResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }

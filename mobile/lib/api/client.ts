@@ -1,29 +1,142 @@
-import { z } from "zod";
+import {
+  httpLogNetworkError,
+  httpLogRequest,
+  httpLogResponse,
+} from "./http-logger";
 
-const HealthSchema = z.object({
-  status: z.literal("ok"),
-  timestamp: z.string(),
-});
+export type ApiErrorCode =
+  | "AUTH_REQUIRED"
+  | "INVALID_TOKEN"
+  | "TOKEN_EXPIRED"
+  | "NOT_FOUND"
+  | "VALIDATION_ERROR"
+  | "FORBIDDEN"
+  | "CONFLICT"
+  | "INSUFFICIENT_CREDITS"
+  | "NETWORK_ERROR"
+  | "UNKNOWN";
 
-export type HealthResponse = z.infer<typeof HealthSchema>;
+export type ApiErrorBody = {
+  code: ApiErrorCode;
+  message: string;
+};
+
+export class ApiClientError extends Error {
+  readonly code: ApiErrorCode;
+  readonly status?: number;
+
+  constructor(code: ApiErrorCode, message: string, status?: number) {
+    super(message);
+    this.name = "ApiClientError";
+    this.code = code;
+    this.status = status;
+  }
+}
 
 function getBaseUrl(): string {
   const url = process.env.EXPO_PUBLIC_API_URL?.trim();
   if (!url) {
-    throw new Error("EXPO_PUBLIC_API_URL is not set");
+    throw new ApiClientError(
+      "NETWORK_ERROR",
+      "EXPO_PUBLIC_API_URL is not set",
+    );
   }
   return url.replace(/\/$/, "");
 }
 
-export async function fetchHealth(): Promise<HealthResponse> {
-  const base = getBaseUrl();
-  const res = await fetch(`${base}/api/health`);
-  if (!res.ok) {
-    throw new Error(`Health check failed: ${res.status}`);
-  }
-  return HealthSchema.parse(await res.json());
-}
-
 export function hasApiUrl(): boolean {
   return Boolean(process.env.EXPO_PUBLIC_API_URL?.trim());
+}
+
+type ApiFetchOptions = {
+  token?: string | null;
+  deviceLocale?: string | null;
+  method?: string;
+  body?: unknown;
+};
+
+export async function apiFetch<T>(
+  path: string,
+  options: ApiFetchOptions = {},
+): Promise<T> {
+  const base = getBaseUrl();
+  const method = options.method ?? "GET";
+  const url = `${base}${path}`;
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+  };
+
+  if (options.token) {
+    headers.Authorization = `Bearer ${options.token}`;
+  }
+  if (options.deviceLocale) {
+    headers["X-Device-Locale"] = options.deviceLocale;
+  }
+  if (options.body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const started = Date.now();
+  httpLogRequest({
+    method,
+    url: path,
+    body: options.body,
+  });
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method,
+      headers,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    });
+  } catch (err) {
+    httpLogNetworkError({
+      method,
+      url: path,
+      durationMs: Date.now() - started,
+      error: err instanceof Error ? err.message : "Network request failed",
+    });
+    throw new ApiClientError("NETWORK_ERROR", "Network request failed.");
+  }
+
+  const durationMs = Date.now() - started;
+  const rawText = await res.text();
+  let parsed: unknown;
+  if (rawText) {
+    try {
+      parsed = JSON.parse(rawText) as unknown;
+    } catch {
+      parsed = rawText;
+    }
+  }
+
+  httpLogResponse({
+    method,
+    url: path,
+    status: res.status,
+    durationMs,
+    body: parsed,
+  });
+
+  if (!res.ok) {
+    let code: ApiErrorCode = "UNKNOWN";
+    let message = `Request failed (${res.status})`;
+    if (parsed && typeof parsed === "object") {
+      const data = parsed as Partial<ApiErrorBody>;
+      if (data.code) code = data.code;
+      if (data.message) message = data.message;
+    }
+    throw new ApiClientError(code, message, res.status);
+  }
+
+  if (res.status === 204 || !rawText) {
+    return undefined as T;
+  }
+
+  return parsed as T;
+}
+
+export async function fetchHealth(): Promise<{ status: string; timestamp: string }> {
+  return apiFetch("/api/health");
 }

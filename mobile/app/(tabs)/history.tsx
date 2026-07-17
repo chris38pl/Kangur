@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { KangurMascot } from "@/components/KangurMascot";
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, spacing, typography } from "@/design-system/tokens";
 
@@ -11,17 +12,31 @@ export default function HistoryScreen() {
 
   return (
     <View
-      className="flex-1"
-      style={{ backgroundColor: theme.bg, padding: spacing[6] }}
+      style={{
+        flex: 1,
+        backgroundColor: theme.section,
+        padding: spacing[6],
+        alignItems: "center",
+        justifyContent: "center",
+      }}
     >
-      <Text style={{ ...typography.title, color: theme.text }}>
+      <KangurMascot variant="icon" width={100} height={100} />
+      <Text
+        style={{
+          ...typography.title,
+          color: theme.text,
+          marginTop: spacing[6],
+          textAlign: "center",
+        }}
+      >
         {t("history.title")}
       </Text>
       <Text
         style={{
           ...typography.body,
-          color: theme.textMuted,
-          marginTop: spacing[4],
+          color: theme.textBody,
+          marginTop: spacing[2],
+          textAlign: "center",
         }}
       >
         {t("history.placeholder")}

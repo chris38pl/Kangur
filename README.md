@@ -39,7 +39,9 @@ cp mobile/.env.example mobile/.env
 ```
 
 Fill Neon `DATABASE_URL` (pooled) + `DIRECT_URL` (direct).  
-Set `EXPO_PUBLIC_API_URL` to `http://<LAN-IP>:3000` or an Expo tunnel — **not** `localhost` on a physical device.
+Set Clerk keys (`CLERK_SECRET_KEY`, publishable keys) and enable email/password + Google; allow unverified email for MVP.  
+Set `EXPO_PUBLIC_API_URL` to `http://<LAN-IP>:3000` or an Expo tunnel — **not** `localhost` on a physical device.  
+Google OAuth: add Clerk redirect URIs for Expo scheme `kangur://`. Apple auth is deferred.
 
 3. Prisma migrate (backend)
 
