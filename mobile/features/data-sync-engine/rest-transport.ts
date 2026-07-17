@@ -8,6 +8,7 @@ import type {
   ItemStatus,
   ShoppingCategory,
 } from "@/features/shopping-item/schemas";
+import { createClientId, isLegacyLocalItemId, isUuid } from "@/lib/createClientId";
 
 /**
  * REST transport for Data Sync Engine (sequential today; batch later).
@@ -24,14 +25,22 @@ export function createRestSyncTransport(
         switch (op.action) {
           case "SET_STATUS": {
             if (!op.itemId) throw new Error("SET_STATUS requires itemId");
+            // Server item ids are Prisma cuids — only reject legacy local_* optimistic ids.
+            if (isLegacyLocalItemId(op.itemId)) {
+              throw new Error(
+                `SET_STATUS itemId is a local optimistic id: ${op.itemId}`,
+              );
+            }
             await updateShoppingItem(token, op.itemId, {
               status: op.payload.status as ItemStatus,
             });
             break;
           }
           case "ADD_ITEM": {
+            const raw = String(op.payload.clientId ?? op.itemId ?? "");
+            const clientId = isUuid(raw) ? raw : createClientId();
             await createShoppingItem(token, op.listId, {
-              clientId: String(op.payload.clientId ?? op.itemId),
+              clientId,
               name: String(op.payload.name ?? ""),
               amount:
                 typeof op.payload.amount === "string"

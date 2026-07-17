@@ -15,8 +15,22 @@ export async function listShoppingLists(
       workspaceId,
       status: "active",
     },
+    include: {
+      _count: {
+        select: {
+          items: {
+            where: { status: { not: "removed" } },
+          },
+        },
+      },
+    },
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
   });
 
-  return lists.map(toShoppingListDto);
+  return lists.map((list) =>
+    toShoppingListDto({
+      ...list,
+      itemCount: list._count.items,
+    }),
+  );
 }

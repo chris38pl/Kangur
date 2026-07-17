@@ -1,33 +1,58 @@
+import { getShoppingCategoryOrder } from "@shared/shopping-categories";
 import { useAuth } from "@clerk/clerk-expo";
 import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
+  Keyboard,
   Pressable,
   ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SHOPPING_CATEGORIES } from "@shared/shopping-categories";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
+import { brandAssets } from "@/design-system/brand-assets";
+import { primaryButtonStyle } from "@/design-system/shopping-density";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { applyAi, ingestAi } from "@/features/ai/api";
 import type { ProposalOperation } from "@/features/ai/schemas";
-import { getShoppingList } from "@/features/shopping-list/api";
-import { useArchiveShoppingList } from "@/features/shopping-list/useShoppingLists";
+import { BackIcon } from "@/features/auth/auth-icons";
+import { CategoryChips } from "@/features/shopping-item/category-chips";
+import { EditItemSheet } from "@/features/shopping-item/edit-item-sheet";
+import { ListItemRow } from "@/features/shopping-item/list-item-row";
+import type { ShoppingItem } from "@/features/shopping-item/schemas";
+import {
+  getShoppingList,
+} from "@/features/shopping-list/api";
+import { CreateListOptionRow } from "@/features/shopping-list/create-list-option-row";
+import { DeleteListDialog } from "@/features/shopping-list/delete-list-dialog";
+import { RenameListSheet } from "@/features/shopping-list/rename-list-sheet";
+import { takePendingListImport } from "@/features/shopping-list/pending-list-import";
+import {
+  clearListProvisional,
+  isListProvisional,
+} from "@/features/shopping-list/provisional-list";
+import {
+  useArchiveShoppingList,
+  useUpdateShoppingList,
+} from "@/features/shopping-list/useShoppingLists";
 import {
   useCreateShoppingItem,
   useShoppingItems,
   useUpdateShoppingItem,
 } from "@/features/shopping-item/useShoppingItems";
 import type { ShoppingCategory } from "@/features/shopping-item/schemas";
+import { createClientId } from "@/lib/createClientId";
+import { isAiReviewEnabled } from "@/lib/aiReview";
 
 function buildApplyOperations(operations: ProposalOperation[]) {
   return operations.map((operation) => {
@@ -42,7 +67,7 @@ function buildApplyOperations(operations: ProposalOperation[]) {
       return {
         op: "create" as const,
         proposalRowId: operation.proposalRowId,
-        clientId: operation.clientId ?? undefined,
+        clientId: operation.clientId ?? createClientId(),
         name: operation.name,
         amount: operation.amount ?? null,
         note: operation.note ?? null,
@@ -78,7 +103,9 @@ export default function ShoppingListScreen() {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+  const insets = useSafeAreaInsets();
   const router = useRouter();
+  const navigation = useNavigation();
   const { listId, import: importSource } = useLocalSearchParams<{
     listId: string;
     import?: string;
@@ -94,6 +121,10 @@ export default function ShoppingListScreen() {
   const [reviewRunId, setReviewRunId] = useState<string | null>(null);
   const [reviewOperations, setReviewOperations] = useState<ProposalOperation[]>([]);
   const [undoVisible, setUndoVisible] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ShoppingItem | null>(null);
+  const [manualAddOpen, setManualAddOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const listQuery = useQuery({
     queryKey: ["shopping-list", listId],
@@ -119,6 +150,53 @@ export default function ShoppingListScreen() {
   const archiveList = useArchiveShoppingList(
     listQuery.data?.workspaceId ?? null,
   );
+  const updateList = useUpdateShoppingList(
+    typeof listId === "string" ? listId : null,
+  );
+  const applyMutation = useMutation({
+    mutationFn: async (input: {
+      runId: string;
+      operations: ProposalOperation[];
+    }) => {
+      const token = await getToken();
+      if (!token || typeof listId !== "string") {
+        throw new Error("Missing auth token or list id");
+      }
+
+      const previousItems =
+        queryClient.getQueryData(["shopping-items", listId]) ?? [];
+
+      const result = await applyAi(token, listId, {
+        runId: input.runId,
+        operations: buildApplyOperations(input.operations),
+      });
+
+      queryClient.setQueryData(["shopping-items", listId], result.items);
+      setUndoVisible(true);
+
+      const timeout = setTimeout(() => {
+        setUndoVisible(false);
+        void queryClient.invalidateQueries({
+          queryKey: ["shopping-items", listId],
+        });
+      }, 5000);
+
+      return { result, previousItems, timeout };
+    },
+    onSuccess: () => {
+      setReviewRunId(null);
+      setReviewOperations([]);
+      setAiText("");
+      if (typeof listId === "string") {
+        clearListProvisional(listId);
+        void queryClient.invalidateQueries({
+          queryKey: ["shopping-list", listId],
+        });
+        void queryClient.invalidateQueries({ queryKey: ["shopping-lists"] });
+      }
+    },
+  });
+
   const ingestMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       const token = await getToken();
@@ -128,53 +206,75 @@ export default function ShoppingListScreen() {
       return ingestAi(token, listId, formData);
     },
     onSuccess: (result) => {
-      setReviewRunId(result.runId);
-      setReviewOperations(result.proposal.operations);
-    },
-  });
-  const applyMutation = useMutation({
-    mutationFn: async (operations: ProposalOperation[]) => {
-      const token = await getToken();
-      if (!token || typeof listId !== "string" || !reviewRunId) {
-        throw new Error("Missing auth token, list id, or run id");
+      const title =
+        result.proposal.shoppingContext?.title?.trim().slice(0, 32) ?? "";
+
+      // Backend renames untitled lists on ingest — refresh header immediately.
+      if (typeof listId === "string" && title) {
+        queryClient.setQueryData(
+          ["shopping-list", listId],
+          (prev: { name?: string; isUntitled?: boolean } | undefined) =>
+            prev
+              ? { ...prev, name: title, isUntitled: false }
+              : prev,
+        );
+        void queryClient.invalidateQueries({
+          queryKey: ["shopping-list", listId],
+        });
+        void queryClient.invalidateQueries({ queryKey: ["shopping-lists"] });
       }
 
-      const previousItems =
-        queryClient.getQueryData(["shopping-items", listId]) ?? [];
+      if (isAiReviewEnabled()) {
+        setReviewRunId(result.runId);
+        setReviewOperations(result.proposal.operations);
+        return;
+      }
 
-      const result = await applyAi(token, listId, {
-        runId: reviewRunId,
-        operations: buildApplyOperations(operations),
+      // Default: auto-apply proposal (no review UI).
+      applyMutation.mutate({
+        runId: result.runId,
+        operations: result.proposal.operations,
       });
-
-      queryClient.setQueryData(["shopping-items", listId], result.items);
-      setUndoVisible(true);
-
-      const timeout = setTimeout(() => {
-        setUndoVisible(false);
-        void queryClient.invalidateQueries({ queryKey: ["shopping-items", listId] });
-      }, 5000);
-
-      return { result, previousItems, timeout };
-    },
-    onSuccess: () => {
-      setReviewRunId(null);
-      setReviewOperations([]);
-      setAiText("");
     },
   });
+
+  const archiveOnLeave = useRef(archiveList.mutateAsync);
+  archiveOnLeave.current = archiveList.mutateAsync;
+
+  // Leave without products → discard provisional list (no empty spam on Home).
+  useEffect(() => {
+    if (typeof listId !== "string") return;
+
+    const unsub = navigation.addListener("beforeRemove", () => {
+      if (!isListProvisional(listId)) return;
+      const items =
+        queryClient.getQueryData<ShoppingItem[]>(["shopping-items", listId]) ??
+        [];
+      const count = items.filter((item) => item.status !== "removed").length;
+      clearListProvisional(listId);
+      if (count === 0) {
+        void archiveOnLeave.current(listId).catch(() => {
+          // best-effort cleanup
+        });
+      }
+    });
+
+    return unsub;
+  }, [listId, navigation, queryClient]);
 
   const isPending = listQuery.isPending || itemsQuery.isPending;
 
   const startTextIngest = () => {
+    Keyboard.dismiss();
     const formData = new FormData();
     formData.append("source", "text");
     formData.append("text", aiText.trim());
     ingestMutation.mutate(formData);
   };
 
-  const startClipboardIngest = async () => {
-    const text = (await Clipboard.getStringAsync()).trim();
+  const startClipboardIngest = async (textOverride?: string) => {
+    Keyboard.dismiss();
+    const text = (textOverride ?? (await Clipboard.getStringAsync())).trim();
     if (!text) return;
     const formData = new FormData();
     formData.append("source", "clipboard");
@@ -183,40 +283,55 @@ export default function ShoppingListScreen() {
     ingestMutation.mutate(formData);
   };
 
-  const startScreenshotIngest = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.8,
-    });
-
-    if (result.canceled) return;
-    const asset = result.assets[0];
+  const startScreenshotIngest = async (asset?: {
+    uri: string;
+    fileName?: string | null;
+    mimeType?: string | null;
+  }) => {
+    Keyboard.dismiss();
+    let picked = asset;
+    if (!picked) {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 0.8,
+      });
+      if (result.canceled) return;
+      picked = result.assets[0];
+    }
     const formData = new FormData();
     formData.append("source", "screenshot");
     formData.append("file", {
-      uri: asset.uri,
-      name: asset.fileName ?? "screenshot.jpg",
-      type: asset.mimeType ?? "image/jpeg",
+      uri: picked.uri,
+      name: picked.fileName ?? "screenshot.jpg",
+      type: picked.mimeType ?? "image/jpeg",
     } as unknown as Blob);
     ingestMutation.mutate(formData);
   };
 
-  // Deep-link from Home create sheet: ?import=screenshot|clipboard|photo
+  // Deep-link from create sheet: pending import (picked before list create) or ?import=
   useEffect(() => {
     if (importTriggered.current) return;
     if (!listQuery.isSuccess || typeof listId !== "string") return;
-    if (!importSource) return;
-    importTriggered.current = true;
-    // Defer so ingest mutations are not scheduled synchronously inside the effect.
-    const handle = setTimeout(() => {
-      if (importSource === "clipboard") {
-        void startClipboardIngest();
-      } else if (importSource === "screenshot" || importSource === "photo") {
-        void startScreenshotIngest();
+
+    const pending = takePendingListImport();
+    if (pending || importSource) {
+      importTriggered.current = true;
+      const handle = setTimeout(() => {
+        if (pending?.kind === "clipboard") {
+          void startClipboardIngest(pending.text);
+        } else if (pending?.kind === "image") {
+          void startScreenshotIngest(pending);
+        } else if (importSource === "clipboard") {
+          void startClipboardIngest();
+        } else if (importSource === "screenshot" || importSource === "photo") {
+          void startScreenshotIngest();
+        }
+      }, 0);
+      if (importSource) {
+        router.setParams({ import: undefined });
       }
-    }, 0);
-    router.setParams({ import: undefined });
-    return () => clearTimeout(handle);
+      return () => clearTimeout(handle);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once when list ready
   }, [listQuery.isSuccess, listId, importSource]);
 
@@ -225,32 +340,101 @@ export default function ShoppingListScreen() {
     reviewOperations.every((operation) => operation.op === "merge") &&
     reviewOperations.every((operation) => operation.confidence >= 0.85);
 
+  const categoryOrder = getShoppingCategoryOrder();
+  const activeItems = (itemsQuery.data ?? [])
+    .filter((item) => item.status !== "removed")
+    .slice()
+    .sort((a, b) => {
+      const aIndex = categoryOrder.indexOf(a.category);
+      const bIndex = categoryOrder.indexOf(b.category);
+      const byCategory =
+        (aIndex === -1 ? categoryOrder.length : aIndex) -
+        (bIndex === -1 ? categoryOrder.length : bIndex);
+      if (byCategory !== 0) return byCategory;
+      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    });
+  const itemCount = activeItems.length;
+
+  const confirmDeleteList = () => {
+    if (typeof listId !== "string") return;
+    setDeleteOpen(true);
+  };
+
+  const performDeleteList = () => {
+    if (typeof listId !== "string") return;
+    void archiveList.mutateAsync(listId).then(() => {
+      console.info("[shopping-list]", "ListDeleted", { listId });
+      setDeleteOpen(false);
+      router.replace("/(tabs)");
+    });
+  };
+
+  const openItemMenu = (item: ShoppingItem) => {
+    setEditingItem(item);
+  };
+
   return (
     <>
-      <Stack.Screen options={{ title: t("list.title") }} />
-      <ScrollView
-        className="flex-1"
-        style={{ backgroundColor: theme.bg, padding: spacing[6] }}
-        contentContainerStyle={{ paddingBottom: spacing[12] }}
-      >
-        {isPending ? (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <ActivityIndicator color={theme.primary} />
-          </View>
-        ) : (
-          <>
-            <Text style={{ fontSize: 48 }}>
-              {listQuery.data?.emoji ?? "🛒"}
-            </Text>
-            <Text
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={{ flex: 1, backgroundColor: theme.bg }}>
+        <View
+          style={{
+            paddingTop: insets.top + spacing[2],
+            paddingHorizontal: spacing[4],
+            paddingBottom: spacing[3],
+            borderBottomWidth: 1,
+            borderBottomColor: theme.border,
+            backgroundColor: theme.bg,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing[2],
+            }}
+          >
+            <Pressable
+              onPress={() => {
+                if (router.canGoBack()) router.back();
+                else router.replace("/(tabs)");
+              }}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t("auth.back")}
               style={{
-                ...typography.display,
-                color: theme.primary,
-                marginTop: spacing[3],
+                width: 40,
+                height: 40,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              {listQuery.data?.name ?? t("list.title")}
-            </Text>
+              <BackIcon size={20} />
+            </Pressable>
+
+            <Pressable
+              onPress={() => setRenameOpen(true)}
+              disabled={!listQuery.data}
+              accessibilityRole="button"
+              accessibilityLabel={t("list.renameTitle")}
+              style={{ flex: 1, minWidth: 0 }}
+            >
+              <Text
+                numberOfLines={1}
+                style={{ ...typography.headline, color: theme.text }}
+              >
+                {listQuery.data?.name ?? t("list.title")}
+              </Text>
+              <Text
+                style={{
+                  ...typography.caption,
+                  color: theme.textMuted,
+                  marginTop: 2,
+                }}
+              >
+                {t("list.itemCount", { count: itemCount })}
+              </Text>
+            </Pressable>
 
             <Pressable
               onPress={() => {
@@ -259,266 +443,275 @@ export default function ShoppingListScreen() {
                 }
               }}
               style={{
-                marginTop: spacing[6],
-                backgroundColor: theme.primary,
-                borderRadius: radius.md,
-                paddingVertical: spacing[4],
-                alignItems: "center",
+                ...primaryButtonStyle(theme),
+                borderRadius: radius.full,
+                paddingVertical: spacing[2],
+                paddingHorizontal: spacing[4],
+                minHeight: 40,
               }}
             >
-              <Text style={{ ...typography.label, color: "#fff" }}>
+              <Text style={{ ...typography.label, color: theme.onPrimary }}>
                 {t("shoppingMode.startShopping")}
               </Text>
             </Pressable>
+          </View>
+        </View>
 
-            <Pressable
-              disabled={archiveList.isPending}
-              onPress={() => {
-                if (typeof listId !== "string") return;
-                Alert.alert(t("list.deleteTitle"), t("list.deleteBody"), [
-                  { text: t("list.deleteCancel"), style: "cancel" },
-                  {
-                    text: t("list.deleteConfirm"),
-                    style: "destructive",
-                    onPress: () => {
-                      void archiveList.mutateAsync(listId).then(() => {
-                        console.info("[shopping-list]", "ListDeleted", {
-                          listId,
-                        });
-                        router.replace("/(tabs)");
-                      });
-                    },
-                  },
-                ]);
-              }}
-              style={{
-                marginTop: spacing[3],
-                borderRadius: radius.md,
-                paddingVertical: spacing[4],
-                alignItems: "center",
-                borderWidth: 1,
-                borderColor: theme.danger,
-                opacity: archiveList.isPending ? 0.6 : 1,
-              }}
-            >
-              {archiveList.isPending ? (
-                <ActivityIndicator color={theme.danger} />
-              ) : (
-                <Text style={{ ...typography.label, color: theme.danger }}>
-                  {t("list.delete")}
-                </Text>
-              )}
-            </Pressable>
-
-            <Text
-              style={{
-                ...typography.label,
-                color: theme.textMuted,
-                marginTop: spacing[6],
-              }}
-            >
-              {t("list.addLabel")}
-            </Text>
-
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder={t("list.namePlaceholder")}
-              placeholderTextColor={theme.textMuted}
-              style={{
-                marginTop: spacing[3],
-                borderWidth: 1,
-                borderColor: theme.border,
-                backgroundColor: theme.surface,
-                borderRadius: radius.md,
-                padding: spacing[4],
-                color: theme.text,
-              }}
-            />
-
-            <TextInput
-              value={amount}
-              onChangeText={setAmount}
-              placeholder={t("list.amountPlaceholder")}
-              placeholderTextColor={theme.textMuted}
-              style={{
-                marginTop: spacing[2],
-                borderWidth: 1,
-                borderColor: theme.border,
-                backgroundColor: theme.surface,
-                borderRadius: radius.md,
-                padding: spacing[4],
-                color: theme.text,
-              }}
-            />
-
-            <TextInput
-              value={note}
-              onChangeText={setNote}
-              placeholder={t("list.notePlaceholder")}
-              placeholderTextColor={theme.textMuted}
-              style={{
-                marginTop: spacing[2],
-                borderWidth: 1,
-                borderColor: theme.border,
-                backgroundColor: theme.surface,
-                borderRadius: radius.md,
-                padding: spacing[4],
-                color: theme.text,
-              }}
-            />
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginTop: spacing[3] }}
-              contentContainerStyle={{ gap: spacing[2] }}
-            >
-              {SHOPPING_CATEGORIES.map((value) => {
-                const selected = value === category;
-                return (
-                  <Pressable
-                    key={value}
-                    onPress={() => setCategory(value)}
-                    style={{
-                      borderWidth: 1,
-                      borderColor: selected ? theme.primary : theme.border,
-                      backgroundColor: selected ? theme.surface : theme.bg,
-                      borderRadius: radius.md,
-                      paddingVertical: spacing[2],
-                      paddingHorizontal: spacing[3],
-                    }}
-                  >
-                    <Text
-                      style={{
-                        ...typography.caption,
-                        color: selected ? theme.primary : theme.text,
-                      }}
-                    >
-                      {t(`categories.${value}`)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-
-            <Pressable
-              disabled={createItem.isPending || !name.trim()}
-              onPress={() =>
-                createItem.mutate(
-                  {
-                    clientId: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`,
-                    name,
-                    ...(amount.trim() ? { amount: amount.trim() } : {}),
-                    ...(note.trim() ? { note: note.trim() } : {}),
-                    category,
-                  },
-                  {
-                    onSuccess: () => {
-                      setName("");
-                      setAmount("");
-                      setNote("");
-                      setCategory("other");
-                    },
-                  },
-                )
-              }
-              style={{
-                marginTop: spacing[4],
-                backgroundColor: theme.primary,
-                borderRadius: radius.md,
-                paddingVertical: spacing[4],
-                alignItems: "center",
-                opacity: createItem.isPending || !name.trim() ? 0.6 : 1,
-              }}
-            >
-              <Text style={{ ...typography.label, color: "#fff" }}>
-                {t("list.addItem")}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingHorizontal: spacing[6],
+            paddingTop: spacing[5],
+            paddingBottom: spacing[12] + insets.bottom,
+          }}
+          keyboardShouldPersistTaps="handled"
+        >
+        {isPending ? (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: spacing[16] }}>
+            <ActivityIndicator color={theme.primary} />
+          </View>
+        ) : (
+          <>
+            <View>
+              <Text style={{ ...typography.headline, color: theme.text }}>
+                {t("ai.quickAddTitle")}
               </Text>
-            </Pressable>
+              <Text
+                style={{
+                  ...typography.body,
+                  color: theme.textBody,
+                  marginTop: spacing[2],
+                }}
+              >
+                {t("ai.quickAddSubtitle")}
+              </Text>
 
-            <Text
-              style={{
-                ...typography.label,
-                color: theme.textMuted,
-                marginTop: spacing[8],
-              }}
-            >
-              {t("ai.title")}
-            </Text>
+              <TextInput
+                value={aiText}
+                onChangeText={setAiText}
+                multiline
+                placeholder={t("ai.textPlaceholder")}
+                placeholderTextColor={theme.textMuted}
+                style={{
+                  marginTop: spacing[4],
+                  minHeight: 96,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  backgroundColor: theme.surface,
+                  borderRadius: radius.lg,
+                  padding: spacing[4],
+                  color: theme.text,
+                  textAlignVertical: "top",
+                }}
+              />
 
-            <TextInput
-              value={aiText}
-              onChangeText={setAiText}
-              multiline
-              placeholder={t("ai.textPlaceholder")}
-              placeholderTextColor={theme.textMuted}
-              style={{
-                marginTop: spacing[3],
-                minHeight: 96,
-                borderWidth: 1,
-                borderColor: theme.border,
-                backgroundColor: theme.surface,
-                borderRadius: radius.md,
-                padding: spacing[4],
-                color: theme.text,
-                textAlignVertical: "top",
-              }}
-            />
-
-            <View style={{ marginTop: spacing[3], gap: spacing[2] }}>
               <Pressable
-                disabled={ingestMutation.isPending || !aiText.trim()}
+                disabled={
+                  ingestMutation.isPending ||
+                  applyMutation.isPending ||
+                  !aiText.trim()
+                }
                 onPress={startTextIngest}
                 style={{
+                  marginTop: spacing[4],
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: spacing[2],
                   backgroundColor: theme.primary,
-                  borderRadius: radius.md,
-                  paddingVertical: spacing[3],
-                  alignItems: "center",
-                  opacity: ingestMutation.isPending || !aiText.trim() ? 0.6 : 1,
+                  borderRadius: radius.lg,
+                  paddingVertical: spacing[4],
+                  opacity:
+                    ingestMutation.isPending ||
+                    applyMutation.isPending ||
+                    !aiText.trim()
+                      ? 0.6
+                      : 1,
                 }}
               >
-                <Text style={{ ...typography.label, color: "#fff" }}>
-                  {t("ai.importText")}
-                </Text>
+                {ingestMutation.isPending || applyMutation.isPending ? (
+                  <ActivityIndicator color={theme.onPrimary} />
+                ) : (
+                  <>
+                    <Text style={{ fontSize: 14, color: theme.onPrimary }}>✨</Text>
+                    <Text style={{ ...typography.label, color: theme.onPrimary }}>
+                      {t("ai.createFromText")}
+                    </Text>
+                  </>
+                )}
               </Pressable>
 
-              <Pressable
-                disabled={ingestMutation.isPending}
-                onPress={() => void startClipboardIngest()}
+              <View
                 style={{
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  backgroundColor: theme.surface,
-                  borderRadius: radius.md,
-                  paddingVertical: spacing[3],
+                  flexDirection: "row",
                   alignItems: "center",
+                  gap: spacing[3],
+                  marginVertical: spacing[5],
                 }}
               >
-                <Text style={{ ...typography.label, color: theme.text }}>
-                  {t("ai.importClipboard")}
+                <View
+                  style={{ flex: 1, height: 1, backgroundColor: theme.border }}
+                />
+                <Text
+                  style={{
+                    ...typography.caption,
+                    color: theme.textMuted,
+                    fontWeight: "700",
+                    letterSpacing: 1,
+                  }}
+                >
+                  {t("ai.orImport")}
                 </Text>
-              </Pressable>
+                <View
+                  style={{ flex: 1, height: 1, backgroundColor: theme.border }}
+                />
+              </View>
 
-              <Pressable
-                disabled={ingestMutation.isPending}
+              <CreateListOptionRow
+                icon="📷"
+                title={t("home.createImage")}
+                subtitle={t("home.createImageHint")}
+                disabled={ingestMutation.isPending || applyMutation.isPending}
                 onPress={() => void startScreenshotIngest()}
-                style={{
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  backgroundColor: theme.surface,
-                  borderRadius: radius.md,
-                  paddingVertical: spacing[3],
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ ...typography.label, color: theme.text }}>
-                  {t("ai.importScreenshot")}
-                </Text>
-              </Pressable>
+              />
+              <CreateListOptionRow
+                icon="🛒"
+                title={t("home.createClipboard")}
+                subtitle={t("home.createClipboardHint")}
+                disabled={ingestMutation.isPending || applyMutation.isPending}
+                onPress={() => void startClipboardIngest()}
+              />
             </View>
 
-            {reviewOperations.length ? (
+            <View style={{ marginTop: spacing[6] }}>
+              <Pressable
+                onPress={() => setManualAddOpen((open) => !open)}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: manualAddOpen }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  minHeight: 44,
+                }}
+              >
+                <Text
+                  style={{
+                    ...typography.headline,
+                    color: manualAddOpen ? theme.text : theme.textMuted,
+                  }}
+                >
+                  {t("list.addLabel")}
+                </Text>
+                <Text
+                  style={{
+                    color: manualAddOpen ? theme.text : theme.textMuted,
+                    fontSize: 22,
+                    lineHeight: 26,
+                    fontWeight: "600",
+                  }}
+                >
+                  {manualAddOpen ? "▾" : "▸"}
+                </Text>
+              </Pressable>
+
+              {manualAddOpen ? (
+                <View>
+                  <TextInput
+                    value={name}
+                    onChangeText={setName}
+                    placeholder={t("list.namePlaceholder")}
+                    placeholderTextColor={theme.textMuted}
+                    style={{
+                      marginTop: spacing[3],
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      backgroundColor: theme.surface,
+                      borderRadius: radius.md,
+                      padding: spacing[4],
+                      color: theme.text,
+                    }}
+                  />
+
+                  <TextInput
+                    value={amount}
+                    onChangeText={setAmount}
+                    placeholder={t("list.amountPlaceholder")}
+                    placeholderTextColor={theme.textMuted}
+                    style={{
+                      marginTop: spacing[2],
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      backgroundColor: theme.surface,
+                      borderRadius: radius.md,
+                      padding: spacing[4],
+                      color: theme.text,
+                    }}
+                  />
+
+                  <TextInput
+                    value={note}
+                    onChangeText={setNote}
+                    placeholder={t("list.notePlaceholder")}
+                    placeholderTextColor={theme.textMuted}
+                    style={{
+                      marginTop: spacing[2],
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      backgroundColor: theme.surface,
+                      borderRadius: radius.md,
+                      padding: spacing[4],
+                      color: theme.text,
+                    }}
+                  />
+
+                  <View style={{ marginTop: spacing[5] }}>
+                    <CategoryChips value={category} onChange={setCategory} />
+                  </View>
+
+                  <Pressable
+                    disabled={createItem.isPending || !name.trim()}
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      createItem.mutate(
+                        {
+                          clientId: createClientId(),
+                          name,
+                          ...(amount.trim() ? { amount: amount.trim() } : {}),
+                          ...(note.trim() ? { note: note.trim() } : {}),
+                          category,
+                        },
+                        {
+                          onSuccess: () => {
+                            setName("");
+                            setAmount("");
+                            setNote("");
+                            setCategory("other");
+                            if (typeof listId === "string") {
+                              clearListProvisional(listId);
+                            }
+                          },
+                        },
+                      );
+                    }}
+                    style={{
+                      marginTop: spacing[4],
+                      backgroundColor: theme.primary,
+                      borderRadius: radius.md,
+                      paddingVertical: spacing[4],
+                      alignItems: "center",
+                      opacity: createItem.isPending || !name.trim() ? 0.6 : 1,
+                    }}
+                  >
+                    <Text style={{ ...typography.label, color: "#fff" }}>
+                      {t("list.addItem")}
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : null}
+            </View>
+
+            {isAiReviewEnabled() && reviewOperations.length ? (
               <View
                 style={{
                   marginTop: spacing[6],
@@ -632,46 +825,21 @@ export default function ShoppingListScreen() {
                           color: theme.text,
                         }}
                       />
-                      <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        style={{ marginTop: spacing[2] }}
-                        contentContainerStyle={{ gap: spacing[2] }}
-                      >
-                        {SHOPPING_CATEGORIES.map((value) => {
-                          const selected = operation.category === value;
-                          return (
-                            <Pressable
-                              key={value}
-                              onPress={() =>
-                                setReviewOperations((current) =>
-                                  current.map((row) =>
-                                    row.proposalRowId === operation.proposalRowId
-                                      ? { ...row, category: value }
-                                      : row,
-                                  ),
-                                )
-                              }
-                              style={{
-                                borderWidth: 1,
-                                borderColor: selected ? theme.primary : theme.border,
-                                borderRadius: radius.md,
-                                paddingVertical: spacing[1],
-                                paddingHorizontal: spacing[2],
-                              }}
-                            >
-                              <Text
-                                style={{
-                                  ...typography.caption,
-                                  color: selected ? theme.primary : theme.text,
-                                }}
-                              >
-                                {t(`categories.${value}`)}
-                              </Text>
-                            </Pressable>
-                          );
-                        })}
-                      </ScrollView>
+                      <View style={{ marginTop: spacing[3] }}>
+                        <CategoryChips
+                          showLabel={false}
+                          value={operation.category}
+                          onChange={(value) =>
+                            setReviewOperations((current) =>
+                              current.map((row) =>
+                                row.proposalRowId === operation.proposalRowId
+                                  ? { ...row, category: value }
+                                  : row,
+                              ),
+                            )
+                          }
+                        />
+                      </View>
                       <Pressable
                         onPress={() =>
                           setReviewOperations((current) =>
@@ -698,7 +866,14 @@ export default function ShoppingListScreen() {
 
                 <Pressable
                   disabled={applyMutation.isPending}
-                  onPress={() => applyMutation.mutate(reviewOperations)}
+                  onPress={() =>
+                    reviewRunId
+                      ? applyMutation.mutate({
+                          runId: reviewRunId,
+                          operations: reviewOperations,
+                        })
+                      : undefined
+                  }
                   style={{
                     marginTop: spacing[4],
                     backgroundColor: theme.primary,
@@ -763,81 +938,158 @@ export default function ShoppingListScreen() {
 
             <Text
               style={{
-                ...typography.label,
-                color: theme.textMuted,
+                ...typography.headline,
+                color: theme.text,
                 marginTop: spacing[8],
               }}
             >
-              {t("list.items")}
+              {t("list.itemsOnList")}
             </Text>
 
-            <View style={{ marginTop: spacing[3], gap: spacing[3] }}>
-              {itemsQuery.data?.length ? (
-                itemsQuery.data.map((item) => (
-                  <Pressable
+            <View style={{ marginTop: spacing[3] }}>
+              {itemCount > 0 ? (
+                activeItems.map((item, index) => (
+                  <ListItemRow
                     key={item.id}
-                    onPress={() =>
-                      updateItem.mutate({
-                        itemId: item.id,
-                        status: item.status === "bought" ? "pending" : "bought",
-                      })
-                    }
-                    style={{
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                      backgroundColor: theme.surface,
-                      borderRadius: radius.lg,
-                      padding: spacing[4],
-                    }}
-                  >
-                    <Text
-                      style={{
-                        ...typography.title,
-                        color: item.status === "bought" ? theme.textMuted : theme.text,
-                        textDecorationLine:
-                          item.status === "bought" ? "line-through" : "none",
-                      }}
-                    >
-                      {item.name}
-                    </Text>
-                    {item.amount ? (
-                      <Text
-                        style={{
-                          ...typography.body,
-                          color: theme.textMuted,
-                          marginTop: spacing[1],
-                        }}
-                      >
-                        {item.amount}
-                      </Text>
-                    ) : null}
-                    {item.note ? (
-                      <Text
-                        style={{
-                          ...typography.caption,
-                          color: theme.textMuted,
-                          marginTop: spacing[1],
-                        }}
-                      >
-                        {item.note}
-                      </Text>
-                    ) : null}
-                  </Pressable>
+                    item={item}
+                    showDivider={index < activeItems.length - 1}
+                    onMenuPress={() => openItemMenu(item)}
+                  />
                 ))
               ) : (
-                <Text
+                <View
                   style={{
-                    ...typography.body,
-                    color: theme.textMuted,
+                    alignItems: "center",
+                    paddingVertical: spacing[8],
+                    paddingHorizontal: spacing[4],
                   }}
                 >
-                  {t("list.empty")}
-                </Text>
+                  <Image
+                    source={brandAssets.listEmpty}
+                    style={{
+                      width: 180,
+                      height: 180,
+                      marginBottom: spacing[4],
+                      resizeMode: "contain",
+                    }}
+                    accessibilityLabel={t("list.emptyTitle")}
+                  />
+                  <Text
+                    style={{
+                      ...typography.headline,
+                      color: theme.text,
+                      textAlign: "center",
+                    }}
+                  >
+                    {t("list.emptyTitle")}
+                  </Text>
+                  <Text
+                    style={{
+                      ...typography.body,
+                      color: theme.textMuted,
+                      textAlign: "center",
+                      marginTop: spacing[2],
+                    }}
+                  >
+                    {t("list.emptySubtitle")}
+                  </Text>
+                </View>
               )}
             </View>
+
+            <Pressable
+              disabled={archiveList.isPending}
+              onPress={confirmDeleteList}
+              style={{
+                marginTop: spacing[8],
+                borderRadius: radius.lg,
+                paddingVertical: spacing[4],
+                paddingHorizontal: spacing[4],
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "row",
+                gap: spacing[2],
+                borderWidth: 1,
+                borderColor: `${theme.danger}55`,
+                backgroundColor: theme.surface,
+                opacity: archiveList.isPending ? 0.6 : 1,
+              }}
+            >
+              {archiveList.isPending ? (
+                <ActivityIndicator color={`${theme.danger}AA`} />
+              ) : (
+                <>
+                  <Text style={{ fontSize: 15, opacity: 0.75 }}>🗑️</Text>
+                  <Text
+                    style={{
+                      ...typography.label,
+                      fontWeight: "500",
+                      color: `${theme.danger}CC`,
+                    }}
+                  >
+                    {t("list.delete")}
+                  </Text>
+                </>
+              )}
+            </Pressable>
           </>
         )}
-      </ScrollView>
+        </ScrollView>
+      </View>
+
+      <RenameListSheet
+        visible={renameOpen}
+        initialName={listQuery.data?.name ?? ""}
+        busy={updateList.isPending}
+        onClose={() => setRenameOpen(false)}
+        onSave={(name) => {
+          updateList.mutate(
+            { name },
+            {
+              onSuccess: () => setRenameOpen(false),
+            },
+          );
+        }}
+      />
+
+      <EditItemSheet
+        visible={Boolean(editingItem)}
+        item={editingItem}
+        onClose={() => setEditingItem(null)}
+        onSave={(input) => {
+          if (!editingItem) return;
+          updateItem.mutate({
+            itemId: editingItem.id,
+            name: input.name,
+            amount: input.amount,
+            note: input.note,
+            category: input.category,
+          });
+        }}
+        onDelete={() => {
+          if (!editingItem) return;
+          const item = editingItem;
+          Alert.alert(t("list.removeItemTitle"), t("list.removeItemBody"), [
+            { text: t("list.deleteCancel"), style: "cancel" },
+            {
+              text: t("list.removeItemConfirm"),
+              style: "destructive",
+              onPress: () => {
+                setEditingItem(null);
+                updateItem.mutate({ itemId: item.id, status: "removed" });
+              },
+            },
+          ]);
+        }}
+      />
+
+      <DeleteListDialog
+        visible={deleteOpen}
+        listName={listQuery.data?.name ?? t("list.title")}
+        busy={archiveList.isPending}
+        onCancel={() => setDeleteOpen(false)}
+        onConfirm={performDeleteList}
+      />
     </>
   );
 }

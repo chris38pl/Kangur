@@ -27,8 +27,10 @@ import {
 import { AiCreditsBalanceSchema } from "@/features/billing/schemas";
 import {
   CreateWorkspaceBodySchema,
+  UpdateWorkspaceBodySchema,
   WorkspaceDTOSchema,
   WorkspaceListResponseSchema,
+  WorkspaceMemberListResponseSchema,
 } from "@/features/workspace/schemas";
 
 extendZodWithOpenApi(z);
@@ -177,6 +179,107 @@ registry.registerPath({
       content: {
         "application/json": {
           schema: WorkspaceDTOSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: "Not found or not a member",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/api/v1/workspaces/{workspaceId}",
+  summary: "Update workspace name and/or icon",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: UpdateWorkspaceBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Updated workspace",
+      content: {
+        "application/json": {
+          schema: WorkspaceDTOSchema,
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: "Not found or not a member",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/workspaces/{workspaceId}/members",
+  summary: "List members of a workspace",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Workspace members",
+      content: {
+        "application/json": {
+          schema: WorkspaceMemberListResponseSchema,
         },
       },
     },

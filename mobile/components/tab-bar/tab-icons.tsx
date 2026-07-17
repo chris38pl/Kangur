@@ -234,3 +234,163 @@ export function TabIconPlus({ color = "#FFFFFF", size = 26 }: IconProps) {
     </Box>
   );
 }
+
+/** Flat hamburger for home top bar. */
+export function IconMenu({ color, size = 24 }: IconProps) {
+  const w = size * 0.78;
+  const thick = Math.max(1.8, size * 0.08);
+  const gap = size * 0.18;
+  return (
+    <Box size={size}>
+      <View style={{ width: w, gap }}>
+        <View
+          style={{
+            width: w,
+            height: thick,
+            borderRadius: thick,
+            backgroundColor: color,
+          }}
+        />
+        <View
+          style={{
+            width: w * 0.72,
+            height: thick,
+            borderRadius: thick,
+            backgroundColor: color,
+          }}
+        />
+        <View
+          style={{
+            width: w,
+            height: thick,
+            borderRadius: thick,
+            backgroundColor: color,
+          }}
+        />
+      </View>
+    </Box>
+  );
+}
+
+/** Flat settings gear for profile header. */
+export function IconSettings({ color, size = 24 }: IconProps) {
+  const outer = size * 0.72;
+  const inner = size * 0.28;
+  const tooth = Math.max(2.2, size * 0.14);
+  return (
+    <Box size={size}>
+      <View
+        style={{
+          width: outer,
+          height: outer,
+          borderRadius: outer / 2,
+          borderWidth: Math.max(1.8, size * 0.08),
+          borderColor: color,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <View
+          style={{
+            width: inner,
+            height: inner,
+            borderRadius: inner / 2,
+            backgroundColor: color,
+          }}
+        />
+      </View>
+      {/* Simple gear teeth via corner ticks */}
+      <View
+        style={{
+          position: "absolute",
+          top: size * 0.06,
+          width: tooth,
+          height: tooth * 0.7,
+          borderRadius: 1,
+          backgroundColor: color,
+        }}
+      />
+      <View
+        style={{
+          position: "absolute",
+          bottom: size * 0.06,
+          width: tooth,
+          height: tooth * 0.7,
+          borderRadius: 1,
+          backgroundColor: color,
+        }}
+      />
+      <View
+        style={{
+          position: "absolute",
+          left: size * 0.06,
+          width: tooth * 0.7,
+          height: tooth,
+          borderRadius: 1,
+          backgroundColor: color,
+        }}
+      />
+      <View
+        style={{
+          position: "absolute",
+          right: size * 0.06,
+          width: tooth * 0.7,
+          height: tooth,
+          borderRadius: 1,
+          backgroundColor: color,
+        }}
+      />
+    </Box>
+  );
+}
+
+/** Flat notification bell for home top bar. */
+export function IconBell({ color, size = 24 }: IconProps) {
+  const bodyW = size * 0.52;
+  const bodyH = size * 0.42;
+  return (
+    <Box size={size}>
+      <View style={{ alignItems: "center" }}>
+        <View
+          style={{
+            width: size * 0.14,
+            height: size * 0.1,
+            borderRadius: size * 0.07,
+            backgroundColor: color,
+            marginBottom: 1,
+          }}
+        />
+        <View
+          style={{
+            width: bodyW,
+            height: bodyH,
+            borderTopLeftRadius: bodyW / 2,
+            borderTopRightRadius: bodyW / 2,
+            borderBottomLeftRadius: 3,
+            borderBottomRightRadius: 3,
+            backgroundColor: color,
+          }}
+        />
+        <View
+          style={{
+            width: bodyW * 1.15,
+            height: Math.max(2, size * 0.08),
+            borderRadius: 2,
+            backgroundColor: color,
+            marginTop: -1,
+          }}
+        />
+        <View
+          style={{
+            width: size * 0.16,
+            height: size * 0.1,
+            borderBottomLeftRadius: size * 0.1,
+            borderBottomRightRadius: size * 0.1,
+            backgroundColor: color,
+            marginTop: 2,
+          }}
+        />
+      </View>
+    </Box>
+  );
+}

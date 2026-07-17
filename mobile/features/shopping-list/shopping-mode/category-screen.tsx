@@ -59,7 +59,7 @@ export function ShoppingCategoryScreen({ listId, category: categoryParam }: Prop
   const scrollRef = useRef<ScrollView>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { allowLeave } = useShoppingModeExitGuard(true);
+  const { allowLeave, exitDialog } = useShoppingModeExitGuard(true);
 
   const category: ShoppingCategory | null = isShoppingCategory(categoryParam)
     ? categoryParam
@@ -125,6 +125,7 @@ export function ShoppingCategoryScreen({ listId, category: categoryParam }: Prop
     return (
       <View style={{ flex: 1, padding: spacing[6], backgroundColor: theme.section }}>
         <Text style={{ color: theme.danger }}>{t("shoppingMode.invalidCategory")}</Text>
+        {exitDialog}
       </View>
     );
   }
@@ -133,6 +134,7 @@ export function ShoppingCategoryScreen({ listId, category: categoryParam }: Prop
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: theme.section }}>
         <ActivityIndicator color={theme.primary} />
+        {exitDialog}
       </View>
     );
   }
@@ -142,7 +144,7 @@ export function ShoppingCategoryScreen({ listId, category: categoryParam }: Prop
       <OfflineStatusBanner listId={listId} />
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={{ padding: spacing[6], paddingBottom: 120 }}
+        contentContainerStyle={{ padding: spacing[6], paddingBottom: 120 + insets.bottom }}
       >
         <Text style={{ fontSize: 36 }}>{getShoppingCategoryIcon(category)}</Text>
         <Text style={{ ...typography.title, color: theme.text, marginTop: spacing[2] }}>
@@ -343,6 +345,8 @@ export function ShoppingCategoryScreen({ listId, category: categoryParam }: Prop
           </Pressable>
         </View>
       ) : null}
+
+      {exitDialog}
     </View>
   );
 }

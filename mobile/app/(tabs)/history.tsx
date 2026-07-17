@@ -1,7 +1,8 @@
-import { Text, View } from "react-native";
+import { Text } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { KangurMascot } from "@/components/KangurMascot";
+import { Screen } from "@/components/Screen";
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, spacing, typography } from "@/design-system/tokens";
 
@@ -11,9 +12,9 @@ export default function HistoryScreen() {
   const theme = colors[scheme];
 
   return (
-    <View
+    <Screen
+      edges={["top"]}
       style={{
-        flex: 1,
         backgroundColor: theme.section,
         padding: spacing[6],
         alignItems: "center",
@@ -41,6 +42,6 @@ export default function HistoryScreen() {
       >
         {t("history.placeholder")}
       </Text>
-    </View>
+    </Screen>
   );
 }

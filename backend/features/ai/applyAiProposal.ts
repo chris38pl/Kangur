@@ -8,6 +8,7 @@ import { appendShoppingEvent } from "@/lib/events/appendShoppingEvent";
 import { prisma } from "@/lib/prisma";
 
 import { toShoppingItemDto } from "../shopping-item/toShoppingItemDto";
+import { applyUntitledListTitleFromProposal } from "./applyUntitledListTitle";
 import { ApplyAiProposalBodySchema } from "./schemas";
 
 type ApplyBody = z.infer<typeof ApplyAiProposalBodySchema>;
@@ -73,7 +74,9 @@ export async function applyAiProposal(input: {
                   normalizedName: operation.name.trim().toLowerCase(),
                 }
               : {}),
-            ...(operation.amount !== undefined ? { amount: operation.amount } : {}),
+            ...(operation.amount !== undefined
+              ? { amount: operation.amount }
+              : {}),
             ...(operation.note !== undefined ? { note: operation.note } : {}),
             ...(operation.category !== undefined
               ? { category: operation.category }
@@ -92,8 +95,9 @@ export async function applyAiProposal(input: {
         type: "ai_applied",
         payload: {
           runId: run.id,
-          appliedOperations: input.body.operations.filter((op) => op.op !== "ignore")
-            .length,
+          appliedOperations: input.body.operations.filter(
+            (op) => op.op !== "ignore",
+          ).length,
         },
       });
 
@@ -125,6 +129,12 @@ export async function applyAiProposal(input: {
         applied,
         items: items.map(toShoppingItemDto),
       };
+    });
+
+    // Fallback if ingest rename did not run (e.g. older clients / race).
+    await applyUntitledListTitleFromProposal({
+      listId: list.id,
+      proposal: run.proposal,
     });
 
     return result;

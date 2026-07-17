@@ -1,5 +1,4 @@
 export const SHOPPING_CATEGORIES = [
-  "produce",
   "fruit",
   "vegetables",
   "dairy",
@@ -39,7 +38,6 @@ export function getShoppingCategoryOrder(): readonly ShoppingCategory[] {
 
 /** Category icon allowlist (UI may only use these glyphs). */
 export const SHOPPING_CATEGORY_ICONS: Record<ShoppingCategory, string> = {
-  produce: "🥬",
   fruit: "🍎",
   vegetables: "🥦",
   dairy: "🥛",

@@ -11,6 +11,7 @@ import {
 import * as SplashScreen from "expo-splash-screen";
 import { type ReactNode, useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { colors } from "@/design-system/tokens";
 import { useDataSyncEngineBootstrap } from "@/features/data-sync-engine/useBootstrap";
@@ -80,22 +81,29 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-        <ClerkLoaded>
-          <AppQueryProvider>
-            <ThemeProvider value={lightTheme}>
-              <AuthGate>
-                <Stack>
-                  <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                  <Stack.Screen name="list/[listId]" />
-                </Stack>
-              </AuthGate>
-            </ThemeProvider>
-          </AppQueryProvider>
-        </ClerkLoaded>
-      </ClerkProvider>
+      <SafeAreaProvider>
+        <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+          <ClerkLoaded>
+            <AppQueryProvider>
+              <ThemeProvider value={lightTheme}>
+                <AuthGate>
+                  <Stack>
+                    <Stack.Screen name="index" options={{ headerShown: false }} />
+                    <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="account" options={{ headerShown: false }} />
+                    <Stack.Screen
+                      name="change-password"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen name="list/[listId]" />
+                  </Stack>
+                </AuthGate>
+              </ThemeProvider>
+            </AppQueryProvider>
+          </ClerkLoaded>
+        </ClerkProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

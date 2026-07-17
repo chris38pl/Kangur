@@ -15,6 +15,8 @@ export const ShoppingListDTOSchema = z
     name: z.string(),
     emoji: z.string(),
     status: ShoppingListStatusSchema,
+    isUntitled: z.boolean(),
+    itemCount: z.number().int().nonnegative(),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
   })

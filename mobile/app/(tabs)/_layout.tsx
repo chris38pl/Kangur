@@ -1,10 +1,10 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Redirect, Tabs } from "expo-router";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { Screen } from "@/components/Screen";
 import { useColorScheme } from "@/components/useColorScheme";
-import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 import { KangurTabBar } from "@/components/tab-bar/kangur-tab-bar";
 import { colors, spacing, typography } from "@/design-system/tokens";
 import { useMe } from "@/features/auth/useMe";
@@ -19,7 +19,6 @@ function TabsWithBar() {
   const colorScheme = useColorScheme() ?? "light";
   const theme = colors[colorScheme];
   const { t } = useTranslation();
-  const headerShown = useClientOnlyValue(false, true);
   const { openCreateList } = useCreateList();
 
   return (
@@ -30,28 +29,17 @@ function TabsWithBar() {
       screenOptions={{
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.textMuted,
-        headerShown,
-        headerStyle: {
-          backgroundColor: theme.bg,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.border,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        headerTitleStyle: {
-          ...typography.headline,
-          color: theme.text,
-        },
+        headerShown: false,
       }}
     >
-      {/* Order: Home | Lists | [FAB] | Archive | Profile */}
+      {/* Order: Home | Spaces | [FAB] | Archive | Profile */}
       <Tabs.Screen
         name="index"
         options={{ title: t("tabs.home") }}
       />
       <Tabs.Screen
         name="workspace"
-        options={{ title: t("tabs.lists") }}
+        options={{ title: t("tabs.workspace") }}
       />
       <Tabs.Screen
         name="history"
@@ -74,16 +62,9 @@ export default function TabLayout() {
 
   if (!isLoaded) {
     return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: theme.bg,
-        }}
-      >
+      <Screen style={{ backgroundColor: theme.bg, alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator color={theme.primary} />
-      </View>
+      </Screen>
     );
   }
 
@@ -93,13 +74,12 @@ export default function TabLayout() {
 
   if (me.isPending) {
     return (
-      <View
+      <Screen
         style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
           backgroundColor: theme.bg,
           padding: spacing[6],
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         <ActivityIndicator color={theme.primary} />
@@ -112,7 +92,7 @@ export default function TabLayout() {
         >
           {t("auth.loadingProfile")}
         </Text>
-      </View>
+      </Screen>
     );
   }
 
@@ -120,12 +100,11 @@ export default function TabLayout() {
     const code =
       me.error instanceof ApiClientError ? me.error.code : "UNKNOWN";
     return (
-      <View
+      <Screen
         style={{
-          flex: 1,
-          justifyContent: "center",
           backgroundColor: theme.bg,
           padding: spacing[6],
+          justifyContent: "center",
         }}
       >
         <Text style={{ ...typography.title, color: theme.text }}>
@@ -167,7 +146,7 @@ export default function TabLayout() {
             {t("auth.signOut")}
           </Text>
         </Pressable>
-      </View>
+      </Screen>
     );
   }
 

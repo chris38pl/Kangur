@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { PROMPT_VERSION } from "@/lib/openai";
 import { prisma } from "@/lib/prisma";
 
+import { applyUntitledListTitleFromProposal } from "./applyUntitledListTitle";
 import { buildProposalFromText } from "./buildProposal";
 import { resolveListOutputLanguage } from "./outputLanguage";
 
@@ -55,6 +56,11 @@ export async function ingestText(input: {
       rawResponse: proposalResult.rawResponse as Prisma.InputJsonValue,
       proposal: proposalResult.proposal as Prisma.InputJsonValue,
     },
+  });
+
+  await applyUntitledListTitleFromProposal({
+    listId: input.listId,
+    proposal: proposalResult.proposal,
   });
 
   return {

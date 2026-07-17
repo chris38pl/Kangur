@@ -44,7 +44,10 @@ export class SyncWorker {
         try {
           await this.transport.execute(op);
           await hooks.onOpState?.(op.id, "PENDING"); // removed by caller after success
-        } catch {
+        } catch (error) {
+          if (__DEV__) {
+            console.warn("[DataSync]", op.action, op.id, error);
+          }
           failed.push(op.id);
           await hooks.onOpState?.(op.id, "FAILED");
         }

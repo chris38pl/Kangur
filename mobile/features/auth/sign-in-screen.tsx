@@ -2,7 +2,7 @@ import { useSignIn, useOAuth } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -33,6 +33,7 @@ import {
   LockFieldIcon,
   MailFieldIcon,
 } from "@/features/auth/auth-icons";
+import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -43,6 +44,17 @@ export function SignInScreen() {
   const theme = colors[scheme];
   const { signIn, setActive, isLoaded } = useSignIn();
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+  const {
+    scrollRef,
+    onScroll,
+    bindFieldFocus,
+    setFormBlockRef,
+    contentPaddingBottom,
+    keyboardHeight,
+  } = useKeyboardScroll();
+  const emailFieldRef = useRef<View>(null);
+  const passwordFieldRef = useRef<View>(null);
+  const keyboardOpen = keyboardHeight > 0;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,6 +63,9 @@ export function SignInScreen() {
   const [busy, setBusy] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+
+  const emailFocus = bindFieldFocus(emailFieldRef);
+  const passwordFocus = bindFieldFocus(passwordFieldRef);
 
   useEffect(() => {
     if (Platform.OS === "web") return;
@@ -132,16 +147,22 @@ export function SignInScreen() {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
       >
         <ScrollView
+          ref={scrollRef}
           style={{ flex: 1 }}
           contentContainerStyle={{
             flexGrow: 1,
             paddingHorizontal: spacing[6],
             paddingTop: spacing[4],
-            paddingBottom: spacing[6],
+            paddingBottom: contentPaddingBottom,
           }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          automaticallyAdjustKeyboardInsets
+          onScroll={onScroll}
+          scrollEventThrottle={16}
         >
           <Pressable
             onPress={() => {
@@ -172,14 +193,14 @@ export function SignInScreen() {
             <BackIcon size={18} />
           </Pressable>
 
-        <AuthBrandHero />
+        {!keyboardOpen ? <AuthBrandHero /> : null}
 
         <Text
           style={{
             ...typography.title,
             color: theme.text,
             textAlign: "center",
-            marginTop: spacing[8],
+            marginTop: keyboardOpen ? spacing[4] : spacing[8],
           }}
         >
           {t("auth.signInTitle")}
@@ -192,7 +213,7 @@ export function SignInScreen() {
             justifyContent: "center",
             gap: spacing[2],
             marginTop: spacing[2],
-            marginBottom: spacing[8],
+            marginBottom: keyboardOpen ? spacing[4] : spacing[8],
             paddingHorizontal: spacing[2],
           }}
         >
@@ -205,10 +226,17 @@ export function SignInScreen() {
           >
             {t("auth.signInSubtitle")}
           </Text>
-          <KangurMascot variant="icon" width={28} height={28} />
+          {!keyboardOpen ? (
+            <KangurMascot variant="icon" width={28} height={28} />
+          ) : null}
         </View>
 
-        <View style={{ ...fieldShell(emailFocused), marginBottom: spacing[4] }}>
+        <View ref={setFormBlockRef} collapsable={false}>
+        <View
+          ref={emailFieldRef}
+          collapsable={false}
+          style={{ ...fieldShell(emailFocused), marginBottom: spacing[4] }}
+        >
           <MailFieldIcon size={20} />
           <TextInput
             autoCapitalize="none"
@@ -219,8 +247,14 @@ export function SignInScreen() {
             placeholderTextColor={theme.textMuted}
             value={email}
             onChangeText={setEmail}
-            onFocus={() => setEmailFocused(true)}
-            onBlur={() => setEmailFocused(false)}
+            onFocus={() => {
+              setEmailFocused(true);
+              emailFocus.onFocus();
+            }}
+            onBlur={() => {
+              setEmailFocused(false);
+              emailFocus.onBlur();
+            }}
             style={{
               flex: 1,
               color: theme.text,
@@ -230,7 +264,11 @@ export function SignInScreen() {
           />
         </View>
 
-        <View style={fieldShell(passwordFocused)}>
+        <View
+          ref={passwordFieldRef}
+          collapsable={false}
+          style={fieldShell(passwordFocused)}
+        >
           <LockFieldIcon size={20} />
           <TextInput
             secureTextEntry={!showPassword}
@@ -239,8 +277,14 @@ export function SignInScreen() {
             placeholderTextColor={theme.textMuted}
             value={password}
             onChangeText={setPassword}
-            onFocus={() => setPasswordFocused(true)}
-            onBlur={() => setPasswordFocused(false)}
+            onFocus={() => {
+              setPasswordFocused(true);
+              passwordFocus.onFocus();
+            }}
+            onBlur={() => {
+              setPasswordFocused(false);
+              passwordFocus.onBlur();
+            }}
             style={{
               flex: 1,
               color: theme.text,
@@ -299,6 +343,7 @@ export function SignInScreen() {
             </Text>
           )}
         </Pressable>
+        </View>
 
         <View
           style={{
@@ -348,7 +393,7 @@ export function SignInScreen() {
 
         <View
           style={{
-            paddingTop: spacing[10],
+            marginTop: spacing[5],
             alignItems: "center",
           }}
         >

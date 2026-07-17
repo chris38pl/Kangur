@@ -50,3 +50,16 @@ export async function createShoppingList(
   );
   return ShoppingListSchema.parse(data);
 }
+
+export async function updateShoppingList(
+  token: string,
+  listId: string,
+  body: { name?: string; emoji?: string },
+): Promise<ShoppingList> {
+  const data = await apiFetch<unknown>(`/api/v1/lists/${listId}`, {
+    token,
+    method: "PATCH",
+    body,
+  });
+  return ShoppingListSchema.parse(data);
+}

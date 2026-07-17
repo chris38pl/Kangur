@@ -1,14 +1,17 @@
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Pressable,
+  ScrollView,
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
-import { shoppingDensity } from "@/design-system/shopping-density";
+import { brandAssets } from "@/design-system/brand-assets";
 import {
   colors,
   radius,
@@ -16,12 +19,14 @@ import {
   spacing,
   typography,
 } from "@/design-system/tokens";
+import { CreateListOptionRow } from "@/features/shopping-list/create-list-option-row";
 
 export type CreateListPath =
   | "empty"
   | "screenshot"
   | "clipboard"
   | "photo"
+  | "describe"
   | "voice";
 
 type Props = {
@@ -31,171 +36,192 @@ type Props = {
   onSelect: (path: CreateListPath) => void;
 };
 
-type RowProps = {
-  icon: string;
-  title: string;
-  subtitle?: string;
-  primary?: boolean;
-  disabled?: boolean;
-  onPress: () => void;
-};
-
-function SheetRow({
-  icon,
-  title,
-  subtitle,
-  primary,
-  disabled,
-  onPress,
-}: RowProps) {
-  const scheme = useColorScheme() ?? "light";
-  const theme = colors[scheme];
-
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: spacing[3],
-        paddingVertical: spacing[4],
-        paddingHorizontal: spacing[4],
-        borderRadius: radius.lg,
-        backgroundColor: primary ? theme.accent : theme.surface,
-        borderWidth: 1,
-        borderColor: primary ? theme.primaryLight : theme.border,
-        opacity: disabled ? 0.4 : 1,
-        minHeight: shoppingDensity.primaryCtaMinHeight,
-        marginBottom: spacing[2],
-      }}
-    >
-      <Text style={{ fontSize: 22 }}>{icon}</Text>
-      <View style={{ flex: 1 }}>
-        <Text style={{ ...typography.headline, color: theme.text }}>{title}</Text>
-        {subtitle ? (
-          <Text style={{ ...typography.caption, color: theme.textMuted }}>
-            {subtitle}
-          </Text>
-        ) : null}
-      </View>
-    </Pressable>
-  );
-}
-
 export function CreateListSheet({ visible, busy, onClose, onSelect }: Props) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+  const insets = useSafeAreaInsets();
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(31,43,69,0.28)",
-          justifyContent: "flex-end",
-        }}
-        onPress={onClose}
-      >
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
+      <View style={{ flex: 1, justifyContent: "flex-end" }}>
         <Pressable
-          onPress={(e) => e.stopPropagation()}
+          accessibilityRole="button"
+          accessibilityLabel={t("workspace.cancel")}
+          onPress={onClose}
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            backgroundColor: "rgba(31, 43, 69, 0.32)",
+          }}
+        />
+
+        <View
           style={{
             backgroundColor: theme.bg,
             borderTopLeftRadius: radius.sheet,
             borderTopRightRadius: radius.sheet,
-            padding: spacing[6],
-            paddingBottom: spacing[12],
+            maxHeight: "92%",
+            paddingBottom: Math.max(insets.bottom, spacing[4]) + spacing[3],
             ...shadows.soft,
           }}
         >
-          <View
-            style={{
-              alignSelf: "center",
-              width: 40,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: theme.border,
-              marginBottom: spacing[5],
-            }}
-          />
-          <Text style={{ ...typography.title, color: theme.text }}>
-            {t("home.createSheetTitle")}
-          </Text>
-          <Text
-            style={{
-              ...typography.body,
-              color: theme.textBody,
-              marginTop: spacing[2],
-              marginBottom: spacing[6],
+          <ScrollView
+            bounces={false}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              paddingHorizontal: spacing[6],
+              paddingTop: spacing[5],
+              paddingBottom: spacing[2],
             }}
           >
-            {t("home.createSheetSubtitle")}
-          </Text>
-
-          {busy ? (
-            <ActivityIndicator
-              color={theme.primary}
-              style={{ marginVertical: spacing[6] }}
-            />
-          ) : (
-            <>
+            <Pressable
+              onPress={onClose}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={t("workspace.cancel")}
+              style={{
+                alignSelf: "flex-end",
+                width: 36,
+                height: 36,
+                borderRadius: radius.full,
+                backgroundColor: theme.section,
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 2,
+              }}
+            >
               <Text
                 style={{
-                  ...typography.label,
-                  color: theme.primary,
-                  marginBottom: spacing[2],
+                  fontSize: 18,
+                  lineHeight: 20,
+                  color: theme.textMuted,
+                  fontWeight: "600",
                 }}
               >
-                {t("home.createAiSection")}
+                ×
               </Text>
-              <SheetRow
-                icon="📷"
-                title={t("home.createScreenshot")}
-                subtitle={t("home.createScreenshotHint")}
-                primary
-                onPress={() => onSelect("screenshot")}
-              />
-              <SheetRow
-                icon="📋"
-                title={t("home.createClipboard")}
-                subtitle={t("home.createClipboardHint")}
-                primary
-                onPress={() => onSelect("clipboard")}
-              />
-              <SheetRow
-                icon="🖼️"
-                title={t("home.createPhoto")}
-                subtitle={t("home.createPhotoHint")}
-                primary
-                onPress={() => onSelect("photo")}
-              />
+            </Pressable>
 
-              <View
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: spacing[3],
+                marginTop: -spacing[2],
+                marginBottom: spacing[5],
+                paddingRight: spacing[2],
+              }}
+            >
+              <View style={{ flex: 1, paddingTop: spacing[2] }}>
+                <Text style={{ ...typography.title, color: theme.text }}>
+                  {t("home.createSheetTitle")}
+                </Text>
+                <Text
+                  style={{
+                    ...typography.body,
+                    color: theme.textBody,
+                    marginTop: spacing[2],
+                  }}
+                >
+                  {t("home.createSheetSubtitle")}
+                </Text>
+              </View>
+
+              <Image
+                source={brandAssets.createListMascot}
                 style={{
-                  height: 1,
-                  backgroundColor: theme.border,
-                  marginVertical: spacing[4],
+                  width: 140,
+                  height: 168,
+                  marginTop: spacing[2],
+                  resizeMode: "contain",
                 }}
+                accessibilityLabel=""
               />
+            </View>
 
-              <SheetRow
-                icon="✏️"
-                title={t("home.createEmpty")}
-                subtitle={t("home.createEmptyHint")}
-                onPress={() => onSelect("empty")}
+            {busy ? (
+              <ActivityIndicator
+                color={theme.primary}
+                style={{ marginVertical: spacing[10] }}
               />
-              <SheetRow
-                icon="🎤"
-                title={t("home.createVoice")}
-                subtitle={t("home.comingSoon")}
-                disabled
-                onPress={() => {}}
-              />
-            </>
-          )}
-        </Pressable>
-      </Pressable>
+            ) : (
+              <>
+                <CreateListOptionRow
+                  icon="📷"
+                  title={t("home.createImage")}
+                  subtitle={t("home.createImageHint")}
+                  onPress={() => onSelect("photo")}
+                />
+                <CreateListOptionRow
+                  icon="🛒"
+                  title={t("home.createClipboard")}
+                  subtitle={t("home.createClipboardHint")}
+                  onPress={() => onSelect("clipboard")}
+                />
+                <CreateListOptionRow
+                  icon="✏️"
+                  title={t("home.createDescribe")}
+                  subtitle={t("home.createDescribeHint")}
+                  onPress={() => onSelect("describe")}
+                />
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: spacing[3],
+                    marginVertical: spacing[4],
+                  }}
+                >
+                  <View
+                    style={{ flex: 1, height: 1, backgroundColor: theme.border }}
+                  />
+                  <Text
+                    style={{
+                      ...typography.caption,
+                      color: theme.textMuted,
+                      fontWeight: "700",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    {t("home.createOr")}
+                  </Text>
+                  <View
+                    style={{ flex: 1, height: 1, backgroundColor: theme.border }}
+                  />
+                </View>
+
+                <CreateListOptionRow
+                  icon="☰"
+                  title={t("home.createEmpty")}
+                  subtitle={t("home.createEmptyHint")}
+                  onPress={() => onSelect("empty")}
+                />
+                <CreateListOptionRow
+                  icon="🎤"
+                  title={t("home.createVoice")}
+                  subtitle={t("home.createVoiceHint")}
+                  disabled
+                  soon
+                  soonLabel={t("home.comingSoonBadge")}
+                  onPress={() => {}}
+                />
+              </>
+            )}
+          </ScrollView>
+        </View>
+      </View>
     </Modal>
   );
 }

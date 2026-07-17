@@ -6,6 +6,7 @@ import {
   createShoppingList,
   getShoppingList,
   listShoppingLists,
+  updateShoppingList,
 } from "./api";
 import type { ShoppingList } from "./schemas";
 
@@ -86,6 +87,27 @@ export function useArchiveShoppingList(workspaceId: string | null) {
       queryClient.removeQueries({ queryKey: ["shopping-list", listId] });
       queryClient.removeQueries({ queryKey: ["shopping-items", listId] });
       await queryClient.invalidateQueries({ queryKey: ["shopping-lists"] });
+    },
+  });
+}
+
+export function useUpdateShoppingList(listId: string | null) {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { name?: string; emoji?: string }) => {
+      const token = await getToken();
+      if (!token || !listId) {
+        throw new Error("Missing auth token or list id");
+      }
+      return updateShoppingList(token, listId, input);
+    },
+    onSuccess: async (updated) => {
+      queryClient.setQueryData(["shopping-list", updated.id], updated);
+      await queryClient.invalidateQueries({
+        queryKey: ["shopping-lists", updated.workspaceId],
+      });
     },
   });
 }

@@ -22,4 +22,4 @@ export const OPENAI_TEXT_MODEL =
 export const OPENAI_VISION_MODEL =
   process.env.OPENAI_MODEL_VISION?.trim() || "gpt-4.1-mini";
 
-export const PROMPT_VERSION = "v3";
+export const PROMPT_VERSION = "v4";

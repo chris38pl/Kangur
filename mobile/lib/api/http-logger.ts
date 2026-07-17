@@ -1,6 +1,7 @@
 /**
- * DEV-only central HTTP logger for `apiFetch`.
- * Independent of React Native DevTools Network tab.
+ * Central HTTP logger for `apiFetch`.
+ * Visible in the Metro terminal (not on the phone UI).
+ * On when __DEV__ or EXPO_PUBLIC_APP_ENV=development.
  */
 
 type HttpLogRequest = {
@@ -24,7 +25,10 @@ type HttpLogFailure = {
   error: string;
 };
 
-const ENABLED = typeof __DEV__ !== "undefined" && __DEV__;
+function loggingEnabled(): boolean {
+  if (typeof __DEV__ !== "undefined" && __DEV__) return true;
+  return process.env.EXPO_PUBLIC_APP_ENV === "development";
+}
 
 function truncate(value: string, max = 2000): string {
   if (value.length <= max) return value;
@@ -44,7 +48,7 @@ function formatBody(body: unknown): unknown {
 }
 
 export function httpLogRequest(entry: HttpLogRequest): void {
-  if (!ENABLED) return;
+  if (!loggingEnabled()) return;
   console.log(
     `[HTTP] → ${entry.method} ${entry.url}`,
     entry.body !== undefined ? { body: formatBody(entry.body) } : "",
@@ -52,7 +56,7 @@ export function httpLogRequest(entry: HttpLogRequest): void {
 }
 
 export function httpLogResponse(entry: HttpLogResponse): void {
-  if (!ENABLED) return;
+  if (!loggingEnabled()) return;
   const tag = entry.status >= 400 ? "✗" : "←";
   console.log(
     `[HTTP] ${tag} ${entry.method} ${entry.url} ${entry.status} (${entry.durationMs} ms)`,
@@ -61,8 +65,8 @@ export function httpLogResponse(entry: HttpLogResponse): void {
 }
 
 export function httpLogNetworkError(entry: HttpLogFailure): void {
-  if (!ENABLED) return;
-  console.log(
+  if (!loggingEnabled()) return;
+  console.warn(
     `[HTTP] ✗ ${entry.method} ${entry.url} NETWORK (${entry.durationMs} ms)`,
     { error: entry.error },
   );

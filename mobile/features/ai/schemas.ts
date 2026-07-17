@@ -1,4 +1,5 @@
 import { SHOPPING_CATEGORIES } from "@shared/shopping-categories";
+import { SHOPPING_LIST_THEMES } from "@shared/shopping-themes";
 import { z } from "zod";
 
 export const ProposalOperationSchema = z.object({
@@ -16,12 +17,18 @@ export const ProposalOperationSchema = z.object({
 
 export type ProposalOperation = z.infer<typeof ProposalOperationSchema>;
 
+export const ShoppingContextSchema = z.object({
+  title: z.string().min(1).max(32),
+  theme: z.enum(SHOPPING_LIST_THEMES),
+});
+
 export const AiIngestResponseSchema = z.object({
   runId: z.string(),
   model: z.string(),
   promptVersion: z.string(),
   durationMs: z.number().nullable(),
   proposal: z.object({
+    shoppingContext: ShoppingContextSchema.optional(),
     operations: z.array(ProposalOperationSchema),
   }),
   fastPath: z.boolean(),

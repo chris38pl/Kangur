@@ -26,7 +26,7 @@ export async function updateShoppingList(input: {
   const updated = await prisma.shoppingList.update({
     where: { id: list.id },
     data: {
-      ...(name !== undefined ? { name } : {}),
+      ...(name !== undefined ? { name, isUntitled: false } : {}),
       ...(input.emoji !== undefined ? { emoji: input.emoji } : {}),
     },
   });

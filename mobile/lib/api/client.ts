@@ -59,8 +59,25 @@ export async function apiFetch<T>(
   path: string,
   options: ApiFetchOptions = {},
 ): Promise<T> {
-  const base = getBaseUrl();
   const method = options.method ?? "GET";
+  const started = Date.now();
+
+  let base: string;
+  try {
+    base = getBaseUrl();
+  } catch (err) {
+    httpLogNetworkError({
+      method,
+      url: path,
+      durationMs: 0,
+      error:
+        err instanceof Error
+          ? err.message
+          : "EXPO_PUBLIC_API_URL is not set",
+    });
+    throw err;
+  }
+
   const url = `${base}${path}`;
   const headers: Record<string, string> = {
     Accept: "application/json",
@@ -76,10 +93,9 @@ export async function apiFetch<T>(
     headers["Content-Type"] = "application/json";
   }
 
-  const started = Date.now();
   httpLogRequest({
     method,
-    url: path,
+    url,
     body: options.body,
   });
 
@@ -93,7 +109,7 @@ export async function apiFetch<T>(
   } catch (err) {
     httpLogNetworkError({
       method,
-      url: path,
+      url,
       durationMs: Date.now() - started,
       error: err instanceof Error ? err.message : "Network request failed",
     });
@@ -113,7 +129,7 @@ export async function apiFetch<T>(
 
   httpLogResponse({
     method,
-    url: path,
+    url,
     status: res.status,
     durationMs,
     body: parsed,

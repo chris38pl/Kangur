@@ -6,6 +6,8 @@ export const ShoppingListSchema = z.object({
   name: z.string(),
   emoji: z.string(),
   status: z.enum(["active", "archived"]),
+  isUntitled: z.boolean().default(true),
+  itemCount: z.number().int().nonnegative().default(0),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

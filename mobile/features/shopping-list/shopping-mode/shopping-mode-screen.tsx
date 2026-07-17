@@ -18,11 +18,11 @@ import { useColorScheme } from "@/components/useColorScheme";
 import { shoppingDensity } from "@/design-system/shopping-density";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { OfflineStatusBanner } from "@/features/offline/OfflineStatusBanner";
+import type { ShoppingItem } from "@/features/shopping-item/schemas";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
-import { ResumeShoppingDialog } from "@/features/shopping-list/session/resume-dialog";
 import { useShoppingSession } from "@/features/shopping-list/session/useShoppingSession";
 import { useShoppingList } from "@/features/shopping-list/useShoppingLists";
-import type { ShoppingItem } from "@/features/shopping-item/schemas";
+import { createClientId } from "@/lib/createClientId";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -52,7 +52,7 @@ export function ShoppingModeScreen({ listId }: Props) {
   const lastScrollY = useRef(0);
   const startedRef = useRef(false);
 
-  const { allowLeave } = useShoppingModeExitGuard(true);
+  const { allowLeave, exitDialog } = useShoppingModeExitGuard(true);
 
   useEffect(() => {
     void activateKeepAwakeAsync("shopping-mode");
@@ -65,18 +65,17 @@ export function ShoppingModeScreen({ listId }: Props) {
     if (
       session.hydrated &&
       listQuery.data?.workspaceId &&
-      !session.needsResume &&
       !startedRef.current
     ) {
       startedRef.current = true;
-      void session.start(listQuery.data.workspaceId);
+      void session.start(listQuery.data.workspaceId).then(() => {
+        void queryClient.invalidateQueries({
+          queryKey: ["shopping-sessions", "resumable"],
+        });
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- start once after hydrate
-  }, [
-    session.hydrated,
-    listQuery.data?.workspaceId,
-    session.needsResume,
-  ]);
+  }, [session.hydrated, listQuery.data?.workspaceId]);
 
   const categories = useMemo(
     () => getActiveCategoryProgress(itemsQuery.data ?? []),
@@ -203,7 +202,7 @@ export function ShoppingModeScreen({ listId }: Props) {
         visible={addOpen}
         onClose={() => setAddOpen(false)}
         onSubmit={(input) => {
-          const clientId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          const clientId = createClientId();
           const optimistic: ShoppingItem = {
             id: clientId,
             clientId,
@@ -228,24 +227,7 @@ export function ShoppingModeScreen({ listId }: Props) {
         }}
       />
 
-      <ResumeShoppingDialog
-        visible={session.needsResume}
-        onContinue={() => {
-          void session
-            .continueRecovery()
-            .then(() => session.clearResumePrompt());
-        }}
-        onDiscard={() => {
-          void session.discard().then(() => {
-            session.clearResumePrompt();
-            startedRef.current = false;
-            if (listQuery.data?.workspaceId) {
-              startedRef.current = true;
-              void session.start(listQuery.data.workspaceId);
-            }
-          });
-        }}
-      />
+      {exitDialog}
     </View>
   );
 }

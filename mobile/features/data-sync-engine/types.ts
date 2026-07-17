@@ -28,6 +28,7 @@ export type DataSyncEvent =
 export type DataSyncEventHandler = (payload?: {
   listId?: string;
   pendingCount?: number;
+  syncedCount?: number;
   error?: string;
 }) => void;
 

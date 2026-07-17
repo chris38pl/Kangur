@@ -197,6 +197,66 @@
           "icon"
         ]
       },
+      "UpdateWorkspaceBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "icon": {
+            "type": "string"
+          }
+        }
+      },
+      "WorkspaceMemberListResponse": {
+        "type": "object",
+        "properties": {
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceMemberDTO"
+            }
+          }
+        },
+        "required": [
+          "members"
+        ]
+      },
+      "WorkspaceMemberDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/WorkspaceRole"
+          },
+          "joinedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "email",
+          "displayName",
+          "role",
+          "joinedAt"
+        ]
+      },
       "ShoppingListListResponse": {
         "type": "object",
         "properties": {
@@ -229,6 +289,13 @@
           "status": {
             "$ref": "#/components/schemas/ShoppingListStatus"
           },
+          "isUntitled": {
+            "type": "boolean"
+          },
+          "itemCount": {
+            "type": "integer",
+            "minimum": 0
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -244,6 +311,8 @@
           "name",
           "emoji",
           "status",
+          "isUntitled",
+          "itemCount",
           "createdAt",
           "updatedAt"
         ]
@@ -378,7 +447,6 @@
       "ShoppingCategory": {
         "type": "string",
         "enum": [
-          "produce",
           "fruit",
           "vegetables",
           "dairy",
@@ -605,6 +673,9 @@
       "AiProposal": {
         "type": "object",
         "properties": {
+          "shoppingContext": {
+            "$ref": "#/components/schemas/ShoppingContext"
+          },
           "operations": {
             "type": "array",
             "items": {
@@ -613,7 +684,44 @@
           }
         },
         "required": [
+          "shoppingContext",
           "operations"
+        ]
+      },
+      "ShoppingContext": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          },
+          "theme": {
+            "$ref": "#/components/schemas/ShoppingListTheme"
+          }
+        },
+        "required": [
+          "title",
+          "theme"
+        ]
+      },
+      "ShoppingListTheme": {
+        "type": "string",
+        "enum": [
+          "generic",
+          "grill",
+          "weekend",
+          "party",
+          "breakfast",
+          "pet",
+          "baby",
+          "bathroom",
+          "household",
+          "garden",
+          "vegetables",
+          "travel",
+          "mealprep",
+          "seasonal"
         ]
       },
       "AiProposalOperation": {
@@ -663,7 +771,6 @@
           "category": {
             "type": "string",
             "enum": [
-              "produce",
               "fruit",
               "vegetables",
               "dairy",
@@ -755,7 +862,6 @@
                 "category": {
                   "type": "string",
                   "enum": [
-                    "produce",
                     "fruit",
                     "vegetables",
                     "dairy",
@@ -885,7 +991,6 @@
               "category": {
                 "type": "string",
                 "enum": [
-                  "produce",
                   "fruit",
                   "vegetables",
                   "dairy",
@@ -952,7 +1057,6 @@
               "category": {
                 "type": "string",
                 "enum": [
-                  "produce",
                   "fruit",
                   "vegetables",
                   "dairy",
@@ -1018,7 +1122,6 @@
               "category": {
                 "type": "string",
                 "enum": [
-                  "produce",
                   "fruit",
                   "vegetables",
                   "dairy",
@@ -1252,6 +1355,143 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/WorkspaceDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update workspace name and/or icon",
+        "tags": [
+          "Workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspaceId}/members": {
+      "get": {
+        "summary": "List members of a workspace",
+        "tags": [
+          "Workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceMemberListResponse"
                 }
               }
             }

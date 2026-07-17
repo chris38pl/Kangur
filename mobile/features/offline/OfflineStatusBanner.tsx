@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
@@ -20,13 +20,20 @@ export function OfflineStatusBanner({ listId }: Props) {
   const theme = colors[scheme];
   const [online, setOnline] = useState(DataSyncEngine.isOnline());
   const [pending, setPending] = useState(0);
+  const [failed, setFailed] = useState(0);
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     const refresh = async () => {
-      const n = await DataSyncEngine.pendingCount(listId);
-      if (mounted) setPending(n);
+      const [n, f] = await Promise.all([
+        DataSyncEngine.pendingCount(listId),
+        DataSyncEngine.failedCount(listId),
+      ]);
+      if (mounted) {
+        setPending(n);
+        setFailed(f);
+      }
     };
     void refresh();
 
@@ -36,6 +43,7 @@ export function OfflineStatusBanner({ listId }: Props) {
     const offQueue = DataSyncEngine.on("queueChanged", (p) => {
       if (listId && p?.listId && p.listId !== listId) return;
       setPending(p?.pendingCount ?? 0);
+      void refresh();
     });
     const offStart = DataSyncEngine.on("syncStarted", () => setSyncing(true));
     const offEnd = DataSyncEngine.on("syncFinished", () => {
@@ -61,21 +69,35 @@ export function OfflineStatusBanner({ listId }: Props) {
     message = t("offline.storedOnDevice");
   } else if (syncing) {
     message = t("offline.syncing");
+  } else if (failed > 0) {
+    message = t("offline.syncFailed", { count: failed });
   } else if (pending > 0) {
     message = t("offline.pending", { count: pending });
   }
 
   return (
-    <View
+    <Pressable
+      onPress={() => {
+        if (failed > 0 || pending > 0) {
+          void DataSyncEngine.retry();
+        }
+      }}
       style={{
-        backgroundColor: online ? theme.accent : "#F59E0B22",
+        backgroundColor:
+          !online || failed > 0 ? "#F59E0B22" : theme.accent,
         paddingVertical: spacing[2],
         paddingHorizontal: spacing[4],
       }}
     >
-      <Text style={{ ...typography.caption, color: theme.text, textAlign: "center" }}>
+      <Text
+        style={{
+          ...typography.caption,
+          color: theme.text,
+          textAlign: "center",
+        }}
+      >
         {message}
       </Text>
-    </View>
+    </Pressable>
   );
 }

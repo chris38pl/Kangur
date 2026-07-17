@@ -13,7 +13,13 @@ type Props = {
 };
 
 /**
- * Full-screen shell that respects system insets (Android nav + status bar).
+ * Full-screen shell that respects system insets (status bar + home/gesture bar).
+ *
+ * - Full-bleed / auth: default `edges={["top","bottom"]}`.
+ * - Tab screens with custom tab bar: `edges={["top"]}` + `useTabBarClearance()`
+ *   for scroll padding (tab bar already owns the bottom inset).
+ * - Stack screens with a native header: `edges={["bottom"]}` or scroll
+ *   `paddingBottom: spacing + insets.bottom`.
  */
 export function Screen({
   children,

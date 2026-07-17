@@ -1,9 +1,11 @@
 import { useOAuth, useSignUp } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import * as Linking from "expo-linking";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -25,9 +27,11 @@ import { getClerkErrorMessage } from "@/features/auth/clerk-error";
 import {
   AppleIcon,
   BackIcon,
+  EyeIcon,
   GoogleIcon,
   MailIcon,
 } from "@/features/auth/auth-icons";
+import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 
 type Step = "landing" | "email" | "verify";
 
@@ -38,22 +42,58 @@ export function SignUpScreen() {
   const theme = colors[scheme];
   const { signUp, setActive, isLoaded } = useSignUp();
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+  const {
+    scrollRef,
+    onScroll,
+    bindFieldFocus,
+    setFormBlockRef,
+    contentPaddingBottom,
+    keyboardHeight,
+  } = useKeyboardScroll();
+  const emailFieldRef = useRef<View>(null);
+  const passwordFieldRef = useRef<View>(null);
+  const nameFieldRef = useRef<View>(null);
+  const codeFieldRef = useRef<View>(null);
+  const keyboardOpen = keyboardHeight > 0;
 
   const [step, setStep] = useState<Step>("landing");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const nameFocus = bindFieldFocus(nameFieldRef);
+  const emailFocus = bindFieldFocus(emailFieldRef);
+  const passwordFocus = bindFieldFocus(passwordFieldRef);
+  const codeFocus = bindFieldFocus(codeFieldRef);
+
+  const splitFullName = (value: string) => {
+    const parts = value.trim().split(/\s+/).filter(Boolean);
+    const firstName = parts[0] ?? "";
+    const lastName = parts.slice(1).join(" ");
+    return { firstName, lastName };
+  };
+
   const onSignUp = async () => {
     if (!isLoaded || !signUp) return;
+
+    const { firstName, lastName } = splitFullName(fullName);
+    if (!firstName) {
+      setError(t("auth.nameRequired"));
+      return;
+    }
+
     setBusy(true);
     setError(null);
     try {
       await signUp.create({
         emailAddress: email.trim(),
         password,
+        firstName,
+        ...(lastName ? { lastName } : {}),
       });
 
       if (signUp.status === "complete" && signUp.createdSessionId) {
@@ -132,16 +172,26 @@ export function SignUpScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingHorizontal: spacing[6],
-          paddingTop: spacing[4],
-          paddingBottom: spacing[6],
-        }}
-        keyboardShouldPersistTaps="handled"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
       >
+        <ScrollView
+          ref={scrollRef}
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingHorizontal: spacing[6],
+            paddingTop: spacing[4],
+            paddingBottom: contentPaddingBottom,
+          }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          automaticallyAdjustKeyboardInsets
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+        >
         <Pressable
           onPress={() => {
             if (step === "verify") {
@@ -181,7 +231,7 @@ export function SignUpScreen() {
           <BackIcon size={18} />
         </Pressable>
 
-      <AuthBrandHero />
+      {!keyboardOpen ? <AuthBrandHero /> : null}
 
       {step === "landing" ? (
         <>
@@ -283,7 +333,7 @@ export function SignUpScreen() {
 
           <View
             style={{
-              paddingTop: spacing[10],
+              marginTop: spacing[5],
               alignItems: "center",
             }}
           >
@@ -306,7 +356,7 @@ export function SignUpScreen() {
               ...typography.title,
               color: theme.text,
               textAlign: "center",
-              marginTop: spacing[8],
+              marginTop: keyboardOpen ? spacing[4] : spacing[8],
             }}
           >
             {step === "verify" ? t("auth.verifyTitle") : t("auth.signUpTitle")}
@@ -317,7 +367,7 @@ export function SignUpScreen() {
               color: theme.textBody,
               textAlign: "center",
               marginTop: spacing[2],
-              marginBottom: spacing[6],
+              marginBottom: keyboardOpen ? spacing[4] : spacing[6],
             }}
           >
             {step === "verify"
@@ -326,71 +376,167 @@ export function SignUpScreen() {
           </Text>
 
           {step === "email" ? (
-            <>
-              <TextInput
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                placeholder={t("auth.email")}
-                placeholderTextColor={theme.textMuted}
-                value={email}
-                onChangeText={setEmail}
-                style={{ ...inputStyle(theme), marginBottom: spacing[3] }}
-              />
-              <TextInput
-                secureTextEntry
-                textContentType="newPassword"
-                placeholder={t("auth.password")}
-                placeholderTextColor={theme.textMuted}
-                value={password}
-                onChangeText={setPassword}
-                style={{ ...inputStyle(theme), marginBottom: spacing[4] }}
-              />
-            </>
+            <View ref={setFormBlockRef} collapsable={false}>
+              <View
+                ref={nameFieldRef}
+                collapsable={false}
+                style={{ marginBottom: spacing[3] }}
+              >
+                <TextInput
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  textContentType="name"
+                  placeholder={t("auth.fullNamePlaceholder")}
+                  placeholderTextColor={theme.textMuted}
+                  value={fullName}
+                  onChangeText={setFullName}
+                  onFocus={nameFocus.onFocus}
+                  onBlur={nameFocus.onBlur}
+                  style={inputStyle(theme)}
+                />
+              </View>
+              <View
+                ref={emailFieldRef}
+                collapsable={false}
+                style={{ marginBottom: spacing[3] }}
+              >
+                <TextInput
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  placeholder={t("auth.email")}
+                  placeholderTextColor={theme.textMuted}
+                  value={email}
+                  onChangeText={setEmail}
+                  onFocus={emailFocus.onFocus}
+                  onBlur={emailFocus.onBlur}
+                  style={inputStyle(theme)}
+                />
+              </View>
+              <View
+                ref={passwordFieldRef}
+                collapsable={false}
+                style={{
+                  ...inputStyle(theme),
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: spacing[4],
+                  paddingVertical: 0,
+                }}
+              >
+                <TextInput
+                  secureTextEntry={!showPassword}
+                  textContentType="newPassword"
+                  placeholder={t("auth.password")}
+                  placeholderTextColor={theme.textMuted}
+                  value={password}
+                  onChangeText={setPassword}
+                  onFocus={passwordFocus.onFocus}
+                  onBlur={passwordFocus.onBlur}
+                  style={{
+                    flex: 1,
+                    color: theme.text,
+                    fontSize: typography.body.fontSize,
+                    paddingVertical: spacing[4],
+                    paddingRight: spacing[2],
+                  }}
+                />
+                <Pressable
+                  onPress={() => setShowPassword((v) => !v)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    showPassword
+                      ? t("auth.hidePassword")
+                      : t("auth.showPassword")
+                  }
+                >
+                  <EyeIcon size={20} off={showPassword} />
+                </Pressable>
+              </View>
+
+              {error ? (
+                <Text
+                  style={{
+                    ...typography.caption,
+                    color: theme.danger,
+                    marginBottom: spacing[3],
+                    textAlign: "center",
+                  }}
+                >
+                  {error}
+                </Text>
+              ) : null}
+
+              <Pressable
+                disabled={busy || !isLoaded}
+                onPress={() => void onSignUp()}
+                style={{ ...pillPrimary, opacity: busy ? 0.7 : 1 }}
+              >
+                {busy ? (
+                  <ActivityIndicator color={theme.onPrimary} />
+                ) : (
+                  <Text style={{ ...typography.label, color: theme.onPrimary }}>
+                    {t("auth.signUp")}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
           ) : (
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="number-pad"
-              textContentType="oneTimeCode"
-              placeholder={t("auth.verificationCode")}
-              placeholderTextColor={theme.textMuted}
-              value={code}
-              onChangeText={setCode}
-              style={{ ...inputStyle(theme), marginBottom: spacing[4] }}
-            />
+            <View ref={setFormBlockRef} collapsable={false}>
+              <View
+                ref={codeFieldRef}
+                collapsable={false}
+                style={{ marginBottom: spacing[4] }}
+              >
+                <TextInput
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="number-pad"
+                  textContentType="oneTimeCode"
+                  placeholder={t("auth.verificationCode")}
+                  placeholderTextColor={theme.textMuted}
+                  value={code}
+                  onChangeText={setCode}
+                  onFocus={codeFocus.onFocus}
+                  onBlur={codeFocus.onBlur}
+                  style={inputStyle(theme)}
+                />
+              </View>
+
+              {error ? (
+                <Text
+                  style={{
+                    ...typography.caption,
+                    color: theme.danger,
+                    marginBottom: spacing[3],
+                    textAlign: "center",
+                  }}
+                >
+                  {error}
+                </Text>
+              ) : null}
+
+              <Pressable
+                disabled={busy || !isLoaded}
+                onPress={() => void onVerify()}
+                style={{ ...pillPrimary, opacity: busy ? 0.7 : 1 }}
+              >
+                {busy ? (
+                  <ActivityIndicator color={theme.onPrimary} />
+                ) : (
+                  <Text style={{ ...typography.label, color: theme.onPrimary }}>
+                    {t("auth.verify")}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
           )}
-
-          {error ? (
-            <Text
-              style={{
-                ...typography.caption,
-                color: theme.danger,
-                marginBottom: spacing[3],
-                textAlign: "center",
-              }}
-            >
-              {error}
-            </Text>
-          ) : null}
-
-          <Pressable
-            disabled={busy || !isLoaded}
-            onPress={() => void (step === "verify" ? onVerify() : onSignUp())}
-            style={{ ...pillPrimary, opacity: busy ? 0.7 : 1 }}
-          >
-            {busy ? (
-              <ActivityIndicator color={theme.onPrimary} />
-            ) : (
-              <Text style={{ ...typography.label, color: theme.onPrimary }}>
-                {step === "verify" ? t("auth.verify") : t("auth.signUp")}
-              </Text>
-            )}
-          </Pressable>
         </>
       ) : null}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

@@ -1,8 +1,22 @@
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { SHOPPING_CATEGORIES } from "@shared/shopping-categories";
+import { SHOPPING_LIST_THEMES } from "@shared/shopping-themes";
 import { z } from "zod";
 
 extendZodWithOpenApi(z);
+
+export const ShoppingListThemeSchema = z
+  .enum(SHOPPING_LIST_THEMES)
+  .openapi("ShoppingListTheme");
+
+export const ShoppingContextSchema = z
+  .object({
+    title: z.string().trim().min(1).max(32),
+    theme: ShoppingListThemeSchema,
+  })
+  .openapi("ShoppingContext");
+
+export type ShoppingContext = z.infer<typeof ShoppingContextSchema>;
 
 export const ProposalOperationSchema = z
   .object({
@@ -23,6 +37,7 @@ export type ProposalOperation = z.infer<typeof ProposalOperationSchema>;
 
 export const AiProposalSchema = z
   .object({
+    shoppingContext: ShoppingContextSchema,
     operations: z.array(ProposalOperationSchema),
   })
   .openapi("AiProposal");

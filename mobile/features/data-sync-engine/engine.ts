@@ -13,6 +13,7 @@ import {
   type SyncOperation,
 } from "./types";
 import { SyncWorker, type SyncTransport } from "./worker";
+import { createClientId, isLegacyLocalItemId, isUuid } from "@/lib/createClientId";
 
 const DEBOUNCE_MS = 1000;
 
@@ -59,10 +60,62 @@ class DataSyncEngineImpl {
     this.connectivity.onChange((online) => {
       if (online) this.scheduleFlush();
     });
-    void this.queue.ensureLoaded().then(() => {
+    void this.queue.ensureLoaded().then(async () => {
+      await this.repairInvalidClientIds();
       void this.pendingCount().then((n) => syncTelemetry.queueLength(n));
       if (this.connectivity.isOnline()) this.scheduleFlush();
     });
+  }
+
+  /**
+   * Legacy shopping-mode used `local_…` ids. API clientId must be UUID;
+   * server item ids are cuids — only drop ops still targeting local_* ids.
+   */
+  private async repairInvalidClientIds(): Promise<void> {
+    const all = await this.queue.getAll();
+    let changed = false;
+    const next: SyncOperation[] = [];
+
+    for (const op of all) {
+      if (op.action === "ADD_ITEM") {
+        const raw = String(op.payload.clientId ?? op.itemId ?? "");
+        if (isUuid(raw)) {
+          next.push(op);
+          continue;
+        }
+        const clientId = createClientId();
+        changed = true;
+        next.push({
+          ...op,
+          itemId: clientId,
+          payload: { ...op.payload, clientId },
+          state: "PENDING",
+        });
+        continue;
+      }
+
+      if (
+        (op.action === "SET_STATUS" ||
+          op.action === "EDIT_ITEM" ||
+          op.action === "REMOVE_ITEM") &&
+        op.itemId &&
+        isLegacyLocalItemId(op.itemId)
+      ) {
+        changed = true;
+        continue;
+      }
+
+      next.push(op);
+    }
+
+    if (changed) {
+      await this.queue.replaceAll(next);
+      if (__DEV__) {
+        console.info(
+          "[DataSync] repaired queue ops with legacy local_* ids",
+        );
+      }
+    }
   }
 
   on(event: DataSyncEvent, handler: DataSyncEventHandler): () => void {
@@ -167,7 +220,11 @@ class DataSyncEngineImpl {
 
     const pending = await this.queue.pendingCount(listId);
     this.emit("queueChanged", { listId, pendingCount: pending });
-    this.emit("syncFinished", { listId, pendingCount: pending });
+    this.emit("syncFinished", {
+      listId,
+      pendingCount: pending,
+      syncedCount: doneIds.length,
+    });
   }
 
   async retry(ids?: string[]): Promise<void> {
@@ -196,6 +253,11 @@ class DataSyncEngineImpl {
 
   async pendingCount(listId?: string): Promise<number> {
     return this.queue.pendingCount(listId);
+  }
+
+  async failedCount(listId?: string): Promise<number> {
+    const all = await this.queue.getAll(listId);
+    return all.filter((op) => op.state === "FAILED").length;
   }
 
   isOnline(): boolean {

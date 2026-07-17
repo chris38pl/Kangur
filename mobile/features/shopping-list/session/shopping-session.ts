@@ -27,7 +27,6 @@ const ALLOWED: Record<SessionState, SessionState[]> = {
 class ShoppingSessionManager {
   private snapshots = new Map<string, SessionSnapshot>();
   private listeners = new Set<Listener>();
-  private recoveryPrompt: SessionSnapshot | null = null;
 
   subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
@@ -42,10 +41,6 @@ class ShoppingSessionManager {
     return this.snapshots.get(listId) ?? null;
   }
 
-  getRecoveryPrompt(): SessionSnapshot | null {
-    return this.recoveryPrompt;
-  }
-
   /** Active / interrupted sessions for Home Continue Shopping. */
   async listResumable(): Promise<SessionSnapshot[]> {
     const all =
@@ -58,6 +53,10 @@ class ShoppingSessionManager {
     );
   }
 
+  /**
+   * Restore an interrupted session. Opening shopping mode (e.g. Home "Resume")
+   * already means continue — no confirmation prompt.
+   */
   async hydrate(listId: string): Promise<SessionSnapshot | null> {
     const saved =
       await dataSyncPersistence.loadSessionSnapshot<SessionSnapshot>(listId);
@@ -68,10 +67,18 @@ class ShoppingSessionManager {
       saved.state === "STARTING" ||
       saved.state === "FINISHING"
     ) {
-      this.recoveryPrompt = saved;
-      this.snapshots.set(listId, saved);
-      this.emit(saved);
-      return saved;
+      const next: SessionSnapshot = {
+        ...saved,
+        state: "ACTIVE",
+        updatedAt: new Date().toISOString(),
+      };
+      if (saved.state !== "ACTIVE") {
+        await this.persist(next);
+      } else {
+        this.snapshots.set(listId, next);
+        this.emit(next);
+      }
+      return next;
     }
     return null;
   }
@@ -107,30 +114,13 @@ class ShoppingSessionManager {
     this.assertTransition(snap.state, "ACTIVE");
     snap = { ...snap, state: "ACTIVE", updatedAt: new Date().toISOString() };
     await this.persist(snap);
-    this.recoveryPrompt = null;
     return snap;
-  }
-
-  async continueRecovery(listId: string): Promise<SessionSnapshot> {
-    const snap = this.snapshots.get(listId) ?? this.recoveryPrompt;
-    if (!snap || snap.listId !== listId) {
-      throw new Error("No session to continue");
-    }
-    const next: SessionSnapshot = {
-      ...snap,
-      state: "ACTIVE",
-      updatedAt: new Date().toISOString(),
-    };
-    await this.persist(next);
-    this.recoveryPrompt = null;
-    return next;
   }
 
   async discard(listId: string): Promise<void> {
     await DataSyncEngine.clear(listId);
     await dataSyncPersistence.clearSessionSnapshot(listId);
     this.snapshots.delete(listId);
-    this.recoveryPrompt = null;
     this.emit(null);
   }
 

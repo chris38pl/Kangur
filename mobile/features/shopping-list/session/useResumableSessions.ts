@@ -11,6 +11,6 @@ export function useResumableSessions(enabled = true) {
     queryFn: async (): Promise<SessionSnapshot[]> => {
       return ShoppingSession.listResumable();
     },
-    staleTime: 5_000,
+    staleTime: 0,
   });
 }

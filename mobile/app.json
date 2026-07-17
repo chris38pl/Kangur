@@ -14,8 +14,9 @@
     },
     "android": {
       "package": "app.kangur.mobile",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "backgroundColor": "#E87B2A",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -38,7 +39,7 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#E87B2A"
+          "backgroundColor": "#FFFFFF"
         }
       ],
       "expo-localization",
