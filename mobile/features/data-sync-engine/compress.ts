@@ -19,8 +19,6 @@ export function compressOperations(ops: SyncOperation[]): {
   const byItemLastIndex = new Map<string, number>();
 
   for (const op of sorted) {
-    const itemKey = op.itemId ?? `__list_${op.listId}_${op.action}`;
-
     if (op.action === "REMOVE_ITEM" && op.itemId) {
       // Drop earlier ADD for same item
       const addIdx = result.findIndex(

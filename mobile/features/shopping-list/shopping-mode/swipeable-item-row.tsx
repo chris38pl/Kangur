@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -49,40 +49,45 @@ export function SwipeableItemRow({
   const scale = useSharedValue(1);
   const rowWidth = useSharedValue(320);
 
-  const itemRef = useRef(item);
-  const indexRef = useRef(index);
-  const onPurchaseRef = useRef(onPurchase);
-  const onUnavailableRef = useRef(onUnavailable);
-  itemRef.current = item;
-  indexRef.current = index;
-  onPurchaseRef.current = onPurchase;
-  onUnavailableRef.current = onUnavailable;
-
   const commitPurchase = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onPurchaseRef.current(itemRef.current, indexRef.current);
-  }, []);
+    onPurchase(item, index);
+  }, [index, item, onPurchase]);
 
   const commitUnavailable = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onUnavailableRef.current(itemRef.current, indexRef.current);
+    onUnavailable(item, index);
+  }, [index, item, onUnavailable]);
+
+  const commitPurchaseRef = useRef(commitPurchase);
+  const commitUnavailableRef = useRef(commitUnavailable);
+
+  useEffect(() => {
+    commitPurchaseRef.current = commitPurchase;
+    commitUnavailableRef.current = commitUnavailable;
+  }, [commitPurchase, commitUnavailable]);
+
+  const runPurchase = useCallback(() => {
+    commitPurchaseRef.current();
+  }, []);
+
+  const runUnavailable = useCallback(() => {
+    commitUnavailableRef.current();
   }, []);
 
   const pan = useMemo(
     () =>
       Gesture.Pan()
-        // Claim the gesture once movement is clearly horizontal (beats ScrollView).
         .activeOffsetX([-16, 16])
         .failOffsetY([-12, 12])
         .onUpdate((e) => {
           "worklet";
           translateX.value = e.translationX;
-          scale.value = Math.abs(e.translationX) > COMMIT_DISTANCE * 0.5 ? 0.98 : 1;
+          scale.value =
+            Math.abs(e.translationX) > COMMIT_DISTANCE * 0.5 ? 0.98 : 1;
         })
         .onEnd((e) => {
           "worklet";
-          // Live shared value is more reliable than the event when a parent
-          // scroll view interrupts the pan.
           const x = translateX.value;
           const v = e.velocityX;
           const abs = Math.abs(x);
@@ -102,14 +107,14 @@ export function SwipeableItemRow({
             translateX.value = withTiming(w, { duration: 160 });
             opacity.value = withTiming(0, { duration: 180 });
             rowHeight.value = withTiming(0, { duration: COLLAPSE_MS });
-            runOnJS(commitPurchase)();
+            runOnJS(runPurchase)();
             return;
           }
           if (commitLeft) {
             translateX.value = withTiming(-w, { duration: 160 });
             opacity.value = withTiming(0, { duration: 180 });
             rowHeight.value = withTiming(0, { duration: COLLAPSE_MS });
-            runOnJS(commitUnavailable)();
+            runOnJS(runUnavailable)();
             return;
           }
 
@@ -118,9 +123,9 @@ export function SwipeableItemRow({
           translateX.value = withSpring(0, { damping: 20, stiffness: 220 });
           scale.value = withSpring(1);
         }),
-    // Shared values + ref-backed JS callbacks are stable for this row's life.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- gesture once
-    [],
+    // Gesture created once; shared values + run* callbacks are stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reanimated gesture
+    [runPurchase, runUnavailable],
   );
 
   const rowStyle = useAnimatedStyle(() => {

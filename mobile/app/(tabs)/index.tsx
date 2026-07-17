@@ -49,7 +49,7 @@ export default function HomeScreen() {
   const createList = useCreateShoppingList(activeWorkspace?.id ?? null);
   const { openCreateList } = useCreateList();
 
-  const lists = listsQuery.data ?? [];
+  const lists = useMemo(() => listsQuery.data ?? [], [listsQuery.data]);
   const resumable = useMemo(() => {
     const sessions = sessionsQuery.data ?? [];
     return sessions.flatMap((session) => {

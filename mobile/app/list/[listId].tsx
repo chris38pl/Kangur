@@ -207,13 +207,16 @@ export default function ShoppingListScreen() {
     if (!listQuery.isSuccess || typeof listId !== "string") return;
     if (!importSource) return;
     importTriggered.current = true;
-    if (importSource === "clipboard") {
-      void startClipboardIngest();
-    } else if (importSource === "screenshot" || importSource === "photo") {
-      void startScreenshotIngest();
-    }
-    // Clear query so refresh doesn't re-trigger
+    // Defer so ingest mutations are not scheduled synchronously inside the effect.
+    const handle = setTimeout(() => {
+      if (importSource === "clipboard") {
+        void startClipboardIngest();
+      } else if (importSource === "screenshot" || importSource === "photo") {
+        void startScreenshotIngest();
+      }
+    }, 0);
     router.setParams({ import: undefined });
+    return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once when list ready
   }, [listQuery.isSuccess, listId, importSource]);
 

@@ -6,4 +6,13 @@ module.exports = [
   {
     ignores: ["node_modules/", ".expo/", "dist/"],
   },
+  {
+    // React Compiler eslint rules false-positive on Reanimated shared values /
+    // gesture worklets (mutating `.value`, closing over shared values).
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      "react-hooks/immutability": "off",
+      "react-hooks/refs": "off",
+    },
+  },
 ];

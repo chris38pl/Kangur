@@ -9,30 +9,35 @@ export function useShoppingSession(listId: string | null) {
     listId ? ShoppingSession.get(listId) : null,
   );
   const [needsResume, setNeedsResume] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  /** Which listId finished AsyncStorage hydrate (null list = already ready). */
+  const [hydratedFor, setHydratedFor] = useState<string | null>(null);
+  const hydrated = listId === null || hydratedFor === listId;
 
   useEffect(() => {
-    if (!listId) {
-      setHydrated(true);
-      return;
-    }
+    if (!listId) return;
+
     let mounted = true;
-    setHydrated(false);
     void ShoppingSession.hydrate(listId).then((saved) => {
       if (!mounted) return;
       if (saved && ShoppingSession.getRecoveryPrompt()?.listId === listId) {
         setNeedsResume(true);
       }
       setSnapshot(ShoppingSession.get(listId));
-      setHydrated(true);
+      setHydratedFor(listId);
     });
-    return ShoppingSession.subscribe((s) => {
+
+    const unsubscribe = ShoppingSession.subscribe((s) => {
       if (!s || s.listId === listId) setSnapshot(s);
     });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, [listId]);
 
   return {
-    snapshot,
+    snapshot: listId ? snapshot : null,
     needsResume,
     hydrated,
     clearResumePrompt: () => setNeedsResume(false),

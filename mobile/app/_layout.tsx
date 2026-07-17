@@ -1,4 +1,4 @@
-import "react-native-gesture-handler";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
@@ -11,7 +11,6 @@ import {
 import * as SplashScreen from "expo-splash-screen";
 import { type ReactNode, useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { colors } from "@/design-system/tokens";
 import { useDataSyncEngineBootstrap } from "@/features/data-sync-engine/useBootstrap";
