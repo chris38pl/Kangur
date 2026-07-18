@@ -39,6 +39,10 @@ export function useShoppingSession(listId: string | null) {
       listId
         ? ShoppingSession.start(listId, workspaceId)
         : Promise.reject(new Error("No list")),
+    setServerSessionId: (serverSessionId: string) =>
+      listId
+        ? ShoppingSession.setServerSessionId(listId, serverSessionId)
+        : Promise.resolve(),
     discard: () =>
       listId ? ShoppingSession.discard(listId) : Promise.resolve(),
     setItemStatus: (itemId: string, status: ItemStatus) =>
@@ -47,9 +51,9 @@ export function useShoppingSession(listId: string | null) {
         : Promise.resolve(),
     addItem: (item: SessionAddItem) =>
       listId ? ShoppingSession.addItem(listId, item) : Promise.resolve(),
-    finish: () =>
+    finish: (options?: { skipArchive?: boolean }) =>
       listId
-        ? ShoppingSession.finish(listId)
+        ? ShoppingSession.finish(listId, options)
         : Promise.reject(new Error("No list")),
     clearEnded: () =>
       listId ? ShoppingSession.clearEnded(listId) : Promise.resolve(),

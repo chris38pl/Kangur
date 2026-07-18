@@ -12,4 +12,11 @@ export const brandAssets = {
   workspaceHero: require("@/assets/brand/workspace-hero.webp"),
   premiumUpgrade: require("@/assets/brand/premium-upgrade.webp"),
   deleteList: require("@/assets/brand/delete-list.webp"),
+  categoryComplete: require("@/assets/brand/category-complete.webp"),
+  notificationsEmpty: require("@/assets/brand/notifications-empty.webp"),
+  inviteWelcome: require("@/assets/brand/invite-welcome.webp"),
+  shoppingStarted: require("@/assets/brand/shopping-started.webp"),
+  shoppingFinished: require("@/assets/brand/shopping-finished.webp"),
+  listCreated: require("@/assets/brand/list-created.webp"),
+  silentMode: require("@/assets/brand/silent-mode.webp"),
 } as const;

@@ -53,6 +53,7 @@ import {
 import type { ShoppingCategory } from "@/features/shopping-item/schemas";
 import { createClientId } from "@/lib/createClientId";
 import { isAiReviewEnabled } from "@/lib/aiReview";
+import { ApiClientError } from "@/lib/api/client";
 
 function buildApplyOperations(operations: ProposalOperation[]) {
   return operations.map((operation) => {
@@ -129,6 +130,12 @@ export default function ShoppingListScreen() {
   const listQuery = useQuery({
     queryKey: ["shopping-list", listId],
     enabled: Boolean(isSignedIn) && typeof listId === "string",
+    retry: (failureCount, error) => {
+      if (error instanceof ApiClientError && error.code === "NOT_FOUND") {
+        return false;
+      }
+      return failureCount < 2;
+    },
     queryFn: async () => {
       const token = await getToken();
       if (!token || typeof listId !== "string") {
@@ -139,7 +146,7 @@ export default function ShoppingListScreen() {
   });
   const itemsQuery = useShoppingItems(
     typeof listId === "string" ? listId : null,
-    Boolean(isSignedIn),
+    Boolean(isSignedIn) && !listQuery.isError,
   );
   const createItem = useCreateShoppingItem(
     typeof listId === "string" ? listId : null,
@@ -205,6 +212,18 @@ export default function ShoppingListScreen() {
       }
       return ingestAi(token, listId, formData);
     },
+    onError: (error) => {
+      if (error instanceof ApiClientError && error.code === "NOT_FOUND") {
+        Alert.alert(t("list.missingTitle"), t("list.missingBody"), [
+          {
+            text: t("invite.goHome"),
+            onPress: () => router.replace("/(tabs)" as never),
+          },
+        ]);
+        return;
+      }
+      Alert.alert(t("list.title"), error.message || t("list.ingestFailed"));
+    },
     onSuccess: (result) => {
       const title =
         result.proposal.shoppingContext?.title?.trim().slice(0, 32) ?? "";
@@ -240,13 +259,24 @@ export default function ShoppingListScreen() {
 
   const archiveOnLeave = useRef(archiveList.mutateAsync);
   archiveOnLeave.current = archiveList.mutateAsync;
+  const mountedAt = useRef(Date.now());
 
   // Leave without products → discard provisional list (no empty spam on Home).
   useEffect(() => {
     if (typeof listId !== "string") return;
+    mountedAt.current = Date.now();
 
-    const unsub = navigation.addListener("beforeRemove", () => {
+    const unsub = navigation.addListener("beforeRemove", (e) => {
       if (!isListProvisional(listId)) return;
+      // Don't trash the list while AI ingest / apply is in flight.
+      if (ingestMutation.isPending || applyMutation.isPending) {
+        e.preventDefault();
+        return;
+      }
+      // Avoid Strict Mode / web remount false leaves right after open.
+      if (Date.now() - mountedAt.current < 1500) {
+        return;
+      }
       const items =
         queryClient.getQueryData<ShoppingItem[]>(["shopping-items", listId]) ??
         [];
@@ -260,9 +290,23 @@ export default function ShoppingListScreen() {
     });
 
     return unsub;
-  }, [listId, navigation, queryClient]);
+  }, [
+    listId,
+    navigation,
+    queryClient,
+    ingestMutation.isPending,
+    applyMutation.isPending,
+  ]);
 
   const isPending = listQuery.isPending || itemsQuery.isPending;
+  const listMissing =
+    listQuery.isError &&
+    listQuery.error instanceof ApiClientError &&
+    listQuery.error.code === "NOT_FOUND";
+
+  const goHome = () => {
+    router.replace("/(tabs)" as never);
+  };
 
   const startTextIngest = () => {
     Keyboard.dismiss();
@@ -470,6 +514,51 @@ export default function ShoppingListScreen() {
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: spacing[16] }}>
             <ActivityIndicator color={theme.primary} />
           </View>
+        ) : listMissing || listQuery.isError ? (
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: spacing[16],
+              paddingHorizontal: spacing[4],
+            }}
+          >
+            <Text
+              style={{
+                ...typography.title,
+                color: theme.text,
+                textAlign: "center",
+              }}
+            >
+              {t("list.missingTitle")}
+            </Text>
+            <Text
+              style={{
+                ...typography.body,
+                color: theme.textMuted,
+                textAlign: "center",
+                marginTop: spacing[2],
+              }}
+            >
+              {t("list.missingBody")}
+            </Text>
+            <Pressable
+              onPress={goHome}
+              style={{
+                marginTop: spacing[6],
+                alignSelf: "stretch",
+                backgroundColor: theme.primary,
+                borderRadius: radius.full,
+                paddingVertical: spacing[4],
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ ...typography.label, color: theme.onPrimary }}>
+                {t("invite.goHome")}
+              </Text>
+            </Pressable>
+          </View>
         ) : (
           <>
             <View>
@@ -535,7 +624,9 @@ export default function ShoppingListScreen() {
                   <>
                     <Text style={{ fontSize: 14, color: theme.onPrimary }}>✨</Text>
                     <Text style={{ ...typography.label, color: theme.onPrimary }}>
-                      {t("ai.createFromText")}
+                      {t(
+                        itemCount > 0 ? "ai.addToList" : "ai.createFromText",
+                      )}
                     </Text>
                   </>
                 )}

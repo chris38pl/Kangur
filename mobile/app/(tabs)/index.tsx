@@ -1,9 +1,10 @@
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
   Pressable,
+  RefreshControl,
   ScrollView,
   Text,
   View,
@@ -24,12 +25,9 @@ import {
 import { useCreateList } from "@/features/shopping-list/create-list-provider";
 import type { CreateListPath } from "@/features/shopping-list/create-list-sheet";
 import type { ShoppingList } from "@/features/shopping-list/schemas";
-import { isListProvisional } from "@/features/shopping-list/provisional-list";
+import { useNotifications, useNotificationPreferences } from "@/features/notifications/useNotifications";
 import { useResumableSessions } from "@/features/shopping-list/session/useResumableSessions";
-import {
-  useArchiveShoppingList,
-  useShoppingLists,
-} from "@/features/shopping-list/useShoppingLists";
+import { useShoppingLists } from "@/features/shopping-list/useShoppingLists";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaceMembers } from "@/features/workspace/useWorkspaceMembers";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
@@ -279,15 +277,15 @@ export default function HomeScreen() {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const workspacesQuery = useWorkspaces();
+  const notificationsQuery = useNotifications();
+  const prefsQuery = useNotificationPreferences();
   const { activeWorkspace, hydrated } = useActiveWorkspace(workspacesQuery.data);
   const membersQuery = useWorkspaceMembers(activeWorkspace?.id ?? null, hydrated);
   const listsQuery = useShoppingLists(activeWorkspace?.id ?? null, hydrated);
   const sessionsQuery = useResumableSessions(hydrated);
-  const archiveList = useArchiveShoppingList(activeWorkspace?.id ?? null);
-  const archiveEmpty = useRef(archiveList.mutateAsync);
-  archiveEmpty.current = archiveList.mutateAsync;
   const { createAndOpen } = useCreateList();
   const tabClearance = useTabBarClearance();
+  const [refreshing, setRefreshing] = useState(false);
 
   const lists = useMemo(
     () => (listsQuery.data ?? []).filter((list) => (list.itemCount ?? 0) > 0),
@@ -306,27 +304,35 @@ export default function HomeScreen() {
     });
   }, [sessionsQuery.data, listsQuery.data]);
 
-  // Persist only lists with products — archive leftover empties (skip ones still being edited).
-  useEffect(() => {
-    const all = listsQuery.data;
-    if (!all) return;
-    for (const list of all) {
-      if (list.status !== "active") continue;
-      if ((list.itemCount ?? 0) > 0) continue;
-      if (isListProvisional(list.id)) continue;
-      void archiveEmpty.current(list.id).catch(() => {
-        // best-effort
-      });
-    }
-  }, [listsQuery.data]);
+  // Empty untitled lists are hidden from Home UI already — do not auto-archive
+  // them here (races with AI create / provisional editing and deletes the list mid-ingest).
+  // Cleanup of abandoned empties happens on leave via list screen beforeRemove.
 
-  // Tabs keep Home mounted — refresh Continue + lists whenever this screen is focused.
+  const refreshHome = useCallback(async () => {
+    await Promise.all([
+      workspacesQuery.refetch(),
+      listsQuery.refetch(),
+      sessionsQuery.refetch(),
+      membersQuery.refetch(),
+    ]);
+  }, [workspacesQuery, listsQuery, sessionsQuery, membersQuery]);
+
+  // Tabs keep Home mounted — refresh whenever this screen is focused.
   useFocusEffect(
     useCallback(() => {
-      void sessionsQuery.refetch();
-      void listsQuery.refetch();
-    }, [listsQuery, sessionsQuery]),
+      void refreshHome();
+    }, [refreshHome]),
   );
+
+  const onPullRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshHome();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshHome]);
+
   const relativeLabels = useMemo(
     () => ({
       justNow: t("home.updatedJustNow"),
@@ -387,6 +393,14 @@ export default function HomeScreen() {
           paddingTop: spacing[2],
           paddingBottom: tabClearance,
         }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onPullRefresh()}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+          />
+        }
       >
         <View
           style={{
@@ -411,10 +425,10 @@ export default function HomeScreen() {
             <IconMenu color={theme.text} size={24} />
           </Pressable>
           <Pressable
-            onPress={() => router.push("/(tabs)/profile" as never)}
+            onPress={() => router.push("/notification-center" as never)}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel={t("tabs.profile")}
+            accessibilityLabel={t("notifications.centerTitle")}
             style={{
               width: 44,
               height: 44,
@@ -423,6 +437,22 @@ export default function HomeScreen() {
             }}
           >
             <IconBell color={brand.primaryHover} size={24} />
+            {!prefsQuery.data?.silentMode &&
+            (notificationsQuery.data?.unreadCount ?? 0) > 0 ? (
+              <View
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  width: 9,
+                  height: 9,
+                  borderRadius: 5,
+                  backgroundColor: brand.primary,
+                  borderWidth: 1.5,
+                  borderColor: theme.bg,
+                }}
+              />
+            ) : null}
           </Pressable>
         </View>
 

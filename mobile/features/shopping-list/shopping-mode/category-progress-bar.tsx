@@ -1,20 +1,21 @@
 import { useEffect } from "react";
-import { View } from "react-native";
+import { View, type StyleProp, type ViewStyle } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 
+import { useColorScheme } from "@/components/useColorScheme";
 import { shoppingDensity } from "@/design-system/shopping-density";
 import { colors } from "@/design-system/tokens";
-import { useColorScheme } from "@/components/useColorScheme";
 
 type Props = {
   progress: number;
+  style?: StyleProp<ViewStyle>;
 };
 
-export function CategoryProgressBar({ progress }: Props) {
+export function CategoryProgressBar({ progress, style }: Props) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const width = useSharedValue(Math.max(0, Math.min(1, progress)));
@@ -31,13 +32,16 @@ export function CategoryProgressBar({ progress }: Props) {
 
   return (
     <View
-      style={{
-        height: shoppingDensity.progressBarHeight,
-        borderRadius: shoppingDensity.progressBarHeight,
-        backgroundColor: theme.border,
-        overflow: "hidden",
-        marginTop: 6,
-      }}
+      style={[
+        {
+          height: shoppingDensity.progressBarHeight,
+          borderRadius: shoppingDensity.progressBarHeight,
+          backgroundColor: theme.border,
+          overflow: "hidden",
+          marginTop: 6,
+        },
+        style,
+      ]}
     >
       <Animated.View
         style={[

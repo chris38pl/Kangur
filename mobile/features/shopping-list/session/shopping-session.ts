@@ -117,6 +117,19 @@ class ShoppingSessionManager {
     return snap;
   }
 
+  async setServerSessionId(
+    listId: string,
+    serverSessionId: string,
+  ): Promise<void> {
+    const snap = this.snapshots.get(listId);
+    if (!snap) return;
+    await this.persist({
+      ...snap,
+      serverSessionId,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
   async discard(listId: string): Promise<void> {
     await DataSyncEngine.clear(listId);
     await dataSyncPersistence.clearSessionSnapshot(listId);
@@ -144,9 +157,12 @@ class ShoppingSessionManager {
   }
 
   /**
-   * Finish shopping. Offline: end session, enqueue ARCHIVE_LIST, hide locally.
+   * Finish shopping. When skipArchive, server already archived via ShoppingSessionService.
    */
-  async finish(listId: string): Promise<SessionSnapshot> {
+  async finish(
+    listId: string,
+    options?: { skipArchive?: boolean },
+  ): Promise<SessionSnapshot> {
     let snap = this.snapshots.get(listId);
     if (!snap || snap.state !== "ACTIVE") {
       snap = {
@@ -156,6 +172,7 @@ class ShoppingSessionManager {
         state: "ACTIVE",
         startedAt: snap?.startedAt ?? new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        serverSessionId: snap?.serverSessionId,
       };
       this.snapshots.set(listId, snap);
     }
@@ -164,11 +181,13 @@ class ShoppingSessionManager {
     snap = { ...snap, state: "FINISHING", updatedAt: new Date().toISOString() };
     await this.persist(snap);
 
-    await DataSyncEngine.enqueue({
-      listId,
-      action: "ARCHIVE_LIST",
-      payload: {},
-    });
+    if (!options?.skipArchive) {
+      await DataSyncEngine.enqueue({
+        listId,
+        action: "ARCHIVE_LIST",
+        payload: {},
+      });
+    }
 
     this.assertTransition(snap.state, "ENDED");
     snap = {
@@ -178,7 +197,6 @@ class ShoppingSessionManager {
       updatedAt: new Date().toISOString(),
     };
     await this.persist(snap);
-
     void DataSyncEngine.flush(listId);
     return snap;
   }

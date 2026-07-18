@@ -1,7 +1,7 @@
 # Kangur — MVP Implementation Roadmap
 
 **Status:** Living document — return here between milestones  
-**Last updated:** 2026-07-16  
+**Last updated:** 2026-07-18  
 **Companions:** [prd.md](./prd.md) · [architecture.md](./architecture.md) · [cursor-rules.md](./cursor-rules.md)
 
 ---
@@ -43,18 +43,23 @@ flowchart TD
   M07[M07 AI Credits]
   M08[M08 Shopping Mode]
   M09[M09 Invites]
+  M095[M09.5 Notifications]
   M10[M10 Smart Polling]
   M11[M11 History Repeat]
   M12[M12 Settings Profile]
   M13[M13 Stripe Premium]
   M14[M14 Polish]
+  M15[M15 Custom Categories]
 
   M01 --> M02 --> M03 --> M04 --> M05 --> M06 --> M07 --> M08
   M03 --> M09
   M08 --> M09
+  M09 --> M095
+  M08 --> M095
   M05 --> M10
   M08 --> M10
   M09 --> M10
+  M095 --> M10
   M08 --> M11
   M03 --> M12
   M07 --> M13
@@ -62,6 +67,7 @@ flowchart TD
   M11 --> M14
   M12 --> M14
   M13 --> M14
+  M14 --> M15
 ```
 
 ### Cursor habit
@@ -81,12 +87,14 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 | M07 | AI Credits | done |
 | M08 | Shopping Mode | done |
 | M08.5 | Data Sync Engine | done |
-| M09 | Invites | pending |
+| M09 | Invites | done |
+| M09.5 | Notifications (MVP) | done |
 | M10 | Smart polling | pending |
 | M11 | History + Repeat | pending |
 | M12 | Settings + Profile | pending |
 | M13 | Stripe Premium | pending |
 | M14 | Polish + RC | pending |
+| M15 | Custom categories (post-MVP) | pending |
 
 ---
 
@@ -358,19 +366,43 @@ Import (Screenshot | Text | Clipboard)
 **Goal:** Multi-user workspace — after the product wedge exists.
 
 **Creates:**
-- Prisma: `Invitation`
-- `backend/features/workspace/inviteMember.ts`, `acceptInvitation.ts`, `listMembers.ts`
-- Routes: members, invitations, accept
-- `mobile/features/workspace/invite-screen.tsx`, `members-list.tsx`
-- Stack route Invite Members
+- Prisma: `Invitation` (tokenHash, pending|accepted|revoked)
+- `backend/features/workspace/inviteMember.ts`, `acceptInvitation.ts`, `listInvitations.ts`, `revokeInvitation.ts`, `removeMember.ts`
+- Routes: invitations CRUD, accept, member remove/role
+- Mobile: invite section, pending list, member menus, `invite/[token]` accept flow
 
-**Depends on:** M03; useful after M08 for two-person shopping demos  
-**Complexity:** M  
+**Depends on:** M03; useful after M08 for two-person shopping demos
+**Complexity:** M
 
 **Acceptance:**
-- [ ] Owner/admin can invite by email; member cannot
-- [ ] Invitee accepts and sees workspace
-- [ ] Unauthorized role actions return 403
+- [x] Owner/admin can invite by email; member cannot
+- [x] Invitee accepts and sees workspace
+- [x] Unauthorized role actions return 403
+
+---
+
+## M09.5 — Notifications (MVP)
+
+**Goal:** Minimal production-ready notification architecture for workspace collaboration — push + in-app center + prefs — without spam.
+
+**Creates:**
+- Prisma: `Notification`, `UserNotificationPreferences`, `PushDevice`, `ShoppingSession`
+- `backend/lib/events/DomainEventBus.ts` (`Promise.allSettled`)
+- `NotificationHandler` → pure `NotificationRepository` → `NotificationCreatedEvent` → `PushHandler`
+- `ShoppingSessionService` (start/finish: publish → archive → close)
+- Routes: notifications list/read, prefs, push-devices, list sessions
+- `mobile/features/notifications/` — center, bell badge, prefs, push registration
+
+**Depends on:** M09 (invites), M08 / M08.5 (shopping session)
+**Complexity:** M
+
+**Acceptance:**
+- [x] Home bell opens Notification Center; mint unread badge; groups Dzisiaj…Starsze; pull-to-refresh
+- [x] Four MVP events via domain bus; repository has no side-effects; push via NotificationCreatedEvent
+- [x] Prefs persisted; new shopping list default OFF
+- [x] Taps: invite → accept; started → shop; finished → finish summary; list created → list
+- [x] Navigation idempotent (no duplicate screens / sessions)
+- [x] No per-item / AI / credits notifications
 
 ---
 
@@ -480,6 +512,41 @@ Import (Screenshot | Text | Clipboard)
 
 ---
 
+## M15 — Custom category packs (post-MVP)
+
+**Goal:** Allow configuring category sets beyond grocery defaults so Kangur works for other list types — e.g. hardware / building store, plumbing, fishing tackle, or any custom pack. Same shopping-list UX (aisles as categories), different taxonomy.
+
+**Creates/updates:**
+- Category pack model (workspace- or list-scoped presets: grocery default + user-defined)
+- CRUD UI to name packs and define categories (label, order, optional icon/color)
+- List creation / settings: pick which pack applies
+- AI ingest / categorization uses the active pack instead of hard-coded grocery categories
+- Shopping Mode progress / badges respect custom categories
+- PL/EN for pack UI; pack category labels as user content
+
+**Depends on:** M14 (MVP complete); builds on M04–M06 category plumbing  
+**Complexity:** L  
+**Status:** post-MVP — last milestone on this roadmap
+
+**Acceptance:**
+- [ ] User can create a custom pack (e.g. “Sklep budowlany”) with ordered categories
+- [ ] List can use grocery default or a custom pack
+- [ ] Items and AI assign categories from the active pack only
+- [ ] Shopping Mode and filters work with custom categories
+- [ ] Existing grocery lists unchanged when packs ship
+
+---
+
+## Post-MVP — Future directions (not scheduled)
+
+Documentation only — not implementation todos for M09.5.
+
+Activity Feed · Audit Log · Notification Archive UI · Notification Delete · Mute Workspace · Mute User · Notification Search · Rich Push · Scheduled Notifications
+
+Architecture hooks already present after M09.5: `NotificationCreatedEvent` fan-out, `archivedAt`, `actorUserId`, `sourceId`, `PushDevice.lastSeenAt` / `appVersion`, `ShoppingSession.clientInstanceId` / `clientPlatform`.
+
+---
+
 ## Suggested Cursor session sizing
 
 | Milestone | Typical sessions |
@@ -489,6 +556,7 @@ Import (Screenshot | Text | Clipboard)
 | M07–M12 | 1 each |
 | M13 | 1–2 |
 | M14 | 1–2 |
+| M15 | 2–3 (post-MVP) |
 
 ---
 

@@ -73,13 +73,25 @@ export function WorkspaceSwitcher({
                 alignItems: "center",
               }}
             >
-              <Text style={{ fontSize: 28 }}>{emoji}</Text>
+            <View
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: radius.full,
+                backgroundColor: theme.accent,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ fontSize: 24 }}>{emoji}</Text>
+            </View>
               <Text
                 numberOfLines={1}
                 style={{
-                  ...typography.caption,
+                  ...typography.label,
                   color: theme.text,
-                  marginTop: spacing[1],
+                  marginTop: spacing[2],
+                  textAlign: "center",
                 }}
               >
                 {ws.name}

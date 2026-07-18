@@ -2,7 +2,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import { useRef, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import {
   Alert,
   Image,
@@ -15,7 +15,6 @@ import { useTranslation } from "react-i18next";
 
 import { Screen } from "@/components/Screen";
 import { useColorScheme } from "@/components/useColorScheme";
-import { IconSettings } from "@/components/tab-bar/tab-icons";
 import { brandAssets } from "@/design-system/brand-assets";
 import {
   brand,
@@ -248,8 +247,6 @@ export default function ProfileScreen() {
   const { signOut, userId } = useAuth();
   const { data: me } = useMe();
   const queryClient = useQueryClient();
-  const scrollRef = useRef<ScrollView>(null);
-  const [settingsY, setSettingsY] = useState(0);
 
   const workspacesQuery = useWorkspaces();
   const { activeWorkspace, hydrated } = useActiveWorkspace(workspacesQuery.data);
@@ -276,6 +273,10 @@ export default function ProfileScreen() {
     router.push("/account");
   };
 
+  const openNotifications = () => {
+    router.push("/notifications");
+  };
+
   const toggleLanguage = () => {
     const next = i18n.language === "pl" ? "en" : "pl";
     void i18n.changeLanguage(next);
@@ -289,13 +290,6 @@ export default function ProfileScreen() {
 
   const goHome = () => {
     router.push("/(tabs)");
-  };
-
-  const scrollToSettings = () => {
-    scrollRef.current?.scrollTo({
-      y: Math.max(0, settingsY - 12),
-      animated: true,
-    });
   };
 
   return (
@@ -348,28 +342,10 @@ export default function ProfileScreen() {
               {t("profile.subtitle")}
             </Text>
           </View>
-
-          <Pressable
-            onPress={scrollToSettings}
-            accessibilityRole="button"
-            accessibilityLabel={t("profile.settingsA11y")}
-            hitSlop={8}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: radius.full,
-              backgroundColor: theme.section,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <IconSettings color={theme.textMuted} size={20} />
-          </Pressable>
         </View>
       </View>
 
       <ScrollView
-        ref={scrollRef}
         contentContainerStyle={{
           paddingHorizontal: spacing[6],
           paddingTop: spacing[5],
@@ -531,7 +507,7 @@ export default function ProfileScreen() {
             icon={<ProfileIconBell color={theme.primary} />}
             title={t("profile.notifications")}
             showDivider
-            onPress={showSoon}
+            onPress={openNotifications}
           />
           <ProfileMenuRow
             icon={<ProfileIconShield color={theme.primary} />}
@@ -540,36 +516,34 @@ export default function ProfileScreen() {
           />
         </SectionCard>
 
-        <View onLayout={(e) => setSettingsY(e.nativeEvent.layout.y)}>
-          <SectionCard title={t("profile.settingsSection")}>
-            <ProfileMenuRow
-              icon={<ProfileIconGlobe color={theme.primary} />}
-              title={t("profile.appLanguage")}
-              value={languageLabel}
-              showDivider
-              onPress={toggleLanguage}
-            />
-            <ProfileMenuRow
-              icon={<ProfileIconPalette color={theme.primary} />}
-              title={t("profile.appTheme")}
-              value={t("profile.themeLight")}
-              showDivider
-              showChevron={false}
-            />
-            <ProfileMenuRow
-              icon={<ProfileIconHelp color={theme.primary} />}
-              title={t("profile.helpSupport")}
-              showDivider
-              onPress={showSoon}
-            />
-            <ProfileMenuRow
-              icon={<ProfileIconInfo color={theme.primary} />}
-              title={t("profile.aboutApp")}
-              value={appVersion}
-              onPress={showSoon}
-            />
-          </SectionCard>
-        </View>
+        <SectionCard title={t("profile.settingsSection")}>
+          <ProfileMenuRow
+            icon={<ProfileIconGlobe color={theme.primary} />}
+            title={t("profile.appLanguage")}
+            value={languageLabel}
+            showDivider
+            onPress={toggleLanguage}
+          />
+          <ProfileMenuRow
+            icon={<ProfileIconPalette color={theme.primary} />}
+            title={t("profile.appTheme")}
+            value={t("profile.themeLight")}
+            showDivider
+            showChevron={false}
+          />
+          <ProfileMenuRow
+            icon={<ProfileIconHelp color={theme.primary} />}
+            title={t("profile.helpSupport")}
+            showDivider
+            onPress={showSoon}
+          />
+          <ProfileMenuRow
+            icon={<ProfileIconInfo color={theme.primary} />}
+            title={t("profile.aboutApp")}
+            value={appVersion}
+            onPress={showSoon}
+          />
+        </SectionCard>
 
         <Pressable
           onPress={() => void onSignOut()}

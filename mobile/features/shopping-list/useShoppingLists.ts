@@ -8,6 +8,7 @@ import {
   listShoppingLists,
   updateShoppingList,
 } from "./api";
+import { markListProvisional } from "./provisional-list";
 import type { ShoppingList } from "./schemas";
 
 export function useShoppingLists(workspaceId: string | null, enabled = true) {
@@ -54,7 +55,9 @@ export function useCreateShoppingList(workspaceId: string | null) {
       }
       return createShoppingList(token, workspaceId, input);
     },
-    onSuccess: async () => {
+    onSuccess: async (list) => {
+      // Must run before shopping-lists refetch — Home archives empty non-provisional lists.
+      markListProvisional(list.id);
       await queryClient.invalidateQueries({
         queryKey: ["shopping-lists", workspaceId],
       });

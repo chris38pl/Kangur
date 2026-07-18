@@ -16,6 +16,12 @@ enum WorkspaceRole {
   member
 }
 
+enum InvitationStatus {
+  pending
+  accepted
+  revoked
+}
+
 enum ShoppingMode {
   shopping
   editing
@@ -84,6 +90,26 @@ enum AiIngestStatus {
   abandoned
 }
 
+enum NotificationType {
+  WORKSPACE_INVITATION
+  SHOPPING_STARTED
+  SHOPPING_FINISHED
+  SHOPPING_LIST_CREATED
+  SHOPPING_LIST_DELETED
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+}
+
+enum NotificationPayloadType {
+  INVITE
+  LIST
+  WORKSPACE
+  SHOPPING
+}
+
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
@@ -92,9 +118,15 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  memberships        WorkspaceMember[]
-  createdWorkspaces  Workspace[]       @relation("WorkspaceCreator")
-  createdShoppingLists ShoppingList[]  @relation("ShoppingListCreator")
+  memberships          WorkspaceMember[]
+  createdWorkspaces    Workspace[]       @relation("WorkspaceCreator")
+  createdShoppingLists ShoppingList[]    @relation("ShoppingListCreator")
+  invitationsSent      Invitation[]      @relation("InvitationInviter")
+  notifications        Notification[]    @relation("NotificationRecipient")
+  actedNotifications   Notification[]    @relation("NotificationActor")
+  notificationPrefs    UserNotificationPreferences?
+  pushDevices          PushDevice[]
+  shoppingSessions     ShoppingSession[]
 }
 
 model Workspace {
@@ -107,10 +139,13 @@ model Workspace {
 
   createdBy    User               @relation("WorkspaceCreator", fields: [createdByUserId], references: [id])
   members      WorkspaceMember[]
+  invitations  Invitation[]
   settings     WorkspaceSettings?
   subscription Subscription?
   lists        ShoppingList[]
   aiUsage      AIUsage[]
+  notifications Notification[]
+  shoppingSessions ShoppingSession[]
 }
 
 model WorkspaceMember {
@@ -125,6 +160,26 @@ model WorkspaceMember {
 
   @@unique([workspaceId, userId])
   @@index([userId])
+}
+
+// TODO Workspace events: InvitationCreated | InvitationAccepted | InvitationRevoked | MemberRemoved | RoleChanged
+model Invitation {
+  id              String           @id @default(cuid())
+  workspaceId     String
+  email           String
+  role            WorkspaceRole    @default(member)
+  tokenHash       String           @unique
+  status          InvitationStatus @default(pending)
+  expiresAt       DateTime
+  invitedByUserId String
+  createdAt       DateTime         @default(now())
+  acceptedAt      DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("InvitationInviter", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, email, status])
+  @@index([workspaceId, status])
 }
 
 model WorkspaceSettings {
@@ -179,6 +234,7 @@ model ShoppingList {
   events    ShoppingEvent[]
   items     ShoppingItem[]
   aiRuns    AiIngestRun[]
+  sessions  ShoppingSession[]
 
   @@index([workspaceId, status])
 }
@@ -234,4 +290,79 @@ model AiIngestRun {
   list ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
 
   @@index([listId, createdAt])
+}
+
+model Notification {
+  id                   String                  @id @default(cuid())
+  recipientUserId      String
+  actorUserId          String?
+  workspaceId          String?
+  type                 NotificationType
+  status               NotificationStatus      @default(UNREAD)
+  title                String
+  body                 String
+  sourceId             String?
+  payloadType          NotificationPayloadType
+  payloadSchemaVersion Int                     @default(1)
+  payload              Json
+  createdAt            DateTime                @default(now())
+  readAt               DateTime?
+  archivedAt           DateTime?
+
+  recipient User       @relation("NotificationRecipient", fields: [recipientUserId], references: [id], onDelete: Cascade)
+  actor     User?      @relation("NotificationActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, createdAt(sort: Desc)])
+  @@index([recipientUserId, status])
+  @@index([recipientUserId, type, sourceId])
+}
+
+model UserNotificationPreferences {
+  userId               String   @id
+  silentMode           Boolean  @default(false)
+  workspaceInvitations Boolean  @default(true)
+  shoppingStarted      Boolean  @default(true)
+  shoppingFinished     Boolean  @default(true)
+  shoppingListCreated  Boolean  @default(false)
+  shoppingListDeleted  Boolean  @default(false)
+  appUpdates           Boolean  @default(false)
+  newFeatures          Boolean  @default(false)
+  offersPromos         Boolean  @default(false)
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PushDevice {
+  id         String   @id @default(cuid())
+  userId     String
+  expoToken  String   @unique
+  platform   String?
+  appVersion String?
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ShoppingSession {
+  id               String    @id @default(cuid())
+  listId           String
+  workspaceId      String
+  actorUserId      String
+  clientInstanceId String?
+  clientPlatform   String?
+  startedAt        DateTime  @default(now())
+  finishedAt       DateTime?
+
+  list      ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  workspace Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  actor     User         @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+
+  @@index([listId, actorUserId])
+  @@index([workspaceId])
 }

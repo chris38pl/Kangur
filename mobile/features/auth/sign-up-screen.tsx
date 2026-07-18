@@ -469,6 +469,9 @@ export function SignUpScreen() {
                 </Text>
               ) : null}
 
+              {/* Clerk Smart CAPTCHA mount (Expo web only; ignored on native). */}
+              <View nativeID="clerk-captcha" />
+
               <Pressable
                 disabled={busy || !isLoaded}
                 onPress={() => void onSignUp()}

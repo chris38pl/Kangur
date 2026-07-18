@@ -16,6 +16,7 @@ export const ApiErrorSchema = z
       "INSUFFICIENT_CREDITS",
     ]),
     message: z.string(),
+    details: z.record(z.string(), z.unknown()).optional(),
   })
   .openapi("ApiError");
 

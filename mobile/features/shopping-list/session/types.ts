@@ -14,6 +14,8 @@ export type SessionSnapshot = {
   state: SessionState;
   startedAt: string;
   updatedAt: string;
+  /** Server shopping session id (M09.5) */
+  serverSessionId?: string;
   /** Local hide after finish-offline before server archive lands */
   locallyHidden?: boolean;
 };

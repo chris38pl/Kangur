@@ -1,6 +1,7 @@
 import * as Clipboard from "expo-clipboard";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Platform,
   Pressable,
@@ -12,22 +13,44 @@ import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
+import { ApiClientError } from "@/lib/api/client";
+
+import { RevokeInviteSheet } from "./revoke-invite-sheet";
+import type { Invitation } from "./schemas";
+import {
+  useCreateInvitation,
+  useRevokeInvitation,
+  useWorkspaceInvitations,
+} from "./useWorkspaceInvites";
 
 type Props = {
   workspaceId: string;
+  canManage: boolean;
   onEmailFocus?: () => void;
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function WorkspaceInviteSection({ workspaceId, onEmailFocus }: Props) {
+export function WorkspaceInviteSection({
+  workspaceId,
+  canManage,
+  onEmailFocus,
+}: Props) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const [email, setEmail] = useState("");
+  const [lastAcceptUrl, setLastAcceptUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [revokeTarget, setRevokeTarget] = useState<Invitation | null>(null);
 
-  const inviteLink = `https://kangur.app/join/${workspaceId}`;
+  const invitationsQuery = useWorkspaceInvitations(workspaceId, canManage);
+  const createMutation = useCreateInvitation(workspaceId);
+  const revokeMutation = useRevokeInvitation(workspaceId);
+
+  if (!canManage) {
+    return null;
+  }
 
   const sendInvite = () => {
     const trimmed = email.trim();
@@ -35,17 +58,57 @@ export function WorkspaceInviteSection({ workspaceId, onEmailFocus }: Props) {
       Alert.alert(t("workspace.inviteInvalidEmail"));
       return;
     }
-    Alert.alert(
-      t("workspace.inviteSentTitle"),
-      t("workspace.inviteSentBody", { email: trimmed }),
-    );
-    setEmail("");
+
+    createMutation.mutate(trimmed, {
+      onSuccess: (result) => {
+        setLastAcceptUrl(result.acceptUrl);
+        setEmail("");
+        Alert.alert(
+          t("workspace.inviteSentTitle"),
+          result.status === "resent"
+            ? t("workspace.inviteResentBody", { email: trimmed })
+            : t("workspace.inviteSentBody", { email: trimmed }),
+        );
+      },
+      onError: (err) => {
+        if (err instanceof ApiClientError) {
+          if (err.status === 409) {
+            Alert.alert(t("workspace.inviteAlreadyMember"));
+            return;
+          }
+          if (err.status === 400) {
+            Alert.alert(err.message || t("workspace.inviteInvalidEmail"));
+            return;
+          }
+          if (err.status === 403) {
+            Alert.alert(t("workspace.inviteForbidden"));
+            return;
+          }
+        }
+        Alert.alert(t("workspace.inviteFailed"));
+      },
+    });
   };
 
   const copyLink = async () => {
-    await Clipboard.setStringAsync(inviteLink);
+    if (!lastAcceptUrl) {
+      Alert.alert(t("workspace.copyLinkNeedInvite"));
+      return;
+    }
+    await Clipboard.setStringAsync(lastAcceptUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const confirmRevoke = () => {
+    if (!revokeTarget) return;
+    const invitationId = revokeTarget.id;
+    revokeMutation.mutate(invitationId, {
+      onSuccess: () => setRevokeTarget(null),
+      onError: () => {
+        Alert.alert(t("workspace.revokeInviteFailed"));
+      },
+    });
   };
 
   const fieldStyle = {
@@ -58,6 +121,8 @@ export function WorkspaceInviteSection({ workspaceId, onEmailFocus }: Props) {
     color: theme.text,
     ...typography.body,
   } as const;
+
+  const pending = invitationsQuery.data ?? [];
 
   return (
     <View style={{ marginTop: spacing[6] }}>
@@ -81,6 +146,7 @@ export function WorkspaceInviteSection({ workspaceId, onEmailFocus }: Props) {
 
       <Pressable
         onPress={sendInvite}
+        disabled={createMutation.isPending}
         accessibilityRole="button"
         style={{
           marginTop: spacing[3],
@@ -91,12 +157,19 @@ export function WorkspaceInviteSection({ workspaceId, onEmailFocus }: Props) {
           alignItems: "center",
           justifyContent: "center",
           gap: spacing[2],
+          opacity: createMutation.isPending ? 0.7 : 1,
         }}
       >
-        <Text style={{ fontSize: 16, color: theme.onPrimary }}>✈️</Text>
-        <Text style={{ ...typography.label, color: theme.onPrimary }}>
-          {t("workspace.inviteSend")}
-        </Text>
+        {createMutation.isPending ? (
+          <ActivityIndicator color={theme.onPrimary} />
+        ) : (
+          <>
+            <Text style={{ fontSize: 16, color: theme.onPrimary }}>✈️</Text>
+            <Text style={{ ...typography.label, color: theme.onPrimary }}>
+              {t("workspace.inviteSend")}
+            </Text>
+          </>
+        )}
       </Pressable>
 
       <View
@@ -145,6 +218,70 @@ export function WorkspaceInviteSection({ workspaceId, onEmailFocus }: Props) {
           </Text>
         </Pressable>
       </View>
+
+      {pending.length > 0 ? (
+        <View style={{ marginTop: spacing[5] }}>
+          <Text style={{ ...typography.headline, color: theme.text }}>
+            {t("workspace.pendingInvitesTitle")}
+          </Text>
+          <View style={{ marginTop: spacing[2], gap: spacing[2] }}>
+            {pending.map((invitation) => (
+              <View
+                key={invitation.id}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing[3],
+                  paddingVertical: spacing[2],
+                }}
+              >
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    ...typography.body,
+                    color: theme.text,
+                    flex: 1,
+                    minWidth: 0,
+                  }}
+                >
+                  {invitation.email}
+                </Text>
+                <Pressable
+                  onPress={() => setRevokeTarget(invitation)}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  style={{
+                    backgroundColor: "#FDECEC",
+                    borderRadius: radius.full,
+                    paddingHorizontal: spacing[3],
+                    paddingVertical: spacing[1] + 2,
+                  }}
+                >
+                  <Text
+                    style={{
+                      ...typography.caption,
+                      color: theme.danger,
+                      fontWeight: "700",
+                    }}
+                  >
+                    {t("workspace.revokeInviteConfirm")}
+                  </Text>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
+
+      <RevokeInviteSheet
+        visible={revokeTarget != null}
+        email={revokeTarget?.email ?? ""}
+        busy={revokeMutation.isPending}
+        onCancel={() => {
+          if (!revokeMutation.isPending) setRevokeTarget(null);
+        }}
+        onConfirm={confirmRevoke}
+      />
     </View>
   );
 }

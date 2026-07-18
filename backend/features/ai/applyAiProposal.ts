@@ -7,6 +7,7 @@ import { conflict, notFound } from "@/lib/auth/errors";
 import { appendShoppingEvent } from "@/lib/events/appendShoppingEvent";
 import { prisma } from "@/lib/prisma";
 
+import { maybePublishShoppingListCreated } from "../shopping-list/maybePublishShoppingListCreated";
 import { toShoppingItemDto } from "../shopping-item/toShoppingItemDto";
 import { applyUntitledListTitleFromProposal } from "./applyUntitledListTitle";
 import { ApplyAiProposalBodySchema } from "./schemas";
@@ -136,6 +137,13 @@ export async function applyAiProposal(input: {
       listId: list.id,
       proposal: run.proposal,
     });
+
+    if (result.applied > 0) {
+      await maybePublishShoppingListCreated({
+        listId: list.id,
+        actorUserId: input.userId,
+      });
+    }
 
     return result;
   } catch (error) {

@@ -26,12 +26,32 @@ import {
 } from "@/features/shopping-item/schemas";
 import { AiCreditsBalanceSchema } from "@/features/billing/schemas";
 import {
+  AcceptInvitationBodySchema,
+  AcceptInvitationResponseSchema,
+  CreateInvitationBodySchema,
   CreateWorkspaceBodySchema,
+  InvitationListResponseSchema,
+  InvitationPreviewQuerySchema,
+  InvitationPreviewResponseSchema,
+  InviteMemberResultSchema,
+  UpdateMemberRoleBodySchema,
   UpdateWorkspaceBodySchema,
   WorkspaceDTOSchema,
   WorkspaceListResponseSchema,
   WorkspaceMemberListResponseSchema,
 } from "@/features/workspace/schemas";
+import {
+  FinishShoppingSessionBodySchema,
+  FinishShoppingSessionResponseSchema,
+  NotifyShoppingFinishedResponseSchema,
+  NotificationListResponseSchema,
+  NotificationPreferencesSchema,
+  RegisterPushDeviceBodySchema,
+  StartShoppingSessionBodySchema,
+  StartShoppingSessionResponseSchema,
+  UnregisterPushDeviceBodySchema,
+  UpdateNotificationPreferencesBodySchema,
+} from "@/features/notifications/schemas";
 
 extendZodWithOpenApi(z);
 
@@ -297,6 +317,548 @@ registry.registerPath({
         "application/json": {
           schema: ApiErrorSchema,
         },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/api/v1/workspaces/{workspaceId}/members/{userId}",
+  summary: "Remove a workspace member",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+      userId: z.string(),
+    }),
+  },
+  responses: {
+    204: { description: "Member removed" },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    404: {
+      description: "Not found",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/api/v1/workspaces/{workspaceId}/members/{userId}",
+  summary: "Update a workspace member role",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+      userId: z.string(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: UpdateMemberRoleBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    204: { description: "Role updated" },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/workspaces/{workspaceId}/invitations",
+  summary: "List pending workspace invitations",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Pending invitations",
+      content: {
+        "application/json": {
+          schema: InvitationListResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/workspaces/{workspaceId}/invitations",
+  summary: "Create or resend a workspace invitation",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: CreateInvitationBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "Invitation created or resent",
+      content: {
+        "application/json": {
+          schema: InviteMemberResultSchema,
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    409: {
+      description: "Already a member",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/api/v1/workspaces/{workspaceId}/invitations/{invitationId}",
+  summary: "Revoke a pending invitation",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+      invitationId: z.string(),
+    }),
+  },
+  responses: {
+    204: { description: "Invitation revoked" },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    404: {
+      description: "Not found",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/invitations/accept",
+  summary: "Accept a workspace invitation by token",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: AcceptInvitationBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Invitation accepted",
+      content: {
+        "application/json": {
+          schema: AcceptInvitationResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    403: {
+      description: "Email mismatch",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    404: {
+      description: "Expired or revoked",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    409: {
+      description: "Already accepted / already member",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/invitations/preview",
+  summary: "Preview a workspace invitation by token (no accept)",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: InvitationPreviewQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Invitation preview",
+      content: {
+        "application/json": {
+          schema: InvitationPreviewResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    403: {
+      description: "Email mismatch",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    404: {
+      description: "Expired or revoked",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/notifications",
+  summary: "List notifications for the current user",
+  tags: ["Notifications"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "Notifications",
+      content: {
+        "application/json": { schema: NotificationListResponseSchema },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/notifications/{notificationId}/read",
+  summary: "Mark a notification as read",
+  tags: ["Notifications"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ notificationId: z.string() }),
+  },
+  responses: {
+    204: { description: "Marked read" },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/notifications/read-all",
+  summary: "Mark all notifications as read",
+  tags: ["Notifications"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    204: { description: "All marked read" },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/me/notification-preferences",
+  summary: "Get notification preferences",
+  tags: ["Notifications"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "Preferences",
+      content: {
+        "application/json": { schema: NotificationPreferencesSchema },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/api/v1/me/notification-preferences",
+  summary: "Update notification preferences",
+  tags: ["Notifications"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: UpdateNotificationPreferencesBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Updated preferences",
+      content: {
+        "application/json": { schema: NotificationPreferencesSchema },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/me/push-devices",
+  summary: "Register Expo push token",
+  tags: ["Notifications"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        "application/json": { schema: RegisterPushDeviceBodySchema },
+      },
+    },
+  },
+  responses: {
+    204: { description: "Registered" },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/api/v1/me/push-devices",
+  summary: "Unregister Expo push token",
+  tags: ["Notifications"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        "application/json": { schema: UnregisterPushDeviceBodySchema },
+      },
+    },
+  },
+  responses: {
+    204: { description: "Unregistered" },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/lists/{listId}/sessions",
+  summary: "Start a shopping session",
+  tags: ["Shopping Sessions"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ listId: z.string() }),
+    body: {
+      content: {
+        "application/json": { schema: StartShoppingSessionBodySchema },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "Session started or resumed",
+      content: {
+        "application/json": { schema: StartShoppingSessionResponseSchema },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/lists/{listId}/sessions/{sessionId}/notify-finished",
+  summary:
+    "Notify workspace that shopping finished (no archive — used on summary screen)",
+  tags: ["Shopping Sessions"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ listId: z.string(), sessionId: z.string() }),
+    body: {
+      content: {
+        "application/json": { schema: FinishShoppingSessionBodySchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Workspace members notified",
+      content: {
+        "application/json": { schema: NotifyShoppingFinishedResponseSchema },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/lists/{listId}/sessions/{sessionId}/finish",
+  summary: "Finish a shopping session and archive the list",
+  tags: ["Shopping Sessions"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ listId: z.string(), sessionId: z.string() }),
+    body: {
+      content: {
+        "application/json": { schema: FinishShoppingSessionBodySchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Session finished",
+      content: {
+        "application/json": { schema: FinishShoppingSessionResponseSchema },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
       },
     },
   },

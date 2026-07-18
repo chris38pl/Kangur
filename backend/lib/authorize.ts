@@ -6,7 +6,7 @@ import type {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { notFound } from "@/lib/auth/errors";
+import { forbidden, notFound } from "@/lib/auth/errors";
 
 export type AuthorizeResult = {
   workspace: Workspace;
@@ -38,6 +38,16 @@ export async function authorize(
     workspace: membership.workspace,
     membership,
   };
+}
+
+export function requireRole(
+  membership: WorkspaceMember,
+  allowed: WorkspaceRole[],
+  message = "Forbidden.",
+): void {
+  if (!allowed.includes(membership.role)) {
+    throw forbidden(message);
+  }
 }
 
 export async function authorizeList(

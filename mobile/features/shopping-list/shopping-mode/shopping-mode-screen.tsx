@@ -1,12 +1,11 @@
-import {
-  getShoppingCategoryIcon,
-  type ShoppingCategory,
-} from "@shared/shopping-categories";
+import { useAuth } from "@clerk/clerk-expo";
+import { type ShoppingCategory } from "@shared/shopping-categories";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -17,28 +16,55 @@ import { useTranslation } from "react-i18next";
 import { useColorScheme } from "@/components/useColorScheme";
 import { shoppingDensity } from "@/design-system/shopping-density";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
+import { BackIcon } from "@/features/auth/auth-icons";
 import { OfflineStatusBanner } from "@/features/offline/OfflineStatusBanner";
+import { startShoppingSession } from "@/features/notifications/api";
 import type { ShoppingItem } from "@/features/shopping-item/schemas";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
 import { useShoppingSession } from "@/features/shopping-list/session/useShoppingSession";
+import { notifyFinishedForActiveSession } from "@/features/shopping-list/session/notify-finished";
 import { useShoppingList } from "@/features/shopping-list/useShoppingLists";
+import { useWorkspaceMembers } from "@/features/workspace/useWorkspaceMembers";
 import { createClientId } from "@/lib/createClientId";
+import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AddItemSheet } from "./add-item-sheet";
-import { getActiveCategoryProgress } from "./category-progress";
-import { CategoryProgressBar } from "./category-progress-bar";
-import { SearchSlot, ShoppingHomeHeader } from "./shopping-home-header";
+import {
+  getActiveCategoryProgress,
+  getCompletedCategoryProgress,
+  getListShoppingProgress,
+} from "./category-progress";
+import { ShoppingCategoryCard } from "./shopping-category-card";
 import { ShoppingFab } from "./shopping-fab";
+import { ShoppingListSummaryCard } from "./shopping-list-summary-card";
 import { useShoppingModeExitGuard } from "./shopping-mode-exit-guard";
 
 type Props = {
   listId: string;
 };
 
+function SectionTitle({ children }: { children: string }) {
+  const scheme = useColorScheme() ?? "light";
+  const theme = colors[scheme];
+
+  return (
+    <Text
+      style={{
+        ...typography.headline,
+        color: theme.text,
+        marginBottom: spacing[3],
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
 export function ShoppingModeScreen({ listId }: Props) {
   const { t } = useTranslation();
+  const { getToken } = useAuth();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
@@ -46,6 +72,7 @@ export function ShoppingModeScreen({ listId }: Props) {
   const queryClient = useQueryClient();
   const listQuery = useShoppingList(listId);
   const itemsQuery = useShoppingItems(listId);
+  const membersQuery = useWorkspaceMembers(listQuery.data?.workspaceId ?? null);
   const session = useShoppingSession(listId);
   const [addOpen, setAddOpen] = useState(false);
   const [fabVisible, setFabVisible] = useState(true);
@@ -68,24 +95,60 @@ export function ShoppingModeScreen({ listId }: Props) {
       !startedRef.current
     ) {
       startedRef.current = true;
-      void session.start(listQuery.data.workspaceId).then(() => {
+      void (async () => {
+        await session.start(listQuery.data!.workspaceId);
+        try {
+          const token = await getToken();
+          if (!token) return;
+          const remote = await startShoppingSession(token, listId, {
+            clientPlatform:
+              Platform.OS === "ios"
+                ? "ios"
+                : Platform.OS === "android"
+                  ? "android"
+                  : "web",
+          });
+          await session.setServerSessionId(remote.id);
+        } catch (error) {
+          console.info("[shopping]", "ServerSessionStartSkipped", error);
+        }
         void queryClient.invalidateQueries({
           queryKey: ["shopping-sessions", "resumable"],
         });
-      });
+      })();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- start once after hydrate
   }, [session.hydrated, listQuery.data?.workspaceId]);
 
+  const items = itemsQuery.data ?? [];
+
   const categories = useMemo(
-    () => getActiveCategoryProgress(itemsQuery.data ?? []),
-    [itemsQuery.data],
+    () => getActiveCategoryProgress(items),
+    [items],
   );
 
-  const remaining = useMemo(
-    () => (itemsQuery.data ?? []).filter((i) => i.status === "pending").length,
-    [itemsQuery.data],
+  const completedCategories = useMemo(
+    () => getCompletedCategoryProgress(items),
+    [items],
   );
+
+  const listProgress = useMemo(() => getListShoppingProgress(items), [items]);
+
+  const relativeLabels = useMemo(
+    () => ({
+      justNow: t("home.updatedJustNow"),
+      minutes: (n: number) => t("home.updatedMinutes", { count: n }),
+      hours: (n: number) => t("home.updatedHours", { count: n }),
+      days: (n: number) => t("home.updatedDays", { count: n }),
+    }),
+    [t],
+  );
+
+  const updatedLabel = listQuery.data?.updatedAt
+    ? t("home.updatedPrefix", {
+        time: formatRelativeUpdatedAt(listQuery.data.updatedAt, relativeLabels),
+      })
+    : "";
 
   const openCategory = (category: ShoppingCategory) => {
     allowLeave();
@@ -107,36 +170,145 @@ export function ShoppingModeScreen({ listId }: Props) {
     );
   }
 
+  const showFinishCta = categories.length === 0;
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.section }}>
-      <OfflineStatusBanner listId={listId} />
-      <ScrollView
-        contentContainerStyle={{
-          padding: spacing[6],
-          paddingBottom: 100 + insets.bottom,
-        }}
-        onScroll={(e) => {
-          const y = e.nativeEvent.contentOffset.y;
-          if (y > lastScrollY.current + 8) setFabVisible(false);
-          else if (y < lastScrollY.current - 8) setFabVisible(true);
-          lastScrollY.current = y;
-        }}
-        scrollEventThrottle={16}
-      >
-        <ShoppingHomeHeader
-          title={listQuery.data?.name ?? t("shoppingMode.title")}
-          remaining={remaining}
-        />
-        <SearchSlot />
+      <View style={{ paddingTop: insets.top, backgroundColor: theme.bg }}>
+        <View
+          style={{
+            paddingHorizontal: spacing[4],
+            paddingBottom: spacing[3],
+            borderBottomWidth: 1,
+            borderBottomColor: theme.border,
+            backgroundColor: theme.bg,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing[2],
+            }}
+          >
+            <Pressable
+              onPress={() => {
+                if (router.canGoBack()) router.back();
+                else {
+                  allowLeave();
+                  router.replace(`/list/${listId}`);
+                }
+              }}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t("auth.back")}
+              style={{
+                width: 40,
+                height: 40,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <BackIcon size={20} />
+            </Pressable>
 
-        {categories.length === 0 ? (
-          <View style={{ marginTop: spacing[8], alignItems: "center" }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text
+                numberOfLines={1}
+                style={{ ...typography.headline, color: theme.text }}
+              >
+                {t("shoppingMode.continueShopping")}
+              </Text>
+              <Text
+                style={{
+                  ...typography.caption,
+                  color: theme.textMuted,
+                  marginTop: 2,
+                }}
+                numberOfLines={2}
+              >
+                {t("shoppingMode.continueShoppingSubtitle")}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <View style={{ flex: 1 }}>
+        <OfflineStatusBanner listId={listId} overlay />
+        <ScrollView
+          contentContainerStyle={{
+            padding: spacing[6],
+            paddingBottom: 100 + insets.bottom,
+          }}
+          onScroll={(e) => {
+            const y = e.nativeEvent.contentOffset.y;
+            if (y > lastScrollY.current + 8) setFabVisible(false);
+            else if (y < lastScrollY.current - 8) setFabVisible(true);
+            lastScrollY.current = y;
+          }}
+          scrollEventThrottle={16}
+        >
+        <ShoppingListSummaryCard
+          title={listQuery.data?.name ?? t("shoppingMode.title")}
+          updatedLabel={updatedLabel}
+          bought={listProgress.bought}
+          total={listProgress.total}
+          progress={listProgress.progress}
+          members={membersQuery.data ?? []}
+        />
+
+        {categories.length > 0 ? (
+          <View style={{ marginBottom: spacing[2] }}>
+            <SectionTitle>{t("shoppingMode.categoriesSection")}</SectionTitle>
+            {categories.map((cat) => (
+              <ShoppingCategoryCard
+                key={cat.category}
+                cat={cat}
+                variant="active"
+                onPress={openCategory}
+              />
+            ))}
+          </View>
+        ) : null}
+
+        {completedCategories.length > 0 ? (
+          <View style={{ marginTop: categories.length > 0 ? spacing[4] : 0 }}>
+            <SectionTitle>
+              {t("shoppingMode.alreadyBoughtSection")}
+            </SectionTitle>
+            {completedCategories.map((cat) => (
+              <ShoppingCategoryCard
+                key={`done-${cat.category}`}
+                cat={cat}
+                variant="completed"
+                onPress={openCategory}
+              />
+            ))}
+          </View>
+        ) : null}
+
+        {showFinishCta ? (
+          <View
+            style={{
+              marginTop: spacing[6],
+              alignItems: "center",
+            }}
+          >
             <Text style={{ ...typography.headline, color: theme.text }}>
               {t("shoppingMode.allDone")}
             </Text>
             <Pressable
               onPress={() => {
                 allowLeave();
+                const unavailable = (itemsQuery.data ?? []).filter(
+                  (i) => i.status === "unavailable",
+                ).length;
+                void notifyFinishedForActiveSession(
+                  listId,
+                  getToken,
+                  unavailable,
+                );
                 router.push(`/list/${listId}/shop/finish`);
               }}
               style={{
@@ -154,42 +326,7 @@ export function ShoppingModeScreen({ listId }: Props) {
               </Text>
             </Pressable>
           </View>
-        ) : (
-          categories.map((cat) => (
-            <Pressable
-              key={cat.category}
-              onPress={() => openCategory(cat.category)}
-              style={{
-                marginBottom: spacing[3],
-                padding: spacing[4],
-                borderRadius: radius.lg,
-                borderWidth: 1,
-                borderColor: theme.border,
-                backgroundColor: theme.surface,
-                minHeight: shoppingDensity.categoryRowMinHeight,
-              }}
-            >
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
-              >
-                <Text style={{ fontSize: 28 }}>
-                  {getShoppingCategoryIcon(cat.category)}
-                </Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ ...typography.headline, color: theme.text }}>
-                    {t(`categories.${cat.category}`)}
-                  </Text>
-                  <Text
-                    style={{ ...typography.caption, color: theme.textMuted }}
-                  >
-                    {t("shoppingMode.leftCount", { count: cat.activeCount })}
-                  </Text>
-                  <CategoryProgressBar progress={cat.progress} />
-                </View>
-              </View>
-            </Pressable>
-          ))
-        )}
+        ) : null}
       </ScrollView>
 
       <ShoppingFab
@@ -197,6 +334,7 @@ export function ShoppingModeScreen({ listId }: Props) {
         expanded={fabVisible}
         onPress={() => setAddOpen(true)}
       />
+      </View>
 
       <AddItemSheet
         visible={addOpen}

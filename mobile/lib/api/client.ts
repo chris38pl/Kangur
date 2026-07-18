@@ -19,17 +19,25 @@ export type ApiErrorCode =
 export type ApiErrorBody = {
   code: ApiErrorCode;
   message: string;
+  details?: Record<string, unknown>;
 };
 
 export class ApiClientError extends Error {
   readonly code: ApiErrorCode;
   readonly status?: number;
+  readonly details?: Record<string, unknown>;
 
-  constructor(code: ApiErrorCode, message: string, status?: number) {
+  constructor(
+    code: ApiErrorCode,
+    message: string,
+    status?: number,
+    details?: Record<string, unknown>,
+  ) {
     super(message);
     this.name = "ApiClientError";
     this.code = code;
     this.status = status;
+    this.details = details;
   }
 }
 
@@ -138,12 +146,16 @@ export async function apiFetch<T>(
   if (!res.ok) {
     let code: ApiErrorCode = "UNKNOWN";
     let message = `Request failed (${res.status})`;
+    let details: Record<string, unknown> | undefined;
     if (parsed && typeof parsed === "object") {
       const data = parsed as Partial<ApiErrorBody>;
       if (data.code) code = data.code;
       if (data.message) message = data.message;
+      if (data.details && typeof data.details === "object") {
+        details = data.details;
+      }
     }
-    throw new ApiClientError(code, message, res.status);
+    throw new ApiClientError(code, message, res.status, details);
   }
 
   if (res.status === 204 || !rawText) {

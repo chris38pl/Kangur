@@ -94,7 +94,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         markListProvisional(list.id);
         setSheetOpen(false);
 
-        router.push(`/list/${list.id}` as never);
+        router.replace(`/list/${list.id}` as never);
       } catch {
         setPreparing(false);
         // keep sheet open; drop any staged import so we do not attach it later

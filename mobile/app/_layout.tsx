@@ -15,6 +15,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { colors } from "@/design-system/tokens";
 import { useDataSyncEngineBootstrap } from "@/features/data-sync-engine/useBootstrap";
+import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { AppQueryProvider } from "@/lib/query/client";
 import { suppressClerkDevKeysWarning } from "@/lib/suppress-clerk-dev-warning";
 
@@ -47,8 +48,9 @@ const lightTheme = {
 };
 
 function AuthGate({ children }: { children: ReactNode }) {
-  const { isLoaded } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   useDataSyncEngineBootstrap();
+  usePushRegistration(Boolean(isSignedIn));
 
   useEffect(() => {
     if (isLoaded) {
@@ -94,6 +96,30 @@ export default function RootLayout() {
                     <Stack.Screen name="account" options={{ headerShown: false }} />
                     <Stack.Screen
                       name="change-password"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="notifications"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="notification-center"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="invite/[token]"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="notification/shopping-started"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="notification/shopping-finished"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="notification/list-created"
                       options={{ headerShown: false }}
                     />
                     <Stack.Screen name="list/[listId]" />

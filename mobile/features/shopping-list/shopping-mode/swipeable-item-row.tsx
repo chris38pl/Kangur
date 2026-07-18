@@ -1,3 +1,4 @@
+import { getShoppingCategoryIcon } from "@shared/shopping-categories";
 import * as Haptics from "expo-haptics";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Text, View } from "react-native";
@@ -14,7 +15,14 @@ import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { shoppingDensity } from "@/design-system/shopping-density";
-import { colors, spacing, typography } from "@/design-system/tokens";
+import {
+  colors,
+  radius,
+  shadows,
+  spacing,
+  typography,
+} from "@/design-system/tokens";
+import { getCategoryBadgeColors } from "@/features/shopping-item/category-badge-colors";
 import type { ShoppingItem } from "@/features/shopping-item/schemas";
 
 type Props = {
@@ -29,7 +37,6 @@ const COMMIT_DISTANCE = 56;
 const COMMIT_DISTANCE_SLOW = 72;
 const COMMIT_VELOCITY = 600;
 const COLLAPSE_MS = shoppingDensity.collapseDurationMs;
-const ROW_MIN = shoppingDensity.rowMinHeight;
 const PURCHASED = shoppingDensity.purchasedColor;
 const UNAVAILABLE = shoppingDensity.unavailableColor;
 
@@ -42,9 +49,11 @@ export function SwipeableItemRow({
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+  const badge = getCategoryBadgeColors(item.category);
 
   const translateX = useSharedValue(0);
-  const rowHeight = useSharedValue<number>(ROW_MIN);
+  const measuredHeight = useSharedValue(72);
+  const collapseHeight = useSharedValue(-1); // -1 = auto layout
   const opacity = useSharedValue(1);
   const scale = useSharedValue(1);
   const rowWidth = useSharedValue(320);
@@ -103,18 +112,16 @@ export function SwipeableItemRow({
             (x < -COMMIT_DISTANCE && v <= 0) ||
             (x < -28 && v < -COMMIT_VELOCITY);
 
-          if (commitRight) {
-            translateX.value = withTiming(w, { duration: 160 });
+          if (commitRight || commitLeft) {
+            const startH = Math.max(measuredHeight.value, 1);
+            collapseHeight.value = startH;
+            translateX.value = withTiming(commitRight ? w : -w, {
+              duration: 160,
+            });
             opacity.value = withTiming(0, { duration: 180 });
-            rowHeight.value = withTiming(0, { duration: COLLAPSE_MS });
-            runOnJS(runPurchase)();
-            return;
-          }
-          if (commitLeft) {
-            translateX.value = withTiming(-w, { duration: 160 });
-            opacity.value = withTiming(0, { duration: 180 });
-            rowHeight.value = withTiming(0, { duration: COLLAPSE_MS });
-            runOnJS(runUnavailable)();
+            collapseHeight.value = withTiming(0, { duration: COLLAPSE_MS });
+            if (commitRight) runOnJS(runPurchase)();
+            else runOnJS(runUnavailable)();
             return;
           }
 
@@ -123,7 +130,6 @@ export function SwipeableItemRow({
           translateX.value = withSpring(0, { damping: 20, stiffness: 220 });
           scale.value = withSpring(1);
         }),
-    // Gesture created once; shared values + run* callbacks are stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Reanimated gesture
     [runPurchase, runUnavailable],
   );
@@ -131,6 +137,7 @@ export function SwipeableItemRow({
   const rowStyle = useAnimatedStyle(() => {
     "worklet";
     const rotation = interpolate(translateX.value, [-200, 200], [-4, 4]);
+    const collapsing = collapseHeight.value >= 0;
     return {
       transform: [
         { translateX: translateX.value },
@@ -138,7 +145,9 @@ export function SwipeableItemRow({
         { rotateZ: `${rotation}deg` },
       ],
       opacity: opacity.value,
-      height: rowHeight.value,
+      height: collapsing ? collapseHeight.value : undefined,
+      marginBottom:
+        collapsing && collapseHeight.value < 1 ? 0 : spacing[3],
       overflow: "hidden" as const,
     };
   });
@@ -155,7 +164,6 @@ export function SwipeableItemRow({
 
   return (
     <View
-      style={{ marginBottom: spacing[2] }}
       onLayout={(e) => {
         rowWidth.value = e.nativeEvent.layout.width;
       }}
@@ -165,12 +173,12 @@ export function SwipeableItemRow({
         style={[
           bgStyle,
           {
-            borderRadius: 12,
+            borderRadius: radius.xl,
             position: "absolute",
             left: 0,
             right: 0,
             top: 0,
-            bottom: 0,
+            bottom: spacing[3],
             justifyContent: "center",
             paddingHorizontal: spacing[4],
           },
@@ -193,33 +201,89 @@ export function SwipeableItemRow({
 
       <GestureDetector gesture={pan}>
         <Animated.View
+          onLayout={(e) => {
+            const h = e.nativeEvent.layout.height;
+            if (h > 0 && collapseHeight.value < 0) {
+              measuredHeight.value = h;
+            }
+          }}
           style={[
             rowStyle,
             {
               backgroundColor: theme.surface,
-              borderRadius: 12,
+              borderRadius: radius.xl,
               borderWidth: 1,
               borderColor: theme.border,
               paddingHorizontal: spacing[4],
+              paddingVertical: spacing[3],
               justifyContent: "center",
-              minHeight: ROW_MIN,
+              ...shadows.soft,
             },
           ]}
         >
-          <Text
-            style={{ ...typography.body, color: theme.text }}
-            numberOfLines={1}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing[3],
+            }}
           >
-            {item.name}
-          </Text>
-          {item.amount || item.note ? (
-            <Text
-              style={{ ...typography.caption, color: theme.textMuted }}
-              numberOfLines={1}
+            <View
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: radius.lg,
+                backgroundColor: badge.background,
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
             >
-              {[item.amount, item.note].filter(Boolean).join(" · ")}
-            </Text>
-          ) : null}
+              <Text style={{ fontSize: 22 }}>
+                {getShoppingCategoryIcon(item.category)}
+              </Text>
+            </View>
+
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text
+                style={{
+                  ...typography.headline,
+                  color: theme.text,
+                  fontSize: 16,
+                  lineHeight: 22,
+                }}
+                numberOfLines={1}
+              >
+                {item.name}
+              </Text>
+              {item.note ? (
+                <Text
+                  style={{
+                    ...typography.caption,
+                    color: theme.textMuted,
+                    marginTop: 2,
+                  }}
+                  numberOfLines={1}
+                >
+                  {item.note}
+                </Text>
+              ) : null}
+            </View>
+
+            {item.amount ? (
+              <Text
+                style={{
+                  ...typography.label,
+                  color: theme.textMuted,
+                  flexShrink: 0,
+                  marginLeft: spacing[2],
+                }}
+                numberOfLines={1}
+              >
+                {item.amount}
+              </Text>
+            ) : null}
+          </View>
         </Animated.View>
       </GestureDetector>
     </View>

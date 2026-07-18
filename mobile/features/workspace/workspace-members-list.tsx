@@ -1,10 +1,14 @@
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 
 import type { WorkspaceMember } from "./schemas";
+import {
+  useRemoveMember,
+  useUpdateMemberRole,
+} from "./useWorkspaceInvites";
 
 const AVATAR_PALETTE = [
   { background: "#FDECEC", text: "#C45C5C" },
@@ -16,8 +20,10 @@ const AVATAR_PALETTE = [
 ] as const;
 
 type Props = {
+  workspaceId: string;
   members: WorkspaceMember[];
   currentUserId: string | null;
+  actorRole: "owner" | "admin" | "member" | null;
   loading?: boolean;
 };
 
@@ -31,14 +37,24 @@ function avatarColors(seed: string) {
 
 function roleLabelKey(role: WorkspaceMember["role"]) {
   if (role === "owner") return "workspace.roleOwner";
-  return "workspace.roleEditor";
+  if (role === "admin") return "workspace.roleAdmin";
+  return "workspace.roleMember";
 }
 
-function roleBadgeStyle(role: WorkspaceMember["role"], theme: (typeof colors)["light"]) {
+function roleBadgeStyle(
+  role: WorkspaceMember["role"],
+  theme: (typeof colors)["light"],
+) {
   if (role === "owner") {
     return {
       background: "#EAF7F2",
       text: theme.primary,
+    };
+  }
+  if (role === "admin") {
+    return {
+      background: "#E8F2FB",
+      text: "#4A7FB5",
     };
   }
   return {
@@ -47,14 +63,83 @@ function roleBadgeStyle(role: WorkspaceMember["role"], theme: (typeof colors)["l
   };
 }
 
+function canShowMenu(
+  actorRole: Props["actorRole"],
+  member: WorkspaceMember,
+  currentUserId: string | null,
+): boolean {
+  if (!actorRole || actorRole === "member") return false;
+  if (member.userId === currentUserId) return false;
+  if (member.role === "owner") return false;
+  if (actorRole === "admin" && member.role !== "member") return false;
+  return true;
+}
+
 export function WorkspaceMembersList({
+  workspaceId,
   members,
   currentUserId,
+  actorRole,
   loading,
 }: Props) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+  const removeMutation = useRemoveMember(workspaceId);
+  const roleMutation = useUpdateMemberRole(workspaceId);
+
+  const openMenu = (member: WorkspaceMember) => {
+    const buttons: {
+      text: string;
+      style?: "cancel" | "destructive" | "default";
+      onPress?: () => void;
+    }[] = [];
+
+    if (actorRole === "owner") {
+      if (member.role === "member") {
+        buttons.push({
+          text: t("workspace.makeAdmin"),
+          onPress: () =>
+            roleMutation.mutate({ userId: member.userId, role: "admin" }),
+        });
+      }
+      if (member.role === "admin") {
+        buttons.push({
+          text: t("workspace.makeMember"),
+          onPress: () =>
+            roleMutation.mutate({ userId: member.userId, role: "member" }),
+        });
+      }
+    }
+
+    if (
+      actorRole === "owner" ||
+      (actorRole === "admin" && member.role === "member")
+    ) {
+      buttons.push({
+        text: t("workspace.removeMember"),
+        style: "destructive",
+        onPress: () => {
+          Alert.alert(
+            t("workspace.removeMemberTitle"),
+            t("workspace.removeMemberBody", { name: member.displayName }),
+            [
+              { text: t("workspace.cancel"), style: "cancel" },
+              {
+                text: t("workspace.removeMember"),
+                style: "destructive",
+                onPress: () => removeMutation.mutate(member.userId),
+              },
+            ],
+          );
+        },
+      });
+    }
+
+    buttons.push({ text: t("workspace.cancel"), style: "cancel" });
+
+    Alert.alert(t("workspace.memberMenu"), member.displayName, buttons);
+  };
 
   return (
     <View style={{ marginTop: spacing[6] }}>
@@ -75,7 +160,10 @@ export function WorkspaceMembersList({
       </View>
 
       {loading ? (
-        <ActivityIndicator color={theme.primary} style={{ marginTop: spacing[4] }} />
+        <ActivityIndicator
+          color={theme.primary}
+          style={{ marginTop: spacing[4] }}
+        />
       ) : (
         <View style={{ gap: spacing[1] }}>
           {members.map((member) => {
@@ -86,6 +174,7 @@ export function WorkspaceMembersList({
             const name = isYou
               ? `${member.displayName} ${t("workspace.youSuffix")}`
               : member.displayName;
+            const showMenu = canShowMenu(actorRole, member, currentUserId);
 
             return (
               <View
@@ -149,28 +238,33 @@ export function WorkspaceMembersList({
                   </Text>
                 </View>
 
-                <Pressable
-                  hitSlop={10}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("workspace.memberMenu")}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text
+                {showMenu ? (
+                  <Pressable
+                    hitSlop={10}
+                    onPress={() => openMenu(member)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("workspace.memberMenu")}
                     style={{
-                      fontSize: 18,
-                      lineHeight: 20,
-                      color: theme.textMuted,
-                      fontWeight: "600",
+                      width: 28,
+                      height: 28,
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    ⋯
-                  </Text>
-                </Pressable>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        lineHeight: 20,
+                        color: theme.textMuted,
+                        fontWeight: "600",
+                      }}
+                    >
+                      ⋯
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <View style={{ width: 28 }} />
+                )}
               </View>
             );
           })}

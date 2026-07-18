@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { normalizeEmail } from "@/lib/email/normalizeEmail";
 
 export type UpsertUserInput = {
   clerkId: string;
@@ -11,17 +12,18 @@ export async function upsertUser({
   email,
   deviceLocale,
 }: UpsertUserInput) {
+  const normalizedEmail = normalizeEmail(email);
   const existing = await prisma.user.findUnique({ where: { clerkId } });
 
   return prisma.user.upsert({
     where: { clerkId },
     create: {
       clerkId,
-      email,
+      email: normalizedEmail,
       locale: existing?.locale ?? deviceLocale,
     },
     update: {
-      email,
+      email: normalizedEmail,
       ...(existing?.locale == null && deviceLocale
         ? { locale: deviceLocale }
         : {}),

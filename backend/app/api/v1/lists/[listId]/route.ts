@@ -69,7 +69,7 @@ export async function DELETE(request: Request, context: RouteContext) {
   try {
     const { listId } = await context.params;
     const { user } = await requireUser(request);
-    await archiveShoppingList(listId, user.id);
+    await archiveShoppingList(listId, user.id, { notifyMembers: true });
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     if (error instanceof ApiError) {

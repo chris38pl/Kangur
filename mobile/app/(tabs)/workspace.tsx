@@ -242,8 +242,10 @@ export default function WorkspaceScreen() {
         </View>
 
         <WorkspaceMembersList
+          workspaceId={activeWorkspace.id}
           members={membersQuery.data ?? []}
           currentUserId={meQuery.data?.id ?? null}
+          actorRole={activeWorkspace.role}
           loading={membersQuery.isPending}
         />
 
@@ -253,6 +255,10 @@ export default function WorkspaceScreen() {
 
         <WorkspaceInviteSection
           workspaceId={activeWorkspace.id}
+          canManage={
+            activeWorkspace.role === "owner" ||
+            activeWorkspace.role === "admin"
+          }
           onEmailFocus={scrollInviteFieldIntoView}
         />
 

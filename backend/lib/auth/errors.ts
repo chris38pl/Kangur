@@ -11,18 +11,26 @@ export type ApiErrorCode =
 export class ApiError extends Error {
   readonly code: ApiErrorCode;
   readonly status: number;
+  readonly details?: Record<string, unknown>;
 
-  constructor(code: ApiErrorCode, message: string, status = 401) {
+  constructor(
+    code: ApiErrorCode,
+    message: string,
+    status = 401,
+    details?: Record<string, unknown>,
+  ) {
     super(message);
     this.name = "ApiError";
     this.code = code;
     this.status = status;
+    this.details = details;
   }
 
   toJSON() {
     return {
       code: this.code,
       message: this.message,
+      ...(this.details ? { details: this.details } : {}),
     };
   }
 }
@@ -39,18 +47,30 @@ export function tokenExpired(): ApiError {
   return new ApiError("TOKEN_EXPIRED", "Authentication token has expired.");
 }
 
-export function notFound(message = "Resource not found."): ApiError {
-  return new ApiError("NOT_FOUND", message, 404);
+export function notFound(
+  message = "Resource not found.",
+  details?: Record<string, unknown>,
+): ApiError {
+  return new ApiError("NOT_FOUND", message, 404, details);
 }
 
-export function validationError(message: string): ApiError {
-  return new ApiError("VALIDATION_ERROR", message, 400);
+export function validationError(
+  message: string,
+  details?: Record<string, unknown>,
+): ApiError {
+  return new ApiError("VALIDATION_ERROR", message, 400, details);
 }
 
-export function forbidden(message = "Forbidden."): ApiError {
-  return new ApiError("FORBIDDEN", message, 403);
+export function forbidden(
+  message = "Forbidden.",
+  details?: Record<string, unknown>,
+): ApiError {
+  return new ApiError("FORBIDDEN", message, 403, details);
 }
 
-export function conflict(message = "Conflict."): ApiError {
-  return new ApiError("CONFLICT", message, 409);
+export function conflict(
+  message = "Conflict.",
+  details?: Record<string, unknown>,
+): ApiError {
+  return new ApiError("CONFLICT", message, 409, details);
 }
