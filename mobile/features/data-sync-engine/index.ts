@@ -7,3 +7,11 @@ export type {
   SyncOpState,
   DataSyncEvent,
 } from "./types";
+export type {
+  SyncCacheAdapter,
+  SyncOperationResult,
+} from "./sync-cache-adapter";
+export {
+  ReactQuerySyncCacheAdapter,
+  resolveServerUpdate,
+} from "./sync-cache-adapter";

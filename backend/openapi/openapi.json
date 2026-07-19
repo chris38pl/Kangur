@@ -59,8 +59,19 @@
             "enum": [
               "pl",
               "en",
+              "de",
+              "ru",
+              "uk",
+              "fr",
+              "es",
+              "it",
+              "cs",
+              "be",
               null
             ]
+          },
+          "platformRole": {
+            "$ref": "#/components/schemas/PlatformRole"
           },
           "createdAt": {
             "type": "string",
@@ -76,8 +87,16 @@
           "clerkId",
           "email",
           "locale",
+          "platformRole",
           "createdAt",
           "updatedAt"
+        ]
+      },
+      "PlatformRole": {
+        "type": "string",
+        "enum": [
+          "USER",
+          "ADMIN"
         ]
       },
       "ApiError": {
@@ -93,7 +112,8 @@
               "VALIDATION_ERROR",
               "FORBIDDEN",
               "CONFLICT",
-              "INSUFFICIENT_CREDITS"
+              "INSUFFICIENT_CREDITS",
+              "HISTORY_LIMIT_EXCEEDED"
             ]
           },
           "message": {
@@ -877,6 +897,20 @@
             "type": "integer",
             "minimum": 0
           },
+          "itemNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "previewItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoryPreviewItem"
+            },
+            "default": []
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -902,7 +936,123 @@
         "type": "string",
         "enum": [
           "active",
-          "archived"
+          "archived",
+          "deleted"
+        ]
+      },
+      "HistoryPreviewItem": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/ShoppingCategory"
+          }
+        },
+        "required": [
+          "name",
+          "category"
+        ]
+      },
+      "ShoppingCategory": {
+        "type": "string",
+        "enum": [
+          "fruit",
+          "vegetables",
+          "dairy",
+          "meat",
+          "fish",
+          "bakery",
+          "frozen",
+          "drinks",
+          "alcohol",
+          "snacks",
+          "household",
+          "cleaning",
+          "baby",
+          "pets",
+          "pharmacy",
+          "cosmetics",
+          "electronics",
+          "office",
+          "garden",
+          "diy",
+          "other"
+        ]
+      },
+      "HistoryListResponse": {
+        "type": "object",
+        "properties": {
+          "lists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoryListDTO"
+            }
+          }
+        },
+        "required": [
+          "lists"
+        ]
+      },
+      "HistoryListDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "emoji": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ShoppingListStatus"
+          },
+          "isUntitled": {
+            "type": "boolean"
+          },
+          "itemCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "itemNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "previewItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoryPreviewItem"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "name",
+          "emoji",
+          "status",
+          "isUntitled",
+          "itemCount",
+          "previewItems",
+          "createdAt",
+          "updatedAt"
         ]
       },
       "CreateShoppingListBody": {
@@ -1023,32 +1173,6 @@
           "updatedByUserId",
           "createdAt",
           "updatedAt"
-        ]
-      },
-      "ShoppingCategory": {
-        "type": "string",
-        "enum": [
-          "fruit",
-          "vegetables",
-          "dairy",
-          "meat",
-          "fish",
-          "bakery",
-          "frozen",
-          "drinks",
-          "alcohol",
-          "snacks",
-          "household",
-          "cleaning",
-          "baby",
-          "pets",
-          "pharmacy",
-          "cosmetics",
-          "electronics",
-          "office",
-          "garden",
-          "diy",
-          "other"
         ]
       },
       "ItemStatus": {
@@ -1761,6 +1885,330 @@
             ]
           }
         ]
+      },
+      "PlatformOverviewResponse": {
+        "type": "object",
+        "properties": {
+          "platformStatus": {
+            "$ref": "#/components/schemas/PlatformStatus"
+          },
+          "activeAlertCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "activeSessions": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "rps": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "p95Ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "headroom": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "pollingOk": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "platformStatus",
+          "activeAlertCount",
+          "activeSessions",
+          "rps",
+          "p95Ms",
+          "headroom",
+          "pollingOk"
+        ]
+      },
+      "PlatformStatus": {
+        "type": "string",
+        "enum": [
+          "healthy",
+          "warning",
+          "critical"
+        ]
+      },
+      "PlatformRealtimeResponse": {
+        "type": "object",
+        "properties": {
+          "systemStatus": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "warning",
+              "degraded"
+            ]
+          },
+          "autoRefreshSec": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "polling": {
+            "type": "object",
+            "properties": {
+              "activePollers": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "pollRequestsPerSec": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p50Ms": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p95Ms": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "emptyPollRatio": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "failuresPerSec": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "timeoutsPerSec": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "lastErrorAgeSec": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "lastErrorKind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "intervalDistribution": {
+                "type": "object",
+                "properties": {
+                  "available": {
+                    "type": "boolean"
+                  },
+                  "hotShare": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "warmShare": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "coldShare": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "hotCount": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "warmCount": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "coldCount": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "available",
+                  "hotShare",
+                  "warmShare",
+                  "coldShare",
+                  "hotCount",
+                  "warmCount",
+                  "coldCount"
+                ]
+              }
+            },
+            "required": [
+              "activePollers",
+              "pollRequestsPerSec",
+              "p50Ms",
+              "p95Ms",
+              "emptyPollRatio",
+              "failuresPerSec",
+              "timeoutsPerSec",
+              "lastErrorAgeSec",
+              "lastErrorKind",
+              "intervalDistribution"
+            ]
+          },
+          "events": {
+            "type": "object",
+            "properties": {
+              "eventsPerSec": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "eventsPerResponse": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "drainCapHits": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "seedingBatches": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "pollNowCount": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "eventsPerSec",
+              "eventsPerResponse",
+              "drainCapHits",
+              "seedingBatches",
+              "pollNowCount"
+            ]
+          },
+          "refresh": {
+            "type": "object",
+            "properties": {
+              "requests": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "deferred": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "offlineCancelled": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "avgDelayMs": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "requests",
+              "deferred",
+              "offlineCancelled",
+              "avgDelayMs"
+            ]
+          },
+          "sync": {
+            "type": "object",
+            "properties": {
+              "pendingQueue": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "successRate": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "retryCount": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "failedOps": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pendingQueue",
+              "successRate",
+              "retryCount",
+              "failedOps"
+            ]
+          }
+        },
+        "required": [
+          "systemStatus",
+          "autoRefreshSec",
+          "polling",
+          "events",
+          "refresh",
+          "sync"
+        ]
       }
     },
     "parameters": {}
@@ -1807,6 +2255,33 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete current user account (app data)",
+        "description": "Idempotent purge of domain data. Ownership transfer is backend-only. Returns 204 with no body. Does not call Clerk.",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Account purged or already absent (idempotent)"
           },
           "401": {
             "description": "Authentication failed",
@@ -3137,6 +3612,61 @@
         }
       }
     },
+    "/api/v1/workspaces/{workspaceId}/lists/history": {
+      "get": {
+        "summary": "List archived shopping lists (History) for a workspace",
+        "tags": [
+          "Shopping Lists"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Archived lists within Free/Premium history depth",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/lists/{listId}": {
       "get": {
         "summary": "Get a shopping list by id",
@@ -3299,6 +3829,156 @@
           },
           "404": {
             "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}/restore": {
+      "post": {
+        "summary": "Restore an archived shopping list to active",
+        "tags": [
+          "Shopping Lists"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "listId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restored shopping list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "History depth limit (HISTORY_LIMIT_EXCEEDED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "List is not archived",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}/repeat": {
+      "post": {
+        "summary": "Repeat an archived list as a new active list with pending items",
+        "tags": [
+          "Shopping Lists"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "listId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "New shopping list created from history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "History depth limit (HISTORY_LIMIT_EXCEEDED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "List is not archived",
             "content": {
               "application/json": {
                 "schema": {
@@ -3787,6 +4467,96 @@
           },
           "404": {
             "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/overview": {
+      "get": {
+        "summary": "Platform Console overview (PlatformAdmin only)",
+        "tags": [
+          "Platform"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Read-only platform health snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOverviewResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a platform admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/realtime": {
+      "get": {
+        "summary": "Platform Console realtime diagnostics (PlatformAdmin only)",
+        "tags": [
+          "Platform"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Read-only realtime / polling / sync diagnostics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformRealtimeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a platform admin",
             "content": {
               "application/json": {
                 "schema": {

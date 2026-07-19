@@ -2,11 +2,20 @@ import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { isShoppingListEmoji } from "@shared/shopping-list-emojis";
 import { z } from "zod";
 
+import { ShoppingCategorySchema } from "@/features/shopping-item/schemas";
+
 extendZodWithOpenApi(z);
 
 export const ShoppingListStatusSchema = z
-  .enum(["active", "archived"])
+  .enum(["active", "archived", "deleted"])
   .openapi("ShoppingListStatus");
+
+export const HistoryPreviewItemSchema = z
+  .object({
+    name: z.string(),
+    category: ShoppingCategorySchema,
+  })
+  .openapi("HistoryPreviewItem");
 
 export const ShoppingListDTOSchema = z
   .object({
@@ -17,6 +26,10 @@ export const ShoppingListDTOSchema = z
     status: ShoppingListStatusSchema,
     isUntitled: z.boolean(),
     itemCount: z.number().int().nonnegative(),
+    /** All non-removed item names — used for client search. */
+    itemNames: z.array(z.string()).default([]),
+    /** First items for badge previews on list cards. */
+    previewItems: z.array(HistoryPreviewItemSchema).default([]),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
   })
@@ -24,11 +37,35 @@ export const ShoppingListDTOSchema = z
 
 export type ShoppingListDTO = z.infer<typeof ShoppingListDTOSchema>;
 
+export const HistoryListDTOSchema = z
+  .object({
+    id: z.string(),
+    workspaceId: z.string(),
+    name: z.string(),
+    emoji: z.string(),
+    status: ShoppingListStatusSchema,
+    isUntitled: z.boolean(),
+    itemCount: z.number().int().nonnegative(),
+    itemNames: z.array(z.string()).default([]),
+    previewItems: z.array(HistoryPreviewItemSchema),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime(),
+  })
+  .openapi("HistoryListDTO");
+
+export type HistoryListDTO = z.infer<typeof HistoryListDTOSchema>;
+
 export const ShoppingListListResponseSchema = z
   .object({
     lists: z.array(ShoppingListDTOSchema),
   })
   .openapi("ShoppingListListResponse");
+
+export const HistoryListResponseSchema = z
+  .object({
+    lists: z.array(HistoryListDTOSchema),
+  })
+  .openapi("HistoryListResponse");
 
 export const CreateShoppingListBodySchema = z
   .object({

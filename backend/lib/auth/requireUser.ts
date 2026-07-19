@@ -1,30 +1,17 @@
+import type { User } from "@prisma/client";
 import { createClerkClient } from "@clerk/backend";
 
 import { upsertUser } from "@/features/auth/upsertUser";
 import { ensureDefaultWorkspace } from "@/features/workspace/ensureDefaultWorkspace";
+import { resolveAppLocale, type AppLocale } from "@/lib/locale";
 
 import { verifyClerkBearer } from "./clerk";
 import { invalidToken } from "./errors";
 
 export type UserContext = {
-  user: {
-    id: string;
-    clerkId: string;
-    email: string;
-    locale: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-  };
+  user: User;
   clerkId: string;
 };
-
-function normalizeLocale(raw: string | null | undefined): "pl" | "en" | null {
-  if (!raw) return null;
-  const lower = raw.toLowerCase();
-  if (lower.startsWith("pl")) return "pl";
-  if (lower.startsWith("en")) return "en";
-  return "en";
-}
 
 async function resolveEmail(
   clerkId: string,
@@ -57,7 +44,9 @@ export async function requireUser(
     request.headers.get("authorization"),
   );
   const email = await resolveEmail(identity.clerkId, secretKey);
-  const deviceLocale = normalizeLocale(options?.deviceLocale);
+  const deviceLocale: AppLocale | null = options?.deviceLocale
+    ? resolveAppLocale(options.deviceLocale)
+    : null;
 
   const user = await upsertUser({
     clerkId: identity.clerkId,

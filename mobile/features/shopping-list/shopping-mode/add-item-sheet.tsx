@@ -54,10 +54,9 @@ export function AddItemSheet({
 
   useEffect(() => {
     if (!visible) return;
-    setCategory(defaultCategory);
     const timer = setTimeout(() => nameRef.current?.focus(), 350);
     return () => clearTimeout(timer);
-  }, [visible, defaultCategory]);
+  }, [visible]);
 
   const reset = () => {
     setName("");

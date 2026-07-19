@@ -1,5 +1,4 @@
-import { useAuth, useUser } from "@clerk/clerk-expo";
-import { useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@clerk/clerk-expo";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState, type ReactNode } from "react";
@@ -26,7 +25,6 @@ import {
   typography,
 } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
-import { DeleteAccountSheet } from "@/features/profile/delete-account-sheet";
 import {
   EmailOnlyPasswordRow,
   LoginMethodsSection,
@@ -34,7 +32,6 @@ import {
 import {
   ProfileIconCamera,
   ProfileIconChevronRight,
-  ProfileIconLogout,
 } from "@/features/profile/profile-icons";
 
 function InfoRow({
@@ -122,31 +119,9 @@ export function AccountDetailsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, isLoaded } = useUser();
-  const { signOut, userId } = useAuth();
-  const queryClient = useQueryClient();
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const showSoon = () => Alert.alert(t("profile.comingSoon"));
-
-  const onDeleteAccount = async () => {
-    if (!user) return;
-    setDeleting(true);
-    try {
-      console.info("[auth]", "DeleteAccount", { clerkId: userId });
-      await user.delete();
-      queryClient.clear();
-      await signOut();
-      setDeleteOpen(false);
-      router.replace("/(auth)");
-    } catch (error) {
-      console.info("[auth]", "DeleteAccountFailed", error);
-      Alert.alert(t("profile.deleteAccountFailed"));
-    } finally {
-      setDeleting(false);
-    }
-  };
 
   const displayName =
     user?.fullName?.trim() ||
@@ -335,40 +310,7 @@ export function AccountDetailsScreen() {
         </Card>
 
         <LoginMethodsSection />
-
-        <Pressable
-          onPress={() => setDeleteOpen(true)}
-          accessibilityRole="button"
-          accessibilityLabel={t("profile.deleteAccount")}
-          style={{
-            marginTop: spacing[8],
-            minHeight: 56,
-            borderRadius: radius.full,
-            backgroundColor: theme.surface,
-            borderWidth: 1,
-            borderColor: theme.border,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: spacing[2],
-            paddingHorizontal: spacing[4],
-          }}
-        >
-          <ProfileIconLogout color={theme.danger} size={18} />
-          <Text style={{ ...typography.label, color: theme.danger }}>
-            {t("profile.deleteAccount")}
-          </Text>
-        </Pressable>
       </ScrollView>
-
-      <DeleteAccountSheet
-        visible={deleteOpen}
-        busy={deleting}
-        onCancel={() => {
-          if (!deleting) setDeleteOpen(false);
-        }}
-        onConfirm={() => void onDeleteAccount()}
-      />
     </Screen>
   );
 }

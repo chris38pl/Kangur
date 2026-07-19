@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
+import { intlLocaleTag } from "@/lib/i18n/locales";
 import { useAiCredits } from "@/features/billing/useAiCredits";
 import type { Workspace } from "@/features/workspace/schemas";
 
@@ -14,7 +15,7 @@ type Props = {
 
 function formatRefreshDate(iso: string, locale: string): string {
   try {
-    return new Intl.DateTimeFormat(locale.startsWith("pl") ? "pl-PL" : "en-GB", {
+    return new Intl.DateTimeFormat(intlLocaleTag(locale), {
       day: "numeric",
       month: "long",
     }).format(new Date(iso));
@@ -53,85 +54,86 @@ export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
         paddingHorizontal: spacing[4],
         borderRadius: radius.xl,
         backgroundColor: theme.section,
-        flexDirection: "row",
-        alignItems: "center",
         gap: spacing[3],
-        position: "relative",
       }}
     >
-      {onMenuPress ? (
-        <Pressable
-          onPress={onMenuPress}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t("workspace.editMenu")}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: spacing[3],
+        }}
+      >
+        <View
           style={{
-            position: "absolute",
-            top: spacing[2],
-            left: spacing[2],
-            zIndex: 2,
-            width: 28,
-            height: 28,
+            width: 52,
+            height: 52,
+            borderRadius: radius.full,
+            backgroundColor: theme.primary,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Text
-            style={{
-              fontSize: 18,
-              lineHeight: 20,
-              color: theme.textMuted,
-              fontWeight: "600",
-            }}
-          >
-            ⋯
-          </Text>
-        </Pressable>
-      ) : null}
-
-      <View
-        style={{
-          width: 52,
-          height: 52,
-          borderRadius: radius.full,
-          backgroundColor: theme.primary,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text style={{ fontSize: 28 }}>{emoji}</Text>
-      </View>
-
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text
-          numberOfLines={1}
-          style={{ ...typography.headline, color: theme.text }}
-        >
-          {workspace.name}
-        </Text>
-        <View
-          style={{
-            marginTop: spacing[1],
-            alignSelf: "flex-start",
-            backgroundColor: roleBadge.background,
-            borderRadius: radius.full,
-            paddingHorizontal: spacing[2] + 2,
-            paddingVertical: 2,
-          }}
-        >
-          <Text
-            style={{
-              ...typography.caption,
-              fontWeight: "600",
-              color: roleBadge.text,
-            }}
-          >
-            {roleLabel}
-          </Text>
+          <Text style={{ fontSize: 28 }}>{emoji}</Text>
         </View>
+
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text
+            numberOfLines={1}
+            style={{ ...typography.headline, color: theme.text }}
+          >
+            {workspace.name}
+          </Text>
+          <View
+            style={{
+              marginTop: spacing[1],
+              alignSelf: "flex-start",
+              backgroundColor: roleBadge.background,
+              borderRadius: radius.full,
+              paddingHorizontal: spacing[2] + 2,
+              paddingVertical: 2,
+            }}
+          >
+            <Text
+              style={{
+                ...typography.caption,
+                fontWeight: "600",
+                color: roleBadge.text,
+              }}
+            >
+              {roleLabel}
+            </Text>
+          </View>
+        </View>
+
+        {onMenuPress ? (
+          <Pressable
+            onPress={onMenuPress}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t("workspace.editMenu")}
+            style={{
+              width: 28,
+              height: 28,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                lineHeight: 20,
+                color: theme.textMuted,
+                fontWeight: "600",
+              }}
+            >
+              ⋯
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
-      <View style={{ alignItems: "flex-end", minWidth: 96 }}>
+      <View>
         <Text style={{ ...typography.caption, color: theme.textMuted }}>
           {t("billing.aiCredits")}
         </Text>
@@ -140,7 +142,7 @@ export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
           <ActivityIndicator
             size="small"
             color={theme.primary}
-            style={{ marginTop: spacing[2] }}
+            style={{ marginTop: spacing[2], alignSelf: "flex-start" }}
           />
         ) : creditsQuery.isError || !credits ? (
           <Text
@@ -153,12 +155,18 @@ export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
             —
           </Text>
         ) : unlimited ? (
-          <>
+          <View
+            style={{
+              marginTop: 2,
+              flexDirection: "row",
+              alignItems: "baseline",
+              gap: spacing[2],
+            }}
+          >
             <Text
               style={{
                 ...typography.headline,
                 color: theme.primary,
-                marginTop: 2,
                 fontSize: 22,
                 lineHeight: 28,
               }}
@@ -169,43 +177,66 @@ export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
               style={{
                 ...typography.caption,
                 color: theme.textMuted,
-                marginTop: spacing[2],
                 fontSize: 11,
                 lineHeight: 14,
               }}
             >
               {t("billing.aiCreditsUnlimited")}
             </Text>
-          </>
+          </View>
         ) : (
           <>
-            <Text style={{ marginTop: 2 }}>
-              <Text
-                style={{
-                  ...typography.headline,
-                  color: theme.primary,
-                  fontSize: 22,
-                  lineHeight: 28,
-                }}
-              >
-                {remaining}
+            <View
+              style={{
+                marginTop: 2,
+                flexDirection: "row",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: spacing[2],
+              }}
+            >
+              <Text>
+                <Text
+                  style={{
+                    ...typography.headline,
+                    color: theme.primary,
+                    fontSize: 22,
+                    lineHeight: 28,
+                  }}
+                >
+                  {remaining}
+                </Text>
+                <Text
+                  style={{
+                    ...typography.headline,
+                    color: theme.primaryLight,
+                    fontSize: 18,
+                    lineHeight: 28,
+                  }}
+                >
+                  {" / "}
+                  {limit}
+                </Text>
               </Text>
               <Text
                 style={{
-                  ...typography.headline,
-                  color: theme.primaryLight,
-                  fontSize: 18,
-                  lineHeight: 28,
+                  ...typography.caption,
+                  color: theme.textMuted,
+                  fontSize: 11,
+                  lineHeight: 14,
+                  flexShrink: 1,
+                  textAlign: "right",
                 }}
               >
-                {" / "}
-                {limit}
+                {t("billing.creditsRefreshed", {
+                  date: formatRefreshDate(credits.periodStart, i18n.language),
+                })}
               </Text>
-            </Text>
+            </View>
             <View
               style={{
                 marginTop: spacing[2],
-                width: 88,
+                width: "100%",
                 height: 6,
                 borderRadius: radius.full,
                 backgroundColor: `${theme.primary}22`,
@@ -221,19 +252,6 @@ export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
                 }}
               />
             </View>
-            <Text
-              style={{
-                ...typography.caption,
-                color: theme.textMuted,
-                marginTop: spacing[2],
-                fontSize: 11,
-                lineHeight: 14,
-              }}
-            >
-              {t("billing.creditsRefreshed", {
-                date: formatRefreshDate(credits.periodStart, i18n.language),
-              })}
-            </Text>
           </>
         )}
       </View>

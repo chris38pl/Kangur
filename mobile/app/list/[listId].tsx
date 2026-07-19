@@ -19,6 +19,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import {
+  ListDetailSkeleton,
+  ListHeaderTitleSkeleton,
+} from "@/components/skeleton";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
 import { primaryButtonStyle } from "@/design-system/shopping-density";
@@ -28,29 +32,30 @@ import type { ProposalOperation } from "@/features/ai/schemas";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { CategoryChips } from "@/features/shopping-item/category-chips";
 import { EditItemSheet } from "@/features/shopping-item/edit-item-sheet";
+import { RemoteChangeToast, useListRealtime } from "@/lib/realtime";
 import { ListItemRow } from "@/features/shopping-item/list-item-row";
-import type { ShoppingItem } from "@/features/shopping-item/schemas";
-import {
-  getShoppingList,
-} from "@/features/shopping-list/api";
-import { CreateListOptionRow } from "@/features/shopping-list/create-list-option-row";
-import { DeleteListDialog } from "@/features/shopping-list/delete-list-dialog";
-import { RenameListSheet } from "@/features/shopping-list/rename-list-sheet";
-import { takePendingListImport } from "@/features/shopping-list/pending-list-import";
-import {
-  clearListProvisional,
-  isListProvisional,
-} from "@/features/shopping-list/provisional-list";
-import {
-  useArchiveShoppingList,
-  useUpdateShoppingList,
-} from "@/features/shopping-list/useShoppingLists";
+import type {
+  ShoppingCategory,
+  ShoppingItem,
+} from "@/features/shopping-item/schemas";
 import {
   useCreateShoppingItem,
   useShoppingItems,
   useUpdateShoppingItem,
 } from "@/features/shopping-item/useShoppingItems";
-import type { ShoppingCategory } from "@/features/shopping-item/schemas";
+import { getShoppingList } from "@/features/shopping-list/api";
+import { CreateListOptionRow } from "@/features/shopping-list/create-list-option-row";
+import { DeleteListDialog } from "@/features/shopping-list/delete-list-dialog";
+import { takePendingListImport } from "@/features/shopping-list/pending-list-import";
+import {
+  clearListProvisional,
+  isListProvisional,
+} from "@/features/shopping-list/provisional-list";
+import { RenameListSheet } from "@/features/shopping-list/rename-list-sheet";
+import {
+  useArchiveShoppingList,
+  useUpdateShoppingList,
+} from "@/features/shopping-list/useShoppingLists";
 import { createClientId } from "@/lib/createClientId";
 import { isAiReviewEnabled } from "@/lib/aiReview";
 import { ApiClientError } from "@/lib/api/client";
@@ -143,6 +148,10 @@ export default function ShoppingListScreen() {
       }
       return getShoppingList(token, listId);
     },
+  });
+
+  useListRealtime(typeof listId === "string" ? listId : null, {
+    workspaceId: listQuery.data?.workspaceId ?? null,
   });
   const itemsQuery = useShoppingItems(
     typeof listId === "string" ? listId : null,
@@ -259,7 +268,7 @@ export default function ShoppingListScreen() {
 
   const archiveOnLeave = useRef(archiveList.mutateAsync);
   archiveOnLeave.current = archiveList.mutateAsync;
-  const mountedAt = useRef(Date.now());
+  const mountedAt = useRef(0);
 
   // Leave without products → discard provisional list (no empty spam on Home).
   useEffect(() => {
@@ -421,6 +430,7 @@ export default function ShoppingListScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={{ flex: 1, backgroundColor: theme.bg }}>
+        <RemoteChangeToast />
         <View
           style={{
             paddingTop: insets.top + spacing[2],
@@ -456,29 +466,34 @@ export default function ShoppingListScreen() {
               <BackIcon size={20} />
             </Pressable>
 
-            <Pressable
-              onPress={() => setRenameOpen(true)}
-              disabled={!listQuery.data}
-              accessibilityRole="button"
-              accessibilityLabel={t("list.renameTitle")}
-              style={{ flex: 1, minWidth: 0 }}
-            >
-              <Text
-                numberOfLines={1}
-                style={{ ...typography.headline, color: theme.text }}
+            {isPending ? (
+              <ListHeaderTitleSkeleton />
+            ) : (
+              <Pressable
+                onPress={() => setRenameOpen(true)}
+                disabled={!listQuery.data}
+                accessibilityRole="button"
+                accessibilityLabel={t("list.renameTitle")}
+                style={{ flex: 1, minWidth: 0 }}
               >
-                {listQuery.data?.name ?? t("list.title")}
-              </Text>
-              <Text
-                style={{
-                  ...typography.caption,
-                  color: theme.textMuted,
-                  marginTop: 2,
-                }}
-              >
-                {t("list.itemCount", { count: itemCount })}
-              </Text>
-            </Pressable>
+                <Text
+                  numberOfLines={1}
+                  style={{ ...typography.headline, color: theme.text }}
+                >
+                  {listQuery.data?.name ?? t("list.title")}
+                </Text>
+                <Text
+                  style={{
+                    ...typography.caption,
+                    color: theme.textMuted,
+                    marginTop: 2,
+                  }}
+                >
+                  {t("list.itemCount", { count: itemCount })}
+                </Text>
+              </Pressable>
+            )}
+
 
             <Pressable
               onPress={() => {
@@ -511,9 +526,7 @@ export default function ShoppingListScreen() {
           keyboardShouldPersistTaps="handled"
         >
         {isPending ? (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: spacing[16] }}>
-            <ActivityIndicator color={theme.primary} />
-          </View>
+          <ListDetailSkeleton />
         ) : listMissing || listQuery.isError ? (
           <View
             style={{
@@ -1129,6 +1142,7 @@ export default function ShoppingListScreen() {
       </View>
 
       <RenameListSheet
+        key={renameOpen ? `rename-${listId}` : "rename-closed"}
         visible={renameOpen}
         initialName={listQuery.data?.name ?? ""}
         busy={updateList.isPending}
@@ -1144,6 +1158,7 @@ export default function ShoppingListScreen() {
       />
 
       <EditItemSheet
+        key={editingItem?.id ?? "edit-closed"}
         visible={Boolean(editingItem)}
         item={editingItem}
         onClose={() => setEditingItem(null)}

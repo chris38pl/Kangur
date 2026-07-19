@@ -27,6 +27,7 @@ import { useShoppingList } from "@/features/shopping-list/useShoppingLists";
 import { useWorkspaceMembers } from "@/features/workspace/useWorkspaceMembers";
 import { createClientId } from "@/lib/createClientId";
 import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
+import { RemoteChangeToast, useListRealtime } from "@/lib/realtime";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -79,6 +80,10 @@ export function ShoppingModeScreen({ listId }: Props) {
   const lastScrollY = useRef(0);
   const startedRef = useRef(false);
 
+  useListRealtime(listId, {
+    workspaceId: listQuery.data?.workspaceId ?? null,
+  });
+
   const { allowLeave, exitDialog } = useShoppingModeExitGuard(true);
 
   useEffect(() => {
@@ -120,7 +125,10 @@ export function ShoppingModeScreen({ listId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- start once after hydrate
   }, [session.hydrated, listQuery.data?.workspaceId]);
 
-  const items = itemsQuery.data ?? [];
+  const items = useMemo(
+    () => itemsQuery.data ?? [],
+    [itemsQuery.data],
+  );
 
   const categories = useMemo(
     () => getActiveCategoryProgress(items),
@@ -174,6 +182,7 @@ export function ShoppingModeScreen({ listId }: Props) {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.section }}>
+      <RemoteChangeToast />
       <View style={{ paddingTop: insets.top, backgroundColor: theme.bg }}>
         <View
           style={{
@@ -235,7 +244,15 @@ export function ShoppingModeScreen({ listId }: Props) {
       </View>
 
       <View style={{ flex: 1 }}>
-        <OfflineStatusBanner listId={listId} overlay />
+        <OfflineStatusBanner
+          listId={listId}
+          overlay
+          bottom
+          style={{
+            bottom: 0,
+            paddingBottom: spacing[2] + insets.bottom,
+          }}
+        />
         <ScrollView
           contentContainerStyle={{
             padding: spacing[6],

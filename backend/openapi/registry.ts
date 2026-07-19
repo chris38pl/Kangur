@@ -6,6 +6,7 @@ import {
 } from "@asteasolutions/zod-to-openapi";
 
 import { ApiErrorSchema, MeResponseSchema } from "@/features/auth/schemas";
+import { PlatformOverviewResponseSchema, PlatformRealtimeResponseSchema } from "@/features/platform/schemas";
 import {
   AiIngestResponseSchema,
   ApplyAiProposalBodySchema,
@@ -13,6 +14,7 @@ import {
 } from "@/features/ai/schemas";
 import {
   CreateShoppingListBodySchema,
+  HistoryListResponseSchema,
   ShoppingListDTOSchema,
   ShoppingListListResponseSchema,
   UpdateShoppingListBodySchema,
@@ -101,6 +103,29 @@ registry.registerPath({
           schema: MeResponseSchema,
         },
       },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/api/v1/me",
+  summary: "Delete current user account (app data)",
+  description:
+    "Idempotent purge of domain data. Ownership transfer is backend-only. Returns 204 with no body. Does not call Clerk.",
+  tags: ["Auth"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    204: {
+      description: "Account purged or already absent (idempotent)",
     },
     401: {
       description: "Authentication failed",
@@ -904,6 +929,45 @@ registry.registerPath({
 });
 
 registry.registerPath({
+  method: "get",
+  path: "/api/v1/workspaces/{workspaceId}/lists/history",
+  summary: "List archived shopping lists (History) for a workspace",
+  tags: ["Shopping Lists"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Archived lists within Free/Premium history depth",
+      content: {
+        "application/json": {
+          schema: HistoryListResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: "Not found or not a member",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
   method: "post",
   path: "/api/v1/workspaces/{workspaceId}/lists",
   summary: "Create a shopping list",
@@ -1075,6 +1139,116 @@ registry.registerPath({
     },
     404: {
       description: "Not found or not a member",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/lists/{listId}/restore",
+  summary: "Restore an archived shopping list to active",
+  tags: ["Shopping Lists"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      listId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Restored shopping list",
+      content: {
+        "application/json": {
+          schema: ShoppingListDTOSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "History depth limit (HISTORY_LIMIT_EXCEEDED)",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: "Not found or not a member",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    409: {
+      description: "List is not archived",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/lists/{listId}/repeat",
+  summary: "Repeat an archived list as a new active list with pending items",
+  tags: ["Shopping Lists"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      listId: z.string(),
+    }),
+  },
+  responses: {
+    201: {
+      description: "New shopping list created from history",
+      content: {
+        "application/json": {
+          schema: ShoppingListDTOSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "History depth limit (HISTORY_LIMIT_EXCEEDED)",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: "Not found or not a member",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    409: {
+      description: "List is not archived",
       content: {
         "application/json": {
           schema: ApiErrorSchema,
@@ -1428,6 +1602,74 @@ registry.registerPath({
     },
     404: {
       description: "Not found or not a member",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/platform/overview",
+  summary: "Platform Console overview (PlatformAdmin only)",
+  tags: ["Platform"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "Read-only platform health snapshot",
+      content: {
+        "application/json": {
+          schema: PlatformOverviewResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "Not a platform admin",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/platform/realtime",
+  summary: "Platform Console realtime diagnostics (PlatformAdmin only)",
+  tags: ["Platform"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "Read-only realtime / polling / sync diagnostics",
+      content: {
+        "application/json": {
+          schema: PlatformRealtimeResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "Not a platform admin",
       content: {
         "application/json": {
           schema: ApiErrorSchema,

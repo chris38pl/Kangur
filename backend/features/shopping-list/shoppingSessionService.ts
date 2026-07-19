@@ -4,7 +4,9 @@ import { notFound, validationError } from "@/lib/auth/errors";
 import { authorizeList } from "@/lib/authorize";
 import { displayNameFromEmail } from "@/lib/displayName";
 import { domainEventBus } from "@/lib/events/DomainEventBus";
+import { getMetrics } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
+import { MetricNames } from "@shared/metrics/names";
 
 export type StartSessionInput = {
   listId: string;
@@ -75,6 +77,14 @@ export async function startShoppingSession(input: StartSessionInput) {
       clientPlatform: input.clientPlatform ?? null,
     },
   });
+
+  const metrics = getMetrics();
+  metrics.increment(MetricNames.shoppingSessionsStarted);
+  metrics.increment(MetricNames.sessionStart);
+  const activeCount = await prisma.shoppingSession.count({
+    where: { finishedAt: null },
+  });
+  metrics.gauge(MetricNames.shoppingSessionsActive, activeCount);
 
   // First shopper on this list notifies; joiners do not.
   if (!peerActive) {
@@ -183,12 +193,24 @@ export async function finishShoppingSession(input: FinishSessionInput) {
     unavailableCount: Math.floor(input.unavailableCount),
   });
 
-  await archiveShoppingList(list.id, input.actorUserId);
+  await archiveShoppingList(list.id, input.actorUserId, {
+    outcome: "archived",
+  });
 
   const closed = await prisma.shoppingSession.update({
     where: { id: session.id },
     data: { finishedAt: new Date() },
   });
+
+  const metrics = getMetrics();
+  metrics.increment(MetricNames.shoppingSessionsFinished);
+  metrics.increment(MetricNames.sessionFinish);
+  const durationMs = closed.finishedAt!.getTime() - session.startedAt.getTime();
+  metrics.timing(MetricNames.shoppingSessionDurationMs, durationMs);
+  const activeCount = await prisma.shoppingSession.count({
+    where: { finishedAt: null },
+  });
+  metrics.gauge(MetricNames.shoppingSessionsActive, activeCount);
 
   return {
     id: closed.id,

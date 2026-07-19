@@ -89,12 +89,16 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 | M08.5 | Data Sync Engine | done |
 | M09 | Invites | done |
 | M09.5 | Notifications (MVP) | done |
-| M10 | Smart polling | pending |
-| M11 | History + Repeat | pending |
-| M12 | Settings + Profile | pending |
+| M10 | Smart polling | done |
+| M11 | History + Repeat | done |
+| M12 | Settings + Profile | done |
 | M13 | Stripe Premium | pending |
+| M13.4 | App Menu + Platform Console shell | done |
+| M13.5 | Observability foundation | done |
+| M13.6 | Platform Console Realtime | done |
 | M14 | Polish + RC | pending |
 | M15 | Custom categories (post-MVP) | pending |
+| M13.7 | Client Metrics Ingestion | deferred (post-release) |
 
 ---
 
@@ -406,64 +410,78 @@ Import (Screenshot | Text | Clipboard)
 
 ---
 
-## M10 — Smart polling (`RealtimeProvider`)
+## M10 — Smart polling (`EventPollingProvider`)
 
 **Goal:** Live collaboration once invites exist; transport-agnostic.
 
+**Status:** done (2026-07-18)
+
 **Creates:**
-- `mobile/lib/realtime/RealtimeProvider.ts` (interface)
-- `mobile/lib/realtime/PollingProvider.ts` (3s; list/Shopping Mode focus only; AppState stop)
-- Soft toast on remote events
-- Optional sound/haptic stubs
-- Query cache patch/invalidate from `events?after=`
+- `mobile/lib/realtime/EventPollingProvider.ts` — adaptive poll (3→5→10s), `pollNow`, drain cap
+- `useListRealtime` + soft toast (presentation only) on list / Shopping Mode
+- Cursor `{ lastEventId, lastUpdatedAt: event.createdAt }` in AsyncStorage
+- `scheduleItemsRefresh` — debounced invalidate; defer while local sync pending
 
 **Depends on:** M05 (events API), M09 (second user); Shopping Mode lifecycle from M08  
 **Complexity:** M  
 
 **Acceptance:**
-- [ ] Two members: A mutates, B updates within ~3s without pull-to-refresh
-- [ ] Polling stops on background / leave list
-- [ ] No websocket vendor in domain code
+- [x] Two members: A mutates, B updates within ~3s (hot interval) without pull-to-refresh
+- [x] Polling stops on background / leave list; resumes with `pollNow` on foreground / online
+- [x] No websocket vendor in domain code
+- [x] Events never applied as list source of truth (invalidate → GET items)
 
 ---
 
 ## M11 — History + search + Repeat List
 
-**Goal:** Past lists, search, duplicate as new pending list.
+**Goal:** Past lists, search, duplicate as a new pending list.
+
+**Status:** done (2026-07-19)
 
 **Creates:**
-- History tab UI + search
-- `backend/features/shopping-list/repeatList.ts`, `searchLists.ts`
-- Routes: repeat, restore
-- Free history depth guard (e.g. last 20 lists)
+- History tab UI + local search (single fetch, client-side filter)
+- `GET /api/v1/workspaces/{id}/lists/history` (preview items, Free depth 20 / Premium cap 200)
+- `POST /api/v1/lists/{id}/restore`, `POST /api/v1/lists/{id}/repeat`
+- Free history depth guard → `403 HISTORY_LIMIT_EXCEEDED` (minimal body)
+- Repeat: same title; all business item fields; navigate to new list; Restore secondary
+- Analytics stubs: `history_opened` / `_search` / `_repeat` / `_repeat_completed` / `_restore`
 
 **Depends on:** M08 (archive path)  
 **Complexity:** S–M  
 
 **Acceptance:**
-- [ ] History shows archived/past; search by title/date
-- [ ] Repeat List creates new list with items reset to pending
-- [ ] Restore works
-- [ ] Free depth limit enforced
+- [x] History shows archived/past; search by title (local)
+- [x] Repeat List creates new list with items reset to pending
+- [x] Restore works
+- [x] Free depth limit enforced (`HISTORY_LIMIT_EXCEEDED`)
 
 ---
 
 ## M12 — Workspace settings + Profile
 
-**Goal:** Settings that affect shopping/sync; profile locale / sign out.
+**Goal:** Profile, locale, and notification preferences that users need day to day.
 
-**Creates:**
-- Settings per PRD (language, notifications, sound, vibration, default shopping layout, keep screen on, AI prefs)
-- `mobile/features/settings/*`, Profile tab
-- API patch workspace settings + user locale
+**Status:** done (2026-07-18)
 
-**Depends on:** M03; enhances M08/M10  
+**Shipped:**
+- Profile tab — account details, login methods, change password, delete account, sign out
+- Language toggle PL/EN (client i18n)
+- Notification preferences screen (silent mode + per-type toggles; API-backed)
+- Premium / plan affordances on profile (upsell stubs where billing not yet live)
+
+**Deferred (not blocking M12):**
+- Workspace settings: realtime sound / haptic, default shopping layout, keep-screen-on toggle UI, AI merge prefs — fold into M10 (sound/haptic with polling) or M14 if still needed
+- Keep-awake in Shopping Mode remains hardcoded on for the trip (setting UI later)
+
+**Depends on:** M03; notification prefs overlap M09.5  
 **Complexity:** S–M  
 
 **Acceptance:**
-- [ ] Settings persist; affect keep-awake + toast sound/haptic
-- [ ] Profile switches PL/EN
-- [ ] No settings beyond PRD list
+- [x] Profile tab: account, language, notifications, sign out
+- [x] Profile switches PL/EN
+- [x] Notification prefs persist via API
+- [x] No settings sprawl beyond what shipped (+ deferred list above)
 
 ---
 
@@ -488,27 +506,112 @@ Import (Screenshot | Text | Clipboard)
 
 ---
 
+## M13.4 — App Navigation & Side Menu
+
+**Goal:** Application-level navigation (App Menu) separate from Bottom Tabs; Platform Console shell + `platformRole` access. Prerequisite for M13.5 observability UI.
+
+**Creates:**
+- Declarative full-screen App Menu (Home tab stack, native push; Bottom Tabs stay visible) — config → visibility predicate → route
+- Home hamburger opens Menu (not Workspace tab; not a left drawer)
+- `User.platformRole` enum (`USER` | `ADMIN`) + `/me` + `requirePlatformAdmin`
+- Platform Admin bootstrap via `PLATFORM_ADMIN_EMAILS` (one-way promote on upsert; never auto-demote)
+- About screen (Version, Environment, API, Build, Commit)
+- Platform Console route shell — Overview (Platform Status + metrics) → Business → Realtime → Scaling → Backend
+- `GET /api/v1/platform/overview` (ADMIN only)
+
+**Depends on:** M03, M12  
+**Complexity:** S–M  
+**Blocks:** — (M13.5 fills Overview metrics)
+
+**Platform Admin Bootstrap:** `platformRole` defaults to `USER`. During upsert, if email ∈ `PLATFORM_ADMIN_EMAILS` and role ≠ `ADMIN`, promote to `ADMIN`. Never auto-demote from env changes. Demotion = explicit ops action. Env is per-environment config (not a DB seed).
+
+**Acceptance:**
+- [x] Tabs = workflows; Menu = application-level destinations
+- [x] Menu hierarchy: Account / Workspace (1 shortcut) / Application / Platform
+- [x] Platform section + Console only for `platformRole = ADMIN` (client hide + backend 403)
+- [x] Platform Console read-only shell with Overview-first IA
+- [x] About build identity fields
+- [x] `PLATFORM_ADMIN_EMAILS` one-way promote on upsert (documented)
+- [x] Architecture §4 + roadmap updated
+
+---
+
+## M13.5 — Observability & Scaling Foundation
+
+**Goal:** Measure polling/sync/shopping health via a swappable Metrics facade; fill Platform Console Overview; inform WebSocket migration without shipping WebSockets.
+
+**Status:** done (2026-07-19)
+
+**Creates:**
+- `shared/metrics/` — metric names, tags, provisional capacity constant  
+- `mobile/lib/metrics/` — Noop / Console (DEV) / Composite; wired into EventPollingProvider, scheduleItemsRefresh, syncTelemetry  
+- `backend/lib/metrics/` — Noop + InMemory (+ Console if `METRICS_DEBUG=1`), `withHttpMetrics`, Prisma query timing  
+- Events + shopping session instrumentation; Platform Overview aggregates sessions + RPS/P95/headroom  
+- Architecture §10.5 (SLOs, capacity, cost, dashboards, alerts, WS checklist)
+
+**Depends on:** M10, M08.5, M08, M13.4  
+**Complexity:** M  
+
+**Acceptance:**
+- [x] Metrics facade with Noop default; syncTelemetry routes through it  
+- [x] Realtime poll/latency/empty/events/refresh metrics emitted  
+- [x] Backend HTTP + events endpoint timing + session counters  
+- [x] Presence KPI = open sessions (+ poll-derived RPS)  
+- [x] Docs: SLOs, capacity (provisional), Scaling/WS decision notes  
+- [x] No behaviour change to polling/sync algorithms  
+
+**Out / Future:** WebSocket, full Prometheus/OTel prod exporters, tracing, heartbeats, k6 load-test playbook, `estimated_monthly_ws_cost`.
+
+---
+
+## M13.6 — Platform Console Realtime
+
+**Goal:** Operational Realtime diagnostics in Platform Console — polling / events / refresh / sync — using existing M13.5 server metrics where possible; honest placeholders for client-only KPIs until ingest exists.
+
+**Status:** done (2026-07-19)
+
+**Creates:**
+- `GET /api/v1/platform/realtime` (ADMIN) — P50/P95, empty-page ratio, events RPS, failures, sessions-as-pollers proxy  
+- InMemory snapshot helpers: `p50`, `mean`, `zeroRatio`  
+- Mobile Realtime panel: Polling / Events / Refresh / Sync sub-tabs, KPI cards + sparklines + interval distribution placeholder + system status  
+- Console chrome: only **Overview** + **Realtime** visible; Scaling / Backend / Business deferred until data is valuable  
+- Docs: phased Console growth order
+
+**Depends on:** M13.5, M10  
+**Complexity:** M  
+
+**Acceptance:**
+- [x] Realtime tab answers: is polling healthy? are events flowing? latency / empty ratio / failures visible  
+- [x] No heavy chart libraries; lightweight sparklines + distribution bar  
+- [x] Null / placeholder for Hot–Warm–Cold, refresh, sync, drain, pollNow (client metrics not ingested yet)  
+- [x] Read-only; no polling/sync behaviour changes  
+
+**Out / Future:** **M13.7** Client Metrics Ingestion (deferred post-release) for true poller gauges + interval tiers; Scaling / Backend / Business tabs; full Sync success-rate instrumentation.
+
+---
+
 ## M14 — Polish + release candidate
 
-**Goal:** Design-system consistency, motion, dark mode, mascot empty states, a11y, EAS smoke build.
+**Goal:** Design-system consistency, motion, mascot empty states, a11y, EAS smoke build. **Light mode only** — no dark theme.
 
 **Creates/updates:**
-- Token/dark mode pass
+- Token / visual polish pass (light)
 - 2–3 motions (enter, status, toast)
 - Empty states (kangaroo / warm orange)
 - Category labels PL/EN complete
-- `mobile/eas.json`
+- `mobile/eas.json` (already present — verify preview/prod profiles)
 - Final sweep against PRD MVP acceptance
+- Optional: remaining deferred settings from M12 (keep-screen-on UI, shopping layout)
 
 **Depends on:** M06–M13 substantially complete  
 **Complexity:** M  
 
 **Acceptance:**
 - [ ] PL/EN parity on user-facing strings
-- [ ] Dark mode via tokens
 - [ ] Shopping Mode one-handed verified
 - [ ] PRD MVP checklist mostly green
 - [ ] Dev/preview EAS build succeeds
+- [ ] No dark-mode theme or dual-scheme polish required
 
 ---
 
@@ -526,7 +629,7 @@ Import (Screenshot | Text | Clipboard)
 
 **Depends on:** M14 (MVP complete); builds on M04–M06 category plumbing  
 **Complexity:** L  
-**Status:** post-MVP — last milestone on this roadmap
+**Status:** post-MVP
 
 **Acceptance:**
 - [ ] User can create a custom pack (e.g. “Sklep budowlany”) with ordered categories
@@ -534,6 +637,106 @@ Import (Screenshot | Text | Clipboard)
 - [ ] Items and AI assign categories from the active pack only
 - [ ] Shopping Mode and filters work with custom categories
 - [ ] Existing grocery lists unchanged when packs ship
+
+---
+
+## Phase 2 — Platform Evolution (Post-Release)
+
+Milestones below are **intentionally deferred** until after the first production release. Pre-release priority is user-facing product and monetization (Stripe, billing, entitlements, RC, Play Store). Platform Console remains operational for MVP on server/proxy metrics.
+
+---
+
+## M13.7 — Client Metrics Ingestion
+
+**Status:** Deferred until post-release (Planned — Phase 2 / Platform Evolution)
+
+> M13.7 is intentionally deferred until after the first production release.  
+> Platform Console is operational for MVP using existing proxy/server metrics.  
+> Client metrics ingestion improves observability only and does not affect end-user functionality.
+
+**Goal:** Ożywić placeholdery Realtime — klient już emituje metryki (`EventPollingProvider`, `scheduleItemsRefresh`, `syncTelemetry`), ale w prod trafiają do **Noop**. M13.7 dodaje ścieżkę buffer → batch POST → agregacja in-process → `GET /platform/realtime`.
+
+**Bez zmian** w istniejących call sites `Metrics.*` — tylko nowy sink + wiring + API + mapowanie w `getRealtime`.
+
+```mermaid
+flowchart LR
+  emit[Emit sites] --> facade[getMetrics Composite]
+  facade --> buffer[BufferMetrics]
+  facade --> noop[Noop]
+  facade -.->|DEV only| console[Console]
+  buffer -->|"POST co 20s"| ingest["/api/v1/platform/client-metrics"]
+  ingest --> agg[ClientMetricsAggregator]
+  agg --> memory[InMemory counters/hist]
+  agg --> gauges[GaugeTTL store]
+  memory --> realtime[getPlatformRealtime]
+  gauges --> realtime
+  realtime --> consoleUI[Platform Console Realtime]
+```
+
+### Decyzje (ustalone)
+
+| Temat | Decyzja |
+|--------|---------|
+| Kto POSTuje | Każdy zalogowany klient (`requireUser`), nie tylko ADMIN |
+| Kiedy włączone | Prod + DEV — Buffer zawsze w Composite; Console nadal tylko DEV |
+| Interval | **20 s** (w oknie 15–30 s), + flush przy `AppState` → `background` |
+| Identyfikacja | Anonimowy `clientInstanceId` (UUID w AsyncStorage) — do sumowania gauge’y |
+| Tagi | Nadal ignorowane w store (jak dziś); tiers już mają osobne nazwy metryk |
+| Bezpieczeństwo | Allowlista nazw `realtime.*` / `sync.*` z `shared/metrics/names.ts`; limity rozmiaru body; fire-and-forget (błąd sieci nie wpływa na app) |
+| Proxy vs client | Gdy są dane klienta dla danej KPI — **preferuj klienta**; inaczej zostaw obecny proxy serwerowy |
+
+**Nadal null po M13.7** (brak emitów dziś): `timeoutsPerSec`, `lastError*`, `avgDelayMs`, `sync.successRate` — bez sztucznego wypełniania; ewentualna instrumentacja w osobnym follow-upie.
+
+### Creates
+
+**Shared — kontrakt batcha** (`shared/metrics/client-batch.ts` lub Zod + shared type):
+
+- `clientInstanceId: string` (uuid)
+- `sentAt: number` (epoch ms)
+- `counters: Record<string, number>` — **delty** od ostatniego udanego flusha
+- `gauges: Record<string, number>` — ostatnia znana wartość
+- `histograms: Record<string, number[]>` — próbki od ostatniego flusha (cap per name, np. 40)
+- Helper `isIngestibleMetricName(name)` — allowlista z `MetricNames` (tylko realtime + sync)
+
+**Mobile — Buffer + flush** (`mobile/lib/metrics/`):
+
+- `buffer.ts` — implementacja `Metrics`; `drain(): ClientMetricsBatch | null`
+- `flusher.ts` — timer 20 s + `AppState`; `apiFetch POST /api/v1/platform/client-metrics`; clear delty dopiero po 2xx
+- `client-id.ts` — `getOrCreateClientInstanceId()` via AsyncStorage
+- Composite: `[buffer, Noop]` (+ Console w DEV); `startMetricsFlusher` / `stopMetricsFlusher` przy login/logout
+- Emit sites **bez zmian**; lokalny cap ~200 pending hist samples
+
+**Backend — ingest + GaugeTTL:**
+
+- `POST /api/v1/platform/client-metrics` — `requireUser`, Zod limits, OpenAPI, **204**
+- `applyClientMetricsBatch`: counters/hist → InMemory; gauges multi-client (`realtime.active_pollers`, `sync.queue_length`, `sync.failed_ops`) → GaugeTTL map (TTL **90 s**) + `sumGauge(name)`
+
+**Realtime API mapping** (`getRealtime.ts`) — prefer client when present:
+
+| KPI | Źródło po M13.7 |
+|-----|-----------------|
+| `activePollers` | `sumGauge(realtime.active_pollers)` jeśli klienci w TTL, else proxy sessions |
+| `pollRequestsPerSec` | `rps(realtime.poll.requests)` jeśli >0, else events/http proxy |
+| `p50/p95` | `realtime.poll.latency_ms` jeśli hist, else events/http duration |
+| `emptyPollRatio` | `empty / (empty+with_events)` z counters, else `zeroRatio(page_size)` |
+| `failuresPerSec` | `rps(realtime.poll.failures)` jeśli ticks, else `http.errors` |
+| `intervalDistribution` | shares z counters hot/warm/cold → `available: true` gdy suma > 0 |
+| `events.*` drain/seeding/pollNow | counters klienta |
+| `eventsPerSec` / perResponse | prefer `realtime.events.delivered` rps + mean `per_response` |
+| `refresh.*` (bez avgDelay) | counters klienta |
+| `sync` queue/retries/failed | sumGauge / counters |
+
+**Depends on:** M13.5, M13.6, first production release  
+**Complexity:** M  
+
+**Acceptance:**
+- [ ] Authenticated clients batch-POST realtime/sync metrics; allowlist enforced
+- [ ] Realtime Console fills Hot/Warm/Cold, refresh, sync, drain, pollNow from ingested data
+- [ ] Multi-client `active_pollers` summed via GaugeTTL (not last-write-wins)
+- [ ] Emit sites unchanged; fire-and-forget (network failure does not affect app)
+- [ ] Server proxies remain fallback when no client data yet
+
+**Out / Future:** Prometheus/OTel exporters; per-workspace slice; infrastructure rate limiter; refresh delay / sync successRate / timeout/lastError instrumentation; persistence beyond process memory.
 
 ---
 
@@ -557,12 +760,29 @@ Architecture hooks already present after M09.5: `NotificationCreatedEvent` fan-o
 | M13 | 1–2 |
 | M14 | 1–2 |
 | M15 | 2–3 (post-MVP) |
+| M13.7 | 2–3 (post-release; Platform Evolution) |
 
 ---
 
 ## Explicitly out of this roadmap
 
 Voice, AI suggestions, AI cleanup on Repeat, websocket vendors, UploadThing, Redux/MobX, `packages/` monorepo, web/admin apps, additional docs beyond the four listed above.
+
+---
+
+## Post-roadmap — Data export (GDPR)
+
+**Not scheduled in the MVP roadmap.** Follow-up after M15 / first production release.
+
+**Goal:** Let users download their Kangur data from Privacy (UI row “Pobierz swoje dane”).
+
+**Creates (when scheduled):**
+- `POST /api/v1/me/data-export` — assemble user / workspaces / lists / items / prefs JSON; email via Resend (attachment or link); rate limit (e.g. 1 / 24h)
+- Privacy screen export row + confirm copy
+- i18n `privacy.export.*`
+
+**Depends on:** Privacy screen (sessions + delete), Resend already used for invites  
+**Out of scope until then:** S3 signed URLs, async job queue, in-app file download without email
 
 ---
 

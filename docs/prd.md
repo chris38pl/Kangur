@@ -540,7 +540,7 @@ Billing attaches to **Workspace**.
 ### Workspace & billing
 
 - [ ] Workspace avatar visible in switcher  
-- [ ] Repeat List creates a new pending copy from history  
+- [x] Repeat List creates a new pending copy from history  
 - [ ] AI Credits enforced server-side; Premium via Stripe  
 
 ### Quality
@@ -557,7 +557,7 @@ Billing attaches to **Workspace**.
 | Topic | Default |
 |-------|---------|
 | Free monthly AI Credits | Set before beta |
-| Free history depth | Last N lists or N days |
+| Free history depth | **Last 20 archived lists** (by `updatedAt`); Premium unlimited (safety cap 200). Beyond Free → `403 HISTORY_LIMIT_EXCEEDED` |
 | Invite mechanism | Email first |
 | When to skip AI Review | Skip only if zero flags and all high confidence — or always show compact Review |
 | Soft vs hard delete | Archive lists; `removed` items |

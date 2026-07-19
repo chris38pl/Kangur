@@ -8,6 +8,7 @@ import {
 } from "@/lib/openai";
 
 import type { AiOutputLanguage } from "./outputLanguage";
+import { AI_PROMPTS } from "./outputLanguage";
 import { AiProposalSchema } from "./schemas";
 
 type ExistingItem = {
@@ -75,31 +76,16 @@ const proposalJsonSchema = {
 } as const;
 
 function languageBlock(language: AiOutputLanguage): string {
-  if (language === "pl") {
-    return [
-      "OUTPUT LANGUAGE (mandatory, non-negotiable): Polish (pl-PL).",
-      "Every `name`, `note`, `reason`, and `shoppingContext.title` MUST be written in Polish.",
-      "Use Polish canonical product names: Mleko, Ser, Chleb, Jabłka, Kawa, Jogurt, Masło, Jajka — NEVER English Milk/Cheese/Bread/Apples/Coffee.",
-      "If the source text/image is Polish, KEEP Polish — do not translate to English.",
-      "If the source is English (or mixed), TRANSLATE product names into Polish.",
-      "Amount: keep digits; use Polish unit wording when present (np. \"2 szt.\", \"500 g\", \"1 l\").",
-      "List title fallback when no clear theme: \"Zakupy\".",
-      "Examples: \"Kup mleko\" → name Mleko. \"Kup 2 cytryny\" → Cytryna / amount \"2\". \"Kup mleko bez laktozy\" → Mleko / note bez laktozy. \"Buy milk\" → Mleko.",
-    ].join("\n");
-  }
+  return AI_PROMPTS[language].systemInstruction;
+}
 
-  return [
-    "OUTPUT LANGUAGE (mandatory, non-negotiable): English (en).",
-    "Every `name`, `note`, `reason`, and `shoppingContext.title` MUST be written in English.",
-    "Use English canonical product names: Milk, Cheese, Bread, Apples, Coffee.",
-    "If the source is another language, TRANSLATE product names into English.",
-    "List title fallback when no clear theme: \"Shopping\".",
-    "Examples: \"Buy milk\" → Milk. \"Buy 2 lemons\" → Lemon / \"2\". \"Buy lactose free milk\" → Milk / note lactose free.",
-  ].join("\n");
+function listTitleFallback(language: AiOutputLanguage): string {
+  const terms = AI_PROMPTS[language].exampleShoppingTerms;
+  return terms?.[terms.length - 1] ?? "Shopping";
 }
 
 function shoppingContextBlock(language: AiOutputLanguage): string {
-  const fallback = language === "pl" ? "Zakupy" : "Shopping";
+  const fallback = listTitleFallback(language);
   return [
     "SHOPPING LIST TITLE (shoppingContext) — mandatory:",
     "Create a short shopping list title from the input content.",
@@ -144,10 +130,8 @@ function buildPrompt(
 }
 
 function systemMessage(language: AiOutputLanguage, kind: "text" | "vision") {
-  const lang =
-    language === "pl"
-      ? "Always output Polish product names and list titles (never English)."
-      : "Always output English product names and list titles.";
+  const { languageName } = AI_PROMPTS[language];
+  const lang = `Always output ${languageName} product names and list titles.`;
   if (kind === "vision") {
     return `You are Kangur AI. Read shopping list screenshots. Prefer simple name + optional amount + optional note. Also set shoppingContext.title + theme. Never invent amounts. ${lang} If the screenshot contains Polish text, product names MUST be Polish even if brand names are foreign.`;
   }

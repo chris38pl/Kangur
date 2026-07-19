@@ -1,0 +1,34 @@
+{
+  "notifications": {
+    "listCreated": {
+      "title": "{{actor}} utworzył(a) listę {{listName}}"
+    },
+    "listDeleted": {
+      "title": "{{actor}} usunął(a) listę {{listName}}"
+    },
+    "shoppingStarted": {
+      "title": "{{actor}} rozpoczął(a) zakupy"
+    },
+    "shoppingFinished": {
+      "title": "{{actor}} zakończył(a) zakupy",
+      "allBought": "Wszystkie produkty kupione",
+      "unavailableOne": "1 produkt był niedostępny",
+      "unavailableMany": "{{count}} produkty były niedostępne"
+    },
+    "invite": {
+      "title": "{{actor}} zaprosił Cię do przestrzeni {{workspaceName}}",
+      "body": "Dołącz, aby wspólnie tworzyć listy zakupów."
+    }
+  },
+  "email": {
+    "invite": {
+      "subject": "Zaproszenie do {{workspaceName}} — Kangur",
+      "headline": "{{inviter}} zaprosił Cię do",
+      "ctaOpen": "Otwórz Kangur",
+      "ctaJoin": "Dołącz do przestrzeni",
+      "bodyExisting": "Masz już konto — otwórz aplikację, aby zaakceptować zaproszenie.",
+      "bodyNew": "Utwórz konto lub zaloguj się, aby dołączyć do wspólnych list zakupów.",
+      "expiry": "Link ważny 7 dni."
+    }
+  }
+}

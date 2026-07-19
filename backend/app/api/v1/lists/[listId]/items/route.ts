@@ -18,7 +18,9 @@ export async function GET(request: Request, context: RouteContext) {
   try {
     const { listId } = await context.params;
     const { user } = await requireUser(request);
-    const items = await listShoppingItems(listId, user.id);
+    const url = new URL(request.url);
+    const allowArchived = url.searchParams.get("allowArchived") === "1";
+    const items = await listShoppingItems(listId, user.id, { allowArchived });
     return NextResponse.json(ShoppingItemListResponseSchema.parse({ items }));
   } catch (error) {
     if (error instanceof ApiError) {

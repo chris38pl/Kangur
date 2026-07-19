@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 import { Screen } from "@/components/Screen";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -33,12 +34,17 @@ import { OfflineStatusBanner } from "@/features/offline/OfflineStatusBanner";
 import { DataSyncEngine } from "@/features/data-sync-engine";
 import { finishShoppingSession } from "@/features/notifications/api";
 import type { ShoppingItem } from "@/features/shopping-item/schemas";
+import { intlLocaleTag } from "@/lib/i18n/locales";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
 import { useShoppingSession } from "@/features/shopping-list/session/useShoppingSession";
 import { useShoppingList } from "@/features/shopping-list/useShoppingLists";
 
 type Props = {
   listId: string;
+  /** Read-only summary for another member (from notification). */
+  viewer?: boolean;
+  /** Shopper display name when opened as viewer. */
+  actorDisplayName?: string;
 };
 
 const BOUGHT_PREVIEW = 5;
@@ -54,7 +60,7 @@ function displayNameFromEmail(email: string): string {
   return local.charAt(0).toUpperCase() + local.slice(1);
 }
 
-function formatDurationMinutes(ms: number, t: (key: string, opts?: object) => string) {
+function formatDurationMinutes(ms: number, t: TFunction) {
   const totalMin = Math.max(1, Math.round(ms / 60_000));
   if (totalMin < 60) {
     return t("shoppingMode.durationMinutes", { count: totalMin });
@@ -70,21 +76,22 @@ function formatDurationMinutes(ms: number, t: (key: string, opts?: object) => st
 function formatFinishedAt(
   date: Date,
   locale: string,
-  t: (key: string, opts?: object) => string,
+  t: TFunction,
 ) {
   const now = new Date();
   const sameDay =
     date.getFullYear() === now.getFullYear() &&
     date.getMonth() === now.getMonth() &&
     date.getDate() === now.getDate();
-  const time = date.toLocaleTimeString(locale.startsWith("pl") ? "pl-PL" : "en-GB", {
+  const tag = intlLocaleTag(locale);
+  const time = date.toLocaleTimeString(tag, {
     hour: "2-digit",
     minute: "2-digit",
   });
   if (sameDay) {
     return t("shoppingMode.finishedToday", { time });
   }
-  const day = date.toLocaleDateString(locale.startsWith("pl") ? "pl-PL" : "en-GB", {
+  const day = date.toLocaleDateString(tag, {
     day: "numeric",
     month: "short",
   });
@@ -287,7 +294,11 @@ function SummaryItemRow({
   );
 }
 
-export function FinishSummaryScreen({ listId }: Props) {
+export function FinishSummaryScreen({
+  listId,
+  viewer = false,
+  actorDisplayName,
+}: Props) {
   const { t, i18n } = useTranslation();
   const { getToken } = useAuth();
   const me = useMe();
@@ -304,10 +315,11 @@ export function FinishSummaryScreen({ listId }: Props) {
   const finishedAt = useMemo(() => new Date(), []);
 
   const actorName = useMemo(() => {
+    if (actorDisplayName) return actorDisplayName;
     const email = me.data?.email;
     if (!email) return t("shoppingMode.you");
     return displayNameFromEmail(email);
-  }, [me.data?.email, t]);
+  }, [actorDisplayName, me.data?.email, t]);
 
   const { boughtItems, unavailableItems, remaining } = useMemo(() => {
     const items = (itemsQuery.data ?? []).filter((i) => i.status !== "removed");
@@ -318,12 +330,16 @@ export function FinishSummaryScreen({ listId }: Props) {
     };
   }, [itemsQuery.data]);
 
+  const sessionSnapshot = session.snapshot;
   const durationLabel = useMemo(() => {
-    const started = session.snapshot?.startedAt
-      ? new Date(session.snapshot.startedAt)
+    if (viewer && !sessionSnapshot?.startedAt) {
+      return "—";
+    }
+    const started = sessionSnapshot?.startedAt
+      ? new Date(sessionSnapshot.startedAt)
       : finishedAt;
     return formatDurationMinutes(finishedAt.getTime() - started.getTime(), t);
-  }, [session.snapshot?.startedAt, finishedAt, t]);
+  }, [viewer, sessionSnapshot, finishedAt, t]);
 
   const visibleBought = showAllBought
     ? boughtItems
@@ -382,7 +398,15 @@ export function FinishSummaryScreen({ listId }: Props) {
     }
   };
 
-  if (listQuery.isPending || itemsQuery.isPending || !session.hydrated) {
+  const goHome = () => {
+    router.replace("/(tabs)");
+  };
+
+  if (
+    listQuery.isPending ||
+    itemsQuery.isPending ||
+    (!viewer && !session.hydrated)
+  ) {
     return (
       <View
         style={{
@@ -413,7 +437,7 @@ export function FinishSummaryScreen({ listId }: Props) {
         }}
       >
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => (viewer ? goHome() : router.back())}
           hitSlop={10}
           accessibilityRole="button"
           style={{
@@ -461,7 +485,7 @@ export function FinishSummaryScreen({ listId }: Props) {
           paddingBottom: spacing[6] + insets.bottom + 120,
         }}
       >
-        {!DataSyncEngine.isOnline() ? (
+        {!viewer && !DataSyncEngine.isOnline() ? (
           <Text
             style={{
               ...typography.caption,
@@ -760,38 +784,62 @@ export function FinishSummaryScreen({ listId }: Props) {
           borderTopColor: theme.border,
         }}
       >
-        <Pressable
-          onPress={() => void finish.mutateAsync()}
-          disabled={finish.isPending}
-          style={{
-            backgroundColor: theme.primary,
-            borderRadius: radius.full,
-            paddingVertical: spacing[4],
-            alignItems: "center",
-            minHeight: shoppingDensity.primaryCtaMinHeight,
-            justifyContent: "center",
-            opacity: finish.isPending ? 0.7 : 1,
-          }}
-        >
-          {finish.isPending ? (
-            <ActivityIndicator color={theme.onPrimary} />
-          ) : (
+        {viewer ? (
+          <Pressable
+            onPress={goHome}
+            style={{
+              backgroundColor: theme.primary,
+              borderRadius: radius.full,
+              paddingVertical: spacing[4],
+              alignItems: "center",
+              minHeight: shoppingDensity.primaryCtaMinHeight,
+              justifyContent: "center",
+            }}
+          >
             <Text style={{ ...typography.label, color: theme.onPrimary }}>
-              {DataSyncEngine.isOnline()
-                ? t("shoppingMode.archiveList")
-                : t("offline.finishAnyway")}
+              {t("shoppingMode.summaryDone")}
             </Text>
-          )}
-        </Pressable>
+          </Pressable>
+        ) : (
+          <>
+            <Pressable
+              onPress={() => void finish.mutateAsync()}
+              disabled={finish.isPending}
+              style={{
+                backgroundColor: theme.primary,
+                borderRadius: radius.full,
+                paddingVertical: spacing[4],
+                alignItems: "center",
+                minHeight: shoppingDensity.primaryCtaMinHeight,
+                justifyContent: "center",
+                opacity: finish.isPending ? 0.7 : 1,
+              }}
+            >
+              {finish.isPending ? (
+                <ActivityIndicator color={theme.onPrimary} />
+              ) : (
+                <Text style={{ ...typography.label, color: theme.onPrimary }}>
+                  {DataSyncEngine.isOnline()
+                    ? t("shoppingMode.summaryDone")
+                    : t("offline.finishAnyway")}
+                </Text>
+              )}
+            </Pressable>
 
-        <Pressable
-          onPress={() => router.back()}
-          style={{ marginTop: spacing[3], alignItems: "center", paddingVertical: spacing[2] }}
-        >
-          <Text style={{ ...typography.label, color: theme.primary }}>
-            {t("shoppingMode.keepShopping")}
-          </Text>
-        </Pressable>
+            <Pressable
+              onPress={() => router.back()}
+              style={{
+                marginTop: spacing[3],
+                alignItems: "center",
+                paddingVertical: spacing[2],
+              }}
+            >
+              <Text style={{ ...typography.label, color: theme.primary }}>
+                {t("shoppingMode.keepShopping")}
+              </Text>
+            </Pressable>
+          </>
+        )}
       </View>
     </Screen>
   );

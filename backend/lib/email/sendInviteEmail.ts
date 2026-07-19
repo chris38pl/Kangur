@@ -1,6 +1,8 @@
 import { getWorkspaceIconEmoji } from "@shared/workspace-icons";
 import { Resend } from "resend";
 
+import { t } from "@/lib/i18n";
+
 export type InviteEmailVariant = "new_user" | "existing_user";
 
 export type SendInviteEmailInput = {
@@ -22,35 +24,25 @@ function buildInviteAcceptUrl(rawToken: string): string {
 export { buildInviteAcceptUrl };
 
 function subject(locale: string | null | undefined, workspaceName: string) {
-  if (locale?.startsWith("pl")) {
-    return `Zaproszenie do ${workspaceName} — Kangur`;
-  }
-  return `You're invited to ${workspaceName} — Kangur`;
+  return t(locale, "email.invite.subject", { workspaceName });
 }
 
 function htmlBody(input: SendInviteEmailInput): string {
   const emoji =
     getWorkspaceIconEmoji(input.workspaceIcon) ?? input.workspaceIcon ?? "🏠";
-  const pl = Boolean(input.locale?.startsWith("pl"));
+  const locale = input.locale;
   const cta =
     input.variant === "existing_user"
-      ? pl
-        ? "Otwórz Kangur"
-        : "Open Kangur"
-      : pl
-        ? "Dołącz do przestrzeni"
-        : "Join workspace";
-  const headline = pl
-    ? `${escapeHtml(input.inviterName)} zaprosił Cię do`
-    : `${escapeHtml(input.inviterName)} invited you to`;
+      ? t(locale, "email.invite.ctaOpen")
+      : t(locale, "email.invite.ctaJoin");
+  const headline = t(locale, "email.invite.headline", {
+    inviter: escapeHtml(input.inviterName),
+  });
   const body =
     input.variant === "existing_user"
-      ? pl
-        ? "Masz już konto — otwórz aplikację, aby zaakceptować zaproszenie."
-        : "You already have an account — open the app to accept the invite."
-      : pl
-        ? "Utwórz konto lub zaloguj się, aby dołączyć do wspólnych list zakupów."
-        : "Create an account or sign in to join shared shopping lists.";
+      ? t(locale, "email.invite.bodyExisting")
+      : t(locale, "email.invite.bodyNew");
+  const expiry = t(locale, "email.invite.expiry");
 
   return `
 <!DOCTYPE html>
@@ -60,7 +52,7 @@ function htmlBody(input: SendInviteEmailInput): string {
   <p style="font-size: 22px; font-weight: 700;">${emoji} ${escapeHtml(input.workspaceName)}</p>
   <p>${body}</p>
   <p><a href="${escapeHtml(input.acceptUrl)}" style="display:inline-block;padding:12px 20px;background:#2F8F84;color:#fff;text-decoration:none;border-radius:8px;">${cta}</a></p>
-  <p style="color:#666;font-size:13px;">${pl ? "Link ważny 7 dni." : "This link expires in 7 days."}</p>
+  <p style="color:#666;font-size:13px;">${expiry}</p>
 </body>
 </html>`.trim();
 }

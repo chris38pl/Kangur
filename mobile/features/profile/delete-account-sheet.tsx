@@ -1,8 +1,18 @@
-import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
+import { brandAssets } from "@/design-system/brand-assets";
 import {
   colors,
   radius,
@@ -19,7 +29,8 @@ type Props = {
 };
 
 /**
- * Confirm sheet for permanent account deletion.
+ * Branded type-to-confirm sheet for permanent account deletion.
+ * Confirm phrase: USUŃ (pl) / DELETE (en).
  */
 export function DeleteAccountSheet({
   visible,
@@ -27,10 +38,20 @@ export function DeleteAccountSheet({
   onCancel,
   onConfirm,
 }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
+  const [typed, setTyped] = useState("");
+
+  const confirmPhrase = t("privacy.delete.confirmPhrase");
+  const canConfirm =
+    typed.trim().toLocaleUpperCase(i18n.language) ===
+    confirmPhrase.toLocaleUpperCase(i18n.language);
+
+  useEffect(() => {
+    if (!visible) setTyped("");
+  }, [visible]);
 
   return (
     <Modal
@@ -38,12 +59,12 @@ export function DeleteAccountSheet({
       animationType="slide"
       transparent
       statusBarTranslucent
-      onRequestClose={onCancel}
+      onRequestClose={busy ? undefined : onCancel}
     >
       <View style={{ flex: 1, justifyContent: "flex-end" }}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t("profile.deleteAccountBack")}
+          accessibilityLabel={t("privacy.delete.back")}
           onPress={busy ? undefined : onCancel}
           style={{
             position: "absolute",
@@ -70,7 +91,7 @@ export function DeleteAccountSheet({
             onPress={onCancel}
             disabled={busy}
             accessibilityRole="button"
-            accessibilityLabel={t("profile.deleteAccountBack")}
+            accessibilityLabel={t("privacy.delete.back")}
             hitSlop={12}
             style={{
               alignSelf: "flex-end",
@@ -95,15 +116,23 @@ export function DeleteAccountSheet({
             </Text>
           </Pressable>
 
+          <View style={{ alignItems: "center", marginTop: spacing[1] }}>
+            <Image
+              source={brandAssets.deleteList}
+              style={{ width: 200, height: 200, resizeMode: "contain" }}
+              accessibilityLabel=""
+            />
+          </View>
+
           <Text
             style={{
               ...typography.title,
               color: theme.text,
               textAlign: "center",
-              marginTop: spacing[2],
+              marginTop: spacing[4],
             }}
           >
-            {t("profile.deleteAccountTitle")}
+            {t("privacy.delete.title")}
           </Text>
           <Text
             style={{
@@ -114,27 +143,71 @@ export function DeleteAccountSheet({
               paddingHorizontal: spacing[2],
             }}
           >
-            {t("profile.deleteAccountBody")}
+            {t("privacy.delete.body")}
+          </Text>
+          <Text
+            style={{
+              ...typography.body,
+              color: theme.danger,
+              textAlign: "center",
+              marginTop: spacing[2],
+              fontWeight: "600",
+            }}
+          >
+            {t("privacy.delete.irreversible")}
           </Text>
 
+          <Text
+            style={{
+              ...typography.caption,
+              color: theme.textMuted,
+              marginTop: spacing[5],
+              marginBottom: spacing[2],
+            }}
+          >
+            {t("privacy.delete.typePrompt", { phrase: confirmPhrase })}
+          </Text>
+          <TextInput
+            value={typed}
+            onChangeText={setTyped}
+            editable={!busy}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            placeholder={confirmPhrase}
+            placeholderTextColor={theme.textMuted}
+            style={{
+              borderWidth: 1,
+              borderColor: theme.border,
+              backgroundColor: theme.bg,
+              borderRadius: radius.md,
+              paddingHorizontal: spacing[4],
+              paddingVertical: spacing[3],
+              ...typography.body,
+              color: theme.text,
+              textAlign: "center",
+              fontWeight: "700",
+              letterSpacing: 1,
+            }}
+          />
+
           <Pressable
-            disabled={busy}
+            disabled={busy || !canConfirm}
             onPress={onConfirm}
             style={{
-              marginTop: spacing[6],
+              marginTop: spacing[5],
               minHeight: 56,
               borderRadius: radius.full,
               backgroundColor: theme.danger,
               alignItems: "center",
               justifyContent: "center",
-              opacity: busy ? 0.7 : 1,
+              opacity: busy || !canConfirm ? 0.45 : 1,
             }}
           >
             {busy ? (
               <ActivityIndicator color={theme.onPrimary} />
             ) : (
               <Text style={{ ...typography.label, color: theme.onPrimary }}>
-                {t("profile.deleteAccountConfirm")}
+                {t("privacy.delete.confirm")}
               </Text>
             )}
           </Pressable>
@@ -150,7 +223,7 @@ export function DeleteAccountSheet({
             }}
           >
             <Text style={{ ...typography.label, color: theme.textMuted }}>
-              {t("profile.deleteAccountBack")}
+              {t("privacy.delete.back")}
             </Text>
           </Pressable>
         </View>

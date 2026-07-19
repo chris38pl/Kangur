@@ -106,6 +106,13 @@ export default function RootLayout() {
                       name="notification-center"
                       options={{ headerShown: false }}
                     />
+                    <Stack.Screen name="about" options={{ headerShown: false }} />
+                    <Stack.Screen name="privacy" options={{ headerShown: false }} />
+                    <Stack.Screen name="language" options={{ headerShown: false }} />
+                    <Stack.Screen
+                      name="platform-console"
+                      options={{ headerShown: false }}
+                    />
                     <Stack.Screen
                       name="invite/[token]"
                       options={{ headerShown: false }}

@@ -6,7 +6,8 @@ export type ApiErrorCode =
   | "VALIDATION_ERROR"
   | "FORBIDDEN"
   | "CONFLICT"
-  | "INSUFFICIENT_CREDITS";
+  | "INSUFFICIENT_CREDITS"
+  | "HISTORY_LIMIT_EXCEEDED";
 
 export class ApiError extends Error {
   readonly code: ApiErrorCode;
@@ -73,4 +74,11 @@ export function conflict(
   details?: Record<string, unknown>,
 ): ApiError {
   return new ApiError("CONFLICT", message, 409, details);
+}
+
+/** Free plan history depth exceeded — resource exists; upgrade for older lists. */
+export function historyLimitExceeded(
+  message = "Older history is available with Premium.",
+): ApiError {
+  return new ApiError("HISTORY_LIMIT_EXCEEDED", message, 403);
 }

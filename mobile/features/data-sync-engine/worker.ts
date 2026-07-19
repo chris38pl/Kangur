@@ -1,7 +1,10 @@
+import type { ShoppingItem } from "@/features/shopping-item/schemas";
+
 import type { SyncOperation } from "./types";
 
 export type SyncTransport = {
-  execute(op: SyncOperation): Promise<void>;
+  /** Must return canonical server entity when the API provides one (never invent fields). */
+  execute(op: SyncOperation): Promise<ShoppingItem | null>;
 };
 
 /**
@@ -24,6 +27,14 @@ export class SyncWorker {
     hooks: {
       onStart?: () => void;
       onOpState?: (id: string, state: SyncOperation["state"]) => Promise<void>;
+      onOpSuccess?: (
+        op: SyncOperation,
+        item: ShoppingItem | null,
+      ) => void | Promise<void>;
+      onOpFailed?: (
+        op: SyncOperation,
+        error: unknown,
+      ) => void | Promise<void>;
       onDone?: (failed: number) => void;
     },
   ): Promise<{ failed: string[] }> {
@@ -42,13 +53,15 @@ export class SyncWorker {
       for (const op of ops) {
         await hooks.onOpState?.(op.id, "SYNCING");
         try {
-          await this.transport.execute(op);
+          const item = await this.transport.execute(op);
+          await hooks.onOpSuccess?.(op, item);
           await hooks.onOpState?.(op.id, "PENDING"); // removed by caller after success
         } catch (error) {
           if (__DEV__) {
             console.warn("[DataSync]", op.action, op.id, error);
           }
           failed.push(op.id);
+          await hooks.onOpFailed?.(op, error);
           await hooks.onOpState?.(op.id, "FAILED");
         }
       }

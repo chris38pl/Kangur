@@ -4,6 +4,7 @@ import { conflictResolver } from "./conflict-resolver";
 import { createSyncOpId } from "./id";
 import { dataSyncPersistence } from "./persistence";
 import { SyncQueue } from "./queue";
+import type { SyncCacheAdapter } from "./sync-cache-adapter";
 import { syncTelemetry } from "./telemetry";
 import {
   ACTION_PRIORITY,
@@ -14,6 +15,7 @@ import {
 } from "./types";
 import { SyncWorker, type SyncTransport } from "./worker";
 import { createClientId, isLegacyLocalItemId, isUuid } from "@/lib/createClientId";
+import { ApiClientError } from "@/lib/api/client";
 
 const DEBOUNCE_MS = 1000;
 
@@ -38,6 +40,11 @@ class DataSyncEngineImpl {
   private handlers = new Map<DataSyncEvent, Set<DataSyncEventHandler>>();
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private started = false;
+  private syncCache: SyncCacheAdapter | null = null;
+
+  setSyncCacheAdapter(adapter: SyncCacheAdapter): void {
+    this.syncCache = adapter;
+  }
 
   start(transport: SyncTransport): void {
     if (this.started) {
@@ -205,6 +212,21 @@ class DataSyncEngineImpl {
         if (state === "SYNCING" || state === "FAILED") {
           await this.queue.update(id, { state });
         }
+      },
+      onOpSuccess: (op, item) => {
+        this.syncCache?.applyOperationResult(op, {
+          status: "success",
+          item: item ?? undefined,
+        });
+      },
+      onOpFailed: (op, error) => {
+        const httpStatus =
+          error instanceof ApiClientError ? error.status : undefined;
+        this.syncCache?.applyOperationResult(op, {
+          status: "failed",
+          error,
+          httpStatus,
+        });
       },
       onDone: (failedCount) => {
         syncTelemetry.failedOps(failedCount);

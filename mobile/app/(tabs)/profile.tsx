@@ -46,7 +46,7 @@ import { useShoppingLists } from "@/features/shopping-list/useShoppingLists";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
-import i18n from "@/lib/i18n";
+import i18n, { localeMeta, resolveAppLocale } from "@/lib/i18n";
 
 function displayNameFromEmail(email: string | undefined): string {
   if (!email) return "Kangur";
@@ -262,8 +262,7 @@ export default function ProfileScreen() {
   const appVersion =
     Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? "1.0.0";
 
-  const languageLabel =
-    i18n.language === "pl" ? t("profile.languagePl") : t("profile.languageEn");
+  const languageLabel = localeMeta(resolveAppLocale(i18n.language)).nativeName;
 
   const showSoon = () => {
     Alert.alert(t("profile.comingSoon"));
@@ -275,11 +274,6 @@ export default function ProfileScreen() {
 
   const openNotifications = () => {
     router.push("/notifications");
-  };
-
-  const toggleLanguage = () => {
-    const next = i18n.language === "pl" ? "en" : "pl";
-    void i18n.changeLanguage(next);
   };
 
   const onSignOut = async () => {
@@ -512,7 +506,7 @@ export default function ProfileScreen() {
           <ProfileMenuRow
             icon={<ProfileIconShield color={theme.primary} />}
             title={t("profile.privacy")}
-            onPress={showSoon}
+            onPress={() => router.push("/privacy")}
           />
         </SectionCard>
 
@@ -522,7 +516,7 @@ export default function ProfileScreen() {
             title={t("profile.appLanguage")}
             value={languageLabel}
             showDivider
-            onPress={toggleLanguage}
+            onPress={() => router.push("/language")}
           />
           <ProfileMenuRow
             icon={<ProfileIconPalette color={theme.primary} />}
@@ -541,7 +535,7 @@ export default function ProfileScreen() {
             icon={<ProfileIconInfo color={theme.primary} />}
             title={t("profile.aboutApp")}
             value={appVersion}
-            onPress={showSoon}
+            onPress={() => router.push("/about" as never)}
           />
         </SectionCard>
 

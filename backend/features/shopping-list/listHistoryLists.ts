@@ -1,0 +1,61 @@
+import { prisma } from "@/lib/prisma";
+import { authorize } from "@/lib/authorize";
+
+import {
+  FREE_HISTORY_LIMIT,
+  PREMIUM_HISTORY_CAP,
+  isPremiumWorkspace,
+} from "./historyAccess";
+import { toHistoryListDto } from "./toHistoryListDto";
+import { PREVIEW_TAKE } from "./toShoppingListDto";
+import type { HistoryListDTO } from "./schemas";
+
+export async function listHistoryLists(
+  workspaceId: string,
+  userId: string,
+): Promise<HistoryListDTO[]> {
+  await authorize(workspaceId, userId);
+
+  const premium = await isPremiumWorkspace(workspaceId);
+  const take = premium ? PREMIUM_HISTORY_CAP : FREE_HISTORY_LIMIT;
+
+  const lists = await prisma.shoppingList.findMany({
+    where: {
+      workspaceId,
+      status: "archived",
+      items: {
+        some: {
+          status: { not: "removed" },
+        },
+      },
+    },
+    include: {
+      _count: {
+        select: {
+          items: {
+            where: { status: { not: "removed" } },
+          },
+        },
+      },
+      items: {
+        where: { status: { not: "removed" } },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        select: { name: true, category: true },
+      },
+    },
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+    take,
+  });
+
+  return lists.map((list) =>
+    toHistoryListDto({
+      ...list,
+      itemCount: list._count.items,
+      itemNames: list.items.map((item) => item.name),
+      previewItems: list.items.slice(0, PREVIEW_TAKE).map((item) => ({
+        name: item.name,
+        category: item.category,
+      })),
+    }),
+  );
+}

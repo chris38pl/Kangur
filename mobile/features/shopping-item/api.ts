@@ -1,18 +1,24 @@
 import { apiFetch } from "@/lib/api/client";
 
 import {
+  ShoppingEventListSchema,
   ShoppingItemListSchema,
   ShoppingItemSchema,
   type ItemStatus,
   type ShoppingCategory,
+  type ShoppingEvent,
   type ShoppingItem,
 } from "./schemas";
 
 export async function listShoppingItems(
   token: string,
   listId: string,
+  options?: { allowArchived?: boolean },
 ): Promise<ShoppingItem[]> {
-  const data = await apiFetch<unknown>(`/api/v1/lists/${listId}/items`, { token });
+  const q = options?.allowArchived ? "?allowArchived=1" : "";
+  const data = await apiFetch<unknown>(`/api/v1/lists/${listId}/items${q}`, {
+    token,
+  });
   return ShoppingItemListSchema.parse(data).items;
 }
 
@@ -52,4 +58,17 @@ export async function updateShoppingItem(
     body,
   });
   return ShoppingItemSchema.parse(data);
+}
+
+export async function listShoppingEvents(
+  token: string,
+  listId: string,
+  after?: string | null,
+): Promise<{ events: ShoppingEvent[]; nextCursor: string | null }> {
+  const q = after ? `?after=${encodeURIComponent(after)}` : "";
+  const data = await apiFetch<unknown>(
+    `/api/v1/lists/${listId}/events${q}`,
+    { token },
+  );
+  return ShoppingEventListSchema.parse(data);
 }

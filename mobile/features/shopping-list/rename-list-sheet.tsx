@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -36,10 +36,6 @@ export function RenameListSheet({
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight(visible);
   const [name, setName] = useState(initialName);
-
-  useEffect(() => {
-    if (visible) setName(initialName);
-  }, [visible, initialName]);
 
   const close = () => {
     Keyboard.dismiss();

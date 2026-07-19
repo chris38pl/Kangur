@@ -1,5 +1,4 @@
 import { Pressable, Text, type StyleProp, type ViewStyle } from "react-native";
-import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { DataSyncEngine } from "@/features/data-sync-engine";
@@ -10,10 +9,12 @@ import { useOfflineSyncStatus } from "./useOfflineSyncStatus";
 type Props = {
   listId?: string;
   /**
-   * Overlay under the top bar without shifting page content.
+   * Overlay without shifting page content.
    * Parent should be `position: "relative"` (default for View).
    */
   overlay?: boolean;
+  /** Pin overlay to bottom instead of top. */
+  bottom?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -23,7 +24,12 @@ export const OFFLINE_BANNER_HEIGHT = 32;
  * Shared offline / sync status banner. Reads Engine connectivity + pending count.
  * Informational only — no business logic on event order.
  */
-export function OfflineStatusBanner({ listId, overlay = false, style }: Props) {
+export function OfflineStatusBanner({
+  listId,
+  overlay = false,
+  bottom = false,
+  style,
+}: Props) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const status = useOfflineSyncStatus(listId);
@@ -50,7 +56,7 @@ export function OfflineStatusBanner({ listId, overlay = false, style }: Props) {
           ...(overlay
             ? {
                 position: "absolute" as const,
-                top: 0,
+                ...(bottom ? { bottom: 0 } : { top: 0 }),
                 left: 0,
                 right: 0,
                 zIndex: 20,

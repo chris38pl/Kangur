@@ -11,7 +11,8 @@ import { CATEGORY_BADGE_COLORS } from "./category-badge-colors";
 type Props = {
   item: ShoppingItem;
   showDivider?: boolean;
-  onMenuPress: () => void;
+  /** Omit for read-only rows (e.g. History preview). */
+  onMenuPress?: () => void;
 };
 
 export function ListItemRow({ item, showDivider = true, onMenuPress }: Props) {
@@ -92,29 +93,31 @@ export function ListItemRow({ item, showDivider = true, onMenuPress }: Props) {
           </Text>
         </View>
 
-        <Pressable
-          onPress={onMenuPress}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel={t("list.itemMenu")}
-          style={{
-            width: 32,
-            height: 32,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text
+        {onMenuPress ? (
+          <Pressable
+            onPress={onMenuPress}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={t("list.itemMenu")}
             style={{
-              fontSize: 22,
-              lineHeight: 22,
-              color: theme.textMuted,
-              fontWeight: "600",
+              width: 32,
+              height: 32,
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            ⋯
-          </Text>
-        </Pressable>
+            <Text
+              style={{
+                fontSize: 22,
+                lineHeight: 22,
+                color: theme.textMuted,
+                fontWeight: "600",
+              }}
+            >
+              ⋯
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
       {showDivider ? (

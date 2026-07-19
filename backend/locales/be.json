@@ -1,0 +1,34 @@
+{
+  "notifications": {
+    "listCreated": {
+      "title": "{{actor}} стварыў(ла) спіс {{listName}}"
+    },
+    "listDeleted": {
+      "title": "{{actor}} выдаліў(ла) спіс {{listName}}"
+    },
+    "shoppingStarted": {
+      "title": "{{actor}} пачаў(ла) пакупкі"
+    },
+    "shoppingFinished": {
+      "title": "{{actor}} скончыў(ла) пакупкі",
+      "allBought": "Усе тавары куплены",
+      "unavailableOne": "1 тавар быў недаступны",
+      "unavailableMany": "{{count}} тавараў былі недаступныя"
+    },
+    "invite": {
+      "title": "{{actor}} запрасіў(ла) вас у {{workspaceName}}",
+      "body": "Далучайцеся, каб разам складаць спісы пакупак."
+    }
+  },
+  "email": {
+    "invite": {
+      "subject": "Запрашэнне ў {{workspaceName}} — Kangur",
+      "headline": "{{inviter}} запрасіў(ла) вас у",
+      "ctaOpen": "Адкрыць Kangur",
+      "ctaJoin": "Далучыцца",
+      "bodyExisting": "У вас ужо ёсць акаўнт — адкрыйце дадатак, каб прыняць запрашэнне.",
+      "bodyNew": "Стварыце акаўнт або ўвайдзіце, каб карыстацца агульнымі спісамі пакупак.",
+      "expiry": "Спасылка дзейнічае 7 дзён."
+    }
+  }
+}

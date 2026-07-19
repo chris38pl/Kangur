@@ -9,10 +9,7 @@ export function useKeyboardHeight(enabled = true): number {
   const [height, setHeight] = useState(0);
 
   useEffect(() => {
-    if (!enabled) {
-      setHeight(0);
-      return;
-    }
+    if (!enabled) return;
 
     const showEvent =
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -32,5 +29,5 @@ export function useKeyboardHeight(enabled = true): number {
     };
   }, [enabled]);
 
-  return height;
+  return enabled ? height : 0;
 }

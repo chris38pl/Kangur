@@ -4,16 +4,27 @@ import { displayNameFromEmail } from "@/lib/displayName";
 import { domainEventBus } from "@/lib/events/DomainEventBus";
 import { ensureNotificationHandlersRegistered } from "@/features/notifications/registerHandlers";
 
+export type SoftRemoveOutcome = "archived" | "deleted";
+
+/**
+ * Soft-remove a list from Home.
+ * - `archived` — finished shopping → appears in History (Repeat).
+ * - `deleted` — user "Delete list" → hidden from Home and History.
+ */
 export async function archiveShoppingList(
   listId: string,
   userId: string,
-  options?: { notifyMembers?: boolean },
+  options?: { notifyMembers?: boolean; outcome?: SoftRemoveOutcome },
 ): Promise<void> {
-  const { list } = await authorizeList(listId, userId);
+  const outcome = options?.outcome ?? "deleted";
+  // User delete from History needs access to archived lists.
+  const { list } = await authorizeList(listId, userId, {
+    allowArchived: outcome === "deleted",
+  });
 
   await prisma.shoppingList.update({
     where: { id: list.id },
-    data: { status: "archived" },
+    data: { status: outcome },
   });
 
   if (!options?.notifyMembers) return;

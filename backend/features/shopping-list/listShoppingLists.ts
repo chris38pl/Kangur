@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { authorize } from "@/lib/authorize";
 
-import { toShoppingListDto } from "./toShoppingListDto";
+import { PREVIEW_TAKE, toShoppingListDto } from "./toShoppingListDto";
 import type { ShoppingListDTO } from "./schemas";
 
 export async function listShoppingLists(
@@ -23,6 +23,11 @@ export async function listShoppingLists(
           },
         },
       },
+      items: {
+        where: { status: { not: "removed" } },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        select: { name: true, category: true },
+      },
     },
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
   });
@@ -31,6 +36,11 @@ export async function listShoppingLists(
     toShoppingListDto({
       ...list,
       itemCount: list._count.items,
+      itemNames: list.items.map((item) => item.name),
+      previewItems: list.items.slice(0, PREVIEW_TAKE).map((item) => ({
+        name: item.name,
+        category: item.category,
+      })),
     }),
   );
 }

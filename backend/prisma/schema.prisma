@@ -16,6 +16,11 @@ enum WorkspaceRole {
   member
 }
 
+enum PlatformRole {
+  USER
+  ADMIN
+}
+
 enum InvitationStatus {
   pending
   accepted
@@ -37,6 +42,7 @@ enum SubscriptionStatus {
 enum ListStatus {
   active
   archived
+  deleted
 }
 
 enum ShoppingEventType {
@@ -111,12 +117,13 @@ enum NotificationPayloadType {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String
-  locale    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String       @id @default(cuid())
+  clerkId      String       @unique
+  email        String
+  locale       String?
+  platformRole PlatformRole @default(USER)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   memberships          WorkspaceMember[]
   createdWorkspaces    Workspace[]       @relation("WorkspaceCreator")

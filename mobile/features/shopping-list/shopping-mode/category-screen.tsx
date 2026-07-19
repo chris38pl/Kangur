@@ -5,7 +5,7 @@ import {
 } from "@shared/shopping-categories";
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -34,6 +34,8 @@ import type { ShoppingItem } from "@/features/shopping-item/schemas";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
 import { notifyFinishedForActiveSession } from "@/features/shopping-list/session/notify-finished";
 import { useShoppingSession } from "@/features/shopping-list/session/useShoppingSession";
+import { useShoppingList } from "@/features/shopping-list/useShoppingLists";
+import { RemoteChangeToast, useListRealtime } from "@/lib/realtime";
 
 import {
   getCategoryTripPosition,
@@ -176,11 +178,17 @@ export function ShoppingCategoryScreen({
   const router = useRouter();
   const queryClient = useQueryClient();
   const itemsQuery = useShoppingItems(listId);
+  const listQuery = useShoppingList(listId);
   const session = useShoppingSession(listId);
   const [undo, setUndo] = useState<UndoSnapshot | null>(null);
   const [purchasedExpanded, setPurchasedExpanded] = useState(true);
+  const [wasCategoryDone, setWasCategoryDone] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useListRealtime(listId, {
+    workspaceId: listQuery.data?.workspaceId ?? null,
+  });
 
   const category: ShoppingCategory | null = isShoppingCategory(categoryParam)
     ? categoryParam
@@ -201,9 +209,13 @@ export function ShoppingCategoryScreen({
   const doneItems = [...purchased, ...unavailable];
   const categoryDone = active.length === 0 && catItems.length > 0;
 
-  useEffect(() => {
-    if (categoryDone) setPurchasedExpanded(false);
-  }, [categoryDone]);
+  // Auto-collapse once when the category completes; user can expand again.
+  if (categoryDone !== wasCategoryDone) {
+    setWasCategoryDone(categoryDone);
+    if (categoryDone) {
+      setPurchasedExpanded(false);
+    }
+  }
 
   const next = useMemo(
     () =>
@@ -299,6 +311,7 @@ export function ShoppingCategoryScreen({
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.section }}>
+      <RemoteChangeToast />
       <View style={{ paddingTop: insets.top, backgroundColor: theme.bg }}>
         <View
           style={{
@@ -363,22 +376,11 @@ export function ShoppingCategoryScreen({
       </View>
 
       <View style={{ flex: 1 }}>
-        <ShoppingFeedbackBanner
-          listId={listId}
-          undo={
-            undo
-              ? { name: undo.item.name, kind: undo.appliedStatus }
-              : null
-          }
-          onUndo={() => {
-            if (undo) void restoreUndo(undo);
-          }}
-        />
         <ScrollView
           ref={scrollRef}
           contentContainerStyle={{
             padding: spacing[6],
-            paddingBottom: (categoryDone ? 24 : 100) + insets.bottom,
+            paddingBottom: 100 + insets.bottom,
           }}
         >
         {categoryDone ? (
@@ -444,18 +446,32 @@ export function ShoppingCategoryScreen({
               onPress={() => setPurchasedExpanded((v) => !v)}
               accessibilityRole="button"
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
                 marginBottom: purchasedExpanded ? spacing[3] : 0,
               }}
             >
-              <Text style={{ ...typography.headline, color: theme.text }}>
-                {t("shoppingMode.purchased")}
-                {categoryDone ? ` (${doneItems.length})` : ""}
-              </Text>
-              <Text style={{ ...typography.label, color: theme.textMuted }}>
-                {purchasedExpanded ? "▾" : "▸"}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text style={{ ...typography.headline, color: theme.text }}>
+                  {t("shoppingMode.purchased")}
+                  {categoryDone ? ` (${doneItems.length})` : ""}
+                </Text>
+                <Text style={{ ...typography.label, color: theme.textMuted }}>
+                  {purchasedExpanded ? "▾" : "▸"}
+                </Text>
+              </View>
+              <Text
+                style={{
+                  ...typography.caption,
+                  color: theme.textMuted,
+                  marginTop: spacing[1],
+                }}
+              >
+                {t("shoppingMode.purchasedRestoreHint")}
               </Text>
             </Pressable>
             {purchasedExpanded
@@ -497,10 +513,12 @@ export function ShoppingCategoryScreen({
           >
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={{ ...typography.headline, color: theme.text }}>
-                {t("shoppingMode.categoryProgressTitle", {
-                  current: tripPosition.current,
-                  total: tripPosition.total,
-                })}
+                {tripPosition.current >= tripPosition.total
+                  ? t("shoppingMode.categoryProgressTitleLast")
+                  : t("shoppingMode.categoryProgressTitle", {
+                      current: tripPosition.current,
+                      total: tripPosition.total,
+                    })}
               </Text>
               <Text
                 style={{
@@ -530,65 +548,75 @@ export function ShoppingCategoryScreen({
             </View>
           </View>
         ) : null}
+
+        {categoryDone ? (
+          <View
+            style={{
+              marginTop: spacing[6],
+              gap: spacing[3],
+            }}
+          >
+            <Pressable
+              onPress={() => {
+                if (next) {
+                  router.replace(`/list/${listId}/shop/${next.category}`);
+                } else {
+                  const unavailable = (itemsQuery.data ?? []).filter(
+                    (i) => i.status === "unavailable",
+                  ).length;
+                  void notifyFinishedForActiveSession(
+                    listId,
+                    getToken,
+                    unavailable,
+                  );
+                  router.push(`/list/${listId}/shop/finish`);
+                }
+              }}
+              style={{
+                backgroundColor: theme.primary,
+                borderRadius: radius.full,
+                paddingVertical: spacing[4],
+                alignItems: "center",
+                minHeight: shoppingDensity.primaryCtaMinHeight,
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ ...typography.label, color: theme.onPrimary }}>
+                {next
+                  ? t("shoppingMode.continueTo", {
+                      category: t(`categories.${next.category}`),
+                      count: next.activeCount,
+                    })
+                  : t("shoppingMode.finishShopping")}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                router.replace(`/list/${listId}/shop`);
+              }}
+              style={{ paddingVertical: spacing[2], alignItems: "center" }}
+            >
+              <Text style={{ ...typography.label, color: theme.primary }}>
+                {t("shoppingMode.backToCategories")}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
       </ScrollView>
       </View>
 
-      {categoryDone ? (
-        <View
-          style={{
-            paddingHorizontal: spacing[6],
-            paddingTop: spacing[4],
-            paddingBottom: spacing[4] + insets.bottom,
-            gap: spacing[3],
-            backgroundColor: theme.section,
-          }}
-        >
-          <Pressable
-            onPress={() => {
-              if (next) {
-                router.replace(`/list/${listId}/shop/${next.category}`);
-              } else {
-                const unavailable = (itemsQuery.data ?? []).filter(
-                  (i) => i.status === "unavailable",
-                ).length;
-                void notifyFinishedForActiveSession(
-                  listId,
-                  getToken,
-                  unavailable,
-                );
-                router.push(`/list/${listId}/shop/finish`);
-              }
-            }}
-            style={{
-              backgroundColor: theme.primary,
-              borderRadius: radius.full,
-              paddingVertical: spacing[4],
-              alignItems: "center",
-              minHeight: shoppingDensity.primaryCtaMinHeight,
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ ...typography.label, color: theme.onPrimary }}>
-              {next
-                ? t("shoppingMode.continueTo", {
-                    category: t(`categories.${next.category}`),
-                    count: next.activeCount,
-                  })
-                : t("shoppingMode.finishShopping")}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              router.replace(`/list/${listId}/shop`);
-            }}
-            style={{ paddingVertical: spacing[2], alignItems: "center" }}
-          >
-            <Text style={{ ...typography.label, color: theme.primary }}>
-              {t("shoppingMode.backToCategories")}
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
+      <ShoppingFeedbackBanner
+        listId={listId}
+        layout="overlay"
+        undo={
+          undo
+            ? { name: undo.item.name, kind: undo.appliedStatus }
+            : null
+        }
+        onUndo={() => {
+          if (undo) void restoreUndo(undo);
+        }}
+      />
 
     </View>
   );

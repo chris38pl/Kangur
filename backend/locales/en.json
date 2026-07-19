@@ -1,0 +1,34 @@
+{
+  "notifications": {
+    "listCreated": {
+      "title": "{{actor}} created list {{listName}}"
+    },
+    "listDeleted": {
+      "title": "{{actor}} deleted list {{listName}}"
+    },
+    "shoppingStarted": {
+      "title": "{{actor}} started shopping"
+    },
+    "shoppingFinished": {
+      "title": "{{actor}} finished shopping",
+      "allBought": "All products purchased",
+      "unavailableOne": "1 product was unavailable",
+      "unavailableMany": "{{count}} products were unavailable"
+    },
+    "invite": {
+      "title": "{{actor}} invited you to {{workspaceName}}",
+      "body": "Join to create shopping lists together."
+    }
+  },
+  "email": {
+    "invite": {
+      "subject": "You're invited to {{workspaceName}} — Kangur",
+      "headline": "{{inviter}} invited you to",
+      "ctaOpen": "Open Kangur",
+      "ctaJoin": "Join workspace",
+      "bodyExisting": "You already have an account — open the app to accept the invite.",
+      "bodyNew": "Create an account or sign in to join shared shopping lists.",
+      "expiry": "This link expires in 7 days."
+    }
+  }
+}

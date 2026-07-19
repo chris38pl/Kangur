@@ -7,31 +7,34 @@ import type { SyncTransport } from "@/features/data-sync-engine/worker";
 import type {
   ItemStatus,
   ShoppingCategory,
+  ShoppingItem,
 } from "@/features/shopping-item/schemas";
 import { createClientId, isLegacyLocalItemId, isUuid } from "@/lib/createClientId";
 
 /**
  * REST transport for Data Sync Engine (sequential today; batch later).
+ * Returns canonical server ShoppingItem when the API provides one.
  */
 export function createRestSyncTransport(
   getToken: () => Promise<string | null>,
 ): SyncTransport {
   return {
-    async execute(op) {
+    async execute(op): Promise<ShoppingItem | null> {
       const token = await getToken();
       if (!token) throw new Error("Missing auth token");
 
       try {
+        let item: ShoppingItem | null = null;
+
         switch (op.action) {
           case "SET_STATUS": {
             if (!op.itemId) throw new Error("SET_STATUS requires itemId");
-            // Server item ids are Prisma cuids — only reject legacy local_* optimistic ids.
             if (isLegacyLocalItemId(op.itemId)) {
               throw new Error(
                 `SET_STATUS itemId is a local optimistic id: ${op.itemId}`,
               );
             }
-            await updateShoppingItem(token, op.itemId, {
+            item = await updateShoppingItem(token, op.itemId, {
               status: op.payload.status as ItemStatus,
             });
             break;
@@ -39,7 +42,7 @@ export function createRestSyncTransport(
           case "ADD_ITEM": {
             const raw = String(op.payload.clientId ?? op.itemId ?? "");
             const clientId = isUuid(raw) ? raw : createClientId();
-            await createShoppingItem(token, op.listId, {
+            item = await createShoppingItem(token, op.listId, {
               clientId,
               name: String(op.payload.name ?? ""),
               amount:
@@ -56,7 +59,7 @@ export function createRestSyncTransport(
           }
           case "EDIT_ITEM": {
             if (!op.itemId) throw new Error("EDIT_ITEM requires itemId");
-            await updateShoppingItem(token, op.itemId, {
+            item = await updateShoppingItem(token, op.itemId, {
               name:
                 typeof op.payload.name === "string"
                   ? op.payload.name
@@ -80,18 +83,24 @@ export function createRestSyncTransport(
           }
           case "REMOVE_ITEM": {
             if (!op.itemId) throw new Error("REMOVE_ITEM requires itemId");
-            await updateShoppingItem(token, op.itemId, { status: "removed" });
+            item = await updateShoppingItem(token, op.itemId, {
+              status: "removed",
+            });
             break;
           }
           case "ARCHIVE_LIST": {
             await archiveShoppingList(token, op.listId);
+            item = null;
             break;
           }
           default:
+            item = null;
             break;
         }
+
         const { DataSyncEngine } = await import("./engine");
         DataSyncEngine.connectivity.setOnline(true);
+        return item;
       } catch (error) {
         const { ApiClientError } = await import("@/lib/api/client");
         if (

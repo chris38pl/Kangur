@@ -3,7 +3,7 @@ import {
   isWorkspaceIconId,
   type WorkspaceIconId,
 } from "@shared/workspace-icons";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -44,14 +44,10 @@ export function EditWorkspaceSheet({
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight(visible);
 
-  const [name, setName] = useState("");
-  const [icon, setIcon] = useState<WorkspaceIconId>("home");
-
-  useEffect(() => {
-    if (!visible || !workspace) return;
-    setName(workspace.name);
-    setIcon(isWorkspaceIconId(workspace.icon) ? workspace.icon : "home");
-  }, [visible, workspace]);
+  const [name, setName] = useState(workspace?.name ?? "");
+  const [icon, setIcon] = useState<WorkspaceIconId>(
+    workspace && isWorkspaceIconId(workspace.icon) ? workspace.icon : "home",
+  );
 
   const close = () => {
     Keyboard.dismiss();

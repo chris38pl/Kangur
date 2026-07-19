@@ -1,5 +1,7 @@
 import type {
+  PlatformRole,
   ShoppingList,
+  User,
   Workspace,
   WorkspaceMember,
   WorkspaceRole,
@@ -7,6 +9,20 @@ import type {
 
 import { prisma } from "@/lib/prisma";
 import { forbidden, notFound } from "@/lib/auth/errors";
+
+export function isPlatformAdmin(user: Pick<User, "platformRole">): boolean {
+  return user.platformRole === "ADMIN";
+}
+
+/** Platform Console and other platform-ops APIs. Hidden menu ≠ authorization. */
+export function requirePlatformAdmin(
+  user: Pick<User, "platformRole">,
+  message = "Platform admin required.",
+): void {
+  if (!isPlatformAdmin(user)) {
+    throw forbidden(message);
+  }
+}
 
 export type AuthorizeResult = {
   workspace: Workspace;
@@ -53,12 +69,19 @@ export function requireRole(
 export async function authorizeList(
   listId: string,
   userId: string,
+  options?: { allowArchived?: boolean },
 ): Promise<AuthorizeListResult> {
+  const allowArchived = options?.allowArchived === true;
+
   const list = await prisma.shoppingList.findUnique({
     where: { id: listId },
   });
 
-  if (!list || list.status === "archived") {
+  if (!list || list.status === "deleted") {
+    throw notFound("List not found.");
+  }
+
+  if (!allowArchived && list.status === "archived") {
     throw notFound("List not found.");
   }
 
@@ -83,4 +106,4 @@ export async function authorizeList(
   };
 }
 
-export type { WorkspaceRole };
+export type { PlatformRole, WorkspaceRole };

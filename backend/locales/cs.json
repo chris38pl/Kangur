@@ -1,0 +1,34 @@
+{
+  "notifications": {
+    "listCreated": {
+      "title": "{{actor}} vytvořil(a) seznam {{listName}}"
+    },
+    "listDeleted": {
+      "title": "{{actor}} smazal(a) seznam {{listName}}"
+    },
+    "shoppingStarted": {
+      "title": "{{actor}} začal(a) nakupovat"
+    },
+    "shoppingFinished": {
+      "title": "{{actor}} dokončil(a) nákup",
+      "allBought": "Všechny produkty koupeny",
+      "unavailableOne": "1 produkt nebyl k dispozici",
+      "unavailableMany": "{{count}} produktů nebylo k dispozici"
+    },
+    "invite": {
+      "title": "{{actor}} vás pozval(a) do {{workspaceName}}",
+      "body": "Připojte se a vytvářejte nákupní seznamy společně."
+    }
+  },
+  "email": {
+    "invite": {
+      "subject": "Pozvánka do {{workspaceName}} — Kangur",
+      "headline": "{{inviter}} vás pozval(a) do",
+      "ctaOpen": "Otevřít Kangur",
+      "ctaJoin": "Připojit se",
+      "bodyExisting": "Už máte účet — otevřete aplikaci a přijměte pozvánku.",
+      "bodyNew": "Vytvořte si účet nebo se přihlaste a používejte sdílené nákupní seznamy.",
+      "expiry": "Tento odkaz vyprší za 7 dní."
+    }
+  }
+}

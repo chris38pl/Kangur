@@ -47,20 +47,18 @@ export function EditItemSheet({
   const bottomPad = useSheetBottomPadding(spacing[4] + spacing[2], keyboardHeight);
   const nameRef = useRef<TextInput>(null);
 
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [note, setNote] = useState("");
-  const [category, setCategory] = useState<ShoppingCategory>("other");
+  const [name, setName] = useState(item?.name ?? "");
+  const [amount, setAmount] = useState(item?.amount ?? "");
+  const [note, setNote] = useState(item?.note ?? "");
+  const [category, setCategory] = useState<ShoppingCategory>(
+    item?.category ?? "other",
+  );
 
   useEffect(() => {
-    if (!visible || !item) return;
-    setName(item.name);
-    setAmount(item.amount ?? "");
-    setNote(item.note ?? "");
-    setCategory(item.category);
+    if (!visible) return;
     const timer = setTimeout(() => nameRef.current?.focus(), 350);
     return () => clearTimeout(timer);
-  }, [visible, item]);
+  }, [visible]);
 
   const close = () => {
     Keyboard.dismiss();

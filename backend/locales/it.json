@@ -1,0 +1,34 @@
+{
+  "notifications": {
+    "listCreated": {
+      "title": "{{actor}} ha creato la lista {{listName}}"
+    },
+    "listDeleted": {
+      "title": "{{actor}} ha eliminato la lista {{listName}}"
+    },
+    "shoppingStarted": {
+      "title": "{{actor}} ha iniziato la spesa"
+    },
+    "shoppingFinished": {
+      "title": "{{actor}} ha finito la spesa",
+      "allBought": "Tutti i prodotti acquistati",
+      "unavailableOne": "1 prodotto non era disponibile",
+      "unavailableMany": "{{count}} prodotti non erano disponibili"
+    },
+    "invite": {
+      "title": "{{actor}} ti ha invitato a {{workspaceName}}",
+      "body": "Unisciti per creare liste della spesa insieme."
+    }
+  },
+  "email": {
+    "invite": {
+      "subject": "Invito a {{workspaceName}} — Kangur",
+      "headline": "{{inviter}} ti ha invitato a",
+      "ctaOpen": "Apri Kangur",
+      "ctaJoin": "Unisciti allo spazio",
+      "bodyExisting": "Hai già un account — apri l’app per accettare l’invito.",
+      "bodyNew": "Crea un account o accedi per usare liste della spesa condivise.",
+      "expiry": "Questo link scade tra 7 giorni."
+    }
+  }
+}

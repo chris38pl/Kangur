@@ -1,0 +1,34 @@
+{
+  "notifications": {
+    "listCreated": {
+      "title": "{{actor}} створив(ла) список {{listName}}"
+    },
+    "listDeleted": {
+      "title": "{{actor}} видалив(ла) список {{listName}}"
+    },
+    "shoppingStarted": {
+      "title": "{{actor}} почав(ла) покупки"
+    },
+    "shoppingFinished": {
+      "title": "{{actor}} завершив(ла) покупки",
+      "allBought": "Усі товари куплено",
+      "unavailableOne": "1 товар був недоступний",
+      "unavailableMany": "{{count}} товарів були недоступні"
+    },
+    "invite": {
+      "title": "{{actor}} запросив(ла) вас до {{workspaceName}}",
+      "body": "Приєднуйтесь, щоб разом складати списки покупок."
+    }
+  },
+  "email": {
+    "invite": {
+      "subject": "Вас запросили до {{workspaceName}} — Kangur",
+      "headline": "{{inviter}} запросив(ла) вас до",
+      "ctaOpen": "Відкрити Kangur",
+      "ctaJoin": "Приєднатися",
+      "bodyExisting": "У вас уже є акаунт — відкрийте додаток, щоб прийняти запрошення.",
+      "bodyNew": "Створіть акаунт або увійдіть, щоб користуватися спільними списками покупок.",
+      "expiry": "Посилання дійсне 7 днів."
+    }
+  }
+}

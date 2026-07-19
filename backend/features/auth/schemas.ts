@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 
+import { AppLocaleSchema } from "@/lib/locale";
+
 extendZodWithOpenApi(z);
 
 export const ApiErrorSchema = z
@@ -14,18 +16,24 @@ export const ApiErrorSchema = z
       "FORBIDDEN",
       "CONFLICT",
       "INSUFFICIENT_CREDITS",
+      "HISTORY_LIMIT_EXCEEDED",
     ]),
     message: z.string(),
     details: z.record(z.string(), z.unknown()).optional(),
   })
   .openapi("ApiError");
 
+export const PlatformRoleSchema = z
+  .enum(["USER", "ADMIN"])
+  .openapi("PlatformRole");
+
 export const MeResponseSchema = z
   .object({
     id: z.string(),
     clerkId: z.string(),
     email: z.string().email(),
-    locale: z.enum(["pl", "en"]).nullable(),
+    locale: AppLocaleSchema.nullable(),
+    platformRole: PlatformRoleSchema,
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
   })

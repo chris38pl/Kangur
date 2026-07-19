@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { Screen } from "@/components/Screen";
+import { HomeSkeleton } from "@/components/skeleton";
 import { useColorScheme } from "@/components/useColorScheme";
 import { KangurTabBar } from "@/components/tab-bar/kangur-tab-bar";
 import { colors, spacing, typography } from "@/design-system/tokens";
@@ -32,7 +33,7 @@ function TabsWithBar() {
         headerShown: false,
       }}
     >
-      {/* Order: Home | Spaces | [FAB] | Archive | Profile */}
+      {/* Order: Home | Spaces | [FAB] | Lists | Profile */}
       <Tabs.Screen
         name="index"
         options={{ title: t("tabs.home") }}
@@ -43,7 +44,7 @@ function TabsWithBar() {
       />
       <Tabs.Screen
         name="history"
-        options={{ title: t("tabs.archive") }}
+        options={{ title: t("tabs.history") }}
       />
       <Tabs.Screen
         name="profile"
@@ -61,11 +62,7 @@ export default function TabLayout() {
   const me = useMe(Boolean(isSignedIn));
 
   if (!isLoaded) {
-    return (
-      <Screen style={{ backgroundColor: theme.bg, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator color={theme.primary} />
-      </Screen>
-    );
+    return <HomeSkeleton />;
   }
 
   if (!isSignedIn) {
@@ -73,27 +70,7 @@ export default function TabLayout() {
   }
 
   if (me.isPending) {
-    return (
-      <Screen
-        style={{
-          backgroundColor: theme.bg,
-          padding: spacing[6],
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <ActivityIndicator color={theme.primary} />
-        <Text
-          style={{
-            ...typography.body,
-            color: theme.textMuted,
-            marginTop: spacing[4],
-          }}
-        >
-          {t("auth.loadingProfile")}
-        </Text>
-      </Screen>
-    );
+    return <HomeSkeleton />;
   }
 
   if (me.isError) {

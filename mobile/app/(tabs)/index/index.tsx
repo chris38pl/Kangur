@@ -295,12 +295,21 @@ export default function HomeScreen() {
 
   const resumable = useMemo(() => {
     const sessions = sessionsQuery.data ?? [];
-    return sessions.flatMap((session) => {
+    const rows = sessions.flatMap((session) => {
       const list = (listsQuery.data ?? []).find((l) => l.id === session.listId);
       if (!list || list.status !== "active") return [];
       // Hide empty abandoned lists from continue section too
       if ((list.itemCount ?? 0) === 0) return [];
       return [{ session, list }];
+    });
+    // Newest shopping activity first (session touch > list updatedAt).
+    return rows.sort((a, b) => {
+      const aAt = Date.parse(a.session.updatedAt) || 0;
+      const bAt = Date.parse(b.session.updatedAt) || 0;
+      if (bAt !== aAt) return bAt - aAt;
+      const aList = Date.parse(a.list.updatedAt) || 0;
+      const bList = Date.parse(b.list.updatedAt) || 0;
+      return bList - aList;
     });
   }, [sessionsQuery.data, listsQuery.data]);
 
@@ -411,10 +420,10 @@ export default function HomeScreen() {
           }}
         >
           <Pressable
-            onPress={() => router.push("/(tabs)/workspace" as never)}
+            onPress={() => router.push("./menu" as never)}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel={t("tabs.workspace")}
+            accessibilityLabel={t("appMenu.open")}
             style={{
               width: 44,
               height: 44,
@@ -501,7 +510,11 @@ export default function HomeScreen() {
               }
               onAction={
                 resumable.length > 2
-                  ? () => router.push("/(tabs)/workspace" as never)
+                  ? () =>
+                      router.push({
+                        pathname: "/(tabs)/history",
+                        params: { segment: "shopping" },
+                      } as never)
                   : undefined
               }
             />
@@ -549,7 +562,11 @@ export default function HomeScreen() {
             actionLabel={lists.length > 0 ? t("home.seeAll") : undefined}
             onAction={
               lists.length > 0
-                ? () => router.push("/(tabs)/workspace" as never)
+                ? () =>
+                    router.push({
+                      pathname: "/(tabs)/history",
+                      params: { segment: "waiting" },
+                    } as never)
                 : undefined
             }
           />

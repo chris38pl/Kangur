@@ -1,9 +1,10 @@
 import type { NotificationType, Prisma } from "@prisma/client";
 
-import { displayNameFromEmail } from "@/lib/displayName";
 import type { DomainEvent } from "@/lib/events/DomainEventBus";
 import { domainEventBus } from "@/lib/events/DomainEventBus";
 import { normalizeEmail } from "@/lib/email/normalizeEmail";
+import { t } from "@/lib/i18n";
+import { resolveAppLocale, type AppLocale } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
 
 import { notificationRepository } from "./notificationRepository";
@@ -43,9 +44,10 @@ export async function handleDomainEventForNotifications(
           workspaceId: event.workspaceId,
         },
         title: (locale) =>
-          locale === "pl"
-            ? `${event.actorDisplayName} utworzył(a) listę ${event.listName}`
-            : `${event.actorDisplayName} created list ${event.listName}`,
+          t(locale, "notifications.listCreated.title", {
+            actor: event.actorDisplayName,
+            listName: event.listName,
+          }),
         body: () => event.listName,
       });
       break;
@@ -62,9 +64,10 @@ export async function handleDomainEventForNotifications(
           workspaceId: event.workspaceId,
         },
         title: (locale) =>
-          locale === "pl"
-            ? `${event.actorDisplayName} usunął(a) listę ${event.listName}`
-            : `${event.actorDisplayName} deleted list ${event.listName}`,
+          t(locale, "notifications.listDeleted.title", {
+            actor: event.actorDisplayName,
+            listName: event.listName,
+          }),
         body: () => event.listName,
       });
       break;
@@ -85,9 +88,9 @@ export async function handleDomainEventForNotifications(
           actorDisplayName: event.actorDisplayName,
         },
         title: (locale) =>
-          locale === "pl"
-            ? `${event.actorDisplayName} rozpoczął(a) zakupy`
-            : `${event.actorDisplayName} started shopping`,
+          t(locale, "notifications.shoppingStarted.title", {
+            actor: event.actorDisplayName,
+          }),
         body: () => event.listName,
       });
       break;
@@ -111,22 +114,19 @@ export async function handleDomainEventForNotifications(
           actorDisplayName: event.actorDisplayName,
         },
         title: (locale) =>
-          locale === "pl"
-            ? `${event.actorDisplayName} zakończył(a) zakupy`
-            : `${event.actorDisplayName} finished shopping`,
+          t(locale, "notifications.shoppingFinished.title", {
+            actor: event.actorDisplayName,
+          }),
         body: (locale) => {
           if (event.unavailableCount <= 0) {
-            return locale === "pl"
-              ? "Wszystkie produkty kupione"
-              : "All products purchased";
+            return t(locale, "notifications.shoppingFinished.allBought");
           }
-          return locale === "pl"
-            ? event.unavailableCount === 1
-              ? "1 produkt był niedostępny"
-              : `${event.unavailableCount} produkty były niedostępne`
-            : event.unavailableCount === 1
-              ? "1 product was unavailable"
-              : `${event.unavailableCount} products were unavailable`;
+          if (event.unavailableCount === 1) {
+            return t(locale, "notifications.shoppingFinished.unavailableOne");
+          }
+          return t(locale, "notifications.shoppingFinished.unavailableMany", {
+            count: event.unavailableCount,
+          });
         },
       });
       break;
@@ -144,19 +144,15 @@ async function handleInvitationCreated(
   });
   if (!invitee) return;
 
-  // TODO PreferenceFilter / NotificationFactory extraction
   const prefs = await getOrCreateNotificationPreferences(invitee.id);
   if (!prefAllowsType(prefs, "WORKSPACE_INVITATION")) return;
 
-  const locale = invitee.locale?.startsWith("pl") ? "pl" : "en";
-  const title =
-    locale === "pl"
-      ? `${event.actorDisplayName} zaprosił Cię do przestrzeni ${event.workspaceName}`
-      : `${event.actorDisplayName} invited you to ${event.workspaceName}`;
-  const body =
-    locale === "pl"
-      ? "Dołącz, aby wspólnie tworzyć listy zakupów."
-      : "Join to create shopping lists together.";
+  const locale = resolveAppLocale(invitee.locale);
+  const title = t(locale, "notifications.invite.title", {
+    actor: event.actorDisplayName,
+    workspaceName: event.workspaceName,
+  });
+  const body = t(locale, "notifications.invite.body");
 
   await saveAndPublish({
     recipientUserId: invitee.id,
@@ -191,11 +187,10 @@ async function handleWorkspaceMembersEvent(
     sourceId: string;
     payloadType: "LIST" | "SHOPPING" | "WORKSPACE";
     payload: Prisma.InputJsonValue;
-    title: (locale: "pl" | "en") => string;
-    body: (locale: "pl" | "en") => string;
+    title: (locale: AppLocale) => string;
+    body: (locale: AppLocale) => string;
   },
 ): Promise<void> {
-  // TODO RecipientResolver extraction
   const members = await prisma.workspaceMember.findMany({
     where: {
       workspaceId: event.workspaceId,
@@ -205,11 +200,9 @@ async function handleWorkspaceMembersEvent(
   });
 
   for (const member of members) {
-    // TODO PreferenceFilter extraction
     const prefs = await getOrCreateNotificationPreferences(member.userId);
     if (!prefAllowsType(prefs, spec.type)) continue;
 
-    // Dedup by type + sourceId for this recipient
     const existing = await prisma.notification.findFirst({
       where: {
         recipientUserId: member.userId,
@@ -220,7 +213,7 @@ async function handleWorkspaceMembersEvent(
     });
     if (existing) continue;
 
-    const locale = member.user.locale?.startsWith("pl") ? "pl" : "en";
+    const locale = resolveAppLocale(member.user.locale);
     await saveAndPublish({
       recipientUserId: member.userId,
       actorUserId: event.actorUserId,

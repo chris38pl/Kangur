@@ -1,14 +1,13 @@
-import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 
+import { RemoveMemberSheet } from "./remove-member-sheet";
 import type { WorkspaceMember } from "./schemas";
-import {
-  useRemoveMember,
-  useUpdateMemberRole,
-} from "./useWorkspaceInvites";
+import { useRemoveMember } from "./useWorkspaceInvites";
 
 const AVATAR_PALETTE = [
   { background: "#FDECEC", text: "#C45C5C" },
@@ -35,35 +34,8 @@ function avatarColors(seed: string) {
   return AVATAR_PALETTE[hash] ?? AVATAR_PALETTE[0];
 }
 
-function roleLabelKey(role: WorkspaceMember["role"]) {
-  if (role === "owner") return "workspace.roleOwner";
-  if (role === "admin") return "workspace.roleAdmin";
-  return "workspace.roleMember";
-}
-
-function roleBadgeStyle(
-  role: WorkspaceMember["role"],
-  theme: (typeof colors)["light"],
-) {
-  if (role === "owner") {
-    return {
-      background: "#EAF7F2",
-      text: theme.primary,
-    };
-  }
-  if (role === "admin") {
-    return {
-      background: "#E8F2FB",
-      text: "#4A7FB5",
-    };
-  }
-  return {
-    background: theme.section,
-    text: theme.textMuted,
-  };
-}
-
-function canShowMenu(
+/** MVP: no role UI — only owner/admin may remove other non-owner members. */
+function canRemoveMember(
   actorRole: Props["actorRole"],
   member: WorkspaceMember,
   currentUserId: string | null,
@@ -86,60 +58,10 @@ export function WorkspaceMembersList({
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const removeMutation = useRemoveMember(workspaceId);
-  const roleMutation = useUpdateMemberRole(workspaceId);
 
-  const openMenu = (member: WorkspaceMember) => {
-    const buttons: {
-      text: string;
-      style?: "cancel" | "destructive" | "default";
-      onPress?: () => void;
-    }[] = [];
-
-    if (actorRole === "owner") {
-      if (member.role === "member") {
-        buttons.push({
-          text: t("workspace.makeAdmin"),
-          onPress: () =>
-            roleMutation.mutate({ userId: member.userId, role: "admin" }),
-        });
-      }
-      if (member.role === "admin") {
-        buttons.push({
-          text: t("workspace.makeMember"),
-          onPress: () =>
-            roleMutation.mutate({ userId: member.userId, role: "member" }),
-        });
-      }
-    }
-
-    if (
-      actorRole === "owner" ||
-      (actorRole === "admin" && member.role === "member")
-    ) {
-      buttons.push({
-        text: t("workspace.removeMember"),
-        style: "destructive",
-        onPress: () => {
-          Alert.alert(
-            t("workspace.removeMemberTitle"),
-            t("workspace.removeMemberBody", { name: member.displayName }),
-            [
-              { text: t("workspace.cancel"), style: "cancel" },
-              {
-                text: t("workspace.removeMember"),
-                style: "destructive",
-                onPress: () => removeMutation.mutate(member.userId),
-              },
-            ],
-          );
-        },
-      });
-    }
-
-    buttons.push({ text: t("workspace.cancel"), style: "cancel" });
-
-    Alert.alert(t("workspace.memberMenu"), member.displayName, buttons);
-  };
+  const [removeTarget, setRemoveTarget] = useState<WorkspaceMember | null>(
+    null,
+  );
 
   return (
     <View style={{ marginTop: spacing[6] }}>
@@ -170,11 +92,14 @@ export function WorkspaceMembersList({
             const isYou = member.userId === currentUserId;
             const initial = (member.displayName.trim()[0] ?? "?").toUpperCase();
             const avatar = avatarColors(member.userId);
-            const badge = roleBadgeStyle(member.role, theme);
             const name = isYou
               ? `${member.displayName} ${t("workspace.youSuffix")}`
               : member.displayName;
-            const showMenu = canShowMenu(actorRole, member, currentUserId);
+            const showRemove = canRemoveMember(
+              actorRole,
+              member,
+              currentUserId,
+            );
 
             return (
               <View
@@ -219,31 +144,12 @@ export function WorkspaceMembersList({
                   {name}
                 </Text>
 
-                <View
-                  style={{
-                    backgroundColor: badge.background,
-                    borderRadius: radius.full,
-                    paddingHorizontal: spacing[3],
-                    paddingVertical: spacing[1],
-                  }}
-                >
-                  <Text
-                    style={{
-                      ...typography.caption,
-                      fontWeight: "600",
-                      color: badge.text,
-                    }}
-                  >
-                    {t(roleLabelKey(member.role))}
-                  </Text>
-                </View>
-
-                {showMenu ? (
+                {showRemove ? (
                   <Pressable
                     hitSlop={10}
-                    onPress={() => openMenu(member)}
+                    onPress={() => setRemoveTarget(member)}
                     accessibilityRole="button"
-                    accessibilityLabel={t("workspace.memberMenu")}
+                    accessibilityLabel={t("workspace.removeMember")}
                     style={{
                       width: 28,
                       height: 28,
@@ -270,6 +176,24 @@ export function WorkspaceMembersList({
           })}
         </View>
       )}
+
+      <RemoveMemberSheet
+        key={removeTarget?.id ?? "remove-member-closed"}
+        visible={removeTarget != null}
+        name={removeTarget?.displayName ?? ""}
+        busy={removeMutation.isPending}
+        onCancel={() => {
+          if (removeMutation.isPending) return;
+          setRemoveTarget(null);
+        }}
+        onConfirm={() => {
+          if (!removeTarget) return;
+          const userId = removeTarget.userId;
+          removeMutation.mutate(userId, {
+            onSuccess: () => setRemoveTarget(null),
+          });
+        }}
+      />
     </View>
   );
 }

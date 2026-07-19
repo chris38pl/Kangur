@@ -1,0 +1,34 @@
+{
+  "notifications": {
+    "listCreated": {
+      "title": "{{actor}} hat die Liste {{listName}} erstellt"
+    },
+    "listDeleted": {
+      "title": "{{actor}} hat die Liste {{listName}} gelöscht"
+    },
+    "shoppingStarted": {
+      "title": "{{actor}} hat mit dem Einkaufen begonnen"
+    },
+    "shoppingFinished": {
+      "title": "{{actor}} hat den Einkauf beendet",
+      "allBought": "Alle Produkte gekauft",
+      "unavailableOne": "1 Produkt war nicht verfügbar",
+      "unavailableMany": "{{count}} Produkte waren nicht verfügbar"
+    },
+    "invite": {
+      "title": "{{actor}} hat dich zu {{workspaceName}} eingeladen",
+      "body": "Tritt bei, um gemeinsam Einkaufslisten zu erstellen."
+    }
+  },
+  "email": {
+    "invite": {
+      "subject": "Einladung zu {{workspaceName}} — Kangur",
+      "headline": "{{inviter}} hat dich eingeladen zu",
+      "ctaOpen": "Kangur öffnen",
+      "ctaJoin": "Workspace beitreten",
+      "bodyExisting": "Du hast bereits ein Konto — öffne die App, um die Einladung anzunehmen.",
+      "bodyNew": "Erstelle ein Konto oder melde dich an, um gemeinsame Einkaufslisten zu nutzen.",
+      "expiry": "Dieser Link ist 7 Tage gültig."
+    }
+  }
+}

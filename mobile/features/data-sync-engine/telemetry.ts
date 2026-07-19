@@ -1,8 +1,25 @@
-/** Telemetry hooks — stub only; no product analytics yet. */
+import { MetricNames } from "@shared/metrics/names";
+
+import { getMetrics } from "@/lib/metrics";
+
+/**
+ * Telemetry hooks for DataSyncEngine — routes through Metrics facade.
+ * Call sites unchanged; Noop in prod unless DEV Console is enabled.
+ */
 export const syncTelemetry = {
-  queueLength(_n: number) {},
-  syncDuration(_ms: number) {},
-  failedOps(_n: number) {},
-  compressionRatio(_ratio: number) {},
-  retryCount(_n: number) {},
+  queueLength(n: number) {
+    getMetrics().gauge(MetricNames.syncQueueLength, n);
+  },
+  syncDuration(ms: number) {
+    getMetrics().timing(MetricNames.syncDurationMs, ms);
+  },
+  failedOps(n: number) {
+    getMetrics().gauge(MetricNames.syncFailedOps, n);
+  },
+  compressionRatio(ratio: number) {
+    getMetrics().histogram(MetricNames.syncCompressionRatio, ratio);
+  },
+  retryCount(n: number) {
+    getMetrics().increment(MetricNames.syncRetryCount, n);
+  },
 };

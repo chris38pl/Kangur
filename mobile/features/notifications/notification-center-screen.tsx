@@ -57,9 +57,10 @@ export function NotificationCenterScreen() {
 
   const silentMode = prefsQuery.data?.silentMode === true;
   const unreadCount = silentMode ? 0 : (query.data?.unreadCount ?? 0);
-  const allNotifications = silentMode
-    ? []
-    : (query.data?.notifications ?? []);
+  const allNotifications = useMemo(
+    () => (silentMode ? [] : (query.data?.notifications ?? [])),
+    [silentMode, query.data?.notifications],
+  );
   const isEmpty = allNotifications.length === 0;
 
   const filtered = useMemo(() => {

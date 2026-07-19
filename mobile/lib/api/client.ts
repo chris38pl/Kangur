@@ -13,6 +13,7 @@ export type ApiErrorCode =
   | "FORBIDDEN"
   | "CONFLICT"
   | "INSUFFICIENT_CREDITS"
+  | "HISTORY_LIMIT_EXCEEDED"
   | "NETWORK_ERROR"
   | "UNKNOWN";
 

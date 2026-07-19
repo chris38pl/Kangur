@@ -89,7 +89,12 @@ export function useArchiveShoppingList(workspaceId: string | null) {
       }
       queryClient.removeQueries({ queryKey: ["shopping-list", listId] });
       queryClient.removeQueries({ queryKey: ["shopping-items", listId] });
-      await queryClient.invalidateQueries({ queryKey: ["shopping-lists"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["shopping-lists"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["shopping-lists-history"],
+        }),
+      ]);
     },
   });
 }

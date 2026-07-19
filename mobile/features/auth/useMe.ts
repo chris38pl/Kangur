@@ -1,24 +1,29 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useQuery } from "@tanstack/react-query";
-import * as Localization from "expo-localization";
 import { z } from "zod";
 
 import { apiFetch } from "@/lib/api/client";
+import i18n from "@/lib/i18n";
+import { resolveAppLocale } from "@/lib/i18n/locales";
+import { createEnumSchema } from "@/lib/zod-enum";
+import { APP_LOCALE_IDS } from "@shared/locales";
+
+const AppLocaleSchema = createEnumSchema(APP_LOCALE_IDS);
 
 const MeSchema = z.object({
   id: z.string(),
   clerkId: z.string(),
   email: z.string(),
-  locale: z.enum(["pl", "en"]).nullable(),
+  locale: AppLocaleSchema.nullable(),
+  platformRole: z.enum(["USER", "ADMIN"]).default("USER"),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
 export type MeUser = z.infer<typeof MeSchema>;
 
-function deviceLocale(): string {
-  const code = Localization.getLocales()[0]?.languageCode ?? "en";
-  return code.startsWith("pl") ? "pl" : "en";
+function preferredLocale(): string {
+  return resolveAppLocale(i18n.language);
 }
 
 export function useMe(enabled = true) {
@@ -34,7 +39,7 @@ export function useMe(enabled = true) {
       }
       const data = await apiFetch<unknown>("/api/v1/me", {
         token,
-        deviceLocale: deviceLocale(),
+        deviceLocale: preferredLocale(),
       });
       return MeSchema.parse(data);
     },

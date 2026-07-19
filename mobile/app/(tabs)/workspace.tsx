@@ -277,6 +277,7 @@ export default function WorkspaceScreen() {
       />
 
       <EditWorkspaceSheet
+        key={editOpen ? activeWorkspace.id : "closed"}
         visible={editOpen}
         workspace={activeWorkspace}
         busy={updateWorkspaceMutation.isPending}

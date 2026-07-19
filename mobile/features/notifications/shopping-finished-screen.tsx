@@ -224,12 +224,17 @@ export function ShoppingFinishedNotificationScreen() {
 
   const onOpenSummary = async () => {
     await markRead();
-    if (listId) {
-      // Open the list — not the finish screen (that would look like B is finishing).
-      router.replace(`/list/${listId}` as never);
-    } else {
+    if (!listId) {
       goHome();
+      return;
     }
+    const q = new URLSearchParams({ viewer: "1" });
+    if (payload.actorDisplayName) {
+      q.set("actor", payload.actorDisplayName);
+    }
+    router.replace(
+      `/list/${listId}/shop/finish?${q.toString()}` as never,
+    );
   };
 
   return (
@@ -459,7 +464,7 @@ export function ShoppingFinishedNotificationScreen() {
             }}
           >
             <Text style={{ ...typography.label, color: theme.onPrimary }}>
-              {t("notifications.openList")}
+              {t("notifications.viewSummary")}
             </Text>
           </Pressable>
 

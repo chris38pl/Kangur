@@ -7,10 +7,11 @@ import {
 import { startShoppingSession } from "@/features/shopping-list/shoppingSessionService";
 import { ApiError, validationError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
+import { withHttpMetrics } from "@/lib/metrics/http-middleware";
 
 type RouteContext = { params: Promise<{ listId: string }> };
 
-export async function POST(request: Request, context: RouteContext) {
+async function handlePost(request: Request, context: RouteContext) {
   try {
     const { listId } = await context.params;
     const { user } = await requireUser(request);
@@ -50,3 +51,5 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 }
+
+export const POST = withHttpMetrics("lists.sessions.start", handlePost as never);

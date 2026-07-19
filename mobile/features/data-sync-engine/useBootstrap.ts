@@ -4,8 +4,18 @@ import { useEffect, useRef } from "react";
 
 import { DataSyncEngine } from "@/features/data-sync-engine";
 import { createRestSyncTransport } from "@/features/data-sync-engine/rest-transport";
+import { ReactQuerySyncCacheAdapter } from "@/features/data-sync-engine/sync-cache-adapter";
 
-/** Bootstraps Data Sync Engine once with REST transport. */
+/**
+ * Architecture rule:
+ *
+ * Shopping item cache MUST be mutated only by:
+ * - optimistic UI writes
+ * - SyncCacheAdapter after transport results (success path)
+ *
+ * Never invalidate or mutate shopping-items here.
+ * Cache reconciliation is owned exclusively by SyncCacheAdapter.
+ */
 export function useDataSyncEngineBootstrap() {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
@@ -14,26 +24,9 @@ export function useDataSyncEngineBootstrap() {
   useEffect(() => {
     if (started.current) return;
     started.current = true;
+    DataSyncEngine.setSyncCacheAdapter(
+      new ReactQuerySyncCacheAdapter(queryClient),
+    );
     DataSyncEngine.start(createRestSyncTransport(() => getToken()));
-  }, [getToken]);
-
-  useEffect(() => {
-    return DataSyncEngine.on("syncFinished", (payload) => {
-      // Only refresh after successful ops — failed sync must not wipe optimistic UI.
-      if ((payload?.syncedCount ?? 0) <= 0) return;
-
-      const listId = payload?.listId;
-      if (listId) {
-        void queryClient.invalidateQueries({
-          queryKey: ["shopping-items", listId],
-        });
-        void queryClient.invalidateQueries({
-          queryKey: ["shopping-list", listId],
-        });
-      } else {
-        void queryClient.invalidateQueries({ queryKey: ["shopping-items"] });
-      }
-      void queryClient.invalidateQueries({ queryKey: ["shopping-lists"] });
-    });
-  }, [queryClient]);
+  }, [getToken, queryClient]);
 }

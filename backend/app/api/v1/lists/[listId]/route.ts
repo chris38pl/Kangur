@@ -69,7 +69,10 @@ export async function DELETE(request: Request, context: RouteContext) {
   try {
     const { listId } = await context.params;
     const { user } = await requireUser(request);
-    await archiveShoppingList(listId, user.id, { notifyMembers: true });
+    await archiveShoppingList(listId, user.id, {
+      notifyMembers: true,
+      outcome: "deleted",
+    });
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     if (error instanceof ApiError) {
@@ -77,8 +80,8 @@ export async function DELETE(request: Request, context: RouteContext) {
     }
     console.error("[shopping-list]", "ArchiveFailed", error);
     return NextResponse.json(
-      { code: "INVALID_TOKEN", message: "Unable to authenticate request." },
-      { status: 401 },
+      { code: "INTERNAL_ERROR", message: "Could not delete list." },
+      { status: 500 },
     );
   }
 }

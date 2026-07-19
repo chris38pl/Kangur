@@ -1,7 +1,8 @@
 /**
- * Native-feeling relative time for notification rows.
- * 2 min temu · 1 godz. temu · Wczoraj, 18:42 · 2 dni temu
+ * Relative time for notification rows via Intl (no per-locale string branches).
  */
+import { intlLocaleTag } from "@/lib/i18n/locales";
+
 export function formatNotificationTime(
   iso: string,
   locale: string,
@@ -9,38 +10,44 @@ export function formatNotificationTime(
 ): string {
   const date = new Date(iso);
   const diffMs = Math.max(0, now.getTime() - date.getTime());
-  const diffMin = Math.floor(diffMs / 60_000);
-  const pl = locale.startsWith("pl");
+  const diffSec = Math.floor(diffMs / 1000);
+  const tag = intlLocaleTag(locale);
 
-  if (diffMin < 1) return pl ? "Teraz" : "Just now";
+  const rtf = new Intl.RelativeTimeFormat(tag, { numeric: "auto" });
+
+  if (diffSec < 60) {
+    return rtf.format(-Math.max(diffSec, 0), "second");
+  }
+
+  const diffMin = Math.floor(diffSec / 60);
   if (diffMin < 60) {
-    return pl ? `${diffMin} min temu` : `${diffMin} min ago`;
+    return rtf.format(-diffMin, "minute");
   }
 
   const diffHours = Math.floor(diffMin / 60);
   if (diffHours < 24 && isSameDay(date, now)) {
-    return pl
-      ? `${diffHours} godz. temu`
-      : `${diffHours}h ago`;
+    return rtf.format(-diffHours, "hour");
   }
 
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
   if (isSameDay(date, yesterday)) {
-    const time = date.toLocaleTimeString(pl ? "pl-PL" : "en-US", {
+    const time = date.toLocaleTimeString(tag, {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
     });
-    return pl ? `Wczoraj, ${time}` : `Yesterday, ${time}`;
+    // RelativeTimeFormat "yesterday" + clock for scanability
+    const dayLabel = rtf.format(-1, "day");
+    return `${dayLabel}, ${time}`;
   }
 
   const diffDays = Math.floor(diffMs / 86_400_000);
   if (diffDays < 7) {
-    return pl ? `${diffDays} dni temu` : `${diffDays}d ago`;
+    return rtf.format(-diffDays, "day");
   }
 
-  return date.toLocaleDateString(pl ? "pl-PL" : "en-US", {
+  return date.toLocaleDateString(tag, {
     day: "numeric",
     month: "short",
   });

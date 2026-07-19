@@ -55,6 +55,7 @@ Kangur Platform (Next.js REST + OpenAPI)
 kangur/
 ├── mobile/                 # Expo app
 ├── backend/                # Next.js platform API
+├── shared/                 # Domain SSOT (locales, categories, themes)
 └── docs/
     ├── prd.md
     ├── architecture.md
@@ -113,17 +114,50 @@ backend/
 
 ### Bottom tabs
 
+Primary daily workflows (one-handed shopping loop):
+
 1. **Home** — active lists, create, import CTA  
-2. **History** — past lists, search, **Repeat List**  
+2. **History** — archived lists (read-only), local search, **Repeat** (primary) / Restore (secondary)
 3. **Workspace** — avatar, members, invites, plan, **AI Credits**, settings  
-4. **Profile** — account, language, sign out  
+4. **Profile** — account hub, language, sign out  
+
+### App Menu (full-screen)
+
+Application-level destinations opened from the Home hamburger as a **full-width screen** nested in the Home tab stack (`/(tabs)/index/menu`) with the **native push / slide** transition — Bottom Tabs stay visible. Not a left drawer, Modal overlay, or Drawer navigator.
+
+**Why full-screen (not a drawer):** better scalability for growing Platform/ops content; more layout space and a cleaner list; richer future destinations feel like real screens; navigation matches iOS/Android stack patterns used elsewhere (Account, Notifications).
+
+Driven by **declarative menu config → visibility predicate → route**.
+
+| Section | Contents |
+|---------|----------|
+| **Account** | Account details, Subscription, Notifications |
+| **Workspace** | Single shortcut to Workspace tab |
+| **Application** | Help, Feedback, Privacy, Terms, About |
+| **Platform** | Platform Console — only when `platformRole = ADMIN` |
+
+Tabs stay focused on workflows; the Menu scales for secondary / ops destinations without adding tabs. Do not duplicate tab destinations as menu rows (except the single Workspace shortcut).
+
+### Platform Console
+
+Read-only operational dashboard (`/platform-console`) for product owners / operators — **not** an admin panel (no mutations, flags UI, or user management in M13.4).
+
+**Phased tabs (ship when data is valuable — do not build empty shells):**
+
+1. **Overview** (M13.5) — Platform Health + key KPIs  
+2. **Realtime** (M13.6) — polling / events / refresh / sync diagnostics (server/proxy metrics for MVP; client ingest = M13.7 post-release)  
+3. **Scaling** — after load tests + capacity planning  
+4. **Backend** — after richer monitoring (e.g. OTel)  
+5. **Business** — after product analytics (DAU/MAU, premium, AI credits, …)
+
+UI currently exposes **Overview** and **Realtime** only. Full IA order for later: Overview → Business → Realtime → Scaling → Backend.
 
 ### Stacks
 
 - Shopping List → **Shopping Mode**  
 - AI Import chooser → Screenshot | Text | Clipboard → Processing → **AI Review**  
 - Finish Shopping → Summary → Archive  
-- Invite Members · Workspace Settings · Premium · Manual Add · List Settings  
+- Invite Members · Workspace Settings · Premium · Manual Add · List Settings · **Menu** (Home stack) · About · Platform Console  
 
 Screens live in `features/`; `app/` only wires routes.
 
@@ -141,7 +175,7 @@ Flat, minimal, premium, friendly; one-handed; large targets; few taps; fast over
 - **Radius:** fixed scale (e.g. sm/md/lg/xl) — no random radii  
 - **Typography:** `display | title | headline | body | label | caption`  
 - **Colors:** semantic tokens (`bg`, `surface`, `text`, `primary`, …); **warm orange** primary  
-- **Dark mode:** token-based from day one  
+- **Theme:** light mode only (no dark theme)  
 - **Icons:** one library only  
 - **Motion:** 2–3 intentional (enter, status change, toast)  
 
@@ -248,12 +282,88 @@ Only then call apply endpoint (or equivalent transaction).
 
 ---
 
-## 10. Synchronization (RealtimeProvider)
+## 10. Synchronization (EventPollingProvider)
 
-- Transport-agnostic.  
-- **MVP: smart polling** — 3s interval; only while list / Shopping Mode visible; stop on background, lock, leave.  
-- Fetch `ShoppingEvent`s after last known event ID; patch UI.  
-- Future: Ably / Supabase Realtime / SSE as adapters — domain never imports a vendor SDK directly.
+- Transport-agnostic. MVP transport: **`EventPollingProvider`** (adaptive polling).  
+- **Public API:** `start` / `stop` / `pollNow` / `isRunning` / `getCurrentListId` (+ optional `destroy`).  
+- **Lifecycle:** mount→start; unmount→stop; background→pause; foreground→pollNow+resume; offline→pause; online→pollNow+resume; listId change→stop old+start new.  
+- **Adaptive intervals:** 3s → 5s (30s idle) → 10s (2min idle); backoff only on successful empty polls; reset to 3s on events.  
+- Fetch `ShoppingEvent`s after last known event id; **events are a refresh signal only** — never rebuild list state from payloads. Cache ownership: **SyncCacheAdapter + React Query**. Soft toast is presentation-only (never triggers refresh).  
+- Future: `WebSocketTransport` without changing `useListRealtime()`; server push for **active list only**; ETag / 304 on events.
+
+---
+
+## 10.5 Observability & Scaling (M13.5)
+
+### Principles
+
+1. Fire-and-forget — metrics never block requests or change business logic.  
+2. Provider pattern: `Metrics` interface + **Noop** (prod/tests default) + **Console** (DEV / `METRICS_DEBUG=1` only) + **InMemory** (backend process local for Platform Console).  
+3. Shared catalogue: `@shared/metrics/names` + low-cardinality tags (`@shared/metrics/tags`).  
+4. Prefer **server-authoritative** counters for sessions/AI; client emits realtime/sync health.
+
+### Layout
+
+| Area | Path |
+|------|------|
+| Names / capacity constant | `shared/metrics/` |
+| Mobile facade | `mobile/lib/metrics/` |
+| Backend facade + HTTP wrap + memory | `backend/lib/metrics/` |
+| Client emit | `EventPollingProvider`, `scheduleItemsRefresh`, `syncTelemetry` |
+| Server emit | events route, shopping sessions (`db.query_ms` reserved — Prisma middleware deferred; events path timed separately) |
+
+### Presence (no heartbeat)
+
+Primary KPI = open `ShoppingSession` rows (`finishedAt: null`). Secondary = events QPS / `realtime.active_pollers`. No dedicated heartbeat in M13.5.
+
+### SLOs (MVP)
+
+| Area | Target |
+|------|--------|
+| Events API P95 | < 250 ms (soft alert 500 ms) |
+| Events availability | > 99% non-5xx (24h) |
+| Client poll failures | < 0.5% of attempts |
+
+### Capacity / headroom
+
+```
+estimated_RPS ≈ active_sessions × (1 / avg_interval_s)
+headroom = PROVISIONAL_EVENTS_CAPACITY_RPS / estimated_RPS
+```
+
+`PROVISIONAL_EVENTS_CAPACITY_RPS = 2500` with `capacity_source=provisional` until the **Future load-testing playbook** (k6) refreshes the constant from measured SLO breach points — capacity MUST come from load tests, not permanent guesses.
+
+### Cost
+
+Leading indicator: `cost.events.*` and documented `estimated_monthly_polling_cost` formula in ops notes. Future: `estimated_monthly_ws_cost` for ROI crossover.
+
+### Platform Console
+
+- **Overview** — DB sessions + in-memory metrics (RPS, P95, headroom, pollingOk).  
+- **Realtime** (`GET /api/v1/platform/realtime`) — events-API proxies (poll RPS, P50/P95, empty-page ratio, failures) + open sessions as active-poller proxy. Client-only KPIs (Hot/Warm/Cold, refresh, sync, drain/pollNow) stay null until **M13.7** client metrics ingest (post-release).  
+- Later tabs (Scaling / Backend / Business) wait for load tests, OTel, and product analytics respectively.
+
+### When to leave polling
+
+Several signals over 2+ weeks: empty-poll waste + high RPS, headroom < 5×, latency floor / SLO burn, polling cost vs future WS cost, battery/pollNow storms. Order of levers: verify adaptive Hot/Warm/Cold → ETag/304 → WebSocket active-list-only.
+
+### Future — Client Metrics Ingestion (M13.7, post-release)
+
+MVP Platform Console is intentionally operable on **server/proxy metrics only**. Client emit sites already exist (`EventPollingProvider`, `scheduleItemsRefresh`, `syncTelemetry`); prod sink remains **Noop** until M13.7.
+
+Target pipeline (do not implement before first production release):
+
+```
+Mobile Metrics.record → BufferMetrics → batch every ~20s
+  → POST /api/v1/platform/client-metrics (requireUser, allowlist realtime.* / sync.*)
+  → ClientMetricsAggregator (InMemory counters/hist + GaugeTTL for multi-client gauges)
+  → GET /platform/realtime prefers client KPIs when present, else server proxies
+  → Platform Console Realtime
+```
+
+Design locks (preserved for when M13.7 ships): anonymous `clientInstanceId`; counter deltas + gauge last-value + capped hist samples; GaugeTTL (~90s) for `active_pollers` / sync queue / failed ops; fire-and-forget flush; prefer client over proxy when data exists. Still out of ingest scope: OTel exporters, per-workspace slices, refresh-delay / sync successRate / lastError instrumentation, durable metric storage.
+
+Also future: OTel/Prometheus exporters (same call sites), tracing, ETag `304_ratio`, WS metrics, load-test playbook, `estimated_monthly_ws_cost`.
 
 ---
 
@@ -275,10 +385,15 @@ Only then call apply endpoint (or equivalent transaction).
 
 **ShoppingEvent:** activity log for sync cursor + toasts + audit — **not** for rebuilding state  
 
-### Repeat List
+### Repeat List & History (M11)
 
-MVP: API duplicates list + items with statuses reset to `pending`.  
-Post-MVP: optional AI cleanup endpoint costing AI Credits.
+- **History** lists archived lists only (`GET …/lists/history`) that have at least one non-removed item. Search is **client-side** after one fetch. Cards show 2–3 preview item names in list order (`sortOrder`, `createdAt`).
+- **Soft-remove outcomes:** Finish Shopping → `status: archived` (History). User “Delete list” → `status: deleted` (hidden from Home and History). Both are soft deletes.
+- **Free depth:** last **20** archived lists (`updatedAt` desc). Premium: no product limit (safety cap 200). Restore/repeat outside Free depth → **`403`** with code **`HISTORY_LIMIT_EXCEEDED`** (minimal body — no `totalArchived` counts until paywall).
+- **Restore:** `archived` → `active` (`POST …/restore`).
+- **Repeat:** new active list with **identical title**; copy **all business-relevant item fields** (today: name, category, amount, note, sortOrder, normalizedName, …). Do **not** copy runtime shopping state (`status` always `pending`; future bought/session timestamps). Navigate to the new list after success.
+- Archived lists are **not editable** — only Repeat / Restore. `authorizeList` accepts `allowArchived` for those paths.
+- Post-MVP: optional AI cleanup endpoint costing AI Credits.
 
 ### Activity log vs event sourcing
 
@@ -295,7 +410,19 @@ Update rows as source of truth; append events; **never** replay events to rebuil
 - AI Credits checked server-side  
 - Image size/MIME limits  
 
-Roles: owner / admin / member — invites & billing: owner + admin.
+Roles: workspace `owner` / `admin` / `member` — invites & billing: owner + admin.
+
+Platform: `User.platformRole` (`USER` | `ADMIN`). Platform Console and `/api/v1/platform/*` require `ADMIN` via `requirePlatformAdmin` — hiding menu items is not authorization.
+
+### Platform Admin Bootstrap
+
+`platformRole` defaults to `USER`. This is **environment configuration**, not app seed data.
+
+On user upsert the backend checks `PLATFORM_ADMIN_EMAILS` (comma-separated, normalized via `isPlatformAdminEmail`). If the authenticated email is on the allowlist and the current role is not already `ADMIN`, the user is **promoted** to `ADMIN`.
+
+The backend **never** automatically demotes `ADMIN` → `USER` when an email is removed from the env list (typo / Preview misconfig must not lock operators out). Demotion is an explicit administrative operation (future: e.g. `pnpm platform:sync-admins`).
+
+Purpose: bootstrap Platform Console access on new environments without manual SQL or database seeds.
 
 ---
 
@@ -372,6 +499,21 @@ Typed API client: generate from OpenAPI where practical.
 - Product copy: **AI Credits**, never bare “Credits” for metering  
 - Named use-cases: `ingestScreenshot`, `applyAiReview`, `markItemBought`, `debitAiCredits`, `finishShopping`, `repeatList`  
 - No Redux/MobX/Saga/Context-everywhere  
+
+### 16.1 How to add a language
+
+Locales are a pure domain layer in `shared/locales.ts` (`SUPPORTED_LOCALES`, `LOCALE_META`, `resolvePreferredLocale`). UI shows `emoji` + `nativeName`. AI uses a separate type + total `mapToAiLanguage`.
+
+**Checklist:**
+
+1. Add an entry in `shared/locales.ts` (id, nativeName, englishName, emoji, bcp47, defaultHomeName) — `LOCALE_META` updates automatically  
+2. `mobile/lib/i18n/{id}.json` + entry in `mobile/lib/i18n/resources/index.ts`  
+3. `backend/locales/{id}.json` (same keys as `DEFAULT_LOCALE`)  
+4. `AI_LOCALE_BY_APP` + `AI_PROMPTS` in `backend/features/ai/outputLanguage.ts`  
+5. `pnpm openapi:generate` in `backend/`  
+6. `pnpm test:locales` in `backend/` (files + key parity + AI map)
+
+**Architecture rule:** Adding a language must **not** require editing existing business logic or UI screens. If you need to change handlers, pickers, or add `if (locale === …)`, extend SSOT / catalogs / total maps first instead of scattering locale branches.
 
 ---
 

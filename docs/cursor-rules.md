@@ -30,7 +30,7 @@ Read the PRD, architecture, and [roadmap.md](./roadmap.md) before large changes.
 ## Branding
 
 - Mascot: flat friendly kangaroo; warm orange; pocket / shopping bag motifs.
-- Minimal, premium, flat — use design-system tokens (8px grid, radius scale, dark mode).
+- Minimal, premium, flat — use design-system tokens (8px grid, radius scale). Light mode only.
 
 ---
 
@@ -77,8 +77,10 @@ Read the PRD, architecture, and [roadmap.md](./roadmap.md) before large changes.
 ## Naming & i18n
 
 - Product metering term: **AI Credits**.
-- PL + EN from the start; no hardcoded user-facing strings in features.
-- Category keys in DB/API; labels in UI only.
+- Locales are SSOT in `shared/locales.ts` (`SUPPORTED_LOCALES` / `LOCALE_META`). Catalogs: `mobile/lib/i18n/{id}.json`, `backend/locales/{id}.json`.
+- No hardcoded user-facing strings in features; category keys in DB/API, labels in UI only.
+- **How to add a language:** see [architecture.md §16.1](./architecture.md#161-how-to-add-a-language).
+- Adding a language must not require editing business handlers, pickers, or `if (locale === …)` — extend SSOT and catalogs instead. Run `pnpm test:locales` in `backend/`.
 
 ---
 
@@ -103,4 +105,5 @@ DB: Neon + Prisma; **no Prisma Accelerate** on MVP.
 - Thin routes; named use-cases (`applyAiReview`, `finishShopping`, `debitAiCredits`, `repeatList`, …).
 - Secrets only on backend; workspace AuthZ on every tenant op.
 - No UploadThing / permanent screenshots unless a later feature needs durable media.
+- Before finishing `mobile/` changes: run `pnpm lint` in `mobile/` and fix errors (CI fails the job otherwise).
 - Do not add docs beyond `prd.md`, `architecture.md`, `cursor-rules.md`, `roadmap.md` without an explicit human request.
