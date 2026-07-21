@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useQueryClient } from "@tanstack/react-query";
+import type { TFunction } from "i18next";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -30,7 +31,7 @@ function toastMessageForBatch(
   events: ShoppingEvent[],
   meId: string | undefined,
   members: WorkspaceMember[] | undefined,
-  t: (key: string, opts?: object) => string,
+  t: TFunction,
 ): string | null {
   const remote = events.filter((e) => e.actorUserId !== meId);
   if (remote.length === 0) return null;

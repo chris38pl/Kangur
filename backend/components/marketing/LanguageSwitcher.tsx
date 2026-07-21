@@ -18,6 +18,10 @@ type Props = {
   label: string;
 };
 
+function writeMarketingLocaleCookie(next: AppLocale) {
+  document.cookie = `${MARKETING_LOCALE_COOKIE}=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
+}
+
 export function LanguageSwitcher({ locale, label }: Props) {
   const router = useRouter();
   const pathname = usePathname() || "/";
@@ -45,7 +49,7 @@ export function LanguageSwitcher({ locale, label }: Props) {
   const switchTo = (next: AppLocale) => {
     setOpen(false);
     if (next === locale) return;
-    document.cookie = `${MARKETING_LOCALE_COOKIE}=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    writeMarketingLocaleCookie(next);
     const rest = stripLocalePrefix(pathname);
     router.push(withLocale(next, rest));
   };

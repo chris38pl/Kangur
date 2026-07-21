@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 export type UseListPaginationOptions = {
   /** Items shown per “page” / show-more step. */
@@ -51,27 +51,27 @@ export function useListPagination<T>(
   const safePageSize = Math.max(1, pageSize);
 
   const [visibleCount, setVisibleCount] = useState(safePageSize);
+  const [prevResetKey, setPrevResetKey] = useState(resetKey);
 
-  useEffect(() => {
+  // Adjust state during render when resetKey changes (React-recommended).
+  if (resetKey !== prevResetKey) {
+    setPrevResetKey(resetKey);
     setVisibleCount(safePageSize);
-  }, [resetKey, safePageSize]);
+  }
 
-  // If the list shrinks (delete / filter), keep window in bounds.
-  useEffect(() => {
-    if (remote) return;
-    setVisibleCount((prev) => {
-      if (items.length === 0) return safePageSize;
-      if (prev > items.length) {
-        return Math.max(safePageSize, items.length);
-      }
-      return prev;
-    });
-  }, [items.length, remote, safePageSize]);
+  const windowCount = useMemo(() => {
+    if (remote) return items.length;
+    if (items.length === 0) return safePageSize;
+    if (visibleCount > items.length) {
+      return Math.max(safePageSize, items.length);
+    }
+    return visibleCount;
+  }, [items.length, remote, safePageSize, visibleCount]);
 
   const visibleItems = useMemo(() => {
     if (remote) return items;
-    return items.slice(0, visibleCount);
-  }, [items, remote, visibleCount]);
+    return items.slice(0, windowCount);
+  }, [items, remote, windowCount]);
 
   const remainingCount = remote
     ? 0
@@ -93,6 +93,6 @@ export function useListPagination<T>(
     remainingCount,
     isLoadingMore: remote ? isLoadingMore : false,
     showMore,
-    visibleCount: remote ? items.length : visibleCount,
+    visibleCount: remote ? items.length : windowCount,
   };
 }

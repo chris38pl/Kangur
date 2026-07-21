@@ -412,7 +412,7 @@ export default function ShoppingListScreen() {
     void archiveList.mutateAsync(listId).then(() => {
       console.info("[shopping-list]", "ListDeleted", { listId });
       setDeleteOpen(false);
-      router.replace("/(tabs)");
+      router.replace("/(tabs)" as never);
     });
   };
 
@@ -448,7 +448,7 @@ export default function ShoppingListScreen() {
             <Pressable
               onPress={() => {
                 if (router.canGoBack()) router.back();
-                else router.replace("/(tabs)");
+                else router.replace("/(tabs)" as never);
               }}
               hitSlop={10}
               accessibilityRole="button"

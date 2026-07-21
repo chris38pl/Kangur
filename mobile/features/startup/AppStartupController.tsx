@@ -64,13 +64,14 @@ export function AppStartupController({ children }: Props) {
   phaseRef.current = phase;
 
   const bootReadyRef = useRef(false);
-  const startedAtRef = useRef(Date.now());
+  const startedAtRef = useRef(0);
   const exitRequestedRef = useRef(false);
   const contentOpacity = useSharedValue(phase === "done" ? 1 : 0);
 
   const requestExit = useCallback(() => {
     if (exitRequestedRef.current) return;
     if (phaseRef.current !== "enter") return;
+    if (startedAtRef.current === 0) return;
 
     const elapsed = Date.now() - startedAtRef.current;
     const minOk = elapsed >= MIN_MS;
@@ -98,6 +99,7 @@ export function AppStartupController({ children }: Props) {
   // Timers: try exit at min and hard-cap at max.
   useEffect(() => {
     if (phase !== "enter") return;
+    startedAtRef.current = Date.now();
     const tMin = setTimeout(() => requestExit(), MIN_MS);
     const tMax = setTimeout(() => requestExit(), MAX_MS);
     return () => {

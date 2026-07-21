@@ -12,7 +12,9 @@
     "showMoreA11y": "Mehr anzeigen, {{count}} verbleibend",
     "cancel": "Abbrechen",
     "continue": "Weiter",
-    "back": "Zurück"
+    "back": "Zurück",
+    "return": "Zurück",
+    "tryAgain": "Erneut versuchen"
   },
   "home": {
     "title": "Kangur",
@@ -251,7 +253,11 @@
     "suggestProposals_other": "Proposals ({{count}})",
     "suggestProposalsEmpty": "All proposals have been reviewed.",
     "suggestAccept": "Add",
-    "suggestPremiumRequired": "Generieren aus Verlauf ist eine Premium-Funktion. Starte den kostenlosen Trial."
+    "suggestPremiumRequired": "Generieren aus Verlauf ist eine Premium-Funktion. Starte den kostenlosen Trial.",
+    "suggestSwipeTip": "Nach rechts wischen zum Hinzufügen. Nach links wischen zum Ablehnen!",
+    "suggestErrorTitle": "Etwas ist schiefgelaufen",
+    "suggestApplyFailed": "Liste aus den ausgewählten Produkten konnte nicht erstellt werden. Bitte erneut versuchen.",
+    "suggestApplyNotFound": "Dieser Vorschlag ist abgelaufen oder wurde nicht gefunden. Erzeuge einen neuen und versuche es erneut."
   },
   "categories": {
     "fruit": "Obst",
@@ -643,6 +649,8 @@
       "confirmPhrase": "LÖSCHEN",
       "confirm": "Konto löschen",
       "back": "Zurück",
+      "return": "Zurück",
+      "tryAgain": "Erneut versuchen",
       "failed": "Konto konnte nicht gelöscht werden. Bitte versuche es erneut.",
       "clerkFailed": "Clerk konnte das Konto nicht löschen. Du bist noch angemeldet - bitte versuche es erneut."
     }
@@ -671,6 +679,8 @@
     "needAccountPrompt": "Du hast noch kein Konto?",
     "logIn": "Anmelden",
     "back": "Zurück",
+    "return": "Zurück",
+    "tryAgain": "Erneut versuchen",
     "verifyTitle": "E-Mail bestätigen",
     "verifySubtitle": "Gib den Code ein, den wir an {{email}} gesendet haben.",
     "verificationCode": "Bestätigungscode",

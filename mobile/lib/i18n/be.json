@@ -12,7 +12,9 @@
     "showMoreA11y": "Паказаць яшчэ, засталося {{count}}",
     "cancel": "Скасаваць",
     "continue": "Працягнуць",
-    "back": "Назад"
+    "back": "Назад",
+    "return": "Назад",
+    "tryAgain": "Паспрабаваць зноў"
   },
   "home": {
     "title": "Kangur",
@@ -265,7 +267,11 @@
     "suggestProposals_other": "Proposals ({{count}})",
     "suggestProposalsEmpty": "All proposals have been reviewed.",
     "suggestAccept": "Add",
-    "suggestPremiumRequired": "Генерацыя з гісторыі - функцыя Premium. Пачні пробны перыяд."
+    "suggestPremiumRequired": "Генерацыя з гісторыі - функцыя Premium. Пачні пробны перыяд.",
+    "suggestSwipeTip": "Правядзіце ўправа, каб дадаць прапанову. Правядзіце ўлева, каб адхіліць!",
+    "suggestErrorTitle": "Нешта пайшло не так",
+    "suggestApplyFailed": "Не ўдалося стварыць спіс з выбраных прадуктаў. Паспрабуйце яшчэ раз.",
+    "suggestApplyNotFound": "Гэтая прапанова скончылася або не знойдзена. Згенеруйце новую і паспрабуйце зноў."
   },
   "categories": {
     "fruit": "Садавіна",
@@ -669,6 +675,8 @@
       "confirmPhrase": "ВЫДАЛІЦЬ",
       "confirm": "Выдаліць уліковы запіс",
       "back": "Назад",
+      "return": "Назад",
+      "tryAgain": "Паспрабаваць зноў",
       "failed": "Не атрымалася выдаліць уліковы запіс. Паспрабуй зноў.",
       "clerkFailed": "Clerk не змог выдаліць уліковы запіс. Ты ўсё яшчэ ў сістэме - паспрабуй зноў."
     }
@@ -697,6 +705,8 @@
     "needAccountPrompt": "Няма уліковага запісу?",
     "logIn": "Увайсці",
     "back": "Назад",
+    "return": "Назад",
+    "tryAgain": "Паспрабаваць зноў",
     "verifyTitle": "Пацвердзі email",
     "verifySubtitle": "Увядзі код, які мы адправілі на {{email}}.",
     "verificationCode": "Код пацверджання",

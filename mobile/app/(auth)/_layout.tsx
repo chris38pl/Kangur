@@ -9,7 +9,7 @@ export default function AuthLayout() {
   }
 
   if (isSignedIn) {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href={"/(tabs)" as never} />;
   }
 
   return (

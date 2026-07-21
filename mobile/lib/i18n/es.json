@@ -12,7 +12,9 @@
     "showMoreA11y": "Mostrar más, {{count}} restantes",
     "cancel": "Cancelar",
     "continue": "Continuar",
-    "back": "Atrás"
+    "back": "Atrás",
+    "return": "Volver",
+    "tryAgain": "Intentar de nuevo"
   },
   "home": {
     "title": "Kangur",
@@ -251,7 +253,11 @@
     "suggestProposals_other": "Proposals ({{count}})",
     "suggestProposalsEmpty": "All proposals have been reviewed.",
     "suggestAccept": "Add",
-    "suggestPremiumRequired": "Generar desde el historial es una función Premium. Empieza la prueba gratis."
+    "suggestPremiumRequired": "Generar desde el historial es una función Premium. Empieza la prueba gratis.",
+    "suggestSwipeTip": "Desliza a la derecha para añadir una propuesta. ¡Desliza a la izquierda para rechazar!",
+    "suggestErrorTitle": "Algo salió mal",
+    "suggestApplyFailed": "No se pudo crear una lista con los productos seleccionados. Inténtalo de nuevo.",
+    "suggestApplyNotFound": "Esta sugerencia caducó o no se encontró. Genera una nueva e inténtalo de nuevo."
   },
   "categories": {
     "fruit": "Fruta",

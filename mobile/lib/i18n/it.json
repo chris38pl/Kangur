@@ -12,7 +12,9 @@
     "showMoreA11y": "Mostra altro, {{count}} rimanenti",
     "cancel": "Annulla",
     "continue": "Continua",
-    "back": "Indietro"
+    "back": "Indietro",
+    "return": "Torna indietro",
+    "tryAgain": "Riprova"
   },
   "home": {
     "title": "Kangur",
@@ -251,7 +253,11 @@
     "suggestProposals_other": "Proposals ({{count}})",
     "suggestProposalsEmpty": "All proposals have been reviewed.",
     "suggestAccept": "Add",
-    "suggestPremiumRequired": "Genera dalla cronologia è una funzione Premium. Avvia la prova gratuita."
+    "suggestPremiumRequired": "Genera dalla cronologia è una funzione Premium. Avvia la prova gratuita.",
+    "suggestSwipeTip": "Scorri a destra per aggiungere una proposta. Scorri a sinistra per rifiutare!",
+    "suggestErrorTitle": "Qualcosa è andato storto",
+    "suggestApplyFailed": "Impossibile creare una lista dai prodotti selezionati. Riprova.",
+    "suggestApplyNotFound": "Questo suggerimento è scaduto o non è stato trovato. Generane uno nuovo e riprova."
   },
   "categories": {
     "fruit": "Frutta",
@@ -643,6 +649,8 @@
       "confirmPhrase": "ELIMINA",
       "confirm": "Elimina account",
       "back": "Indietro",
+      "return": "Torna indietro",
+      "tryAgain": "Riprova",
       "failed": "Impossibile eliminare l'account. Riprova.",
       "clerkFailed": "Clerk non ha potuto eliminare l'account. Sei ancora connesso - riprova."
     }
@@ -671,6 +679,8 @@
     "needAccountPrompt": "Non hai un account?",
     "logIn": "Accedi",
     "back": "Indietro",
+    "return": "Torna indietro",
+    "tryAgain": "Riprova",
     "verifyTitle": "Verifica email",
     "verifySubtitle": "Inserisci il codice che abbiamo inviato a {{email}}.",
     "verificationCode": "Codice di verifica",

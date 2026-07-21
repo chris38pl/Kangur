@@ -2,6 +2,8 @@ import { Image, type ImageStyle, type StyleProp } from "react-native";
 
 type IconProps = {
   size?: number;
+  /** Optional tint for monochrome PNGs (e.g. back chevron). */
+  color?: string;
   style?: StyleProp<ImageStyle>;
 };
 
@@ -17,12 +19,17 @@ const appleSource = require("@/assets/brand/icon-apple.png");
 function BrandImage({
   source,
   size = 20,
+  color,
   style,
 }: IconProps & { source: number }) {
   return (
     <Image
       source={source}
-      style={[{ width: size, height: size }, style]}
+      style={[
+        { width: size, height: size },
+        color ? { tintColor: color } : null,
+        style,
+      ]}
       resizeMode="contain"
       accessibilityIgnoresInvertColors
     />
@@ -60,8 +67,10 @@ export function EyeIcon({
 }
 
 /** Back chevron. */
-export function BackIcon({ size = 20, style }: IconProps) {
-  return <BrandImage source={backSource} size={size} style={style} />;
+export function BackIcon({ size = 20, color, style }: IconProps) {
+  return (
+    <BrandImage source={backSource} size={size} color={color} style={style} />
+  );
 }
 
 /** Official multicolor Google "G". */

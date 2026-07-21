@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -49,9 +49,15 @@ export function DeleteAccountSheet({
     typed.trim().toLocaleUpperCase(i18n.language) ===
     confirmPhrase.toLocaleUpperCase(i18n.language);
 
-  useEffect(() => {
-    if (!visible) setTyped("");
-  }, [visible]);
+  const handleCancel = () => {
+    setTyped("");
+    onCancel();
+  };
+
+  const handleConfirm = () => {
+    setTyped("");
+    onConfirm();
+  };
 
   return (
     <Modal
@@ -59,13 +65,14 @@ export function DeleteAccountSheet({
       animationType="slide"
       transparent
       statusBarTranslucent
-      onRequestClose={busy ? undefined : onCancel}
+      onShow={() => setTyped("")}
+      onRequestClose={busy ? undefined : handleCancel}
     >
       <View style={{ flex: 1, justifyContent: "flex-end" }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("privacy.delete.back")}
-          onPress={busy ? undefined : onCancel}
+          onPress={busy ? undefined : handleCancel}
           style={{
             position: "absolute",
             top: 0,
@@ -88,7 +95,7 @@ export function DeleteAccountSheet({
           }}
         >
           <Pressable
-            onPress={onCancel}
+            onPress={handleCancel}
             disabled={busy}
             accessibilityRole="button"
             accessibilityLabel={t("privacy.delete.back")}
@@ -192,7 +199,7 @@ export function DeleteAccountSheet({
 
           <Pressable
             disabled={busy || !canConfirm}
-            onPress={onConfirm}
+            onPress={handleConfirm}
             style={{
               marginTop: spacing[5],
               minHeight: 56,
@@ -214,7 +221,7 @@ export function DeleteAccountSheet({
 
           <Pressable
             disabled={busy}
-            onPress={onCancel}
+            onPress={handleCancel}
             style={{
               marginTop: spacing[3],
               minHeight: 48,

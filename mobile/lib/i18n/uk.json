@@ -12,7 +12,9 @@
     "showMoreA11y": "Показати ще, залишилось {{count}}",
     "cancel": "Скасувати",
     "continue": "Продовжити",
-    "back": "Назад"
+    "back": "Назад",
+    "return": "Назад",
+    "tryAgain": "Спробувати знову"
   },
   "home": {
     "title": "Kangur",
@@ -265,7 +267,11 @@
     "suggestProposals_other": "Proposals ({{count}})",
     "suggestProposalsEmpty": "All proposals have been reviewed.",
     "suggestAccept": "Add",
-    "suggestPremiumRequired": "Генерація з історії - функція Premium. Почніть пробний період."
+    "suggestPremiumRequired": "Генерація з історії - функція Premium. Почніть пробний період.",
+    "suggestSwipeTip": "Проведіть праворуч, щоб додати пропозицію. Проведіть ліворуч, щоб відхилити!",
+    "suggestErrorTitle": "Щось пішло не так",
+    "suggestApplyFailed": "Не вдалося створити список із вибраних продуктів. Спробуйте ще раз.",
+    "suggestApplyNotFound": "Ця пропозиція закінчилася або її не знайдено. Згенеруйте нову і спробуйте знову."
   },
   "categories": {
     "fruit": "Фрукти",
@@ -669,6 +675,8 @@
       "confirmPhrase": "ВИДАЛИТИ",
       "confirm": "Видалити обліковий запис",
       "back": "Назад",
+      "return": "Назад",
+      "tryAgain": "Спробувати знову",
       "failed": "Не вдалося видалити обліковий запис. Спробуйте знову.",
       "clerkFailed": "Clerk не зміг видалити обліковий запис. Ви все ще в системі - спробуйте знову."
     }
@@ -697,6 +705,8 @@
     "needAccountPrompt": "Немає облікового запису?",
     "logIn": "Увійти",
     "back": "Назад",
+    "return": "Назад",
+    "tryAgain": "Спробувати знову",
     "verifyTitle": "Підтвердіть email",
     "verifySubtitle": "Введіть код, який ми надіслали на {{email}}.",
     "verificationCode": "Код підтвердження",

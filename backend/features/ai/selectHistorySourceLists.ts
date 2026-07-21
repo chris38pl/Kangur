@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { ListStatus } from "@prisma/client";
 
 import {
   HISTORY_LIST_TAKE,
@@ -18,6 +19,8 @@ const listItemsInclude = {
     },
   },
 };
+
+const HISTORY_SOURCE_STATUSES: ListStatus[] = ["active", "archived"];
 
 function normalizeName(name: string): string {
   return name.trim().toLowerCase();
@@ -68,7 +71,7 @@ export async function selectHistorySourceLists(
 ): Promise<HistorySourceList[]> {
   const baseWhere = {
     workspaceId,
-    status: { in: ["active", "archived"] as const },
+    status: { in: HISTORY_SOURCE_STATUSES },
     items: { some: { status: { not: "removed" as const } } },
   };
 

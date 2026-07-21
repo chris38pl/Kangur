@@ -38,6 +38,8 @@ export interface EventPollingProvider {
   start(listId: string): void;
   stop(): void;
   pollNow(): void;
+  pause(): void;
+  resume(): void;
   isRunning(): boolean;
   getCurrentListId(): string | null;
   /** Optional full cleanup (logout / teardown). App-lifetime singleton may omit. */

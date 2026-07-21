@@ -6,5 +6,5 @@ import { Redirect } from "expo-router";
  * providers finish wiring during Fast Refresh / cold start.
  */
 export default function Index() {
-  return <Redirect href="/(tabs)" />;
+  return <Redirect href={"/(tabs)" as never} />;
 }

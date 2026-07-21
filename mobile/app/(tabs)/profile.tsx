@@ -278,7 +278,7 @@ export default function ProfileScreen() {
   };
 
   const goHome = () => {
-    router.push("/(tabs)");
+    router.push("/(tabs)" as never);
   };
 
   return (

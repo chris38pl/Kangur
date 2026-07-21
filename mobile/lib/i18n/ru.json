@@ -12,7 +12,9 @@
     "showMoreA11y": "Показать ещё, осталось {{count}}",
     "cancel": "Отмена",
     "continue": "Продолжить",
-    "back": "Назад"
+    "back": "Назад",
+    "return": "Назад",
+    "tryAgain": "Попробовать снова"
   },
   "home": {
     "title": "Kangur",
@@ -265,7 +267,11 @@
     "suggestProposals_other": "Proposals ({{count}})",
     "suggestProposalsEmpty": "All proposals have been reviewed.",
     "suggestAccept": "Add",
-    "suggestPremiumRequired": "Генерация из истории - функция Premium. Начните пробный период."
+    "suggestPremiumRequired": "Генерация из истории - функция Premium. Начните пробный период.",
+    "suggestSwipeTip": "Смахните вправо, чтобы добавить предложение. Смахните влево, чтобы отклонить!",
+    "suggestErrorTitle": "Что-то пошло не так",
+    "suggestApplyFailed": "Не удалось создать список из выбранных продуктов. Попробуйте ещё раз.",
+    "suggestApplyNotFound": "Это предложение истекло или не найдено. Сгенерируйте новое и попробуйте снова."
   },
   "categories": {
     "fruit": "Фрукты",
@@ -669,6 +675,8 @@
       "confirmPhrase": "УДАЛИТЬ",
       "confirm": "Удалить аккаунт",
       "back": "Назад",
+      "return": "Назад",
+      "tryAgain": "Попробовать снова",
       "failed": "Не удалось удалить аккаунт. Попробуйте снова.",
       "clerkFailed": "Clerk не смог удалить аккаунт. Вы всё ещё в системе - попробуйте снова."
     }
@@ -697,6 +705,8 @@
     "needAccountPrompt": "Нет аккаунта?",
     "logIn": "Войти",
     "back": "Назад",
+    "return": "Назад",
+    "tryAgain": "Попробовать снова",
     "verifyTitle": "Подтвердите email",
     "verifySubtitle": "Введите код, который мы отправили на {{email}}.",
     "verificationCode": "Код подтверждения",

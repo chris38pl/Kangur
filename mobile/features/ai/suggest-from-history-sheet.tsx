@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -92,24 +92,25 @@ export function SuggestFromHistorySheet({
    */
   const [orders, setOrders] = useState<Record<SuggestBucket, string[]>>({
     accepted: [],
-    proposals: [],
+    proposals: items.map((item) => item.proposalRowId),
     rejected: [],
   });
   const itemKey = items.map((i) => i.proposalRowId).join("|");
+  const [prevItemKey, setPrevItemKey] = useState(itemKey);
   const itemsById = useMemo(() => {
     const map = new Map<string, SuggestFromHistoryItem>();
     for (const item of items) map.set(item.proposalRowId, item);
     return map;
   }, [items]);
 
-  useEffect(() => {
+  if (itemKey !== prevItemKey) {
+    setPrevItemKey(itemKey);
     setOrders({
       accepted: [],
       proposals: items.map((item) => item.proposalRowId),
       rejected: [],
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- itemKey captures identity
-  }, [itemKey]);
+  }
 
   const resolve = useCallback(
     (ids: string[]) =>

@@ -12,7 +12,9 @@
     "showMoreA11y": "Zobrazit více, zbývá {{count}}",
     "cancel": "Zrušit",
     "continue": "Pokračovat",
-    "back": "Zpět"
+    "back": "Zpět",
+    "return": "Zpět",
+    "tryAgain": "Zkusit znovu"
   },
   "home": {
     "title": "Kangur",
@@ -265,7 +267,11 @@
     "suggestProposals_other": "Proposals ({{count}})",
     "suggestProposalsEmpty": "All proposals have been reviewed.",
     "suggestAccept": "Add",
-    "suggestPremiumRequired": "Generování z historie je funkce Premium. Spusťte zkušební období."
+    "suggestPremiumRequired": "Generování z historie je funkce Premium. Spusťte zkušební období.",
+    "suggestSwipeTip": "Potáhněte doprava pro přidání návrhu. Potáhněte doleva pro odmítnutí!",
+    "suggestErrorTitle": "Něco se pokazilo",
+    "suggestApplyFailed": "Nepodařilo se vytvořit seznam z vybraných produktů. Zkuste to znovu.",
+    "suggestApplyNotFound": "Tento návrh vypršel nebo nebyl nalezen. Vygenerujte nový a zkuste to znovu."
   },
   "categories": {
     "fruit": "Ovoce",
@@ -669,6 +675,8 @@
       "confirmPhrase": "SMAZAT",
       "confirm": "Smazat účet",
       "back": "Zpět",
+      "return": "Zpět",
+      "tryAgain": "Zkusit znovu",
       "failed": "Nepodařilo se smazat účet. Zkus to znovu.",
       "clerkFailed": "Clerk nemohl účet smazat. Stále jsi přihlášen(a) - zkus to znovu."
     }
@@ -697,6 +705,8 @@
     "needAccountPrompt": "Nemáš účet?",
     "logIn": "Přihlásit se",
     "back": "Zpět",
+    "return": "Zpět",
+    "tryAgain": "Zkusit znovu",
     "verifyTitle": "Ověř e-mail",
     "verifySubtitle": "Zadej kód, který jsme poslali na {{email}}.",
     "verificationCode": "Ověřovací kód",

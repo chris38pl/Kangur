@@ -988,14 +988,15 @@ export function PremiumScreen() {
     });
   }, [workspace?.id]);
 
+  if (workspace?.plan === "premium" && activating) {
+    setActivating(false);
+    setCheckoutStep(null);
+  }
+
   useEffect(() => {
-    if (!workspace) return;
-    if (workspace.plan === "premium" && activating) {
-      void AsyncStorage.removeItem(activatingKey(workspace.id));
-      setActivating(false);
-      setCheckoutStep(null);
-    }
-  }, [workspace, activating]);
+    if (!workspace || workspace.plan !== "premium") return;
+    void AsyncStorage.removeItem(activatingKey(workspace.id));
+  }, [workspace?.id, workspace?.plan]);
 
   // After Checkout, webhooks may be delayed (or missing locally). Sync from Stripe
   // and poll until plan flips to premium.

@@ -170,6 +170,16 @@
           "plan": {
             "$ref": "#/components/schemas/WorkspacePlan"
           },
+          "billingStatus": {
+            "$ref": "#/components/schemas/WorkspaceBillingStatus"
+          },
+          "currentPeriodEnd": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -187,6 +197,8 @@
           "isOwner",
           "memberCount",
           "plan",
+          "billingStatus",
+          "currentPeriodEnd",
           "createdAt",
           "updatedAt"
         ]
@@ -204,6 +216,17 @@
         "enum": [
           "free",
           "premium"
+        ]
+      },
+      "WorkspaceBillingStatus": {
+        "type": "string",
+        "enum": [
+          "none",
+          "active",
+          "trialing",
+          "past_due",
+          "cancelled",
+          "expired"
         ]
       },
       "CreateWorkspaceBody": {
@@ -1375,6 +1398,33 @@
         },
         "required": [
           "url"
+        ]
+      },
+      "BillingSyncResponse": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": "string",
+            "enum": [
+              "free",
+              "premium"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "currentPeriodEnd": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "plan",
+          "status",
+          "currentPeriodEnd"
         ]
       },
       "BillingWebhookAck": {
@@ -4803,6 +4853,61 @@
           },
           "403": {
             "description": "Member cannot manage billing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspaceId}/billing/sync": {
+      "post": {
+        "summary": "Sync Premium entitlement from Stripe (Checkout return / webhook fallback)",
+        "tags": [
+          "Billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current plan after sync",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingSyncResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Member cannot manage billing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No Stripe customer for workspace",
             "content": {
               "application/json": {
                 "schema": {

@@ -12,7 +12,9 @@
     "showMoreA11y": "Afficher plus, {{count}} restant(s)",
     "cancel": "Annuler",
     "continue": "Continuer",
-    "back": "Retour"
+    "back": "Retour",
+    "return": "Retour",
+    "tryAgain": "Réessayer"
   },
   "home": {
     "title": "Kangur",
@@ -251,7 +253,11 @@
     "suggestProposals_other": "Proposals ({{count}})",
     "suggestProposalsEmpty": "All proposals have been reviewed.",
     "suggestAccept": "Add",
-    "suggestPremiumRequired": "Générer depuis l’historique est une fonction Premium. Démarrez l’essai gratuit."
+    "suggestPremiumRequired": "Générer depuis l’historique est une fonction Premium. Démarrez l’essai gratuit.",
+    "suggestSwipeTip": "Glissez à droite pour ajouter une proposition. Glissez à gauche pour rejeter !",
+    "suggestErrorTitle": "Une erreur s’est produite",
+    "suggestApplyFailed": "Impossible de créer une liste à partir des produits sélectionnés. Réessayez.",
+    "suggestApplyNotFound": "Cette suggestion a expiré ou est introuvable. Générez-en une nouvelle et réessayez."
   },
   "categories": {
     "fruit": "Fruits",
@@ -643,6 +649,8 @@
       "confirmPhrase": "SUPPRIMER",
       "confirm": "Supprimer le compte",
       "back": "Retour",
+      "return": "Retour",
+      "tryAgain": "Réessayer",
       "failed": "Impossible de supprimer le compte. Veuillez réessayer.",
       "clerkFailed": "Clerk n'a pas pu supprimer le compte. Vous êtes toujours connecté - veuillez réessayer."
     }
@@ -671,6 +679,8 @@
     "needAccountPrompt": "Vous n'avez pas de compte ?",
     "logIn": "Se connecter",
     "back": "Retour",
+    "return": "Retour",
+    "tryAgain": "Réessayer",
     "verifyTitle": "Vérifier l'e-mail",
     "verifySubtitle": "Saisissez le code que nous avons envoyé à {{email}}.",
     "verificationCode": "Code de vérification",

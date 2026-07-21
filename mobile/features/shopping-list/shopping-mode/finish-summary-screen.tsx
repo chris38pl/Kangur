@@ -378,7 +378,7 @@ export function FinishSummaryScreen({
       }
       await queryClient.invalidateQueries({ queryKey: ["shopping-lists"] });
       await session.clearEnded();
-      router.replace("/(tabs)");
+      router.replace("/(tabs)" as never);
     },
   });
 
@@ -399,7 +399,7 @@ export function FinishSummaryScreen({
   };
 
   const goHome = () => {
-    router.replace("/(tabs)");
+    router.replace("/(tabs)" as never);
   };
 
   if (
