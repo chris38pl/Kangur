@@ -17,7 +17,7 @@ import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
-import { SymbolView } from "expo-symbols";
+import { FallbackSymbol } from "@/components/FallbackSymbol";
 
 import {
   formatNotificationTime,
@@ -138,21 +138,7 @@ export function NotificationCenterScreen() {
             justifyContent: "center",
           }}
         >
-          <SymbolView
-            name={{
-              ios: "gearshape",
-              android: "tune",
-              web: "tune",
-            }}
-            size={22}
-            tintColor={theme.text}
-            weight="medium"
-            fallback={
-              <Text style={{ fontSize: 20, color: theme.text, lineHeight: 22 }}>
-                ⚙
-              </Text>
-            }
-          />
+          <FallbackSymbol fallback="⚙" color={theme.text} size={20} />
         </Pressable>
       </View>
 

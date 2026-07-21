@@ -503,7 +503,7 @@ export function ProfileIconList({ color, size = 22 }: IconProps) {
   );
 }
 
-/** House — recognizable for spaces / workspaces. */
+/** House - recognizable for spaces / workspaces. */
 export function ProfileIconHome({ color, size = 22 }: IconProps) {
   const w = size * 0.72;
   const h = size * 0.58;
@@ -552,7 +552,7 @@ export function ProfileIconHome({ color, size = 22 }: IconProps) {
   );
 }
 
-/** Shopping bag — recognizable for products. */
+/** Shopping bag - recognizable for products. */
 export function ProfileIconBag({ color, size = 22 }: IconProps) {
   const w = size * 0.58;
   const h = size * 0.52;
@@ -748,6 +748,161 @@ export function ProfileIconLogout({ color, size = 20 }: IconProps) {
           />
         </View>
       </View>
+    </Box>
+  );
+}
+
+/** Chat bubble with simple face - contact support. */
+export function ProfileIconContact({ color, size = 22 }: IconProps) {
+  const w = size * 0.78;
+  const h = size * 0.62;
+  return (
+    <Box size={size}>
+      <View
+        style={{
+          width: w,
+          height: h,
+          borderRadius: size * 0.18,
+          borderWidth: STROKE,
+          borderColor: color,
+          alignItems: "center",
+          justifyContent: "center",
+          paddingBottom: 2,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            gap: size * 0.12,
+            marginBottom: 2,
+          }}
+        >
+          <View
+            style={{
+              width: 2.5,
+              height: 2.5,
+              borderRadius: 1.25,
+              backgroundColor: color,
+            }}
+          />
+          <View
+            style={{
+              width: 2.5,
+              height: 2.5,
+              borderRadius: 1.25,
+              backgroundColor: color,
+            }}
+          />
+        </View>
+        <View
+          style={{
+            width: size * 0.22,
+            height: size * 0.1,
+            borderBottomWidth: STROKE,
+            borderBottomColor: color,
+            borderBottomLeftRadius: size * 0.12,
+            borderBottomRightRadius: size * 0.12,
+          }}
+        />
+      </View>
+      <View
+        style={{
+          position: "absolute",
+          bottom: size * 0.08,
+          left: size * 0.18,
+          width: size * 0.18,
+          height: size * 0.14,
+          borderLeftWidth: STROKE,
+          borderBottomWidth: STROKE,
+          borderColor: color,
+          transform: [{ rotate: "-35deg" }],
+        }}
+      />
+    </Box>
+  );
+}
+
+/** Discord-like gamepad mark for community. */
+export function ProfileIconDiscord({ color, size = 22 }: IconProps) {
+  const w = size * 0.86;
+  const h = size * 0.62;
+  return (
+    <Box size={size}>
+      <View
+        style={{
+          width: w,
+          height: h,
+          borderRadius: size * 0.22,
+          borderWidth: STROKE,
+          borderColor: color,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <View style={{ flexDirection: "row", gap: size * 0.18 }}>
+          <View
+            style={{
+              width: size * 0.16,
+              height: size * 0.16,
+              borderRadius: size * 0.08,
+              backgroundColor: color,
+            }}
+          />
+          <View
+            style={{
+              width: size * 0.16,
+              height: size * 0.16,
+              borderRadius: size * 0.08,
+              backgroundColor: color,
+            }}
+          />
+        </View>
+      </View>
+    </Box>
+  );
+}
+
+/** Speech bubble with check - send feedback. */
+export function ProfileIconFeedback({ color, size = 22 }: IconProps) {
+  const w = size * 0.72;
+  const h = size * 0.58;
+  return (
+    <Box size={size}>
+      <View
+        style={{
+          width: w,
+          height: h,
+          borderRadius: 4,
+          borderWidth: STROKE,
+          borderColor: color,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <View
+          style={{
+            width: size * 0.22,
+            height: size * 0.12,
+            borderLeftWidth: STROKE,
+            borderBottomWidth: STROKE,
+            borderColor: color,
+            transform: [{ rotate: "-45deg" }, { translateY: -1 }],
+          }}
+        />
+      </View>
+      <View
+        style={{
+          position: "absolute",
+          bottom: size * 0.1,
+          left: size * 0.22,
+          width: size * 0.16,
+          height: size * 0.12,
+          borderLeftWidth: STROKE,
+          borderBottomWidth: STROKE,
+          borderColor: color,
+          transform: [{ rotate: "-40deg" }],
+        }}
+      />
     </Box>
   );
 }

@@ -1,4 +1,4 @@
-/** Canonical metric names — shared between mobile and backend. */
+/** Canonical metric names - shared between mobile and backend. */
 
 export const MetricNames = {
   // Realtime (client)

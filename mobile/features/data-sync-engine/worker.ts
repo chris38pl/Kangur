@@ -8,7 +8,7 @@ export type SyncTransport = {
 };
 
 /**
- * Single worker — no concurrent flushes. Transport-agnostic.
+ * Single worker - no concurrent flushes. Transport-agnostic.
  */
 export class SyncWorker {
   private running = false;

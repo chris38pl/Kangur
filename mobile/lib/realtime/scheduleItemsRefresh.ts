@@ -52,7 +52,7 @@ function runInvalidate(queryClient: QueryClient, listId: string) {
 
 /**
  * Request a canonical items refresh (debounce + defer while local sync pending).
- * Never driven by toast — only by event detection / explicit callers.
+ * Never driven by toast - only by event detection / explicit callers.
  */
 export function scheduleItemsRefresh(
   queryClient: QueryClient,

@@ -18,6 +18,7 @@ export function toShoppingListDto(
     emoji: list.emoji,
     status: list.status,
     isUntitled: list.isUntitled,
+    preferredForAi: list.preferredForAi,
     itemCount: list.itemCount ?? 0,
     itemNames: list.itemNames ?? [],
     previewItems: list.previewItems ?? [],

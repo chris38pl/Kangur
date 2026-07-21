@@ -32,7 +32,7 @@ type Props = {
   index: number;
 };
 
-/** Short intentional swipe — absolute px, independent of row width. */
+/** Short intentional swipe - absolute px, independent of row width. */
 const COMMIT_DISTANCE = 56;
 const COMMIT_DISTANCE_SLOW = 72;
 const COMMIT_VELOCITY = 600;

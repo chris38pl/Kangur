@@ -1,8 +1,8 @@
 import { ActivityIndicator, Image, Modal, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SymbolView } from "expo-symbols";
 import { useTranslation } from "react-i18next";
 
+import { FallbackSymbol } from "@/components/FallbackSymbol";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
 import {
@@ -22,41 +22,25 @@ type Props = {
   visible: boolean;
   listName: string;
   mode: ActionsMode;
+  preferredForAi?: boolean;
   busy?: boolean;
   onClose: () => void;
   onPreview: () => void;
   onShop: () => void;
   onRepeat: () => void;
   onRestore: () => void;
+  onTogglePreferred: () => void;
   onDelete: () => void;
 };
 
-type SymbolName = {
-  ios: string;
-  android: string;
-  web: string;
-};
-
 function ActionIcon({
-  name,
   color,
   fallback,
 }: {
-  name: SymbolName;
   color: string;
   fallback: string;
 }) {
-  return (
-    <SymbolView
-      name={name}
-      size={18}
-      tintColor={color}
-      weight="semibold"
-      fallback={
-        <Text style={{ fontSize: 15, lineHeight: 18, color }}>{fallback}</Text>
-      }
-    />
-  );
+  return <FallbackSymbol fallback={fallback} color={color} size={15} />;
 }
 
 function ActionRow({
@@ -65,8 +49,8 @@ function ActionRow({
   onPress,
   disabled,
   tone,
-  symbol,
   fallback,
+  iconColor,
   showDivider = true,
 }: {
   label: string;
@@ -74,8 +58,8 @@ function ActionRow({
   onPress: () => void;
   disabled?: boolean;
   tone: ActionTone;
-  symbol: SymbolName;
   fallback: string;
+  iconColor?: string;
   showDivider?: boolean;
 }) {
   const scheme = useColorScheme() ?? "light";
@@ -105,6 +89,7 @@ function ActionRow({
   };
 
   const colorsForTone = toneStyle[tone];
+  const resolvedIcon = iconColor ?? colorsForTone.icon;
 
   return (
     <Pressable
@@ -133,11 +118,7 @@ function ActionRow({
           flexShrink: 0,
         }}
       >
-        <ActionIcon
-          name={symbol}
-          color={colorsForTone.icon}
-          fallback={fallback}
-        />
+        <ActionIcon color={resolvedIcon} fallback={fallback} />
       </View>
 
       <View style={{ flex: 1, minWidth: 0 }}>
@@ -167,18 +148,20 @@ function ActionRow({
 }
 
 /**
- * List overflow — Preview / Shop / Repeat / Restore / Delete.
+ * List overflow - Preview / Shop / Repeat / Restore / Delete.
  */
 export function HistoryActionsSheet({
   visible,
   listName,
   mode,
+  preferredForAi = false,
   busy = false,
   onClose,
   onPreview,
   onShop,
   onRepeat,
   onRestore,
+  onTogglePreferred,
   onDelete,
 }: Props) {
   const { t } = useTranslation();
@@ -301,12 +284,19 @@ export function HistoryActionsSheet({
                 subtitle={t("history.previewHint")}
                 onPress={onPreview}
                 tone="neutral"
-                symbol={{
-                  ios: "eye",
-                  android: "visibility",
-                  web: "visibility",
-                }}
                 fallback="◉"
+              />
+              <ActionRow
+                label={
+                  preferredForAi
+                    ? t("history.removeFromAi")
+                    : t("history.useForAi")
+                }
+                subtitle={t("history.useForAiHint")}
+                onPress={onTogglePreferred}
+                tone="neutral"
+                iconColor={preferredForAi ? brand.starActive : undefined}
+                fallback={preferredForAi ? "★" : "☆"}
               />
               {mode === "shopping" ? (
                 <ActionRow
@@ -314,11 +304,6 @@ export function HistoryActionsSheet({
                   subtitle={t("history.continueShoppingHint")}
                   onPress={onShop}
                   tone="primary"
-                  symbol={{
-                    ios: "cart.fill",
-                    android: "shopping_cart",
-                    web: "shopping_cart",
-                  }}
                   fallback="🛒"
                 />
               ) : null}
@@ -328,11 +313,6 @@ export function HistoryActionsSheet({
                   subtitle={t("history.startShoppingHint")}
                   onPress={onShop}
                   tone="primary"
-                  symbol={{
-                    ios: "cart.badge.plus",
-                    android: "add_shopping_cart",
-                    web: "add_shopping_cart",
-                  }}
                   fallback="🛒"
                 />
               ) : null}
@@ -343,11 +323,6 @@ export function HistoryActionsSheet({
                     subtitle={t("history.repeatHint")}
                     onPress={onRepeat}
                     tone="primary"
-                    symbol={{
-                      ios: "arrow.triangle.2.circlepath",
-                      android: "autorenew",
-                      web: "autorenew",
-                    }}
                     fallback="↻"
                   />
                   <ActionRow
@@ -355,11 +330,6 @@ export function HistoryActionsSheet({
                     subtitle={t("history.restoreHint")}
                     onPress={onRestore}
                     tone="restore"
-                    symbol={{
-                      ios: "arrow.uturn.backward",
-                      android: "undo",
-                      web: "undo",
-                    }}
                     fallback="↩"
                   />
                 </>
@@ -369,11 +339,6 @@ export function HistoryActionsSheet({
                 subtitle={t("history.deleteHint")}
                 onPress={onDelete}
                 tone="danger"
-                symbol={{
-                  ios: "trash",
-                  android: "delete",
-                  web: "delete",
-                }}
                 fallback="⌫"
                 showDivider={false}
               />

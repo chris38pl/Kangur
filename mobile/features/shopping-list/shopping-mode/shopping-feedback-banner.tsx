@@ -8,18 +8,17 @@ import { OfflineStatusBanner } from "@/features/offline/OfflineStatusBanner";
 import { useOfflineSyncStatus } from "@/features/offline/useOfflineSyncStatus";
 import { brand, colors, radius, spacing } from "@/design-system/tokens";
 
-export type ShoppingUndoFeedback = {
+export type ShoppingActionFeedback = {
   name: string;
   kind: "bought" | "unavailable";
 };
 
 type Props = {
   listId: string;
-  undo: ShoppingUndoFeedback | null;
-  onUndo: () => void;
+  feedback: ShoppingActionFeedback | null;
   /**
-   * overlay — absolute bottom (during shopping, no CTA footer).
-   * docked — in-flow under CTAs; parent keeps a fixed-height slot so CTAs do not jump.
+   * overlay - absolute bottom (during shopping, no CTA footer).
+   * docked - in-flow under CTAs; parent keeps a fixed-height slot so CTAs do not jump.
    */
   layout?: "overlay" | "docked";
 };
@@ -28,12 +27,11 @@ type Props = {
 export const SHOPPING_FEEDBACK_BANNER_HEIGHT = 40;
 
 /**
- * Bottom shopping feedback: action + Undo with sync line underneath.
+ * Bottom shopping feedback: last action confirmation + sync line.
  */
 export function ShoppingFeedbackBanner({
   listId,
-  undo,
-  onUndo,
+  feedback,
   layout = "overlay",
 }: Props) {
   const { t } = useTranslation();
@@ -42,15 +40,13 @@ export function ShoppingFeedbackBanner({
   const insets = useSafeAreaInsets();
   const sync = useOfflineSyncStatus(listId);
   const docked = layout === "docked";
-  const bottomPad = docked ? spacing[1] + insets.bottom : spacing[1] + insets.bottom;
+  const bottomPad = spacing[1] + insets.bottom;
 
   const barBody = (opts: {
-    barBg: string;
     iconBg: string;
     title: string;
     syncLine: string;
     isBought: boolean;
-    showUndo: boolean;
   }) => (
     <View
       style={{
@@ -116,32 +112,12 @@ export function ShoppingFeedbackBanner({
           </Text>
         </Pressable>
       </View>
-
-      {opts.showUndo ? (
-        <Pressable
-          onPress={onUndo}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel={t("shoppingMode.undo")}
-        >
-          <Text
-            style={{
-              fontSize: 13,
-              lineHeight: 16,
-              fontWeight: "600",
-              color: opts.isBought ? brand.primary : brand.unavailable,
-            }}
-          >
-            {t("shoppingMode.undo")}
-          </Text>
-        </Pressable>
-      ) : null}
     </View>
   );
 
-  if (!undo) {
+  if (!feedback) {
     if (docked) {
-      // Fixed-height slot under CTAs — keep layout stable even when idle.
+      // Fixed-height slot under CTAs - keep layout stable even when idle.
       if (!sync.visible) {
         return (
           <View
@@ -198,24 +174,22 @@ export function ShoppingFeedbackBanner({
     );
   }
 
-  const isBought = undo.kind === "bought";
+  const isBought = feedback.kind === "bought";
   const title = t(
     isBought
       ? "shoppingMode.undoBought"
       : "shoppingMode.undoUnavailable",
-    { name: undo.name },
+    { name: feedback.name },
   );
   const syncLine = sync.visible ? sync.message : t("offline.allSaved");
   const barBg = isBought ? brand.accent : "#FEF3C7";
   const iconBg = isBought ? brand.primary : brand.unavailable;
 
   const content = barBody({
-    barBg,
     iconBg,
     title,
     syncLine,
     isBought,
-    showUndo: true,
   });
 
   if (docked) {
@@ -256,3 +230,6 @@ export function ShoppingFeedbackBanner({
     </View>
   );
 }
+
+/** @deprecated Use ShoppingActionFeedback */
+export type ShoppingUndoFeedback = ShoppingActionFeedback;

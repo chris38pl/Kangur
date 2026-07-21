@@ -42,7 +42,7 @@ function iconForRoute(name: string, color: string, focused: boolean) {
 }
 
 /**
- * Kangur bottom bar — four tabs with a docked center FAB (create list).
+ * Kangur bottom bar - four tabs with a docked center FAB (create list).
  * Layout: Home | Spaces | [+] | Lists | Profile
  */
 export function KangurTabBar({

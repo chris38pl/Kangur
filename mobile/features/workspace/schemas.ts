@@ -8,6 +8,10 @@ export const WorkspaceSchema = z.object({
   isOwner: z.boolean(),
   memberCount: z.number().int().nonnegative(),
   plan: z.enum(["free", "premium"]),
+  billingStatus: z
+    .enum(["none", "active", "trialing", "past_due", "cancelled", "expired"])
+    .default("none"),
+  currentPeriodEnd: z.string().nullable().optional().default(null),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

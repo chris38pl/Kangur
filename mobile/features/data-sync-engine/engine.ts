@@ -27,7 +27,7 @@ export type EnqueueInput = {
 };
 
 /**
- * Data Sync Engine façade — Queue + Worker + Persistence + Connectivity.
+ * Data Sync Engine façade - Queue + Worker + Persistence + Connectivity.
  * Events are informational only; do not build business logic on event order.
  */
 class DataSyncEngineImpl {
@@ -76,7 +76,7 @@ class DataSyncEngineImpl {
 
   /**
    * Legacy shopping-mode used `local_…` ids. API clientId must be UUID;
-   * server item ids are cuids — only drop ops still targeting local_* ids.
+   * server item ids are cuids - only drop ops still targeting local_* ids.
    */
   private async repairInvalidClientIds(): Promise<void> {
     const all = await this.queue.getAll();

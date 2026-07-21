@@ -15,7 +15,7 @@ const CURSOR_PREFIX = "realtime:cursor:";
  * - Realtime polling cursors
  * - Any other `kangur.*` / `realtime:*` keys found
  *
- * Missing keys are OK (no throw). Clerk token cache is cleared via `signOut()` —
+ * Missing keys are OK (no throw). Clerk token cache is cleared via `signOut()` -
  * call this helper before `signOut()`, not instead of it.
  */
 export async function clearLocalUserData(
@@ -37,6 +37,6 @@ export async function clearLocalUserData(
       await AsyncStorage.multiRemove(toRemove);
     }
   } catch {
-    // Idempotent best-effort — never block sign-out path on storage errors.
+    // Idempotent best-effort - never block sign-out path on storage errors.
   }
 }

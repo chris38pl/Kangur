@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { authorize } from "@/lib/authorize";
 
+import { getWorkspaceEntitlement } from "@/lib/premium";
+
 import {
   FREE_HISTORY_LIMIT,
   PREMIUM_HISTORY_CAP,
-  isPremiumWorkspace,
 } from "./historyAccess";
 import { toHistoryListDto } from "./toHistoryListDto";
 import { PREVIEW_TAKE } from "./toShoppingListDto";
@@ -16,8 +17,10 @@ export async function listHistoryLists(
 ): Promise<HistoryListDTO[]> {
   await authorize(workspaceId, userId);
 
-  const premium = await isPremiumWorkspace(workspaceId);
-  const take = premium ? PREMIUM_HISTORY_CAP : FREE_HISTORY_LIMIT;
+  const entitlement = await getWorkspaceEntitlement(workspaceId);
+  const take = entitlement.isPremium
+    ? PREMIUM_HISTORY_CAP
+    : FREE_HISTORY_LIMIT;
 
   const lists = await prisma.shoppingList.findMany({
     where: {

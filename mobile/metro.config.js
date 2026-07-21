@@ -4,10 +4,18 @@ const { withNativeWind } = require("nativewind/metro");
 
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, "..");
+const sharedRoot = path.resolve(workspaceRoot, "shared");
 
 const config = getDefaultConfig(projectRoot);
 
-config.watchFolders = [workspaceRoot];
+// Watch only shared/ — watching the whole monorepo pulls backend/node_modules
+// (second React copy) and breaks Clerk context (“useAuth outside ClerkProvider”).
+config.watchFolders = [sharedRoot];
+
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, "node_modules"),
+];
+config.resolver.disableHierarchicalLookup = true;
 
 const upstreamResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
@@ -15,7 +23,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     const rel = moduleName.slice("@shared/".length);
     return {
       type: "sourceFile",
-      filePath: path.resolve(workspaceRoot, "shared", `${rel}.ts`),
+      filePath: path.resolve(sharedRoot, `${rel}.ts`),
     };
   }
   if (upstreamResolveRequest) {

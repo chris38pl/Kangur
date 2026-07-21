@@ -14,7 +14,7 @@ export interface PushProvider {
   send(input: PushMessage): Promise<void>;
 }
 
-/** Expo Push API — swappable later. */
+/** Expo Push API - swappable later. */
 export class ExpoPushProvider implements PushProvider {
   async send(input: PushMessage): Promise<void> {
     if (input.tokens.length === 0) return;

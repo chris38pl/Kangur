@@ -25,7 +25,7 @@ function percentile(sorted: number[], p: number): number | null {
 
 /**
  * Process-local metrics for Platform Console / ops snapshots.
- * Zero network I/O — safe as a prod companion to Noop.
+ * Zero network I/O - safe as a prod companion to Noop.
  */
 export function createInMemoryMetrics(): Metrics & {
   snapshot: () => {

@@ -14,6 +14,8 @@
     "typecheck": "tsc --noEmit",
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "test:locales": "tsx scripts/check-locales.ts",
+    "eval:ai": "tsx evals/runner/cli.ts",
+    "eval:prune-reports": "tsx evals/runner/cli.ts --prune-only",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy"
@@ -27,6 +29,8 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.17.2",
+    "stripe": "^22.3.2",
+    "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

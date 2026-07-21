@@ -5,7 +5,7 @@ import {
   type AppLocale,
 } from "@/lib/locale";
 
-/** AI may support a subset of AppLocale in the future — keep types separate. */
+/** AI may support a subset of AppLocale in the future - keep types separate. */
 export type AiOutputLanguage =
   | "pl"
   | "en"
@@ -53,8 +53,8 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
     systemInstruction: [
       "OUTPUT LANGUAGE (mandatory, non-negotiable): Polish (pl-PL).",
       "Every `name`, `note`, `reason`, and `shoppingContext.title` MUST be written in Polish.",
-      "Use Polish canonical product names: Mleko, Ser, Chleb, Jabłka, Kawa, Jogurt, Masło, Jajka — NEVER English Milk/Cheese/Bread/Apples/Coffee.",
-      "If the source text/image is Polish, KEEP Polish — do not translate to English.",
+      "Use Polish canonical product names: Mleko, Ser, Chleb, Jabłka, Kawa, Jogurt, Masło, Jajka - NEVER English Milk/Cheese/Bread/Apples/Coffee.",
+      "If the source text/image is Polish, KEEP Polish - do not translate to English.",
       "If the source is English (or mixed), TRANSLATE product names into Polish.",
       "Amount: keep digits; use Polish unit wording when present (np. \"2 szt.\", \"500 g\", \"1 l\").",
       "List title fallback when no clear theme: \"Zakupy\".",
@@ -86,8 +86,8 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
     systemInstruction: [
       "OUTPUT LANGUAGE (mandatory, non-negotiable): German (de-DE).",
       "Every `name`, `note`, `reason`, and `shoppingContext.title` MUST be written in German.",
-      "Use German canonical product names: Milch, Käse, Brot, Äpfel, Kaffee, Joghurt, Butter, Eier — NEVER English Milk/Cheese/Bread.",
-      "If the source text/image is German, KEEP German — do not translate to English.",
+      "Use German canonical product names: Milch, Käse, Brot, Äpfel, Kaffee, Joghurt, Butter, Eier - NEVER English Milk/Cheese/Bread.",
+      "If the source text/image is German, KEEP German - do not translate to English.",
       "If the source is another language, TRANSLATE product names into German.",
       "Amount: keep digits; use German unit wording when present (z. B. \"2 Stk.\", \"500 g\", \"1 l\").",
       "List title fallback when no clear theme: \"Einkauf\".",
@@ -107,8 +107,8 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
     systemInstruction: [
       "OUTPUT LANGUAGE (mandatory, non-negotiable): Russian (ru-RU).",
       "Every `name`, `note`, `reason`, and `shoppingContext.title` MUST be written in Russian.",
-      "Use Russian canonical product names: Молоко, Сыр, Хлеб, Яблоки, Кофе, Йогурт, Масло, Яйца — NEVER English Milk/Cheese/Bread.",
-      "If the source text/image is Russian, KEEP Russian — do not translate to English.",
+      "Use Russian canonical product names: Молоко, Сыр, Хлеб, Яблоки, Кофе, Йогурт, Масло, Яйца - NEVER English Milk/Cheese/Bread.",
+      "If the source text/image is Russian, KEEP Russian - do not translate to English.",
       "If the source is another language, TRANSLATE product names into Russian.",
       "Amount: keep digits; use Russian unit wording when present (напр. \"2 шт.\", \"500 г\", \"1 л\").",
       "List title fallback when no clear theme: \"Покупки\".",
@@ -128,8 +128,8 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
     systemInstruction: [
       "OUTPUT LANGUAGE (mandatory, non-negotiable): Ukrainian (uk-UA).",
       "Every `name`, `note`, `reason`, and `shoppingContext.title` MUST be written in Ukrainian.",
-      "Use Ukrainian canonical product names: Молоко, Сир, Хліб, Яблука, Кава, Йогурт, Масло, Яйця — NEVER English or Russian equivalents when the output language is Ukrainian.",
-      "If the source text/image is Ukrainian, KEEP Ukrainian — do not translate to Russian or English.",
+      "Use Ukrainian canonical product names: Молоко, Сир, Хліб, Яблука, Кава, Йогурт, Масло, Яйця - NEVER English or Russian equivalents when the output language is Ukrainian.",
+      "If the source text/image is Ukrainian, KEEP Ukrainian - do not translate to Russian or English.",
       "If the source is another language, TRANSLATE product names into Ukrainian.",
       "Amount: keep digits; use Ukrainian unit wording when present (напр. \"2 шт.\", \"500 г\", \"1 л\").",
       "List title fallback when no clear theme: \"Покупки\".",
@@ -149,8 +149,8 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
     systemInstruction: [
       "OUTPUT LANGUAGE (mandatory, non-negotiable): French (fr-FR).",
       "Every `name`, `note`, `reason`, and `shoppingContext.title` MUST be written in French.",
-      "Use French canonical product names: Lait, Fromage, Pain, Pommes, Café, Yaourt, Beurre, Œufs — NEVER English Milk/Cheese/Bread.",
-      "If the source text/image is French, KEEP French — do not translate to English.",
+      "Use French canonical product names: Lait, Fromage, Pain, Pommes, Café, Yaourt, Beurre, Œufs - NEVER English Milk/Cheese/Bread.",
+      "If the source text/image is French, KEEP French - do not translate to English.",
       "If the source is another language, TRANSLATE product names into French.",
       "Amount: keep digits; use French unit wording when present (p. ex. \"2 pcs\", \"500 g\", \"1 l\").",
       "List title fallback when no clear theme: \"Courses\".",
@@ -170,8 +170,8 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
     systemInstruction: [
       "OUTPUT LANGUAGE (mandatory, non-negotiable): Spanish (es-ES).",
       "Every `name`, `note`, `reason`, and `shoppingContext.title` MUST be written in Spanish.",
-      "Use Spanish canonical product names: Leche, Queso, Pan, Manzanas, Café, Yogur, Mantequilla, Huevos — NEVER English Milk/Cheese/Bread.",
-      "If the source text/image is Spanish, KEEP Spanish — do not translate to English.",
+      "Use Spanish canonical product names: Leche, Queso, Pan, Manzanas, Café, Yogur, Mantequilla, Huevos - NEVER English Milk/Cheese/Bread.",
+      "If the source text/image is Spanish, KEEP Spanish - do not translate to English.",
       "If the source is another language, TRANSLATE product names into Spanish.",
       "Amount: keep digits; use Spanish unit wording when present (p. ej. \"2 uds.\", \"500 g\", \"1 l\").",
       "List title fallback when no clear theme: \"Compra\".",
@@ -191,8 +191,8 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
     systemInstruction: [
       "OUTPUT LANGUAGE (mandatory, non-negotiable): Italian (it-IT).",
       "Every `name`, `note`, `reason`, and `shoppingContext.title` MUST be written in Italian.",
-      "Use Italian canonical product names: Latte, Formaggio, Pane, Mele, Caffè, Yogurt, Burro, Uova — NEVER English Milk/Cheese/Bread.",
-      "If the source text/image is Italian, KEEP Italian — do not translate to English.",
+      "Use Italian canonical product names: Latte, Formaggio, Pane, Mele, Caffè, Yogurt, Burro, Uova - NEVER English Milk/Cheese/Bread.",
+      "If the source text/image is Italian, KEEP Italian - do not translate to English.",
       "If the source is another language, TRANSLATE product names into Italian.",
       "Amount: keep digits; use Italian unit wording when present (es. \"2 pz\", \"500 g\", \"1 l\").",
       "List title fallback when no clear theme: \"Spesa\".",
@@ -212,8 +212,8 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
     systemInstruction: [
       "OUTPUT LANGUAGE (mandatory, non-negotiable): Czech (cs-CZ).",
       "Every `name`, `note`, `reason`, and `shoppingContext.title` MUST be written in Czech.",
-      "Use Czech canonical product names: Mléko, Sýr, Chléb, Jablka, Káva, Jogurt, Máslo, Vejce — NEVER English Milk/Cheese/Bread.",
-      "If the source text/image is Czech, KEEP Czech — do not translate to English or Polish.",
+      "Use Czech canonical product names: Mléko, Sýr, Chléb, Jablka, Káva, Jogurt, Máslo, Vejce - NEVER English Milk/Cheese/Bread.",
+      "If the source text/image is Czech, KEEP Czech - do not translate to English or Polish.",
       "If the source is another language, TRANSLATE product names into Czech.",
       "Amount: keep digits; use Czech unit wording when present (např. \"2 ks\", \"500 g\", \"1 l\").",
       "List title fallback when no clear theme: \"Nákup\".",
@@ -233,8 +233,8 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
     systemInstruction: [
       "OUTPUT LANGUAGE (mandatory, non-negotiable): Belarusian (be-BY).",
       "Every `name`, `note`, `reason`, and `shoppingContext.title` MUST be written in Belarusian.",
-      "Use Belarusian canonical product names: Малако, Сыр, Хлеб, Яблыкі, Кава, Ягурт, Масла, Яйкі — NEVER Russian or English when output is Belarusian (use і/ў orthography).",
-      "If the source text/image is Belarusian, KEEP Belarusian — do not translate to Russian or English.",
+      "Use Belarusian canonical product names: Малако, Сыр, Хлеб, Яблыкі, Кава, Ягурт, Масла, Яйкі - NEVER Russian or English when output is Belarusian (use і/ў orthography).",
+      "If the source text/image is Belarusian, KEEP Belarusian - do not translate to Russian or English.",
       "If the source is another language, TRANSLATE product names into Belarusian.",
       "Amount: keep digits; use Belarusian unit wording when present (напр. \"2 шт.\", \"500 г\", \"1 л\").",
       "List title fallback when no clear theme: \"Пакупкі\".",
@@ -318,6 +318,30 @@ export function looksItalian(text: string): boolean {
   return /\b(latte|pane|uova|formaggio|burro|spesa|lista\s+della\s+spesa|mele|yogurt|comprare|caffè|caffe)\b/i.test(
     text,
   );
+}
+
+export async function resolveWorkspaceOutputLanguage(
+  workspaceId: string,
+): Promise<AiOutputLanguage> {
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: workspaceId },
+    select: {
+      settings: { select: { language: true } },
+      members: {
+        where: { role: "owner" },
+        take: 1,
+        select: { user: { select: { locale: true } } },
+      },
+    },
+  });
+
+  const settingsLang = workspace?.settings?.language;
+  if (isAppLocale(settingsLang)) {
+    return mapToAiLanguage(settingsLang);
+  }
+
+  const ownerLocale = workspace?.members[0]?.user.locale;
+  return mapToAiLanguage(resolveAppLocale(ownerLocale));
 }
 
 export async function resolveListOutputLanguage(

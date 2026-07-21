@@ -2,7 +2,7 @@ const DEFAULT_CAP = 30;
 
 /**
  * In-memory rolling buffers for Platform Console KPI sparklines.
- * Client-only presentation history — not persisted, not fabricated.
+ * Client-only presentation history - not persisted, not fabricated.
  */
 export type MetricHistoryKey =
   | "activeSessions"

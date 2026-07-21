@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 
 /**
- * Home tab stack — keeps Bottom Tabs visible while pushing Menu (and future home-level screens).
+ * Home tab stack - keeps Bottom Tabs visible while pushing Menu (and future home-level screens).
  */
 export default function HomeStackLayout() {
   return (

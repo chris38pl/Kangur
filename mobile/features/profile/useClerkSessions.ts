@@ -62,7 +62,7 @@ export function clerkSessionsQueryKey(userId: string | null | undefined) {
 
 /**
  * Clerk auth sessions for Privacy screen.
- * No Prisma — identity-provider data only.
+ * No Prisma - identity-provider data only.
  */
 export function useClerkSessions() {
   const { user, isLoaded } = useUser();

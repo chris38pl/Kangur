@@ -1,0 +1,256 @@
+id: weekly-big-plus-topups
+scenarioVersion: 1
+name: Big weekly list + tiny top-ups
+description: "Core UX: Saturday ~35 items then Mon–Fri 1-item top-ups → proposal
+  near the big list size"
+adapter: shopping-history
+input:
+  locale: pl
+  lists:
+    - name: Sobota - duże zakupy
+      updatedAt: 2026-07-12T10:00:00.000Z
+      items:
+        - name: Mleko
+          category: dairy
+          amount: null
+          note: null
+        - name: Chleb
+          category: bakery
+          amount: null
+          note: null
+        - name: Jajka
+          category: dairy
+          amount: null
+          note: null
+        - name: Masło
+          category: dairy
+          amount: null
+          note: null
+        - name: Jogurt naturalny
+          category: dairy
+          amount: null
+          note: null
+        - name: Ser żółty
+          category: dairy
+          amount: null
+          note: null
+        - name: Szynka
+          category: meat
+          amount: null
+          note: null
+        - name: Kurczak
+          category: meat
+          amount: null
+          note: null
+        - name: Pomidory
+          category: vegetables
+          amount: null
+          note: null
+        - name: Ogórki
+          category: vegetables
+          amount: null
+          note: null
+        - name: Sałata
+          category: vegetables
+          amount: null
+          note: null
+        - name: Papryka
+          category: vegetables
+          amount: null
+          note: null
+        - name: Cebula
+          category: vegetables
+          amount: null
+          note: null
+        - name: Ziemniaki
+          category: vegetables
+          amount: null
+          note: null
+        - name: Banany
+          category: fruit
+          amount: null
+          note: null
+        - name: Jabłka
+          category: fruit
+          amount: null
+          note: null
+        - name: Cytryny
+          category: fruit
+          amount: null
+          note: null
+        - name: Woda
+          category: drinks
+          amount: null
+          note: null
+        - name: Sok pomarańczowy
+          category: drinks
+          amount: null
+          note: null
+        - name: Kawa
+          category: drinks
+          amount: null
+          note: null
+        - name: Herbata
+          category: drinks
+          amount: null
+          note: null
+        - name: Ryż
+          category: other
+          amount: null
+          note: null
+        - name: Makaron
+          category: other
+          amount: null
+          note: null
+        - name: Oliwa
+          category: other
+          amount: null
+          note: null
+        - name: Ketchup
+          category: other
+          amount: null
+          note: null
+        - name: Majonez
+          category: other
+          amount: null
+          note: null
+        - name: Płatki owsiane
+          category: bakery
+          amount: null
+          note: null
+        - name: Mąka
+          category: bakery
+          amount: null
+          note: null
+        - name: Cukier
+          category: other
+          amount: null
+          note: null
+        - name: Sól
+          category: other
+          amount: null
+          note: null
+        - name: Pieprz
+          category: other
+          amount: null
+          note: null
+        - name: Papier toaletowy
+          category: household
+          amount: null
+          note: null
+        - name: Płyn do naczyń
+          category: cleaning
+          amount: null
+          note: null
+        - name: Mozzarella
+          category: dairy
+          amount: null
+          note: null
+        - name: Kabanosy
+          category: meat
+          amount: null
+          note: null
+    - name: Poniedziałek
+      updatedAt: 2026-07-14T10:00:00.000Z
+      items:
+        - name: Mleko
+          category: dairy
+          amount: null
+          note: null
+    - name: Wtorek
+      updatedAt: 2026-07-15T10:00:00.000Z
+      items:
+        - name: Banany
+          category: fruit
+          amount: null
+          note: null
+    - name: Środa
+      updatedAt: 2026-07-16T10:00:00.000Z
+      items:
+        - name: Ser żółty
+          category: dairy
+          amount: null
+          note: null
+    - name: Piątek
+      updatedAt: 2026-07-18T10:00:00.000Z
+      items:
+        - name: Papryka
+          category: vegetables
+          amount: null
+          note: null
+baseline:
+  items:
+    - Mleko
+    - Chleb
+    - Jajka
+    - Masło
+    - Jogurt naturalny
+    - Ser żółty
+    - Szynka
+    - Kurczak
+    - Pomidory
+    - Ogórki
+    - Sałata
+    - Papryka
+    - Cebula
+    - Ziemniaki
+    - Banany
+    - Jabłka
+    - Cytryny
+    - Woda
+    - Sok pomarańczowy
+    - Kawa
+    - Herbata
+    - Ryż
+    - Makaron
+    - Oliwa
+    - Ketchup
+    - Majonez
+    - Płatki owsiane
+    - Mąka
+    - Cukier
+    - Sól
+    - Pieprz
+    - Papier toaletowy
+    - Płyn do naczyń
+    - Mozzarella
+    - Kabanosy
+expectations:
+  mustIncludeAny:
+    - Mleko
+    - Chleb
+    - Jajka
+    - Pomidory
+    - Płatki owsiane
+    - Mozzarella
+    - Kabanosy
+  minItems: 25
+  nonEmpty: true
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H004
+    type: no_hallucination
+  - id: H005
+    type: language
+    locale: pl
+  - id: H006
+    type: product_cap
+    max: 40
+softRules:
+  - id: S002
+    type: golden_similarity
+    minRecall: 0.65
+  - id: S003
+    type: reason_honesty
+infoRules:
+  - id: I001
+    type: merge_count
+  - id: I002
+    type: avg_note_length
+  - id: I003
+    type: avg_reason_length
+  - id: I004
+    type: item_count

@@ -1,0 +1,92 @@
+id: no-merge-milk-variants
+scenarioVersion: 1
+name: Do not merge milk 2% vs 3.2%
+adapter: shopping-history
+input:
+  locale: pl
+  lists:
+    - name: A
+      updatedAt: 2026-07-10T10:00:00.000Z
+      items:
+        - name: Mleko 2%
+          category: dairy
+          amount: null
+          note: null
+        - name: Chleb
+          category: bakery
+          amount: null
+          note: null
+    - name: B
+      updatedAt: 2026-07-12T10:00:00.000Z
+      items:
+        - name: Mleko 3,2%
+          category: dairy
+          amount: null
+          note: null
+        - name: Jajka
+          category: dairy
+          amount: null
+          note: null
+    - name: C
+      updatedAt: 2026-07-14T10:00:00.000Z
+      items:
+        - name: Mleko 2%
+          category: dairy
+          amount: null
+          note: null
+        - name: Masło
+          category: dairy
+          amount: null
+          note: null
+    - name: D
+      updatedAt: 2026-07-16T10:00:00.000Z
+      items:
+        - name: Mleko 3,2%
+          category: dairy
+          amount: null
+          note: null
+        - name: Woda
+          category: drinks
+          amount: null
+          note: null
+    - name: E
+      updatedAt: 2026-07-18T10:00:00.000Z
+      items:
+        - name: Chleb
+          category: bakery
+          amount: null
+          note: null
+        - name: Jajka
+          category: dairy
+          amount: null
+          note: null
+expectations:
+  nonEmpty: true
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H004
+    type: no_hallucination
+  - id: H005
+    type: language
+    locale: pl
+  - id: H006
+    type: product_cap
+    max: 40
+  - id: H007
+    type: must_not_merge
+    pairs:
+      - a: Mleko 2%
+        b: Mleko 3,2%
+softRules: []
+infoRules:
+  - id: I001
+    type: merge_count
+  - id: I002
+    type: avg_note_length
+  - id: I003
+    type: avg_reason_length
+  - id: I004
+    type: item_count

@@ -8,9 +8,13 @@ import {
 import { ApiErrorSchema, MeResponseSchema } from "@/features/auth/schemas";
 import { PlatformOverviewResponseSchema, PlatformRealtimeResponseSchema } from "@/features/platform/schemas";
 import {
+  AbandonSuggestFromHistoryBodySchema,
   AiIngestResponseSchema,
   ApplyAiProposalBodySchema,
   ApplyAiProposalResponseSchema,
+  ApplySuggestFromHistoryBodySchema,
+  ApplySuggestFromHistoryResponseSchema,
+  SuggestFromHistoryResponseSchema,
 } from "@/features/ai/schemas";
 import {
   CreateShoppingListBodySchema,
@@ -26,7 +30,7 @@ import {
   ShoppingItemListResponseSchema,
   UpdateShoppingItemBodySchema,
 } from "@/features/shopping-item/schemas";
-import { AiCreditsBalanceSchema } from "@/features/billing/schemas";
+import { AiCreditsBalanceSchema, BillingCheckoutResponseSchema, BillingPortalResponseSchema, BillingSyncResponseSchema, BillingWebhookAckSchema, PremiumPriceSchema } from "@/features/billing/schemas";
 import {
   AcceptInvitationBodySchema,
   AcceptInvitationResponseSchema,
@@ -832,7 +836,7 @@ registry.registerPath({
   method: "post",
   path: "/api/v1/lists/{listId}/sessions/{sessionId}/notify-finished",
   summary:
-    "Notify workspace that shopping finished (no archive — used on summary screen)",
+    "Notify workspace that shopping finished (no archive - used on summary screen)",
   tags: ["Shopping Sessions"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -1504,6 +1508,163 @@ registry.registerPath({
 
 registry.registerPath({
   method: "post",
+  path: "/api/v1/workspaces/{workspaceId}/billing/checkout",
+  summary: "Create a Stripe Checkout session for Premium (30-day trial)",
+  tags: ["Billing"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Checkout URL",
+      content: {
+        "application/json": {
+          schema: BillingCheckoutResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Member cannot manage billing",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    409: {
+      description: "Already Premium",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/workspaces/{workspaceId}/billing/portal",
+  summary: "Create a Stripe Customer Portal session",
+  tags: ["Billing"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Portal URL",
+      content: {
+        "application/json": {
+          schema: BillingPortalResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Member cannot manage billing",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/workspaces/{workspaceId}/billing/sync",
+  summary: "Sync Premium entitlement from Stripe (Checkout return / webhook fallback)",
+  tags: ["Billing"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Current plan after sync",
+      content: {
+        "application/json": {
+          schema: BillingSyncResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Member cannot manage billing",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: "No Stripe customer for workspace",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/billing/webhook",
+  summary: "Stripe webhook (signature verified; no Clerk auth)",
+  tags: ["Billing"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.unknown(),
+        },
+      },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: "Event received",
+      content: {
+        "application/json": {
+          schema: BillingWebhookAckSchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid signature or payload",
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/billing/premium-price",
+  summary: "Get Premium monthly price from Stripe (STRIPE_PRICE_PREMIUM_MONTHLY)",
+  tags: ["Billing"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "Premium price",
+      content: {
+        "application/json": {
+          schema: PremiumPriceSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
   path: "/api/v1/lists/{listId}/ai/ingest",
   summary: "Create an AI proposal from text, clipboard, or screenshot",
   tags: ["AI"],
@@ -1602,6 +1763,145 @@ registry.registerPath({
     },
     404: {
       description: "Not found or not a member",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/workspaces/{workspaceId}/ai/suggest-from-history",
+  summary: "Generate a shopping list proposal from recent active and archived lists",
+  tags: ["AI"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "History suggestion proposal created",
+      content: {
+        "application/json": {
+          schema: SuggestFromHistoryResponseSchema,
+        },
+      },
+    },
+    402: {
+      description: "Insufficient AI Credits",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "Premium required, feature disabled, or forbidden",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: "No history or workspace not found",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    502: {
+      description: "AI temporarily unavailable",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/workspaces/{workspaceId}/ai/suggest-from-history/apply",
+  summary: "Create a list from accepted history-suggestion items",
+  tags: ["AI"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: ApplySuggestFromHistoryBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "List created and items applied",
+      content: {
+        "application/json": {
+          schema: ApplySuggestFromHistoryResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Validation error (empty accepted / invalid proposalRowId)",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    409: {
+      description: "Run already applied or abandoned",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/workspaces/{workspaceId}/ai/suggest-from-history/abandon",
+  summary: "Abandon a history-suggestion proposal run",
+  tags: ["AI"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: AbandonSuggestFromHistoryBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Run abandoned",
+      content: {
+        "application/json": {
+          schema: z.object({ abandoned: z.literal(true) }),
+        },
+      },
+    },
+    409: {
+      description: "Run already applied or abandoned",
       content: {
         "application/json": {
           schema: ApiErrorSchema,

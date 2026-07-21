@@ -2,7 +2,7 @@
  * Event polling transport (M10).
  *
  * ADR: events are only a signal to refresh canonical list state from the API.
- * EventPollingProvider owns polling lifecycle only — React Query cache ownership
+ * EventPollingProvider owns polling lifecycle only - React Query cache ownership
  * remains with SyncCacheAdapter + React Query.
  *
  * Future: WebSocketTransport without changing useListRealtime();

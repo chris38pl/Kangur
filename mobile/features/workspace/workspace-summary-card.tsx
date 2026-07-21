@@ -152,7 +152,7 @@ export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
               marginTop: spacing[1],
             }}
           >
-            —
+            -
           </Text>
         ) : unlimited ? (
           <View

@@ -1,0 +1,9 @@
+# Named prompt aliases for --prompt / --compare-prompt.
+# V1: all ids resolve to the production builder in features/ai.
+# Forks can later point at alternate modules under this folder.
+production:
+  label: Production (HISTORY_PROPOSAL_VERSION)
+  module: production
+history-v3:
+  label: Alias for current production prompt
+  module: production

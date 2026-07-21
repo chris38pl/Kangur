@@ -20,7 +20,7 @@ const ALLOWED: Record<SessionState, SessionState[]> = {
 
 /**
  * Shopping Session state machine.
- * Only this module mutates SessionState — UI calls methods only.
+ * Only this module mutates SessionState - UI calls methods only.
  *
  * IDLE → STARTING → ACTIVE → FINISHING → ENDED
  */
@@ -55,7 +55,7 @@ class ShoppingSessionManager {
 
   /**
    * Restore an interrupted session. Opening shopping mode (e.g. Home "Resume")
-   * already means continue — no confirmation prompt.
+   * already means continue - no confirmation prompt.
    */
   async hydrate(listId: string): Promise<SessionSnapshot | null> {
     const saved =
@@ -137,7 +137,7 @@ class ShoppingSessionManager {
     this.emit(null);
   }
 
-  /** Optimistic status change — enqueues SET_STATUS; UI never waits on network. */
+  /** Optimistic status change - enqueues SET_STATUS; UI never waits on network. */
   async setItemStatus(listId: string, patch: SessionItemPatch): Promise<void> {
     await DataSyncEngine.enqueue({
       listId,

@@ -11,8 +11,13 @@ export async function updateShoppingList(input: {
   userId: string;
   name?: string;
   emoji?: string;
+  preferredForAi?: boolean;
 }): Promise<ShoppingListDTO> {
-  const { list } = await authorizeList(input.listId, input.userId);
+  // Finished (archived) lists can still be starred for AI - allow archived when
+  // preferredForAi is part of the update.
+  const { list } = await authorizeList(input.listId, input.userId, {
+    allowArchived: input.preferredForAi !== undefined,
+  });
 
   const name =
     input.name === undefined
@@ -28,6 +33,9 @@ export async function updateShoppingList(input: {
     data: {
       ...(name !== undefined ? { name, isUntitled: false } : {}),
       ...(input.emoji !== undefined ? { emoji: input.emoji } : {}),
+      ...(input.preferredForAi !== undefined
+        ? { preferredForAi: input.preferredForAi }
+        : {}),
     },
   });
 

@@ -1,12 +1,14 @@
-import type { AiIngestSource, Prisma } from "@prisma/client";
+import type { AiProposalSource, Prisma } from "@prisma/client";
 
 import { ApiError } from "@/lib/auth/errors";
+import { getWorkspaceEntitlement } from "@/lib/premium";
 import { prisma } from "@/lib/prisma";
 
-export const AI_CREDIT_COSTS: Record<AiIngestSource, number> = {
+export const AI_CREDIT_COSTS: Record<AiProposalSource, number> = {
   text: 1,
   clipboard: 1,
   screenshot: 2,
+  history: 3,
 };
 
 export function getFreeMonthlyLimit(): number {
@@ -32,19 +34,11 @@ export function insufficientCredits(message = "Insufficient AI Credits."): ApiEr
   return new ApiError("INSUFFICIENT_CREDITS", message, 402);
 }
 
-async function isPremiumWorkspace(workspaceId: string): Promise<boolean> {
-  const sub = await prisma.subscription.findUnique({
-    where: { workspaceId },
-    select: { id: true },
-  });
-  return Boolean(sub);
-}
-
 export async function getAiCreditsBalance(
   workspaceId: string,
 ): Promise<AiCreditsBalance> {
   const periodStart = getPeriodStart();
-  const unlimited = await isPremiumWorkspace(workspaceId);
+  const { isPremium: unlimited } = await getWorkspaceEntitlement(workspaceId);
 
   if (unlimited) {
     return {
@@ -76,7 +70,7 @@ export async function getAiCreditsBalance(
 
 export async function assertCanIngest(
   workspaceId: string,
-  source: AiIngestSource,
+  source: AiProposalSource,
 ): Promise<void> {
   const cost = AI_CREDIT_COSTS[source];
   const balance = await getAiCreditsBalance(workspaceId);
@@ -90,14 +84,14 @@ export async function assertCanIngest(
 
 export async function debitAiCredits(
   workspaceId: string,
-  source: AiIngestSource,
+  source: AiProposalSource,
   tx?: Prisma.TransactionClient,
 ): Promise<void> {
   const db = tx ?? prisma;
   const cost = AI_CREDIT_COSTS[source];
   if (cost <= 0) return;
 
-  const unlimited = await isPremiumWorkspace(workspaceId);
+  const { isPremium: unlimited } = await getWorkspaceEntitlement(workspaceId);
   if (unlimited) return;
 
   const periodStart = getPeriodStart();

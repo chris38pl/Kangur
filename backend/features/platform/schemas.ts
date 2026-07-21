@@ -7,7 +7,7 @@ export const PlatformStatusSchema = z
   .enum(["healthy", "warning", "critical"])
   .openapi("PlatformStatus");
 
-/** Shell overview — metrics filled by M13.5; status is the primary glance. */
+/** Shell overview - metrics filled by M13.5; status is the primary glance. */
 export const PlatformOverviewResponseSchema = z
   .object({
     platformStatus: PlatformStatusSchema,

@@ -7,7 +7,9 @@ export type ApiErrorCode =
   | "FORBIDDEN"
   | "CONFLICT"
   | "INSUFFICIENT_CREDITS"
-  | "HISTORY_LIMIT_EXCEEDED";
+  | "HISTORY_LIMIT_EXCEEDED"
+  | "PREMIUM_REQUIRED"
+  | "AI_UNAVAILABLE";
 
 export class ApiError extends Error {
   readonly code: ApiErrorCode;
@@ -76,9 +78,23 @@ export function conflict(
   return new ApiError("CONFLICT", message, 409, details);
 }
 
-/** Free plan history depth exceeded — resource exists; upgrade for older lists. */
+/** Free plan history depth exceeded - resource exists; upgrade for older lists. */
 export function historyLimitExceeded(
   message = "Older history is available with Premium.",
 ): ApiError {
   return new ApiError("HISTORY_LIMIT_EXCEEDED", message, 403);
+}
+
+/** Feature requires an active/trialing Premium subscription. */
+export function premiumRequired(
+  message = "Premium is required for this feature.",
+): ApiError {
+  return new ApiError("PREMIUM_REQUIRED", message, 403);
+}
+
+/** Model provider failed / timed out - client should show temporary unavailability. */
+export function aiUnavailable(
+  message = "AI is temporarily unavailable. Please try again.",
+): ApiError {
+  return new ApiError("AI_UNAVAILABLE", message, 502);
 }

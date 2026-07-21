@@ -1,6 +1,6 @@
 # Kangur
 
-AI Shopping Assistant — Expo mobile + Next.js platform API.
+AI Shopping Assistant - Expo mobile + Next.js platform API.
 
 ## Architecture
 
@@ -8,7 +8,7 @@ AI Shopping Assistant — Expo mobile + Next.js platform API.
 kangur/
 ├── backend/     # Next.js platform API (Prisma, Neon, OpenAPI)
 ├── mobile/      # Expo app (Expo Router, NativeWind)
-└── docs/        # prd, architecture, cursor-rules, roadmap
+└── docs/        # prd, architecture, cursor-rules, roadmap, deploy
 ```
 
 No pnpm workspace. No `packages/` monorepo.
@@ -40,7 +40,7 @@ cp mobile/.env.example mobile/.env
 
 Fill Neon `DATABASE_URL` (pooled) + `DIRECT_URL` (direct).  
 Set Clerk keys (`CLERK_SECRET_KEY`, publishable keys) and enable email/password + Google; allow unverified email for MVP.  
-Set `EXPO_PUBLIC_API_URL` to `http://<LAN-IP>:3000` or an Expo tunnel — **not** `localhost` on a physical device.  
+Set `EXPO_PUBLIC_API_URL` to `http://<LAN-IP>:3000` or an Expo tunnel - **not** `localhost` on a physical device.  
 Google OAuth: add Clerk redirect URIs for Expo scheme `kangur://`. Apple auth is deferred.
 
 3. Prisma migrate (backend)
@@ -58,10 +58,19 @@ cd backend && pnpm dev          # 0.0.0.0:3000
 cd mobile && pnpm start
 ```
 
+## Deploy
+
+Ops runbook: **[docs/deploy.md](docs/deploy.md)**
+
+- Environments: local → staging (`staging-api.getkangur.com`) → production (`api.getkangur.com`)
+- Landing: `getkangur.com` (never serves API)
+- Order: merge → deploy backend → migrate → health → Stripe webhook → EAS build → Closed Testing → Production
+- Neon DBs: `kangur-dev` / `kangur-staging` / `kangur-prod`
+
 ## Notes
 
 - No Prisma Accelerate
-- Neon branching: production / preview / local
-- OpenAPI: `cd backend && pnpm openapi:generate` — do not hand-edit `openapi.json`
-- Docs: `docs/prd.md`, `docs/architecture.md`, `docs/cursor-rules.md`, `docs/roadmap.md`
+- Neon branching: production / staging / local
+- OpenAPI: `cd backend && pnpm openapi:generate` - do not hand-edit `openapi.json`
+- Docs: `docs/prd.md`, `docs/architecture.md`, `docs/cursor-rules.md`, `docs/roadmap.md`, `docs/deploy.md`
 - No pnpm workspace / no `packages/` monorepo

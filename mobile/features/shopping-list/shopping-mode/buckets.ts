@@ -1,6 +1,6 @@
 import type { ItemStatus, ShoppingItem } from "@/features/shopping-item/schemas";
 
-/** UI buckets — map Prisma ItemStatus. */
+/** UI buckets - map Prisma ItemStatus. */
 export type ShoppingBucket = "ACTIVE" | "PURCHASED" | "UNAVAILABLE";
 
 export function statusToBucket(status: ItemStatus): ShoppingBucket | null {

@@ -1,5 +1,5 @@
 /**
- * Kangur Design System v2 — semantic tokens (SSOT).
+ * Kangur Design System v2 - semantic tokens (SSOT).
  * Premium mint / Scandinavian / Linear aesthetic. Never pure black.
  */
 
@@ -51,13 +51,15 @@ export const typography = {
   caption: { fontSize: 13, lineHeight: 18, fontWeight: "400" as const },
 } as const;
 
-/** Brand + semantic colors — light is the product default. */
+/** Brand + semantic colors - light is the product default. */
 export const brand = {
   primary: "#43BFA8",
   primaryHover: "#35A894",
   primaryLight: "#74D4C1",
   accent: "#DFF5EF",
   unavailable: "#F59E0B",
+  /** Soft orange - preferred-for-AI star (active). */
+  starActive: "#F0A04B",
   heroGradient: ["#5FD0BA", "#36B29E"] as const,
 } as const;
 
@@ -79,7 +81,7 @@ export const colors = {
     danger: "#E05A5A",
     onPrimary: "#FFFFFF",
   },
-  /** Soft dark — still airy, not Material black. */
+  /** Soft dark - still airy, not Material black. */
   dark: {
     bg: "#12181F",
     section: "#1A222B",

@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Redirect, Tabs } from "expo-router";
-import { ActivityIndicator, Pressable, Text } from "react-native";
+import { useEffect } from "react";
+import { Pressable, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { Screen } from "@/components/Screen";
@@ -10,6 +11,10 @@ import { KangurTabBar } from "@/components/tab-bar/kangur-tab-bar";
 import { colors, spacing, typography } from "@/design-system/tokens";
 import { useMe } from "@/features/auth/useMe";
 import { CreateListProvider, useCreateList } from "@/features/shopping-list/create-list-provider";
+import { useShoppingLists } from "@/features/shopping-list/useShoppingLists";
+import { useAppStartup } from "@/features/startup/AppStartupController";
+import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
+import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { ApiClientError } from "@/lib/api/client";
 import {
   primaryButtonStyle,
@@ -59,7 +64,33 @@ export default function TabLayout() {
   const theme = colors[colorScheme];
   const { t } = useTranslation();
   const { isSignedIn, isLoaded, signOut } = useAuth();
+  const { notifyBootReady } = useAppStartup();
   const me = useMe(Boolean(isSignedIn));
+  const workspacesQuery = useWorkspaces(Boolean(isSignedIn) && Boolean(me.data));
+  const { activeWorkspace, hydrated } = useActiveWorkspace(workspacesQuery.data);
+  const listsQuery = useShoppingLists(
+    activeWorkspace?.id ?? null,
+    Boolean(isSignedIn) && hydrated,
+  );
+
+  // Keep full HomeSkeleton until Home data is ready - avoids skeleton → tab bar → spinner.
+  const homeBootPending =
+    workspacesQuery.isPending ||
+    !hydrated ||
+    (Boolean(activeWorkspace?.id) && listsQuery.isPending);
+
+  const homeReady =
+    isLoaded &&
+    isSignedIn &&
+    !me.isPending &&
+    !me.isError &&
+    !homeBootPending;
+
+  useEffect(() => {
+    if (homeReady || me.isError) {
+      notifyBootReady();
+    }
+  }, [homeReady, me.isError, notifyBootReady]);
 
   if (!isLoaded) {
     return <HomeSkeleton />;
@@ -125,6 +156,10 @@ export default function TabLayout() {
         </Pressable>
       </Screen>
     );
+  }
+
+  if (homeBootPending) {
+    return <HomeSkeleton />;
   }
 
   return (

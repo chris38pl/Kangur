@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { isWorkspaceIconId } from "@shared/workspace-icons";
 
 import { normalizeWorkspaceName } from "./normalizeName";
-import { toWorkspaceDto } from "./toWorkspaceDto";
+import { toWorkspaceDto, workspaceSubscriptionSelect } from "./toWorkspaceDto";
 import type { WorkspaceDTO } from "./schemas";
 
 export type UpdateWorkspaceInput = {
@@ -44,7 +44,7 @@ export async function updateWorkspace(
     where: { id: input.workspaceId },
     data,
     include: {
-      subscription: { select: { id: true } },
+      subscription: { select: workspaceSubscriptionSelect },
       _count: { select: { members: true } },
     },
   });

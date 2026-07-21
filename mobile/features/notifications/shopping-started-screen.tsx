@@ -159,7 +159,7 @@ export function ShoppingStartedNotificationScreen() {
   const onOpenList = async () => {
     await markRead();
     if (listId) {
-      // List detail — not /shop (entering shop would start B's session and notify A).
+      // List detail - not /shop (entering shop would start B's session and notify A).
       router.replace(`/list/${listId}` as never);
     } else {
       goHome();

@@ -29,7 +29,7 @@ export function isShoppingCategory(value: string): value is ShoppingCategory {
 }
 
 /**
- * Store Flow SSOT — default aisle order for Shopping Mode home.
+ * Store Flow SSOT - default aisle order for Shopping Mode home.
  * Future store presets must go through this helper (never hardcode order in UI).
  */
 export function getShoppingCategoryOrder(): readonly ShoppingCategory[] {

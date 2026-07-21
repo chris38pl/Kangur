@@ -1,8 +1,8 @@
-# Kangur — Architecture
+# Kangur - Architecture
 
-**Companion to:** [prd.md](./prd.md) · [cursor-rules.md](./cursor-rules.md) · [roadmap.md](./roadmap.md)  
+**Companion to:** [prd.md](./prd.md) · [cursor-rules.md](./cursor-rules.md) · [roadmap.md](./roadmap.md) · [deploy.md](./deploy.md)  
 **Status:** Greenfield MVP architecture  
-**Last updated:** 2026-07-16
+**Last updated:** 2026-07-21
 
 ---
 
@@ -22,19 +22,20 @@ Kangur Platform (Next.js REST + OpenAPI)
 | Layer | Choice |
 |-------|--------|
 | Mobile | React Native, Expo, Expo Router, TypeScript, NativeWind |
-| Platform API | Next.js App Router — versioned REST `/api/v1/...` + **OpenAPI generated from Zod** (never hand-edited) |
+| Platform API | Next.js App Router - versioned REST `/api/v1/...` + **OpenAPI generated from Zod** (never hand-edited) |
 | Forms / validation | React Hook Form, Zod |
 | Client data | **TanStack Query** + React local state; optional light Zustand |
-| Client data — forbidden | **No Redux, MobX, Saga, Context-everywhere** |
-| DB | **Neon** (serverless Postgres) + Prisma — **no Prisma Accelerate** for MVP |
+| Client data - forbidden | **No Redux, MobX, Saga, Context-everywhere** |
+| DB | **Neon** (serverless Postgres) + Prisma - **no Prisma Accelerate** for MVP |
 | Auth | Clerk (email/password, Google, Apple) |
 | Payments | Stripe (subscription on Workspace) |
-| AI | OpenAI via AI SDK — vision + structured outputs + Zod |
+| AI | OpenAI (official SDK) - vision + structured outputs + Zod |
 | Sync (MVP) | Smart polling behind `RealtimeProvider` |
-| Sync (later) | Ably / Supabase Realtime / SSE — undecided; cost-driven |
+| Sync (later) | Ably / Supabase Realtime / SSE - undecided; cost-driven |
 | Storage | No permanent screenshots; no UploadThing unless justified later |
+| Observability | PostHog + Sentry from Closed Testing (see [deploy.md](./deploy.md)) |
 
-**Docs only:** `prd.md`, `architecture.md`, `cursor-rules.md`, `roadmap.md`.
+**Docs:** `prd.md`, `architecture.md`, `cursor-rules.md`, `roadmap.md`, `deploy.md`.
 
 ---
 
@@ -42,7 +43,7 @@ Kangur Platform (Next.js REST + OpenAPI)
 
 - Backend exposes a **stable REST API** with Zod-validated contracts.
 - **OpenAPI is generated from Zod only** (registry + generate script). Never hand-edit the OpenAPI file; fix Zod if it drifts.
-- OpenAPI exists so Cursor/Claude/Copilot and codegen can produce typed clients — not for vanity Swagger UI.
+- OpenAPI exists so Cursor/Claude/Copilot and codegen can produce typed clients - not for vanity Swagger UI.
 - Expo is the first consumer; web/admin must be able to use the same `/api/v1` without rewriting domain logic.
 - Prefer Route Handlers for mobile-facing operations.
 - No Expo imports in `backend/`.
@@ -60,14 +61,15 @@ kangur/
     ├── prd.md
     ├── architecture.md
     ├── cursor-rules.md
-    └── roadmap.md
+    ├── roadmap.md
+    └── deploy.md
 ```
 
-Alternative: `apps/mobile` + `apps/backend` — still **without** `packages/`.
+Alternative: `apps/mobile` + `apps/backend` - still **without** `packages/`.
 
 Duplicate Zod lightly if needed; extract shared package later when drift hurts.
 
-### 3.1 Mobile — feature-first
+### 3.1 Mobile - feature-first
 
 ```
 mobile/
@@ -89,7 +91,7 @@ mobile/
 
 **Prefer `features/*`** over horizontal `hooks/utils/services/repositories` dumps.
 
-### 3.2 Backend — feature-first
+### 3.2 Backend - feature-first
 
 ```
 backend/
@@ -116,14 +118,14 @@ backend/
 
 Primary daily workflows (one-handed shopping loop):
 
-1. **Home** — active lists, create, import CTA  
-2. **History** — archived lists (read-only), local search, **Repeat** (primary) / Restore (secondary)
-3. **Workspace** — avatar, members, invites, plan, **AI Credits**, settings  
-4. **Profile** — account hub, language, sign out  
+1. **Home** - active lists, create, import CTA  
+2. **History** - archived lists (read-only), local search, **Repeat** (primary) / Restore (secondary)
+3. **Workspace** - avatar, members, invites, plan, **AI Credits**, settings  
+4. **Profile** - account hub, language, sign out  
 
 ### App Menu (full-screen)
 
-Application-level destinations opened from the Home hamburger as a **full-width screen** nested in the Home tab stack (`/(tabs)/index/menu`) with the **native push / slide** transition — Bottom Tabs stay visible. Not a left drawer, Modal overlay, or Drawer navigator.
+Application-level destinations opened from the Home hamburger as a **full-width screen** nested in the Home tab stack (`/(tabs)/index/menu`) with the **native push / slide** transition - Bottom Tabs stay visible. Not a left drawer, Modal overlay, or Drawer navigator.
 
 **Why full-screen (not a drawer):** better scalability for growing Platform/ops content; more layout space and a cleaner list; richer future destinations feel like real screens; navigation matches iOS/Android stack patterns used elsewhere (Account, Notifications).
 
@@ -134,21 +136,21 @@ Driven by **declarative menu config → visibility predicate → route**.
 | **Account** | Account details, Subscription, Notifications |
 | **Workspace** | Single shortcut to Workspace tab |
 | **Application** | Help, Feedback, Privacy, Terms, About |
-| **Platform** | Platform Console — only when `platformRole = ADMIN` |
+| **Platform** | Platform Console - only when `platformRole = ADMIN` |
 
 Tabs stay focused on workflows; the Menu scales for secondary / ops destinations without adding tabs. Do not duplicate tab destinations as menu rows (except the single Workspace shortcut).
 
 ### Platform Console
 
-Read-only operational dashboard (`/platform-console`) for product owners / operators — **not** an admin panel (no mutations, flags UI, or user management in M13.4).
+Read-only operational dashboard (`/platform-console`) for product owners / operators - **not** an admin panel (no mutations, flags UI, or user management in M13.4).
 
-**Phased tabs (ship when data is valuable — do not build empty shells):**
+**Phased tabs (ship when data is valuable - do not build empty shells):**
 
-1. **Overview** (M13.5) — Platform Health + key KPIs  
-2. **Realtime** (M13.6) — polling / events / refresh / sync diagnostics (server/proxy metrics for MVP; client ingest = M13.7 post-release)  
-3. **Scaling** — after load tests + capacity planning  
-4. **Backend** — after richer monitoring (e.g. OTel)  
-5. **Business** — after product analytics (DAU/MAU, premium, AI credits, …)
+1. **Overview** (M13.5) - Platform Health + key KPIs  
+2. **Realtime** (M13.6) - polling / events / refresh / sync diagnostics (server/proxy metrics for MVP; client ingest = M13.7 post-release)  
+3. **Scaling** - after load tests + capacity planning  
+4. **Backend** - after richer monitoring (e.g. OTel)  
+5. **Business** - after product analytics (DAU/MAU, premium, AI credits, …)
 
 UI currently exposes **Overview** and **Realtime** only. Full IA order for later: Overview → Business → Realtime → Scaling → Backend.
 
@@ -171,8 +173,8 @@ Flat, minimal, premium, friendly; one-handed; large targets; few taps; fast over
 
 ### 5.2 Tokens
 
-- **Spacing:** 8px base — `4, 8, 12, 16, 24, 32, 40, 48`  
-- **Radius:** fixed scale (e.g. sm/md/lg/xl) — no random radii  
+- **Spacing:** 8px base - `4, 8, 12, 16, 24, 32, 40, 48`  
+- **Radius:** fixed scale (e.g. sm/md/lg/xl) - no random radii  
 - **Typography:** `display | title | headline | body | label | caption`  
 - **Colors:** semantic tokens (`bg`, `surface`, `text`, `primary`, …); **warm orange** primary  
 - **Theme:** light mode only (no dark theme)  
@@ -181,16 +183,16 @@ Flat, minimal, premium, friendly; one-handed; large targets; few taps; fast over
 
 ### 5.3 Shopping Mode tokens
 
-Larger type/spacing scale variant (e.g. density = `shopping`) — huge hit targets, reduced chrome.
+Larger type/spacing scale variant (e.g. density = `shopping`) - huge hit targets, reduced chrome.
 
 ### 5.4 Mascot
 
 | Element | Direction |
 |---------|-----------|
-| Character | Flat kangaroo — friendly, minimal |
+| Character | Flat kangaroo - friendly, minimal |
 | Primary | Warm orange |
 | Motifs | Pocket, shopping bag |
-| Usage | Empty states, Premium, onboarding — sparingly, not every list row |
+| Usage | Empty states, Premium, onboarding - sparingly, not every list row |
 
 ### 5.5 Accessibility
 
@@ -200,8 +202,8 @@ Contrast; hit slops; status not by color alone; labels on icon-only actions.
 
 ## 6. Architecture principles
 
-1. Workspace tenancy — billing + **AI Credits** on workspace.  
-2. Current state + activity log — **not** event sourcing.  
+1. Workspace tenancy - billing + **AI Credits** on workspace.  
+2. Current state + activity log - **not** event sourcing.  
 3. Structured AI only; closed category enum.  
 4. Sync transport-agnostic (`RealtimeProvider`).  
 5. Platform API + OpenAPI first.  
@@ -224,13 +226,28 @@ Contrast; hit slops; status not by color alone; labels on icon-only actions.
 
 **Do not add:** Redux, MobX, Redux-Saga, global React Context for server state.
 
-Optimistic updates OK for status toggles. AI ingest is not optimistic — Processing → Review → apply.
+Optimistic updates OK for status toggles. AI ingest is not optimistic - Processing → Review → apply.
 
 Cache keys include: `workspace`, `lists`, `list`, `items`, `aiCredits`, `subscription`.
 
 ---
 
 ## 8. AI flow
+
+Shared path for all AI list generation (import **and** Generate from History):
+
+```
+Trigger (screenshot | text | clipboard | Generate from History)
+  → AuthZ + Premium entitlement (when required) + AI Credits check
+  → Structured OpenAI output (Zod) / AiIngestRun proposal
+  → AI Review (client)
+  → Apply
+  → Debit AI Credits + ShoppingEvents + persist raw JSONB
+```
+
+**AI Generate from History (Premium):** not a separate AI stack. Same **proposal → AI Review → Apply** architecture as import. Backend selects up to **5** source lists (`active` + `archived` with items): first the newest lists marked `preferredForAi` (star on History - “Use for AI”, not favorites), then fills with newest unmarked lists. No client list picker at generate time. Requires active Premium entitlement; Free / expired → `403 PREMIUM_REQUIRED`. Still uses the AI Credits meter (unlimited when Premium).
+
+**Proposal philosophy:** generate a **near-complete large weekly grocery list** for fast swipe Review (prefer keep ordinary groceries / once-seen food; hard-drop clear DIY/project one-offs; seasonal/event items cautious but not auto-deleted). Bias: better false positive than false negative. Lists with `preferredForAi=true` are the **primary** source in the prompt; newer non-preferred lists only complement.
 
 ```
 Import (screenshot | text | clipboard)
@@ -244,7 +261,7 @@ Import (screenshot | text | clipboard)
   → Shopping Mode
 ```
 
-Prefer **proposal then explicit apply** after Review so Reject/Edit never leave half-applied junk. High-confidence-only shortcuts may auto-skip to compact Review — product rule in PRD open decisions.
+Prefer **proposal then explicit apply** after Review so Reject/Edit never leave half-applied junk. High-confidence-only shortcuts may auto-skip to compact Review - product rule in PRD open decisions.
 
 ### 8.1 AI principles
 
@@ -262,15 +279,30 @@ Product name: **AI Credits** (not “Credits”).
 |--------|------------|
 | Text / clipboard import | 1 |
 | Screenshot import | 2 |
-| Suggestions (post-MVP) | 3 |
+| AI Generate from History (Premium) | TBD (≥1) |
+| Suggestions (other post-MVP) | 3 |
 
 Track `aiCreditsUsed` per workspace billing period. Prefer not charging when nothing is applied.
+
+**Premium-only ≠ Unlimited AI Credits.** Generate from History is gated by Premium entitlement; credits are enforced separately (Premium sets the cap to unlimited).
 
 ### 8.3 AI Review (client responsibilities)
 
 Render groups: low confidence, merge proposals, unknown/ambiguous, ready items.  
 Actions: accept all, edit, reject, confirm/undo merge.  
 Only then call apply endpoint (or equivalent transaction).
+
+### 8.4 AI evals (offline harness)
+
+Not a runtime path. Live under `backend/evals/`:
+
+```
+Scenario YAML → thin Adapter (prod generator) → Evaluator (timing/seed/repeat) → Judges → Report
+```
+
+- Same structured OpenAI + Zod path as production (`buildSuggestFromHistory` → enrich); no credits, no DB persist.
+- Pin identity via `proposalVersion`, `promptHash`, `model` / `resolvedModel`, suite/scenario versions.
+- Run: `pnpm eval:ai --suite history-suggest` (see `backend/evals/README.md`).
 
 ---
 
@@ -288,7 +320,7 @@ Only then call apply endpoint (or equivalent transaction).
 - **Public API:** `start` / `stop` / `pollNow` / `isRunning` / `getCurrentListId` (+ optional `destroy`).  
 - **Lifecycle:** mount→start; unmount→stop; background→pause; foreground→pollNow+resume; offline→pause; online→pollNow+resume; listId change→stop old+start new.  
 - **Adaptive intervals:** 3s → 5s (30s idle) → 10s (2min idle); backoff only on successful empty polls; reset to 3s on events.  
-- Fetch `ShoppingEvent`s after last known event id; **events are a refresh signal only** — never rebuild list state from payloads. Cache ownership: **SyncCacheAdapter + React Query**. Soft toast is presentation-only (never triggers refresh).  
+- Fetch `ShoppingEvent`s after last known event id; **events are a refresh signal only** - never rebuild list state from payloads. Cache ownership: **SyncCacheAdapter + React Query**. Soft toast is presentation-only (never triggers refresh).  
 - Future: `WebSocketTransport` without changing `useListRealtime()`; server push for **active list only**; ETag / 304 on events.
 
 ---
@@ -297,7 +329,7 @@ Only then call apply endpoint (or equivalent transaction).
 
 ### Principles
 
-1. Fire-and-forget — metrics never block requests or change business logic.  
+1. Fire-and-forget - metrics never block requests or change business logic.  
 2. Provider pattern: `Metrics` interface + **Noop** (prod/tests default) + **Console** (DEV / `METRICS_DEBUG=1` only) + **InMemory** (backend process local for Platform Console).  
 3. Shared catalogue: `@shared/metrics/names` + low-cardinality tags (`@shared/metrics/tags`).  
 4. Prefer **server-authoritative** counters for sessions/AI; client emits realtime/sync health.
@@ -310,7 +342,7 @@ Only then call apply endpoint (or equivalent transaction).
 | Mobile facade | `mobile/lib/metrics/` |
 | Backend facade + HTTP wrap + memory | `backend/lib/metrics/` |
 | Client emit | `EventPollingProvider`, `scheduleItemsRefresh`, `syncTelemetry` |
-| Server emit | events route, shopping sessions (`db.query_ms` reserved — Prisma middleware deferred; events path timed separately) |
+| Server emit | events route, shopping sessions (`db.query_ms` reserved - Prisma middleware deferred; events path timed separately) |
 
 ### Presence (no heartbeat)
 
@@ -331,7 +363,7 @@ estimated_RPS ≈ active_sessions × (1 / avg_interval_s)
 headroom = PROVISIONAL_EVENTS_CAPACITY_RPS / estimated_RPS
 ```
 
-`PROVISIONAL_EVENTS_CAPACITY_RPS = 2500` with `capacity_source=provisional` until the **Future load-testing playbook** (k6) refreshes the constant from measured SLO breach points — capacity MUST come from load tests, not permanent guesses.
+`PROVISIONAL_EVENTS_CAPACITY_RPS = 2500` with `capacity_source=provisional` until the **Future load-testing playbook** (k6) refreshes the constant from measured SLO breach points - capacity MUST come from load tests, not permanent guesses.
 
 ### Cost
 
@@ -339,15 +371,15 @@ Leading indicator: `cost.events.*` and documented `estimated_monthly_polling_cos
 
 ### Platform Console
 
-- **Overview** — DB sessions + in-memory metrics (RPS, P95, headroom, pollingOk).  
-- **Realtime** (`GET /api/v1/platform/realtime`) — events-API proxies (poll RPS, P50/P95, empty-page ratio, failures) + open sessions as active-poller proxy. Client-only KPIs (Hot/Warm/Cold, refresh, sync, drain/pollNow) stay null until **M13.7** client metrics ingest (post-release).  
+- **Overview** - DB sessions + in-memory metrics (RPS, P95, headroom, pollingOk).  
+- **Realtime** (`GET /api/v1/platform/realtime`) - events-API proxies (poll RPS, P50/P95, empty-page ratio, failures) + open sessions as active-poller proxy. Client-only KPIs (Hot/Warm/Cold, refresh, sync, drain/pollNow) stay null until **M13.7** client metrics ingest (post-release).  
 - Later tabs (Scaling / Backend / Business) wait for load tests, OTel, and product analytics respectively.
 
 ### When to leave polling
 
 Several signals over 2+ weeks: empty-poll waste + high RPS, headroom < 5×, latency floor / SLO burn, polling cost vs future WS cost, battery/pollNow storms. Order of levers: verify adaptive Hot/Warm/Cold → ETag/304 → WebSocket active-list-only.
 
-### Future — Client Metrics Ingestion (M13.7, post-release)
+### Future - Client Metrics Ingestion (M13.7, post-release)
 
 MVP Platform Console is intentionally operable on **server/proxy metrics only**. Client emit sites already exist (`EventPollingProvider`, `scheduleItemsRefresh`, `syncTelemetry`); prod sink remains **Noop** until M13.7.
 
@@ -383,17 +415,25 @@ Also future: OTel/Prometheus exporters (same call sites), tracing, ETag `304_rat
 
 **ShoppingItem.category:** closed enum  
 
-**ShoppingEvent:** activity log for sync cursor + toasts + audit — **not** for rebuilding state  
+**ShoppingEvent:** activity log for sync cursor + toasts + audit - **not** for rebuilding state  
 
 ### Repeat List & History (M11)
 
 - **History** lists archived lists only (`GET …/lists/history`) that have at least one non-removed item. Search is **client-side** after one fetch. Cards show 2–3 preview item names in list order (`sortOrder`, `createdAt`).
 - **Soft-remove outcomes:** Finish Shopping → `status: archived` (History). User “Delete list” → `status: deleted` (hidden from Home and History). Both are soft deletes.
-- **Free depth:** last **20** archived lists (`updatedAt` desc). Premium: no product limit (safety cap 200). Restore/repeat outside Free depth → **`403`** with code **`HISTORY_LIMIT_EXCEEDED`** (minimal body — no `totalArchived` counts until paywall).
+- **Free depth:** last **20** archived lists (`updatedAt` desc). Premium: no product limit (safety cap 200). Restore/repeat outside Free depth → **`403`** with code **`HISTORY_LIMIT_EXCEEDED`** (minimal body - no `totalArchived` counts until paywall).
 - **Restore:** `archived` → `active` (`POST …/restore`).
 - **Repeat:** new active list with **identical title**; copy **all business-relevant item fields** (today: name, category, amount, note, sortOrder, normalizedName, …). Do **not** copy runtime shopping state (`status` always `pending`; future bought/session timestamps). Navigate to the new list after success.
-- Archived lists are **not editable** — only Repeat / Restore. `authorizeList` accepts `allowArchived` for those paths.
-- Post-MVP: optional AI cleanup endpoint costing AI Credits.
+- Archived lists are **not editable** - only Repeat / Restore (and Premium Generate from History entry points). `authorizeList` accepts `allowArchived` for those paths.
+- Post-MVP: optional AI cleanup on Repeat (strip one-offs) costing AI Credits - not the same as Generate from History.
+
+### AI Generate from History (M13 Premium entitlement)
+
+- **Product:** generate a shopping list from recent shopping history.
+- **Input selection:** server-side only - up to **5** latest archived lists for the workspace (`updatedAt` DESC). **No user list picker.**
+- **Gate:** active Premium entitlement. Missing or expired → **`403 PREMIUM_REQUIRED`** (backend is source of truth). Stripe only updates entitlement via webhooks; it is not part of the AI handler.
+- **Pipeline:** shared AI architecture - `AiIngestRun` proposal → AI Review → Apply (same as import). Debit AI Credits on the normal meter.
+- Analytics stubs: `history_ai_generate_started` / `_reviewed` / `_applied` / `_cancelled`.
 
 ### Activity log vs event sourcing
 
@@ -406,13 +446,14 @@ Update rows as source of truth; append events; **never** replay events to rebuil
 - Secrets only on backend  
 - Clerk JWT on protected routes  
 - `authorize(workspaceId, userId, capability)` everywhere  
-- Stripe webhook verification  
 - AI Credits checked server-side  
+- Premium entitlements checked server-side for Premium-only AI (`PREMIUM_REQUIRED`)  
 - Image size/MIME limits  
+- Stripe webhook verification (billing → entitlement only)  
 
-Roles: workspace `owner` / `admin` / `member` — invites & billing: owner + admin.
+Roles: workspace `owner` / `admin` / `member` - invites & billing: owner + admin.
 
-Platform: `User.platformRole` (`USER` | `ADMIN`). Platform Console and `/api/v1/platform/*` require `ADMIN` via `requirePlatformAdmin` — hiding menu items is not authorization.
+Platform: `User.platformRole` (`USER` | `ADMIN`). Platform Console and `/api/v1/platform/*` require `ADMIN` via `requirePlatformAdmin` - hiding menu items is not authorization.
 
 ### Platform Admin Bootstrap
 
@@ -428,18 +469,21 @@ Purpose: bootstrap Platform Console access on new environments without manual SQ
 
 ## 13. Deployment & database (Neon)
 
+**Ops runbook:** [deploy.md](./deploy.md) - environments, domains, release order, rollback, env matrices, CI, monitoring.
+
 | Piece | Target |
 |-------|--------|
-| Backend | **Vercel** |
-| Database | **Neon** (serverless Postgres) |
-| Mobile | EAS Build / Submit |
-| Vendors | Clerk, Stripe, OpenAI |
+| Backend | **Vercel** - `api.getkangur.com` (`main`), `staging-api.getkangur.com` (`staging`) |
+| Landing | **getkangur.com** - marketing / privacy / terms / contact / delete-account (no API or `/health` on apex) |
+| Database | **Neon** (serverless Postgres) - `kangur-dev` / `kangur-staging` / `kangur-prod` |
+| Mobile | EAS Build / Submit (`development` / `preview` / `production`) |
+| Vendors | Clerk, Stripe, OpenAI, Resend (optional), Expo Push, PostHog, Sentry |
 
 ### Why Neon
 
-- Known stack from prior projects (Esteo): Prisma migrations, pooling, envs, Vercel integration — near-zero learning cost.
+- Known stack from prior projects (Esteo): Prisma migrations, pooling, envs, Vercel integration - near-zero learning cost.
 - Fits **Vercel → Next.js → Prisma → Neon** serverless path.
-- **Branching:** Production / Preview / Local DB branches for safer schema work.
+- **Branching:** Production / Staging / Local DB branches for safer schema work.
 - MVP cost: effectively free for a long time at household scale.
 
 ### Prisma Accelerate
@@ -449,14 +493,14 @@ Purpose: bootstrap Platform Console access on new environments without manual SQ
 ### Neon branching (recommended workflow)
 
 ```
-Production branch
-  → Preview branch (per PR / schema experiment)
-  → Local development branch or shared dev branch
+kangur-prod
+  → kangur-staging
+  → kangur-dev (local)
 ```
 
-Use Neon pooler connection string for serverless runtimes (`DATABASE_URL` with pooler host). Keep a direct URL for migrations if Neon docs recommend splitting (`DATABASE_URL` pooled vs `DIRECT_URL` for Prisma migrate).
+Use Neon pooler connection string for serverless runtimes (`DATABASE_URL` with pooler host). Keep a direct URL for migrations (`DIRECT_URL` for Prisma migrate deploy).
 
-Prisma migrate in CI. Environments: development, preview, production — separate Clerk/Stripe/OpenAI keys; Neon branches mapped accordingly.
+Environments: local, staging, production - separate Clerk/Stripe/OpenAI keys; Neon DBs mapped accordingly. See [deploy.md](./deploy.md) for deployment order (deploy backend → migrate → health → webhook → mobile).
 
 ---
 
@@ -466,14 +510,15 @@ Prisma migrate in CI. Environments: development, preview, production — separat
 
 Canonical templates (keep in sync with these docs):
 
-- [backend/.env.example](../backend/.env.example) — Neon, Vercel notes, Clerk, OpenAI, Stripe, AI Credits
-- [mobile/.env.example](../mobile/.env.example) — `EXPO_PUBLIC_*` only
+- [backend/.env.example](../backend/.env.example) - Neon, Vercel notes, Clerk, OpenAI, Stripe, AI Credits, Resend
+- [mobile/.env.example](../mobile/.env.example) - `EXPO_PUBLIC_*` only
+- Per-environment matrices: [deploy.md §7](./deploy.md#7-environment-variables)
 
-On Vercel: set secrets in Project → Environment Variables (Production / Preview / Development). Prefer **Neon Vercel integration** for `DATABASE_URL` / `DIRECT_URL`. System vars (`VERCEL_URL`, `VERCEL_ENV`, …) are auto-injected — do not paste them into `.env` locally unless a script needs them.
+On Vercel: set secrets in Project → Environment Variables (Production / Preview / Development). Prefer **Neon Vercel integration** for `DATABASE_URL` / `DIRECT_URL`. System vars (`VERCEL_URL`, `VERCEL_ENV`, …) are auto-injected - do not paste them into `.env` locally unless a script needs them.
 
 `DIRECT_URL` is for Prisma migrate against Neon’s non-pooled host. **No Prisma Accelerate** on MVP.
 
-No OpenAI, Stripe secrets, Clerk secret, or database URLs on mobile.
+No OpenAI, Stripe secrets, Clerk secret, or database URLs on mobile. API hosts only: `api.getkangur.com` / `staging-api.getkangur.com` - never `getkangur.com` apex.
 
 ---
 
@@ -506,7 +551,7 @@ Locales are a pure domain layer in `shared/locales.ts` (`SUPPORTED_LOCALES`, `LO
 
 **Checklist:**
 
-1. Add an entry in `shared/locales.ts` (id, nativeName, englishName, emoji, bcp47, defaultHomeName) — `LOCALE_META` updates automatically  
+1. Add an entry in `shared/locales.ts` (id, nativeName, englishName, emoji, bcp47, defaultHomeName) - `LOCALE_META` updates automatically  
 2. `mobile/lib/i18n/{id}.json` + entry in `mobile/lib/i18n/resources/index.ts`  
 3. `backend/locales/{id}.json` (same keys as `DEFAULT_LOCALE`)  
 4. `AI_LOCALE_BY_APP` + `AI_PROMPTS` in `backend/features/ai/outputLanguage.ts`  
@@ -545,7 +590,7 @@ Source of truth: [roadmap.md](./roadmap.md).
 M01 Bootstrap → M02 Auth → M03 Workspace → M04 Lists → M05 Items/events
 → M06 AI (Import→Processing→Review→Apply) → M07 AI Credits
 → M08 Shopping Mode (back confirm, FAB, Finish) → M09 Invites → M10 Polling
-→ M11 History/Repeat → M12 Settings → M13 Stripe → M14 Polish
+→ M11 History/Repeat → M12 Settings → M13 Stripe Premium (+ AI Generate from History) → M14 Polish
 ```
 
 Database: **Neon** (no Prisma Accelerate). Complete `.env.example` from M01.  

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-import { toWorkspaceDto } from "./toWorkspaceDto";
+import { toWorkspaceDto, workspaceSubscriptionSelect } from "./toWorkspaceDto";
 import type { WorkspaceDTO } from "./schemas";
 
 export async function listWorkspaces(userId: string): Promise<WorkspaceDTO[]> {
@@ -9,7 +9,7 @@ export async function listWorkspaces(userId: string): Promise<WorkspaceDTO[]> {
     include: {
       workspace: {
         include: {
-          subscription: { select: { id: true } },
+          subscription: { select: workspaceSubscriptionSelect },
           _count: { select: { members: true } },
         },
       },

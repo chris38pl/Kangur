@@ -13,7 +13,7 @@ import {
 const AUTO_DISMISS_MS = 3_200;
 
 /**
- * Soft toast for remote list changes. Presentation only — never refreshes data.
+ * Soft toast for remote list changes. Presentation only - never refreshes data.
  * Replace-in-place when a new batch arrives.
  */
 export function RemoteChangeToast() {

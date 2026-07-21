@@ -22,11 +22,11 @@
   },
   "email": {
     "invite": {
-      "subject": "Zaproszenie do {{workspaceName}} — Kangur",
+      "subject": "Zaproszenie do {{workspaceName}} - Kangur",
       "headline": "{{inviter}} zaprosił Cię do",
       "ctaOpen": "Otwórz Kangur",
       "ctaJoin": "Dołącz do przestrzeni",
-      "bodyExisting": "Masz już konto — otwórz aplikację, aby zaakceptować zaproszenie.",
+      "bodyExisting": "Masz już konto - otwórz aplikację, aby zaakceptować zaproszenie.",
       "bodyNew": "Utwórz konto lub zaloguj się, aby dołączyć do wspólnych list zakupów.",
       "expiry": "Link ważny 7 dni."
     }

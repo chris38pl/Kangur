@@ -113,7 +113,9 @@
               "FORBIDDEN",
               "CONFLICT",
               "INSUFFICIENT_CREDITS",
-              "HISTORY_LIMIT_EXCEEDED"
+              "HISTORY_LIMIT_EXCEEDED",
+              "PREMIUM_REQUIRED",
+              "AI_UNAVAILABLE"
             ]
           },
           "message": {
@@ -893,6 +895,9 @@
           "isUntitled": {
             "type": "boolean"
           },
+          "preferredForAi": {
+            "type": "boolean"
+          },
           "itemCount": {
             "type": "integer",
             "minimum": 0
@@ -927,6 +932,7 @@
           "emoji",
           "status",
           "isUntitled",
+          "preferredForAi",
           "itemCount",
           "createdAt",
           "updatedAt"
@@ -1016,6 +1022,9 @@
           "isUntitled": {
             "type": "boolean"
           },
+          "preferredForAi": {
+            "type": "boolean"
+          },
           "itemCount": {
             "type": "integer",
             "minimum": 0
@@ -1049,6 +1058,7 @@
           "emoji",
           "status",
           "isUntitled",
+          "preferredForAi",
           "itemCount",
           "previewItems",
           "createdAt",
@@ -1081,6 +1091,9 @@
           },
           "emoji": {
             "type": "string"
+          },
+          "preferredForAi": {
+            "type": "boolean"
           }
         }
       },
@@ -1340,6 +1353,84 @@
           "periodStart"
         ]
       },
+      "BillingCheckoutResponse": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "BillingPortalResponse": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "BillingWebhookAck": {
+        "type": "object",
+        "properties": {
+          "received": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "received"
+        ]
+      },
+      "PremiumPrice": {
+        "type": "object",
+        "properties": {
+          "priceId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          },
+          "interval": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "year",
+              null
+            ]
+          },
+          "formatted": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "priceId",
+          "amount",
+          "currency",
+          "interval",
+          "formatted"
+        ]
+      },
       "AiIngestResponse": {
         "type": "object",
         "properties": {
@@ -1349,8 +1440,15 @@
           "model": {
             "type": "string"
           },
-          "promptVersion": {
+          "provider": {
             "type": "string"
+          },
+          "proposalType": {
+            "type": "string"
+          },
+          "proposalVersion": {
+            "type": "integer",
+            "exclusiveMinimum": 0
           },
           "durationMs": {
             "type": [
@@ -1369,7 +1467,9 @@
         "required": [
           "runId",
           "model",
-          "promptVersion",
+          "provider",
+          "proposalType",
+          "proposalVersion",
           "durationMs",
           "proposal",
           "fastPath"
@@ -1884,6 +1984,291 @@
               "proposalRowId"
             ]
           }
+        ]
+      },
+      "SuggestFromHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "proposalType": {
+            "type": "string"
+          },
+          "proposalVersion": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "durationMs": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "sourceListsCount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/SuggestFromHistoryProposal"
+          }
+        },
+        "required": [
+          "runId",
+          "model",
+          "provider",
+          "proposalType",
+          "proposalVersion",
+          "durationMs",
+          "sourceListsCount",
+          "proposal"
+        ]
+      },
+      "SuggestFromHistoryProposal": {
+        "type": "object",
+        "properties": {
+          "shoppingContext": {
+            "$ref": "#/components/schemas/ShoppingContext"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SuggestFromHistoryItem"
+            }
+          }
+        },
+        "required": [
+          "shoppingContext",
+          "items"
+        ]
+      },
+      "SuggestFromHistoryItem": {
+        "type": "object",
+        "properties": {
+          "proposalRowId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "amount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "fruit",
+              "vegetables",
+              "dairy",
+              "meat",
+              "fish",
+              "bakery",
+              "frozen",
+              "drinks",
+              "alcohol",
+              "snacks",
+              "household",
+              "cleaning",
+              "baby",
+              "pets",
+              "pharmacy",
+              "cosmetics",
+              "electronics",
+              "office",
+              "garden",
+              "diy",
+              "other"
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timesSeen": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "proposalRowId",
+          "name",
+          "amount",
+          "note",
+          "category",
+          "timesSeen",
+          "lastSeenAt"
+        ]
+      },
+      "ApplySuggestFromHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "$ref": "#/components/schemas/SuggestAppliedShoppingList"
+          },
+          "applied": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "list",
+          "applied"
+        ]
+      },
+      "SuggestAppliedShoppingList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "emoji": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "archived",
+              "deleted"
+            ]
+          },
+          "isUntitled": {
+            "type": "boolean"
+          },
+          "itemCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "itemNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "previewItems": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string",
+                  "enum": [
+                    "fruit",
+                    "vegetables",
+                    "dairy",
+                    "meat",
+                    "fish",
+                    "bakery",
+                    "frozen",
+                    "drinks",
+                    "alcohol",
+                    "snacks",
+                    "household",
+                    "cleaning",
+                    "baby",
+                    "pets",
+                    "pharmacy",
+                    "cosmetics",
+                    "electronics",
+                    "office",
+                    "garden",
+                    "diy",
+                    "other"
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "category"
+              ]
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "name",
+          "emoji",
+          "status",
+          "isUntitled",
+          "itemCount",
+          "itemNames",
+          "previewItems",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ApplySuggestFromHistoryBody": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "acceptedProposalRowIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "runId",
+          "acceptedProposalRowIds"
+        ]
+      },
+      "AbandonSuggestFromHistoryBody": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "runId"
         ]
       },
       "PlatformOverviewResponse": {
@@ -3363,7 +3748,7 @@
     },
     "/api/v1/lists/{listId}/sessions/{sessionId}/notify-finished": {
       "post": {
-        "summary": "Notify workspace that shopping finished (no archive — used on summary screen)",
+        "summary": "Notify workspace that shopping finished (no archive - used on summary screen)",
         "tags": [
           "Shopping Sessions"
         ],
@@ -4329,6 +4714,162 @@
         }
       }
     },
+    "/api/v1/workspaces/{workspaceId}/billing/checkout": {
+      "post": {
+        "summary": "Create a Stripe Checkout session for Premium (30-day trial)",
+        "tags": [
+          "Billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Checkout URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingCheckoutResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Member cannot manage billing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already Premium",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspaceId}/billing/portal": {
+      "post": {
+        "summary": "Create a Stripe Customer Portal session",
+        "tags": [
+          "Billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Portal URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingPortalResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Member cannot manage billing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/webhook": {
+      "post": {
+        "summary": "Stripe webhook (signature verified; no Clerk auth)",
+        "tags": [
+          "Billing"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event received",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingWebhookAck"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid signature or payload"
+          }
+        }
+      }
+    },
+    "/api/v1/billing/premium-price": {
+      "get": {
+        "summary": "Get Premium monthly price from Stripe (STRIPE_PRICE_PREMIUM_MONTHLY)",
+        "tags": [
+          "Billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Premium price",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PremiumPrice"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/lists/{listId}/ai/ingest": {
       "post": {
         "summary": "Create an AI proposal from text, clipboard, or screenshot",
@@ -4467,6 +5008,210 @@
           },
           "404": {
             "description": "Not found or not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspaceId}/ai/suggest-from-history": {
+      "post": {
+        "summary": "Generate a shopping list proposal from recent active and archived lists",
+        "tags": [
+          "AI"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "History suggestion proposal created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestFromHistoryResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient AI Credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Premium required, feature disabled, or forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No history or workspace not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "AI temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspaceId}/ai/suggest-from-history/apply": {
+      "post": {
+        "summary": "Create a list from accepted history-suggestion items",
+        "tags": [
+          "AI"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplySuggestFromHistoryBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List created and items applied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplySuggestFromHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (empty accepted / invalid proposalRowId)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Run already applied or abandoned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspaceId}/ai/suggest-from-history/abandon": {
+      "post": {
+        "summary": "Abandon a history-suggestion proposal run",
+        "tags": [
+          "AI"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AbandonSuggestFromHistoryBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Run abandoned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "abandoned": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "abandoned"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Run already applied or abandoned",
             "content": {
               "application/json": {
                 "schema": {

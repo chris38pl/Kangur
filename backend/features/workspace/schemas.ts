@@ -12,6 +12,10 @@ export const WorkspacePlanSchema = z
   .enum(["free", "premium"])
   .openapi("WorkspacePlan");
 
+export const WorkspaceBillingStatusSchema = z
+  .enum(["none", "active", "trialing", "past_due", "cancelled", "expired"])
+  .openapi("WorkspaceBillingStatus");
+
 export const WorkspaceDTOSchema = z
   .object({
     id: z.string(),
@@ -21,6 +25,8 @@ export const WorkspaceDTOSchema = z
     isOwner: z.boolean(),
     memberCount: z.number().int().nonnegative(),
     plan: WorkspacePlanSchema,
+    billingStatus: WorkspaceBillingStatusSchema,
+    currentPeriodEnd: z.string().datetime().nullable(),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
   })

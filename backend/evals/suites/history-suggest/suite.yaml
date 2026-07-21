@@ -1,0 +1,8 @@
+name: history-suggest
+suiteVersion: 3
+adapter: shopping-history
+defaultModel: gpt-4.1-mini
+defaultPrompt: production
+description: >
+  History Suggest - complete large weekly grocery proposal for Review UX;
+  preferredForAi lists are the primary source (fill with newest unmarked).

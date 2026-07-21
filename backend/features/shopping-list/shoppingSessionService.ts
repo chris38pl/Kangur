@@ -23,7 +23,7 @@ export type FinishSessionInput = {
 };
 
 /**
- * ShoppingSessionService — domain lifecycle.
+ * ShoppingSessionService - domain lifecycle.
  * Start: publish ShoppingStarted only for the first active session on the list
  * (joining an in-progress trip does not notify again).
  * Notify finished: publish ShoppingFinished only (from actor "Finish shopping" CTA).
@@ -184,7 +184,7 @@ export async function finishShoppingSession(input: FinishSessionInput) {
     };
   }
 
-  // Publish again is safe — notification handler dedups by sessionId.
+  // Publish again is safe - notification handler dedups by sessionId.
   await publishShoppingFinished({
     list,
     workspace,

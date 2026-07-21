@@ -10,7 +10,7 @@ export type UseListPaginationOptions = {
   resetKey?: string | number;
   /**
    * External “has more” for server-driven pagination.
-   * When set with `onLoadMore`, the hook does not slice locally —
+   * When set with `onLoadMore`, the hook does not slice locally -
    * `visibleItems` equals `items` and `showMore` calls `onLoadMore`.
    */
   hasMore?: boolean;
@@ -29,7 +29,7 @@ export type UseListPaginationResult<T> = {
 };
 
 /**
- * Progressive list reveal — “Show more” pagination for mobile lists.
+ * Progressive list reveal - “Show more” pagination for mobile lists.
  *
  * Default: client-side window over an already-fetched array.
  * Optional remote mode: pass `hasMore` + `onLoadMore` when the next page

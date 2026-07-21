@@ -22,7 +22,7 @@ export const OFFLINE_BANNER_HEIGHT = 32;
 
 /**
  * Shared offline / sync status banner. Reads Engine connectivity + pending count.
- * Informational only — no business logic on event order.
+ * Informational only - no business logic on event order.
  */
 export function OfflineStatusBanner({
   listId,

@@ -27,16 +27,24 @@ export type CreateListPath =
   | "clipboard"
   | "photo"
   | "describe"
-  | "voice";
+  | "voice"
+  | "fromHistory";
 
 type Props = {
   visible: boolean;
   busy?: boolean;
+  showFromHistory?: boolean;
   onClose: () => void;
   onSelect: (path: CreateListPath) => void;
 };
 
-export function CreateListSheet({ visible, busy, onClose, onSelect }: Props) {
+export function CreateListSheet({
+  visible,
+  busy,
+  showFromHistory = false,
+  onClose,
+  onSelect,
+}: Props) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
@@ -175,6 +183,14 @@ export function CreateListSheet({ visible, busy, onClose, onSelect }: Props) {
                   subtitle={t("home.createDescribeHint")}
                   onPress={() => onSelect("describe")}
                 />
+                {showFromHistory ? (
+                  <CreateListOptionRow
+                    icon="✨"
+                    title={t("home.createFromHistory")}
+                    subtitle={t("home.createFromHistoryHint")}
+                    onPress={() => onSelect("fromHistory")}
+                  />
+                ) : null}
 
                 <View
                   style={{

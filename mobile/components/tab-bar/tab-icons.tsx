@@ -36,7 +36,7 @@ function Box({
   );
 }
 
-/** Delicate house — filled when active. */
+/** Delicate house - filled when active. */
 export function TabIconHome({ color, size = 24, filled }: IconProps) {
   const w = size * 0.72;
   const h = size * 0.58;

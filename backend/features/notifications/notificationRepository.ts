@@ -20,7 +20,7 @@ export type SaveNotificationInput = {
   payload: Prisma.InputJsonValue;
 };
 
-/** Pure persistence — no event side-effects. */
+/** Pure persistence - no event side-effects. */
 export const notificationRepository = {
   async save(input: SaveNotificationInput): Promise<Notification> {
     return prisma.notification.create({

@@ -4,7 +4,7 @@ import { notifyShoppingFinished } from "@/features/notifications/api";
 import { ShoppingSession } from "./shopping-session";
 
 /**
- * Notify workspace that this shopper finished — call only from the actor's
+ * Notify workspace that this shopper finished - call only from the actor's
  * "Finish shopping" CTA, never when opening the summary as a viewer.
  */
 export async function notifyFinishedForActiveSession(

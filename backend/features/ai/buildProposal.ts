@@ -87,7 +87,7 @@ function listTitleFallback(language: AiOutputLanguage): string {
 function shoppingContextBlock(language: AiOutputLanguage): string {
   const fallback = listTitleFallback(language);
   return [
-    "SHOPPING LIST TITLE (shoppingContext) — mandatory:",
+    "SHOPPING LIST TITLE (shoppingContext) - mandatory:",
     "Create a short shopping list title from the input content.",
     "Priority: 1) occasion 2) meal 3) purpose 4) dominant theme 5) generic.",
     "Prefer under 24 characters. Hard limit 32 characters.",

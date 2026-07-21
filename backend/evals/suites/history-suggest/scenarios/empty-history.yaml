@@ -1,0 +1,15 @@
+id: empty-history
+scenarioVersion: 1
+name: Empty history controlled error
+adapter: shopping-history
+input:
+  locale: pl
+  lists: []
+expectations:
+  expectError: EMPTY_HISTORY
+hardRules:
+  - id: H010
+    type: expect_error
+    code: EMPTY_HISTORY
+softRules: []
+infoRules: []

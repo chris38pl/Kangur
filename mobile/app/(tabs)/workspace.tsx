@@ -250,7 +250,9 @@ export default function WorkspaceScreen() {
         />
 
         {activeWorkspace.plan !== "premium" ? (
-          <PremiumUpgradeBanner />
+          <PremiumUpgradeBanner
+            onPress={() => router.push("/premium")}
+          />
         ) : null}
 
         <WorkspaceInviteSection

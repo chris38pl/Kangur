@@ -1,16 +1,20 @@
 /**
- * Brand image assets — prefer WebP; PNG kept as conversion source / fallback.
+ * Brand image assets - prefer WebP; PNG kept as conversion source / fallback.
  */
 export const brandAssets = {
   icon: require("@/assets/brand/kangur-icon.webp"),
   hero: require("@/assets/brand/kangur-hero.webp"),
+  /** Cold-start brand boot mascot (single, consistent). */
+  splashMascot: require("@/assets/brand/list-bag.webp"),
   leaveShopping: require("@/assets/brand/leave-shopping.webp"),
+  error: require("@/assets/brand/error.webp"),
   createListMascot: require("@/assets/brand/create-list-mascot.webp"),
   homeHero: require("@/assets/brand/home-hero.webp"),
   listBag: require("@/assets/brand/list-bag.webp"),
   listEmpty: require("@/assets/brand/list-empty.webp"),
   workspaceHero: require("@/assets/brand/workspace-hero.webp"),
   premiumUpgrade: require("@/assets/brand/premium-upgrade.webp"),
+  premiumActive: require("@/assets/brand/premium-active.webp"),
   deleteList: require("@/assets/brand/delete-list.webp"),
   categoryComplete: require("@/assets/brand/category-complete.webp"),
   notificationsEmpty: require("@/assets/brand/notifications-empty.webp"),

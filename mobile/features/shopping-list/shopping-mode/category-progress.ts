@@ -22,7 +22,7 @@ export type ListShoppingProgress = {
   unavailable: number;
   pending: number;
   total: number;
-  /** 0–1 — bought / total (matches “X z Y produktów” copy) */
+  /** 0–1 - bought / total (matches “X z Y produktów” copy) */
   progress: number;
 };
 

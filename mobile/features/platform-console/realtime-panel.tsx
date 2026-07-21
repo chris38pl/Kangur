@@ -83,18 +83,18 @@ function softTint(hex: string, alphaHex = "22"): string {
 }
 
 function fmtNum(n: number | null | undefined, digits = 1): string {
-  if (n == null || !Number.isFinite(n)) return "—";
+  if (n == null || !Number.isFinite(n)) return "-";
   if (Number.isInteger(n) || digits === 0) return String(Math.round(n));
   return n.toFixed(digits);
 }
 
 function fmtPct(ratio: number | null | undefined): string {
-  if (ratio == null || !Number.isFinite(ratio)) return "—";
+  if (ratio == null || !Number.isFinite(ratio)) return "-";
   return `${Math.round(ratio * 100)}%`;
 }
 
 function fmtMs(n: number | null | undefined): string {
-  if (n == null || !Number.isFinite(n)) return "—";
+  if (n == null || !Number.isFinite(n)) return "-";
   return `${Math.round(n)} ms`;
 }
 
@@ -603,7 +603,7 @@ export function RealtimePanel({
                   ? t("platformConsole.rtAgeSec", {
                       sec: Math.round(p.lastErrorAgeSec),
                     })
-                  : "—"
+                  : "-"
               }
               hint={p?.lastErrorKind ?? undefined}
               accent={ACCENT.red}

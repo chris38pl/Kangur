@@ -1,6 +1,6 @@
-# Kangur — Product Requirements Document
+# Kangur - Product Requirements Document
 
-**Working title:** Kangur — AI Shopping Assistant  
+**Working title:** Kangur - AI Shopping Assistant  
 **Document type:** PRD (MVP)  
 **Status:** Draft for greenfield MVP  
 **Last updated:** 2026-07-16
@@ -11,7 +11,7 @@
 
 Kangur is an **AI-first shopping assistant**, not another shopping list app.
 
-It turns chaotic shopping input — Messenger screenshots, WhatsApp messages, SMS, pasted text, clipboard, and later voice — into an organized, collaborative shopping list in seconds.
+It turns chaotic shopping input - Messenger screenshots, WhatsApp messages, SMS, pasted text, clipboard, and later voice - into an organized, collaborative shopping list in seconds.
 
 **Core promise:** Open Kangur → import screenshot / text / clipboard → AI extracts, normalizes, merges, categorizes, and sorts → Review → ready list. No manual rewriting. No app switching. No chaos.
 
@@ -31,7 +31,7 @@ Today’s household flow is broken:
 
 ### Solution
 
-A workspace-owned collaborative list where AI ingests messy input and humans shop together with live sync — including a dedicated **Shopping Mode** and a clear **Finish Shopping** ending.
+A workspace-owned collaborative list where AI ingests messy input and humans shop together with live sync - including a dedicated **Shopping Mode** and a clear **Finish Shopping** ending.
 
 ---
 
@@ -47,7 +47,7 @@ A workspace-owned collaborative list where AI ingests messy input and humans sho
 | **No Clutter** | No enterprise density, no settings sprawl, no decorative noise. |
 | **Fast over Fancy** | Perceived speed beats visual spectacle. |
 | **Shared by Default** | Lists live in workspaces; collaboration is the normal case. |
-| **Premium Feeling** | Minimal, calm, high-quality UI — not “cheap free utility.” |
+| **Premium Feeling** | Minimal, calm, high-quality UI - not “cheap free utility.” |
 | **Trust AI but Verify** | Auto-apply high confidence; **AI Review** for the rest; never hide merges. |
 | **Family Focused** | Designed for households and small groups, not social networks. |
 
@@ -63,7 +63,7 @@ A workspace-owned collaborative list where AI ingests messy input and humans sho
 | Keep one shared source of truth while shopping | Mid-trip adds appear without manual refresh |
 | Make in-store UX unmatched | Shopping Mode: large targets, swipe, stay-awake |
 | Clear trip ending | Finish Shopping → summary → archive |
-| Monetize without blocking first value | Free **AI Credits**; Premium unlocks unlimited AI + full history |
+| Monetize without blocking first value | Free **AI Credits**; Premium unlocks unlimited AI, full history, and **AI Generate from History** |
 
 ### Secondary goals
 
@@ -80,19 +80,19 @@ See [§13 Non-goals](#13-non-goals).
 
 ## 4. User Personas
 
-### Persona A — The Shopper (primary)
+### Persona A - The Shopper (primary)
 
 - Shopping with phone in one hand.
 - Gets lists via Messenger/WhatsApp; hates retyping.
 - Needs: speed, Shopping Mode, live updates, clear categories, Finish summary.
 
-### Persona B — The List Sender
+### Persona B - The List Sender
 
 - Sends products from home/work while cooking.
 - Expects adds to show up for the shopper.
 - Needs: screenshot / text / clipboard → Review → done.
 
-### Persona C — Household Admin
+### Persona C - Household Admin
 
 - Creates workspaces (with avatar), invites members, manages billing.
 - Needs: simple invites, clear Premium status, **AI Credits** visibility.
@@ -127,12 +127,15 @@ See [§13 Non-goals](#13-non-goals).
 
 - As a user, I can create, rename, archive, restore, search, and browse past lists.
 - As a user, from History I can **Repeat List** (duplicate as a new list; optional AI cleanup later).
+- As a Premium user, I can **AI Generate from History** - generate a shopping list from recent shopping history (backend uses up to 5 latest archived lists; no list picker) → AI Review → new list.
+- As a Free user, Generate from History is blocked with an upgrade CTA; backend returns `403 PREMIUM_REQUIRED`.
 - As a Premium user, I retain full history; Free users have limited history depth.
 
 ### Billing
 
-- As a workspace admin, I can upgrade to Premium (~9.99 PLN/month) for unlimited **AI Credits** and full history.
+- As a workspace admin, I can upgrade to Premium (~9.99 PLN/month) via Stripe for Premium entitlements: unlimited **AI Credits**, full history, and **AI Generate from History**.
 - As a Free workspace, when **AI Credits** are exhausted I can still shop/edit lists but cannot run AI ingest until reset or upgrade.
+- Premium-only features are gated by entitlements (active subscription), separate from the credit balance itself.
 
 ---
 
@@ -179,10 +182,21 @@ History → Select past list → Repeat List → New draft list
   → Shopping Mode → …
 ```
 
-### 6.5 Billing
+### 6.5 AI Generate from History (Premium)
 
 ```
-Workspace / Profile → Premium → Stripe Checkout → Unlimited AI Credits
+History / Create → AI Generate from History
+  → Backend loads ≤5 latest archived lists (updatedAt DESC; no picker)
+  → Premium entitlement check (else 403 PREMIUM_REQUIRED)
+  → AI proposal (shared AiIngestRun path) → AI Review → Apply → New list
+```
+
+### 6.6 Billing
+
+```
+Workspace / Profile → Premium → Stripe Checkout
+  → Premium entitlement active
+  → Unlimited AI Credits + AI Generate from History unlocked
 ```
 
 ---
@@ -194,7 +208,7 @@ Workspace / Profile → Premium → Stripe Checkout → Unlimited AI Credits
 | Tab | Purpose |
 |-----|---------|
 | **Home** | Active lists, quick create, primary import CTA |
-| **History** | Past / archived lists, search, **Repeat List** |
+| **History** | Past / archived lists, search, **Repeat List**, **AI Generate from History** (Premium) |
 | **Workspace** | Avatar, members, invites, plan, **AI Credits**, settings |
 | **Profile** | Account, locale, app preferences, sign out |
 
@@ -228,16 +242,16 @@ One of the most important screens in the app. Shown after AI ingest when there i
 
 | Block | Purpose |
 |-------|---------|
-| **Low confidence items** | Items below confidence threshold — review before accept |
-| **Merge conflicts / proposed merges** | “Milk” + “mleko 2%” → one item — confirm or split |
+| **Low confidence items** | Items below confidence threshold - review before accept |
+| **Merge conflicts / proposed merges** | “Milk” + “mleko 2%” → one item - confirm or split |
 | **Unknown / ambiguous products** | Unclear intent, odd OCR, missing qty when source was vague |
 | High-confidence auto-ready items | Shown as accepted preview (collapsed or checkmarked) |
 
 **Actions:**
 
-- **Accept all** — apply entire proposal (still respecting any unchecked rejects)
-- **Edit** — rename, qty, unit, category, note per item
-- **Reject** — drop item(s) from this ingest (do not add to list)
+- **Accept all** - apply entire proposal (still respecting any unchecked rejects)
+- **Edit** - rename, qty, unit, category, note per item
+- **Reject** - drop item(s) from this ingest (do not add to list)
 - Confirm / undo individual merges
 - Back / cancel ingest apply (no list change if user abandons before accept)
 
@@ -249,10 +263,10 @@ Entered when the user opens a list to shop (from Home or “Start shopping”). 
 
 | Behavior | Detail |
 |----------|--------|
-| Focus | Only pending (and maybe unavailable) — hide clutter |
+| Focus | Only pending (and maybe unavailable) - hide clutter |
 | Targets | Huge checkboxes / tap areas; large type |
 | Gestures | Swipe to bought / unavailable / remove (tunable) |
-| Actions | Minimal chrome: status, maybe add, finish — no settings maze |
+| Actions | Minimal chrome: status, maybe add, finish - no settings maze |
 | Stay awake | Optional keep-screen-on while mode is active |
 | Sync | Soft toasts for remote adds; optional sound/haptic |
 | Exit | Back to normal list view or Finish Shopping |
@@ -279,9 +293,9 @@ Summary is satisfying and useful for later Repeat List / analytics. Archive is t
 
 Import is an explicit entry with three MVP sources (+ manual add elsewhere):
 
-1. **Screenshot** — camera roll / capture → vision  
-2. **Text** — paste multi-line into a field  
-3. **Clipboard** — detect clipboard text on return to app (especially Android); offer “Import from clipboard?”  
+1. **Screenshot** - camera roll / capture → vision  
+2. **Text** - paste multi-line into a field  
+3. **Clipboard** - detect clipboard text on return to app (especially Android); offer “Import from clipboard?”  
 
 Manual add remains a separate, non-AI path.
 
@@ -318,6 +332,7 @@ Manual add remains a separate, non-AI path.
 
 - CRUD, search (title, date), archive, restore.
 - **Repeat List** from History: creates a new list copied from a past list (items reset to `pending`). Optional Post-MVP AI pass to strip one-off products.
+- **AI Generate from History** (Premium entitlement, M13): generate a shopping list from recent shopping history. Backend automatically uses up to **5** latest archived lists (`updatedAt` DESC); the user does **not** pick lists. Reuses shared AI proposal → Review → Apply. Requires active Premium; Free / expired → `403 PREMIUM_REQUIRED`. Still meters via **AI Credits** (unlimited on Premium). Distinct from Repeat.
 - Archive preferred over hard delete.
 
 ### 9.5 Shopping items
@@ -364,15 +379,18 @@ Voice: Post-MVP.
 
 ### 9.9 AI Credits (metering)
 
-Always say **AI Credits** in product copy (not bare “Credits” — avoids currency confusion).
+Always say **AI Credits** in product copy (not bare “Credits” - avoids currency confusion).
 
 Free plan: monthly **AI Credits**. Premium: unlimited (fair-use).
+
+**Premium-only feature ≠ Unlimited AI Credits.** Entitlements (e.g. Generate from History) are gated by active subscription; credits are a separate meter that Premium happens to set to unlimited.
 
 | Action | Suggested cost |
 |--------|----------------|
 | Text / clipboard import | 1 AI Credit |
 | Screenshot import | 2 AI Credits |
-| Suggestions (Post-MVP) | 3 AI Credits |
+| **AI Generate from History** (Premium only) | TBD (≥1; same debit path) |
+| Suggestions (other Post-MVP) | 3 AI Credits |
 | Repeat List AI cleanup (Post-MVP) | TBD (likely ≥1) |
 
 Exact Free monthly allowance set before beta. Enforce server-side.
@@ -391,12 +409,13 @@ Exact Free monthly allowance set before beta. Enforce server-side.
 ### 9.12 History & search
 
 - Past lists within plan limits; search by title and date.
-- **Repeat List** action on history items (MVP: copy; Post-MVP: AI refine).
+- **Repeat List** on history items (MVP: deterministic copy; Post-MVP optional AI cleanup on that copy).
+- **AI Generate from History** (M13, Premium): generate a shopping list from recent shopping history - backend auto-loads ≤5 latest archived lists (`updatedAt` DESC), no picker; shared AI Review/Apply path.
 
-### 9.13 AI suggestions
+### 9.13 AI Generate from History & other AI
 
-- MVP: **no**  
-- Post-MVP: yes (costs AI Credits)
+- **AI Generate from History:** MVP via **M13** - Premium entitlement required; not available on Free.
+- Other “AI suggestions” beyond Generate from History: Post-MVP.
 
 ### 9.14 Internationalization
 
@@ -436,14 +455,15 @@ Exact Free monthly allowance set before beta. Enforce server-side.
 - **Finish Shopping** → summary → archive
 - Activity log (`ShoppingEvent`)
 - Live sync via smart polling + `RealtimeProvider`
-- Stripe workspace Premium
+- Stripe workspace Premium (billing) + **Premium entitlements**
+- **AI Generate from History** (Premium-only; ≤5 recent archived lists; shared AI Review path)
 - **AI Credits** metering
 - PL / EN
 - Expo mobile + Next.js platform API (+ OpenAPI)
 
 ### Out of MVP
 
-- Voice; AI suggestions; AI cleanup on Repeat List (copy-only in MVP)  
+- Voice; AI cleanup on Repeat List (copy-only Repeat in MVP)  
 - Stores, prices, recipes, pantry, receipts, location  
 - Permanent screenshot storage  
 - Web/admin UI (API ready for them)  
@@ -456,28 +476,35 @@ Exact Free monthly allowance set before beta. Enforce server-side.
 ## 12. Post-MVP
 
 1. Voice input  
-2. AI suggestions from history  
-3. AI cleanup on Repeat List (“remove one-off products”)  
-4. Estimated shopping cost  
-5. Recurring AI lists  
-6. Recipe → list  
-7. Pantry / receipts / stores / location  
-8. Push sync transport if polling limits UX  
-9. Web client / admin on the same platform API  
+2. AI cleanup on Repeat List (“remove one-off products”)  
+3. Estimated shopping cost  
+4. Recurring AI lists / further AI suggestion modes beyond Generate from History  
+5. Recipe → list  
+6. Pantry / receipts / stores / location  
+7. Push sync transport if polling limits UX  
+8. Web client / admin on the same platform API  
 
 ---
 
 ## 13. Monetization
 
-Billing attaches to **Workspace**.
+Billing attaches to **Workspace**. Stripe is the payment provider; **Premium entitlements** unlock product features.
 
-| Plan | Price | AI | History | Collaboration |
-|------|-------|----|---------|----------------|
-| Free | 0 | Limited monthly **AI Credits** | Limited history | Live sync |
-| Premium | ~9.99 PLN / month | Unlimited **AI Credits** | Unlimited history | + future AI features |
+| Feature | Free | Premium |
+|---------|------|---------|
+| Repeat List | Yes (history depth limit) | Yes |
+| AI Generate from History | No (`403 PREMIUM_REQUIRED`) | Yes |
+| Unlimited AI Credits | No (monthly cap) | Yes |
+| Full history depth | No (last 20 archived) | Yes (safety cap 200) |
+
+| Plan | Price | Notes |
+|------|-------|--------|
+| Free | 0 | Limited monthly **AI Credits**; limited history |
+| Premium | ~9.99 PLN / month | Entitlements above + Stripe Checkout / Customer Portal |
 
 - Stripe Checkout + Customer Portal for owner/admin.
 - AI Credits exhausted → upgrade CTA; list CRUD still works; AI blocked.
+- Premium-only features stay blocked after subscription expiry (`403 PREMIUM_REQUIRED`), even if credit accounting would allow unlimited.
 
 ---
 
@@ -498,19 +525,19 @@ Billing attaches to **Workspace**.
 
 **Taglines:**
 
-- “Kangur — AI Shopping Assistant”
-- “Kangur — Intelligent shopping for the whole family”
+- “Kangur - AI Shopping Assistant”
+- “Kangur - Intelligent shopping for the whole family”
 
 **Mascot / brand kit (direction):**
 
 | Element | Direction |
 |---------|-----------|
-| Mascot | Flat kangaroo — friendly, minimal |
+| Mascot | Flat kangaroo - friendly, minimal |
 | Color | Warm orange primary |
 | Motifs | Pocket, shopping bag |
-| Style | Flat, warm, approachable — not corporate, not childish clutter |
+| Style | Flat, warm, approachable - not corporate, not childish clutter |
 
-**Look:** Modern, minimal, premium. Inspired by Linear, Notion Mobile, Todoist, Things 3, modern Material — adapted for shopping. See architecture Design System.
+**Look:** Modern, minimal, premium. Inspired by Linear, Notion Mobile, Todoist, Things 3, modern Material - adapted for shopping. See architecture Design System.
 
 ---
 
@@ -541,7 +568,7 @@ Billing attaches to **Workspace**.
 
 - [ ] Workspace avatar visible in switcher  
 - [x] Repeat List creates a new pending copy from history  
-- [ ] AI Credits enforced server-side; Premium via Stripe  
+- [ ] AI Credits enforced server-side; Premium via Stripe entitlements; Generate from History returns `403 PREMIUM_REQUIRED` when not entitled
 
 ### Quality
 
@@ -559,7 +586,7 @@ Billing attaches to **Workspace**.
 | Free monthly AI Credits | Set before beta |
 | Free history depth | **Last 20 archived lists** (by `updatedAt`); Premium unlimited (safety cap 200). Beyond Free → `403 HISTORY_LIMIT_EXCEEDED` |
 | Invite mechanism | Email first |
-| When to skip AI Review | Skip only if zero flags and all high confidence — or always show compact Review |
+| When to skip AI Review | Skip only if zero flags and all high confidence - or always show compact Review |
 | Soft vs hard delete | Archive lists; `removed` items |
 
 ---

@@ -1,4 +1,4 @@
-/** Stable client-side id for shopping items (must be UUID — API validates clientId). */
+/** Stable client-side id for shopping items (must be UUID - API validates clientId). */
 export function createClientId(): string {
   if (typeof globalThis.crypto?.randomUUID === "function") {
     return globalThis.crypto.randomUUID();
@@ -13,7 +13,7 @@ export function createClientId(): string {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-/** API `clientId` must be UUID. Server item `id` is a cuid — do not use this for that. */
+/** API `clientId` must be UUID. Server item `id` is a cuid - do not use this for that. */
 export function isUuid(value: string): boolean {
   return UUID_RE.test(value);
 }

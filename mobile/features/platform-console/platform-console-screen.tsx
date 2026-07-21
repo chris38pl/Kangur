@@ -115,7 +115,7 @@ const LATENCY_ACCENT = "#7C6CF0";
 
 /**
  * Presentation-only health: overall platform impact, not a single SLO blip.
- * Does not change API data — only how Overview answers “is the platform OK?”
+ * Does not change API data - only how Overview answers “is the platform OK?”
  */
 function deriveDisplayHealth(overview: Overview | undefined): {
   level: HealthLevel;
@@ -155,7 +155,7 @@ function deriveDisplayHealth(overview: Overview | undefined): {
       id: "polling",
       titleKey: "platformConsole.alertPollingTitle",
       detailKey: "platformConsole.alertPollingDetail",
-      value: "—",
+      value: "-",
       severity: "warning",
     });
   }
@@ -859,14 +859,14 @@ function OverviewBody({
   const noTrend = t("platformConsole.noTrendYet");
 
   const sessions =
-    overview?.activeSessions != null ? String(overview.activeSessions) : "—";
-  const rps = overview?.rps != null ? String(overview.rps) : "—";
+    overview?.activeSessions != null ? String(overview.activeSessions) : "-";
+  const rps = overview?.rps != null ? String(overview.rps) : "-";
   const p95 =
-    overview?.p95Ms != null ? `${Math.round(overview.p95Ms)} ms` : "—";
+    overview?.p95Ms != null ? `${Math.round(overview.p95Ms)} ms` : "-";
   const headroom =
     overview?.headroom != null
       ? `${formatHeadroom(overview.headroom)}×`
-      : "—";
+      : "-";
 
   return (
     <>
@@ -969,7 +969,7 @@ export function PlatformConsoleScreen() {
         token,
       });
       const overview = OverviewSchema.parse(data);
-      // Rolling sparkline buffers — real poll samples only, no fabricated history.
+      // Rolling sparkline buffers - real poll samples only, no fabricated history.
       recordOverviewSample({
         activeSessions: overview.activeSessions,
         rps: overview.rps,

@@ -3,7 +3,7 @@ import { sanitizeTags, type MetricTags } from "@shared/metrics/tags";
 import type { Metrics } from "./types";
 import { safeEmit } from "./types";
 
-/** DEV-only sink — never the production default. */
+/** DEV-only sink - never the production default. */
 export function createConsoleMetrics(prefix = "[metrics]"): Metrics {
   const log = (
     kind: string,

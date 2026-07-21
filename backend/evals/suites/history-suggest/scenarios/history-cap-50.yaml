@@ -1,0 +1,44 @@
+id: history-cap-50
+scenarioVersion: 1
+name: 50 lists capped to 5
+adapter: shopping-history
+input:
+  locale: pl
+  generate:
+    listCount: 50
+    itemsPerList: 3
+    namePrefix: Item
+    listNamePrefix: Hist
+    category: other
+    baseDate: 2026-01-01T10:00:00.000Z
+expectations:
+  sourceListCap: 5
+  nonEmpty: true
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H004
+    type: no_hallucination
+  - id: H005
+    type: language
+    locale: pl
+  - id: H006
+    type: product_cap
+    max: 40
+  - id: H011
+    type: source_list_cap
+    expected: 5
+  - id: H013
+    type: no_crash
+softRules: []
+infoRules:
+  - id: I001
+    type: merge_count
+  - id: I002
+    type: avg_note_length
+  - id: I003
+    type: avg_reason_length
+  - id: I004
+    type: item_count

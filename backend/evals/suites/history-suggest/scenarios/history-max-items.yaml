@@ -1,0 +1,31 @@
+id: history-max-items
+scenarioVersion: 1
+name: Stress 5×200 items
+description: Contract stress - not AI quality
+adapter: shopping-history
+input:
+  locale: pl
+  generate:
+    listCount: 5
+    itemsPerList: 200
+    namePrefix: Sku
+    listNamePrefix: Bulk
+    category: other
+    baseDate: 2026-07-01T10:00:00.000Z
+expectations:
+  sourceListCap: 5
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H006
+    type: product_cap
+    max: 40
+  - id: H011
+    type: source_list_cap
+    expected: 5
+  - id: H013
+    type: no_crash
+softRules: []
+infoRules:
+  - id: I004
+    type: item_count

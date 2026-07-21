@@ -62,7 +62,7 @@ export const APP_MENU_SECTIONS: AppMenuSection[] = [
       {
         id: "subscription",
         labelKey: "appMenu.subscription",
-        stub: true,
+        href: "/premium",
         visible: everyone,
       },
       {
@@ -92,13 +92,13 @@ export const APP_MENU_SECTIONS: AppMenuSection[] = [
       {
         id: "help",
         labelKey: "appMenu.help",
-        stub: true,
+        href: "/help",
         visible: everyone,
       },
       {
         id: "feedback",
         labelKey: "appMenu.feedback",
-        stub: true,
+        href: "/help",
         visible: everyone,
       },
       {

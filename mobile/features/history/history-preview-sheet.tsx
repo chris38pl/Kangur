@@ -32,7 +32,7 @@ type Props = {
 };
 
 /**
- * Read-only History preview — same row layout as “Items on list”.
+ * Read-only History preview - same row layout as “Items on list”.
  */
 export function HistoryPreviewSheet({
   visible,

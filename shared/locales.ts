@@ -1,7 +1,7 @@
 /**
  * Single source of truth for app locales (UI, API, notifications).
  *
- * How to add a language — checklist:
+ * How to add a language - checklist:
  * 1. Add an entry here (id, nativeName, englishName, emoji, bcp47, defaultHomeName)
  * 2. mobile/lib/i18n/{id}.json + entry in resources/index.ts
  * 3. backend/locales/{id}.json
@@ -10,7 +10,7 @@
  * 6. pnpm test:locales
  *
  * Adding a language must not require editing business handlers, pickers, or
- * `if (locale === …)` branches — extend SSOT and catalogs instead.
+ * `if (locale === …)` branches - extend SSOT and catalogs instead.
  */
 
 const LOCALE_DEFINITIONS = [

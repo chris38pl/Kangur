@@ -20,7 +20,7 @@ type BoneProps = {
 
 /**
  * Soft pulsing bone for skeleton screens.
- * Opacity-only animation — cheap and calm (not a harsh shimmer sweep).
+ * Opacity-only animation - cheap and calm (not a harsh shimmer sweep).
  */
 export function SkeletonBone({
   width = "100%",
@@ -68,7 +68,7 @@ type BlockProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** Neutral layout wrapper — no pulse of its own. */
+/** Neutral layout wrapper - no pulse of its own. */
 export function SkeletonBlock({ children, style }: BlockProps) {
   return <View style={style}>{children}</View>;
 }

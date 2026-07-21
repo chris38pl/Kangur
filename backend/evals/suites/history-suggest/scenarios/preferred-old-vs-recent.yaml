@@ -1,0 +1,124 @@
+id: preferred-old-vs-recent
+scenarioVersion: 1
+name: Old preferred weekly vs recent events
+description: >
+  Preferred weekly groceries from 6 months ago should still dominate over
+  five newer unmarked event/DIY lists (grill, IKEA, remont, birthday, party).
+adapter: shopping-history
+input:
+  locale: pl
+  lists:
+    - id: weekly-old
+      name: Weekly groceries
+      updatedAt: 2025-12-19T10:00:00.000Z
+      preferredForAi: true
+      items:
+        - { name: Mleko, category: dairy, amount: null, note: null }
+        - { name: Chleb, category: bakery, amount: null, note: null }
+        - { name: Jajka, category: dairy, amount: null, note: null }
+        - { name: Masło, category: dairy, amount: null, note: null }
+        - { name: Jogurt naturalny, category: dairy, amount: null, note: null }
+        - { name: Ser żółty, category: dairy, amount: null, note: null }
+        - { name: Pomidory, category: vegetables, amount: null, note: null }
+        - { name: Ogórki, category: vegetables, amount: null, note: null }
+        - { name: Banany, category: fruit, amount: null, note: null }
+        - { name: Jabłka, category: fruit, amount: null, note: null }
+        - { name: Woda, category: drinks, amount: null, note: null }
+        - { name: Kawa, category: drinks, amount: null, note: null }
+        - { name: Ryż, category: other, amount: null, note: null }
+        - { name: Makaron, category: other, amount: null, note: null }
+        - { name: Kurczak, category: meat, amount: null, note: null }
+        - { name: Płatki owsiane, category: bakery, amount: null, note: null }
+        - { name: Papier toaletowy, category: household, amount: null, note: null }
+        - { name: Płyn do naczyń, category: cleaning, amount: null, note: null }
+        - { name: Mozzarella, category: dairy, amount: null, note: null }
+        - { name: Ketchup, category: other, amount: null, note: null }
+    - id: grill
+      name: Grill u znajomych
+      updatedAt: 2026-07-15T10:00:00.000Z
+      preferredForAi: false
+      items:
+        - { name: Karkówka, category: meat, amount: null, note: null }
+        - { name: Kiełbasa, category: meat, amount: null, note: null }
+        - { name: Węgiel, category: other, amount: null, note: null }
+    - id: ikea
+      name: IKEA
+      updatedAt: 2026-07-16T10:00:00.000Z
+      preferredForAi: false
+      items:
+        - { name: Biurko, category: household, amount: null, note: null }
+        - { name: Lampa, category: electronics, amount: null, note: null }
+        - { name: Szafka, category: household, amount: null, note: null }
+    - id: remont
+      name: Remont
+      updatedAt: 2026-07-17T10:00:00.000Z
+      preferredForAi: false
+      items:
+        - { name: Farba, category: diy, amount: null, note: null }
+        - { name: Wałek, category: diy, amount: null, note: null }
+        - { name: Silikon, category: diy, amount: null, note: null }
+    - id: birthday
+      name: Urodziny
+      updatedAt: 2026-07-18T10:00:00.000Z
+      preferredForAi: false
+      items:
+        - { name: Balony, category: other, amount: null, note: null }
+        - { name: Tort urodzinowy, category: bakery, amount: null, note: null }
+    - id: party
+      name: Impreza
+      updatedAt: 2026-07-19T10:00:00.000Z
+      preferredForAi: false
+      items:
+        - { name: Kieliszki jednorazowe, category: other, amount: null, note: null }
+        - { name: Serwetki imprezowe, category: other, amount: null, note: null }
+expectations:
+  mustIncludeAny:
+    - Mleko
+    - Chleb
+    - Jajka
+    - Pomidory
+    - Płatki owsiane
+  mustExclude:
+    - Biurko
+    - Lampa
+    - Szafka
+    - Farba
+    - Wałek
+    - Silikon
+    - Węgiel
+    - Balony
+    - Kieliszki jednorazowe
+  preferExclude:
+    - Karkówka
+    - Kiełbasa
+  titleMustNotMatch:
+    - "(?i)grill"
+    - "(?i)remont"
+    - "(?i)ikea"
+    - "(?i)urodzin"
+    - "(?i)imprez"
+  sourceListCap: 5
+  minItems: 12
+  nonEmpty: true
+hardRules:
+  - { id: H001, type: json_valid }
+  - { id: H002, type: category_enum }
+  - { id: H004, type: no_hallucination }
+  - { id: H005, type: language, locale: pl }
+  - { id: H006, type: product_cap, max: 40 }
+softRules:
+  - { id: S002, type: golden_similarity, minRecall: 0.5 }
+baseline:
+  items:
+    - Mleko
+    - Chleb
+    - Jajka
+    - Masło
+    - Pomidory
+    - Banany
+    - Woda
+    - Kawa
+    - Mozzarella
+    - Ketchup
+infoRules:
+  - { id: I004, type: item_count }

@@ -131,7 +131,7 @@ export function AccountDetailsScreen() {
   const email =
     user?.primaryEmailAddress?.emailAddress ??
     user?.emailAddresses?.[0]?.emailAddress ??
-    "—";
+    "-";
 
   const isEmailOnlyAuth =
     Boolean(user?.passwordEnabled) &&

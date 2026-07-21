@@ -31,7 +31,7 @@ export function ShoppingHomeHeader({ title, remaining }: Props) {
   );
 }
 
-/** Reserved spacing for future sticky search — owns layout even when empty. */
+/** Reserved spacing for future sticky search - owns layout even when empty. */
 export function SearchSlot() {
   return (
     <View

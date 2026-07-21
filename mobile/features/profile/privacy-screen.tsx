@@ -177,8 +177,8 @@ export function PrivacyScreen() {
   };
 
   const formatLastActive = (iso: string | null) => {
-    if (!iso) return "—";
-    return formatRelativeUpdatedAt(iso, relativeLabels) || "—";
+    if (!iso) return "-";
+    return formatRelativeUpdatedAt(iso, relativeLabels) || "-";
   };
 
   const onRevokeOne = (row: ClerkSessionRow) => {

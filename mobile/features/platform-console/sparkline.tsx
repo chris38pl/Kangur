@@ -18,7 +18,7 @@ type Props = {
 type Point = { x: number; y: number };
 
 /**
- * Tiny trend for KPI cards — pure RN Views (no native SVG).
+ * Tiny trend for KPI cards - pure RN Views (no native SVG).
  * Soft area + stroked line segments. No axes / interaction.
  */
 export function Sparkline({

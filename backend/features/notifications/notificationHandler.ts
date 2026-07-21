@@ -14,7 +14,7 @@ import {
 } from "./preferences";
 
 /**
- * NotificationHandler — logical steps (TODO extract later):
+ * NotificationHandler - logical steps (TODO extract later):
  * 1. RecipientResolver
  * 2. PreferenceFilter
  * 3. NotificationFactory (title/body/payload)

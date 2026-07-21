@@ -6,7 +6,7 @@ const QUEUE_KEY = "kangur.dataSync.queue.v1";
 const SESSION_PREFIX = "kangur.shoppingSession.v1.";
 
 /**
- * Persistence abstraction — durable across restart / process kill.
+ * Persistence abstraction - durable across restart / process kill.
  * AsyncStorage satisfies requirements; MMKV/SQLite can replace later.
  */
 export const dataSyncPersistence = {

@@ -11,8 +11,8 @@ import {
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { AuthBrandHero } from "@/features/auth/auth-brand-hero";
 
-const TERMS_PLACEHOLDER_URL = "https://kangur.app/terms";
-const PRIVACY_PLACEHOLDER_URL = "https://kangur.app/privacy";
+const TERMS_PLACEHOLDER_URL = "https://getkangur.com/terms";
+const PRIVACY_PLACEHOLDER_URL = "https://getkangur.com/privacy";
 
 export function WelcomeScreen() {
   const { t } = useTranslation();

@@ -57,7 +57,12 @@ function SectionTitleSkeleton({ withAction = false }: { withAction?: boolean }) 
  * Home-shaped loading shell shown while the user profile boots.
  * Mirrors Start: header icons → hero → quick actions → lists.
  */
-export function HomeSkeleton() {
+export function HomeSkeleton({
+  showTabBar = true,
+}: {
+  /** Fake tab bar silhouette - off when real Tabs bar is already mounted. */
+  showTabBar?: boolean;
+}) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
@@ -75,7 +80,7 @@ export function HomeSkeleton() {
         accessibilityState={{ busy: true }}
         accessibilityLabel={t("auth.loadingProfile")}
       >
-        {/* Top bar — menu + notifications */}
+        {/* Top bar - menu + notifications */}
         <View
           style={{
             flexDirection: "row",
@@ -88,7 +93,7 @@ export function HomeSkeleton() {
           <SkeletonBone width={24} height={24} borderRadius={radius.full} />
         </View>
 
-        {/* Hero — title, subtitle, illustration plane */}
+        {/* Hero - title, subtitle, illustration plane */}
         <View style={{ alignItems: "center", marginBottom: spacing[6] }}>
           <SkeletonBone width="78%" height={28} borderRadius={8} />
           <View style={{ height: spacing[3] }} />
@@ -167,59 +172,61 @@ export function HomeSkeleton() {
         </View>
       </View>
 
-      {/* Tab bar silhouette — app feels already “in” */}
-      <View
-        style={{
-          borderTopWidth: 1,
-          borderTopColor: theme.border,
-          backgroundColor: theme.surface,
-          paddingBottom: Math.max(insets.bottom, spacing[2]),
-          paddingTop: spacing[3],
-          paddingHorizontal: spacing[3],
-          flexDirection: "row",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-        }}
-      >
-        {[0, 1, 2, 3].map((i) => (
-          <View
-            key={i}
-            style={{
-              width: "18%",
-              alignItems: "center",
-              gap: 6,
-              opacity: i === 0 ? 1 : 0.5,
-              paddingBottom: spacing[1],
-            }}
-          >
-            <SkeletonBone
-              width={22}
-              height={22}
-              borderRadius={6}
-              style={
-                i === 0 ? { backgroundColor: `${brand.primary}55` } : undefined
-              }
-            />
-            <SkeletonBone width={28} height={7} borderRadius={4} />
-          </View>
-        ))}
+      {/* Tab bar silhouette - app feels already “in” */}
+      {showTabBar ? (
         <View
-          pointerEvents="none"
           style={{
-            position: "absolute",
-            left: "50%",
-            marginLeft: -28,
-            top: -14,
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            backgroundColor: brand.primary,
-            opacity: 0.35,
-            borderWidth: 3,
-            borderColor: theme.bg,
+            borderTopWidth: 1,
+            borderTopColor: theme.border,
+            backgroundColor: theme.surface,
+            paddingBottom: Math.max(insets.bottom, spacing[2]),
+            paddingTop: spacing[3],
+            paddingHorizontal: spacing[3],
+            flexDirection: "row",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
           }}
-        />
-      </View>
+        >
+          {[0, 1, 2, 3].map((i) => (
+            <View
+              key={i}
+              style={{
+                width: "18%",
+                alignItems: "center",
+                gap: 6,
+                opacity: i === 0 ? 1 : 0.5,
+                paddingBottom: spacing[1],
+              }}
+            >
+              <SkeletonBone
+                width={22}
+                height={22}
+                borderRadius={6}
+                style={
+                  i === 0 ? { backgroundColor: `${brand.primary}55` } : undefined
+                }
+              />
+              <SkeletonBone width={28} height={7} borderRadius={4} />
+            </View>
+          ))}
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: "50%",
+              marginLeft: -28,
+              top: -14,
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              backgroundColor: brand.primary,
+              opacity: 0.35,
+              borderWidth: 3,
+              borderColor: theme.bg,
+            }}
+          />
+        </View>
+      ) : null}
     </Screen>
   );
 }

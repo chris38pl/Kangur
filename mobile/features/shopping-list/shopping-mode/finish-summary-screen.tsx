@@ -333,7 +333,7 @@ export function FinishSummaryScreen({
   const sessionSnapshot = session.snapshot;
   const durationLabel = useMemo(() => {
     if (viewer && !sessionSnapshot?.startedAt) {
-      return "—";
+      return "-";
     }
     const started = sessionSnapshot?.startedAt
       ? new Date(sessionSnapshot.startedAt)

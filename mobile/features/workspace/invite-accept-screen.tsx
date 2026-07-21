@@ -169,7 +169,7 @@ export function InviteAcceptScreen() {
     return () => {
       cancelled = true;
     };
-    // getToken / t are unstable on web — do not depend on them or we loop.
+    // getToken / t are unstable on web - do not depend on them or we loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
   }, [rawToken, isLoaded, isSignedIn]);
 

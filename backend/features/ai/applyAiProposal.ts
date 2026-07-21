@@ -20,7 +20,7 @@ export async function applyAiProposal(input: {
   body: ApplyBody;
 }) {
   const { list } = await authorizeList(input.listId, input.userId);
-  const run = await prisma.aiIngestRun.findUnique({
+  const run = await prisma.aiProposalRun.findUnique({
     where: { id: input.body.runId },
   });
 
@@ -28,8 +28,24 @@ export async function applyAiProposal(input: {
     throw notFound("AI run not found.");
   }
 
+  if (run.status !== "proposed") {
+    throw conflict("AI run is no longer proposed.");
+  }
+
   try {
     const result = await prisma.$transaction(async (tx) => {
+      const claimed = await tx.aiProposalRun.updateMany({
+        where: { id: run.id, status: "proposed" },
+        data: {
+          status: "applied",
+          appliedAt: new Date(),
+        },
+      });
+
+      if (claimed.count !== 1) {
+        throw conflict("AI run is no longer proposed.");
+      }
+
       for (const operation of input.body.operations) {
         if (operation.op === "ignore") continue;
 
@@ -99,14 +115,6 @@ export async function applyAiProposal(input: {
           appliedOperations: input.body.operations.filter(
             (op) => op.op !== "ignore",
           ).length,
-        },
-      });
-
-      await tx.aiIngestRun.update({
-        where: { id: run.id },
-        data: {
-          status: "applied",
-          appliedAt: new Date(),
         },
       });
 

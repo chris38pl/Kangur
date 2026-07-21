@@ -14,3 +14,41 @@ export const AiCreditsBalanceSchema = z
   .openapi("AiCreditsBalance");
 
 export type AiCreditsBalanceDto = z.infer<typeof AiCreditsBalanceSchema>;
+
+export const BillingCheckoutResponseSchema = z
+  .object({
+    url: z.string().url(),
+  })
+  .openapi("BillingCheckoutResponse");
+
+export const BillingPortalResponseSchema = z
+  .object({
+    url: z.string().url(),
+  })
+  .openapi("BillingPortalResponse");
+
+export const BillingSyncResponseSchema = z
+  .object({
+    plan: z.enum(["free", "premium"]),
+    status: z.string(),
+    currentPeriodEnd: z.string().datetime().nullable(),
+  })
+  .openapi("BillingSyncResponse");
+
+export const BillingWebhookAckSchema = z
+  .object({
+    received: z.literal(true),
+  })
+  .openapi("BillingWebhookAck");
+
+export const PremiumPriceSchema = z
+  .object({
+    priceId: z.string(),
+    amount: z.number().nonnegative(),
+    currency: z.string().min(3).max(3),
+    interval: z.enum(["day", "week", "month", "year"]).nullable(),
+    formatted: z.string(),
+  })
+  .openapi("PremiumPrice");
+
+export type PremiumPriceDto = z.infer<typeof PremiumPriceSchema>;

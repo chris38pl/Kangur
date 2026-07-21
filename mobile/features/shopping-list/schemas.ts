@@ -14,6 +14,7 @@ export const ShoppingListSchema = z.object({
   emoji: z.string(),
   status: z.enum(["active", "archived", "deleted"]),
   isUntitled: z.boolean().default(true),
+  preferredForAi: z.boolean().default(false),
   itemCount: z.number().int().nonnegative().default(0),
   itemNames: z.array(z.string()).default([]),
   previewItems: z.array(ShoppingListPreviewItemSchema).default([]),

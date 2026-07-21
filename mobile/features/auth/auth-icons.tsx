@@ -29,22 +29,22 @@ function BrandImage({
   );
 }
 
-/** Envelope — white, for primary CTA. */
+/** Envelope - white, for primary CTA. */
 export function MailIcon({ size = 20, style }: IconProps) {
   return <BrandImage source={mailWhiteSource} size={size} style={style} />;
 }
 
-/** Envelope — teal, for form fields. */
+/** Envelope - teal, for form fields. */
 export function MailFieldIcon({ size = 20, style }: IconProps) {
   return <BrandImage source={mailTealSource} size={size} style={style} />;
 }
 
-/** Lock — teal, for password fields. */
+/** Lock - teal, for password fields. */
 export function LockFieldIcon({ size = 20, style }: IconProps) {
   return <BrandImage source={lockTealSource} size={size} style={style} />;
 }
 
-/** Eye / eye-off — password visibility toggle. */
+/** Eye / eye-off - password visibility toggle. */
 export function EyeIcon({
   size = 20,
   off = false,

@@ -28,5 +28,5 @@ export {
   type LocaleMeta,
 };
 
-/** Shared Zod schema for AppLocale — use everywhere instead of z.enum casts. */
+/** Shared Zod schema for AppLocale - use everywhere instead of z.enum casts. */
 export const AppLocaleSchema = createEnumSchema(APP_LOCALE_IDS);

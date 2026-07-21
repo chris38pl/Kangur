@@ -28,6 +28,7 @@ import { brandAssets } from "@/design-system/brand-assets";
 import { primaryButtonStyle } from "@/design-system/shopping-density";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { applyAi, ingestAi } from "@/features/ai/api";
+import { buildScreenshotIngestFormData } from "@/features/ai/buildScreenshotIngestFormData";
 import type { ProposalOperation } from "@/features/ai/schemas";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { CategoryChips } from "@/features/shopping-item/category-chips";
@@ -59,6 +60,7 @@ import {
 import { createClientId } from "@/lib/createClientId";
 import { isAiReviewEnabled } from "@/lib/aiReview";
 import { ApiClientError } from "@/lib/api/client";
+import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
 
 function buildApplyOperations(operations: ProposalOperation[]) {
   return operations.map((operation) => {
@@ -110,6 +112,7 @@ export default function ShoppingListScreen() {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
   const router = useRouter();
   const navigation = useNavigation();
   const { listId, import: importSource } = useLocalSearchParams<{
@@ -126,7 +129,6 @@ export default function ShoppingListScreen() {
   const [aiText, setAiText] = useState("");
   const [reviewRunId, setReviewRunId] = useState<string | null>(null);
   const [reviewOperations, setReviewOperations] = useState<ProposalOperation[]>([]);
-  const [undoVisible, setUndoVisible] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ShoppingItem | null>(null);
   const [manualAddOpen, setManualAddOpen] = useState(false);
@@ -179,25 +181,13 @@ export default function ShoppingListScreen() {
         throw new Error("Missing auth token or list id");
       }
 
-      const previousItems =
-        queryClient.getQueryData(["shopping-items", listId]) ?? [];
-
       const result = await applyAi(token, listId, {
         runId: input.runId,
         operations: buildApplyOperations(input.operations),
       });
 
       queryClient.setQueryData(["shopping-items", listId], result.items);
-      setUndoVisible(true);
-
-      const timeout = setTimeout(() => {
-        setUndoVisible(false);
-        void queryClient.invalidateQueries({
-          queryKey: ["shopping-items", listId],
-        });
-      }, 5000);
-
-      return { result, previousItems, timeout };
+      return result;
     },
     onSuccess: () => {
       setReviewRunId(null);
@@ -207,6 +197,9 @@ export default function ShoppingListScreen() {
         clearListProvisional(listId);
         void queryClient.invalidateQueries({
           queryKey: ["shopping-list", listId],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["shopping-items", listId],
         });
         void queryClient.invalidateQueries({ queryKey: ["shopping-lists"] });
       }
@@ -237,7 +230,7 @@ export default function ShoppingListScreen() {
       const title =
         result.proposal.shoppingContext?.title?.trim().slice(0, 32) ?? "";
 
-      // Backend renames untitled lists on ingest — refresh header immediately.
+      // Backend renames untitled lists on ingest - refresh header immediately.
       if (typeof listId === "string" && title) {
         queryClient.setQueryData(
           ["shopping-list", listId],
@@ -351,14 +344,15 @@ export default function ShoppingListScreen() {
       if (result.canceled) return;
       picked = result.assets[0];
     }
-    const formData = new FormData();
-    formData.append("source", "screenshot");
-    formData.append("file", {
-      uri: picked.uri,
-      name: picked.fileName ?? "screenshot.jpg",
-      type: picked.mimeType ?? "image/jpeg",
-    } as unknown as Blob);
-    ingestMutation.mutate(formData);
+    try {
+      const formData = await buildScreenshotIngestFormData(picked);
+      ingestMutation.mutate(formData);
+    } catch (error) {
+      Alert.alert(
+        t("list.title"),
+        error instanceof Error ? error.message : t("list.ingestFailed"),
+      );
+    }
   };
 
   // Deep-link from create sheet: pending import (picked before list create) or ?import=
@@ -425,6 +419,9 @@ export default function ShoppingListScreen() {
   const openItemMenu = (item: ShoppingItem) => {
     setEditingItem(item);
   };
+
+  const footerPad =
+    spacing[3] + 56 + spacing[3] + Math.max(insets.bottom, spacing[2]);
 
   return (
     <>
@@ -493,26 +490,6 @@ export default function ShoppingListScreen() {
                 </Text>
               </Pressable>
             )}
-
-
-            <Pressable
-              onPress={() => {
-                if (typeof listId === "string") {
-                  router.push(`/list/${listId}/shop`);
-                }
-              }}
-              style={{
-                ...primaryButtonStyle(theme),
-                borderRadius: radius.full,
-                paddingVertical: spacing[2],
-                paddingHorizontal: spacing[4],
-                minHeight: 40,
-              }}
-            >
-              <Text style={{ ...typography.label, color: theme.onPrimary }}>
-                {t("shoppingMode.startShopping")}
-              </Text>
-            </Pressable>
           </View>
         </View>
 
@@ -521,7 +498,7 @@ export default function ShoppingListScreen() {
           contentContainerStyle={{
             paddingHorizontal: spacing[6],
             paddingTop: spacing[5],
-            paddingBottom: spacing[12] + insets.bottom,
+            paddingBottom: footerPad + spacing[4],
           }}
           keyboardShouldPersistTaps="handled"
         >
@@ -1006,40 +983,6 @@ export default function ShoppingListScreen() {
               </View>
             ) : null}
 
-            {undoVisible ? (
-              <View
-                style={{
-                  marginTop: spacing[4],
-                  borderWidth: 1,
-                  borderColor: theme.primary,
-                  borderRadius: radius.md,
-                  padding: spacing[3],
-                  backgroundColor: theme.surface,
-                }}
-              >
-                <Text style={{ ...typography.body, color: theme.text }}>
-                  {t("ai.undoMessage")}
-                </Text>
-                <Pressable
-                  onPress={async () => {
-                    const mutationData = applyMutation.data;
-                    if (!mutationData || typeof listId !== "string") return;
-                    clearTimeout(mutationData.timeout);
-                    queryClient.setQueryData(
-                      ["shopping-items", listId],
-                      mutationData.previousItems,
-                    );
-                    setUndoVisible(false);
-                  }}
-                  style={{ marginTop: spacing[2], alignSelf: "flex-start" }}
-                >
-                  <Text style={{ ...typography.label, color: theme.primary }}>
-                    {t("ai.undo")}
-                  </Text>
-                </Pressable>
-              </View>
-            ) : null}
-
             <Text
               style={{
                 ...typography.headline,
@@ -1139,6 +1082,39 @@ export default function ShoppingListScreen() {
           </>
         )}
         </ScrollView>
+
+        <View
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: theme.border,
+            backgroundColor: theme.bg,
+            paddingHorizontal: spacing[4],
+            paddingTop: spacing[3],
+            paddingBottom:
+              Math.max(insets.bottom, spacing[2]) +
+              spacing[3] +
+              keyboardHeight,
+          }}
+        >
+          <Pressable
+            onPress={() => {
+              if (typeof listId === "string") {
+                router.push(`/list/${listId}/shop`);
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t("shoppingMode.startShopping")}
+            style={{
+              ...primaryButtonStyle(theme),
+              borderRadius: radius.full,
+              minHeight: 56,
+            }}
+          >
+            <Text style={{ ...typography.label, color: theme.onPrimary }}>
+              {t("shoppingMode.startShopping")}
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       <RenameListSheet

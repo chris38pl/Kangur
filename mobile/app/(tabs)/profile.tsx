@@ -4,7 +4,6 @@ import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { type ReactNode } from "react";
 import {
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -264,10 +263,6 @@ export default function ProfileScreen() {
 
   const languageLabel = localeMeta(resolveAppLocale(i18n.language)).nativeName;
 
-  const showSoon = () => {
-    Alert.alert(t("profile.comingSoon"));
-  };
-
   const openAccount = () => {
     router.push("/account");
   };
@@ -495,7 +490,7 @@ export default function ProfileScreen() {
             icon={<ProfileIconCard color={theme.primary} />}
             title={t("profile.subscription")}
             showDivider
-            onPress={showSoon}
+            onPress={() => router.push("/premium")}
           />
           <ProfileMenuRow
             icon={<ProfileIconBell color={theme.primary} />}
@@ -529,7 +524,7 @@ export default function ProfileScreen() {
             icon={<ProfileIconHelp color={theme.primary} />}
             title={t("profile.helpSupport")}
             showDivider
-            onPress={showSoon}
+            onPress={() => router.push("/help" as never)}
           />
           <ProfileMenuRow
             icon={<ProfileIconInfo color={theme.primary} />}

@@ -1,0 +1,109 @@
+id: all-one-offs
+scenarioVersion: 1
+name: All products appear once
+adapter: shopping-history
+input:
+  locale: pl
+  lists:
+    - name: A
+      updatedAt: 2026-07-10T10:00:00.000Z
+      items:
+        - name: A1
+          category: other
+          amount: null
+          note: null
+        - name: A2
+          category: other
+          amount: null
+          note: null
+        - name: A3
+          category: dairy
+          amount: null
+          note: null
+    - name: B
+      updatedAt: 2026-07-12T10:00:00.000Z
+      items:
+        - name: B1
+          category: bakery
+          amount: null
+          note: null
+        - name: B2
+          category: fruit
+          amount: null
+          note: null
+        - name: B3
+          category: drinks
+          amount: null
+          note: null
+    - name: C
+      updatedAt: 2026-07-14T10:00:00.000Z
+      items:
+        - name: C1
+          category: meat
+          amount: null
+          note: null
+        - name: C2
+          category: vegetables
+          amount: null
+          note: null
+        - name: C3
+          category: dairy
+          amount: null
+          note: null
+    - name: D
+      updatedAt: 2026-07-16T10:00:00.000Z
+      items:
+        - name: D1
+          category: household
+          amount: null
+          note: null
+        - name: D2
+          category: snacks
+          amount: null
+          note: null
+        - name: D3
+          category: frozen
+          amount: null
+          note: null
+    - name: E
+      updatedAt: 2026-07-18T10:00:00.000Z
+      items:
+        - name: E1
+          category: fish
+          amount: null
+          note: null
+        - name: E2
+          category: pharmacy
+          amount: null
+          note: null
+        - name: E3
+          category: cleaning
+          amount: null
+          note: null
+expectations:
+  nonEmpty: true
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H004
+    type: no_hallucination
+  - id: H005
+    type: language
+    locale: pl
+  - id: H006
+    type: product_cap
+    max: 40
+  - id: H012
+    type: non_empty_items
+softRules: []
+infoRules:
+  - id: I001
+    type: merge_count
+  - id: I002
+    type: avg_note_length
+  - id: I003
+    type: avg_reason_length
+  - id: I004
+    type: item_count

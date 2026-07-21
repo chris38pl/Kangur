@@ -97,7 +97,7 @@ export async function finishShoppingSession(
   });
 }
 
-/** Notify workspace members that shopping finished — does not archive the list. */
+/** Notify workspace members that shopping finished - does not archive the list. */
 export async function notifyShoppingFinished(
   token: string,
   listId: string,

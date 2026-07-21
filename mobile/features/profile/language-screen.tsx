@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Pressable, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { Screen } from "@/components/Screen";
@@ -23,16 +22,16 @@ function FlagBadge({ emoji }: { emoji: string }) {
   return (
     <View
       style={{
-        width: 34,
-        height: 34,
-        borderRadius: 17,
+        width: 26,
+        height: 26,
+        borderRadius: 13,
         overflow: "hidden",
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#F1F5F9",
       }}
     >
-      <Text style={{ fontSize: 22, lineHeight: 26 }}>{emoji}</Text>
+      <Text style={{ fontSize: 16, lineHeight: 20 }}>{emoji}</Text>
     </View>
   );
 }
@@ -57,7 +56,6 @@ export function LanguageScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const insets = useSafeAreaInsets();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const current = resolveAppLocale(i18n.language);
@@ -122,7 +120,16 @@ export function LanguageScreen() {
         </View>
       </View>
 
-      <View style={{ flex: 1, paddingHorizontal: spacing[6], paddingTop: spacing[6] }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingHorizontal: spacing[6],
+          paddingTop: spacing[6],
+          paddingBottom: spacing[6],
+          gap: spacing[5],
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
         <View
           style={{
             backgroundColor: theme.surface,
@@ -142,7 +149,7 @@ export function LanguageScreen() {
                 accessibilityState={{ selected }}
                 accessibilityLabel={option.nativeName}
                 style={{
-                  minHeight: 64,
+                  minHeight: 56,
                   flexDirection: "row",
                   alignItems: "center",
                   paddingHorizontal: spacing[4],
@@ -168,19 +175,17 @@ export function LanguageScreen() {
             );
           })}
         </View>
-      </View>
 
-      <Text
-        style={{
-          ...typography.caption,
-          color: theme.textMuted,
-          textAlign: "center",
-          paddingHorizontal: spacing[6],
-          paddingBottom: Math.max(insets.bottom, spacing[4]) + spacing[2],
-        }}
-      >
-        {t("profile.languageHint")}
-      </Text>
+        <Text
+          style={{
+            ...typography.caption,
+            color: theme.textMuted,
+            textAlign: "center",
+          }}
+        >
+          {t("profile.languageHint")}
+        </Text>
+      </ScrollView>
     </Screen>
   );
 }

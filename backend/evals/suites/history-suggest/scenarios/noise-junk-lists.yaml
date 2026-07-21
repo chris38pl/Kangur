@@ -1,0 +1,87 @@
+id: noise-junk-lists
+scenarioVersion: 1
+name: Noise junk list names/items
+adapter: shopping-history
+input:
+  locale: pl
+  lists:
+    - name: ....
+      updatedAt: 2026-07-10T10:00:00.000Z
+      items:
+        - name: ???
+          category: other
+          amount: null
+          note: null
+        - name: "123"
+          category: other
+          amount: null
+          note: null
+    - name: test
+      updatedAt: 2026-07-12T10:00:00.000Z
+      items:
+        - name: test
+          category: other
+          amount: null
+          note: null
+        - name: asdf
+          category: other
+          amount: null
+          note: null
+    - name: Zakupy
+      updatedAt: 2026-07-14T10:00:00.000Z
+      items:
+        - name: Mleko
+          category: dairy
+          amount: null
+          note: null
+        - name: Chleb
+          category: bakery
+          amount: null
+          note: null
+    - name: Dom
+      updatedAt: 2026-07-16T10:00:00.000Z
+      items:
+        - name: Jajka
+          category: dairy
+          amount: null
+          note: null
+        - name: Masło
+          category: dairy
+          amount: null
+          note: null
+    - name: Tydzień
+      updatedAt: 2026-07-18T10:00:00.000Z
+      items:
+        - name: Mleko
+          category: dairy
+          amount: null
+          note: null
+        - name: Woda
+          category: drinks
+          amount: null
+          note: null
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H004
+    type: no_hallucination
+  - id: H005
+    type: language
+    locale: pl
+  - id: H006
+    type: product_cap
+    max: 40
+  - id: H013
+    type: no_crash
+softRules: []
+infoRules:
+  - id: I001
+    type: merge_count
+  - id: I002
+    type: avg_note_length
+  - id: I003
+    type: avg_reason_length
+  - id: I004
+    type: item_count

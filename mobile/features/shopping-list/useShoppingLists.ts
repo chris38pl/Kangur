@@ -56,7 +56,7 @@ export function useCreateShoppingList(workspaceId: string | null) {
       return createShoppingList(token, workspaceId, input);
     },
     onSuccess: async (list) => {
-      // Must run before shopping-lists refetch — Home archives empty non-provisional lists.
+      // Must run before shopping-lists refetch - Home archives empty non-provisional lists.
       markListProvisional(list.id);
       await queryClient.invalidateQueries({
         queryKey: ["shopping-lists", workspaceId],
@@ -65,7 +65,7 @@ export function useCreateShoppingList(workspaceId: string | null) {
   });
 }
 
-/** Soft-delete (archive) — removes list from active home. */
+/** Soft-delete (archive) - removes list from active home. */
 export function useArchiveShoppingList(workspaceId: string | null) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
@@ -104,7 +104,11 @@ export function useUpdateShoppingList(listId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: { name?: string; emoji?: string }) => {
+    mutationFn: async (input: {
+      name?: string;
+      emoji?: string;
+      preferredForAi?: boolean;
+    }) => {
       const token = await getToken();
       if (!token || !listId) {
         throw new Error("Missing auth token or list id");
@@ -113,9 +117,14 @@ export function useUpdateShoppingList(listId: string | null) {
     },
     onSuccess: async (updated) => {
       queryClient.setQueryData(["shopping-list", updated.id], updated);
-      await queryClient.invalidateQueries({
-        queryKey: ["shopping-lists", updated.workspaceId],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["shopping-lists", updated.workspaceId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["shopping-lists-history", updated.workspaceId],
+        }),
+      ]);
     },
   });
 }

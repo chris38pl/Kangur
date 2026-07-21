@@ -46,11 +46,17 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const file = formData.get("file");
-    if (!(file instanceof File)) {
+    if (!(file instanceof Blob)) {
       throw validationError("Screenshot file is required.");
     }
 
-    if (!file.type.startsWith("image/")) {
+    const mimeFromField = formData.get("mimeType");
+    const mimeType =
+      (file instanceof File && file.type) ||
+      (typeof mimeFromField === "string" && mimeFromField) ||
+      "image/jpeg";
+
+    if (!mimeType.startsWith("image/")) {
       throw validationError("Screenshot must be an image.");
     }
 
@@ -58,13 +64,19 @@ export async function POST(request: Request, context: RouteContext) {
       throw validationError("Screenshot is too large.");
     }
 
+    const fileNameField = formData.get("fileName");
+    const fileName =
+      (file instanceof File && file.name) ||
+      (typeof fileNameField === "string" && fileNameField) ||
+      "screenshot.jpg";
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const result = await ingestScreenshot({
       listId,
       userId: user.id,
       fileBuffer: buffer,
-      mimeType: file.type,
-      fileName: file.name,
+      mimeType,
+      fileName,
     });
 
     return NextResponse.json(AiIngestResponseSchema.parse(result));

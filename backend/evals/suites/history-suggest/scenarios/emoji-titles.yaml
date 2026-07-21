@@ -1,0 +1,93 @@
+id: emoji-titles
+scenarioVersion: 2
+name: Emoji in list titles
+adapter: shopping-history
+input:
+  locale: pl
+  lists:
+    - name: 🥩 Grill
+      updatedAt: 2026-07-19T10:00:00.000Z
+      items:
+        - name: Karkówka
+          category: meat
+          amount: null
+          note: null
+    - name: 🍕 Pizza night
+      updatedAt: 2026-07-18T10:00:00.000Z
+      items:
+        - name: Mąka
+          category: bakery
+          amount: null
+          note: null
+        - name: Ser mozzarella
+          category: dairy
+          amount: null
+          note: null
+    - name: Zakupy
+      updatedAt: 2026-07-16T10:00:00.000Z
+      items:
+        - name: Mleko
+          category: dairy
+          amount: null
+          note: null
+        - name: Chleb
+          category: bakery
+          amount: null
+          note: null
+    - name: Dom
+      updatedAt: 2026-07-14T10:00:00.000Z
+      items:
+        - name: Jajka
+          category: dairy
+          amount: null
+          note: null
+        - name: Masło
+          category: dairy
+          amount: null
+          note: null
+    - name: Tydzień
+      updatedAt: 2026-07-12T10:00:00.000Z
+      items:
+        - name: Mleko
+          category: dairy
+          amount: null
+          note: null
+        - name: Woda
+          category: drinks
+          amount: null
+          note: null
+expectations:
+  mustIncludeAny:
+    - Mleko
+    - Chleb
+    - Mąka
+  preferExclude:
+    - Karkówka
+  titleMustNotMatch:
+    - (?i)grill
+    - 🍕
+    - 🥩
+  nonEmpty: true
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H004
+    type: no_hallucination
+  - id: H005
+    type: language
+    locale: pl
+  - id: H006
+    type: product_cap
+    max: 40
+softRules: []
+infoRules:
+  - id: I001
+    type: merge_count
+  - id: I002
+    type: avg_note_length
+  - id: I003
+    type: avg_reason_length
+  - id: I004
+    type: item_count

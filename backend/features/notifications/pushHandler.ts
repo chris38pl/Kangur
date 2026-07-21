@@ -4,7 +4,7 @@ import { pushProvider } from "@/lib/notifications/PushProvider";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Reacts to NotificationCreatedEvent only — never called from NotificationRepository.
+ * Reacts to NotificationCreatedEvent only - never called from NotificationRepository.
  */
 export async function handleNotificationCreated(
   event: Extract<DomainEvent, { type: "NotificationCreated" }>,

@@ -20,7 +20,7 @@ const MAX_EVENTS = 1_000;
 /**
  * Adaptive event poller for a single active list.
  *
- * @see types.ts ADR — events are refresh signals only.
+ * @see types.ts ADR - events are refresh signals only.
  */
 export function createEventPollingProvider(
   callbacks: EventPollingCallbacks,

@@ -8,8 +8,8 @@ export type SoftRemoveOutcome = "archived" | "deleted";
 
 /**
  * Soft-remove a list from Home.
- * - `archived` — finished shopping → appears in History (Repeat).
- * - `deleted` — user "Delete list" → hidden from Home and History.
+ * - `archived` - finished shopping → appears in History (Repeat).
+ * - `deleted` - user "Delete list" → hidden from Home and History.
  */
 export async function archiveShoppingList(
   listId: string,

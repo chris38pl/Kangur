@@ -45,7 +45,7 @@ import {
 import { ShoppingFeedbackBanner } from "./shopping-feedback-banner";
 import { SwipeableItemRow } from "./swipeable-item-row";
 
-type UndoSnapshot = {
+type StatusFeedback = {
   item: ShoppingItem;
   previousStatus: ShoppingItem["status"];
   appliedStatus: "bought" | "unavailable";
@@ -76,10 +76,10 @@ function SectionTitle({ children }: { children: string }) {
 
 function DoneItemCard({
   item,
-  onUndo,
+  onRestore,
 }: {
   item: ShoppingItem;
-  onUndo: () => void;
+  onRestore: () => void;
 }) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
@@ -87,7 +87,7 @@ function DoneItemCard({
 
   return (
     <Pressable
-      onPress={onUndo}
+      onPress={onRestore}
       accessibilityRole="button"
       style={{
         backgroundColor: theme.surface,
@@ -180,11 +180,11 @@ export function ShoppingCategoryScreen({
   const itemsQuery = useShoppingItems(listId);
   const listQuery = useShoppingList(listId);
   const session = useShoppingSession(listId);
-  const [undo, setUndo] = useState<UndoSnapshot | null>(null);
+  const [feedback, setFeedback] = useState<StatusFeedback | null>(null);
   const [purchasedExpanded, setPurchasedExpanded] = useState(true);
   const [wasCategoryDone, setWasCategoryDone] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
-  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useListRealtime(listId, {
     workspaceId: listQuery.data?.workspaceId ?? null,
@@ -244,10 +244,10 @@ export function ShoppingCategoryScreen({
     [listId, queryClient],
   );
 
-  const showUndo = (snapshot: UndoSnapshot) => {
-    if (undoTimer.current) clearTimeout(undoTimer.current);
-    setUndo(snapshot);
-    undoTimer.current = setTimeout(() => setUndo(null), 4000);
+  const showFeedback = (snapshot: StatusFeedback) => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    setFeedback(snapshot);
+    feedbackTimer.current = setTimeout(() => setFeedback(null), 4000);
   };
 
   const applyStatus = async (
@@ -255,7 +255,7 @@ export function ShoppingCategoryScreen({
     index: number,
     status: "bought" | "unavailable",
   ) => {
-    showUndo({
+    showFeedback({
       item,
       previousStatus: item.status,
       appliedStatus: status,
@@ -265,9 +265,9 @@ export function ShoppingCategoryScreen({
     await session.setItemStatus(item.id, status);
   };
 
-  const restoreUndo = async (snapshot: UndoSnapshot) => {
-    if (undoTimer.current) clearTimeout(undoTimer.current);
-    setUndo(null);
+  const restoreItem = async (snapshot: StatusFeedback) => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    setFeedback(null);
     patchCacheStatus(snapshot.item.id, snapshot.previousStatus);
     await session.setItemStatus(snapshot.item.id, snapshot.previousStatus);
     scrollRef.current?.scrollTo({ y: 0, animated: true });
@@ -479,8 +479,8 @@ export function ShoppingCategoryScreen({
                   <DoneItemCard
                     key={item.id}
                     item={item}
-                    onUndo={() =>
-                      void restoreUndo({
+                    onRestore={() =>
+                      void restoreItem({
                         item,
                         previousStatus: "pending",
                         appliedStatus:
@@ -608,14 +608,11 @@ export function ShoppingCategoryScreen({
       <ShoppingFeedbackBanner
         listId={listId}
         layout="overlay"
-        undo={
-          undo
-            ? { name: undo.item.name, kind: undo.appliedStatus }
+        feedback={
+          feedback
+            ? { name: feedback.item.name, kind: feedback.appliedStatus }
             : null
         }
-        onUndo={() => {
-          if (undo) void restoreUndo(undo);
-        }}
       />
 
     </View>

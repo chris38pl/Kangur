@@ -11,7 +11,7 @@ export type SyncOperationResult =
 
 /**
  * Adapter between DataSyncEngine and app cache.
- * Not a source of truth — only applies transport results.
+ * Not a source of truth - only applies transport results.
  */
 export interface SyncCacheAdapter {
   applyOperationResult(
@@ -43,7 +43,7 @@ function shoppingItemsKey(listId: string) {
 
 /**
  * React Query implementation of SyncCacheAdapter.
- * Mutates only the active shopping-items list cache — never history,
+ * Mutates only the active shopping-items list cache - never history,
  * undo queues, or archived-list screens.
  */
 export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
@@ -92,22 +92,27 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
       shoppingItemsKey(listId),
       (prev) => {
         if (!prev) return [server];
-        let found = false;
-        const next = prev.map((item) => {
-          if (item.id !== server.id && item.clientId !== server.clientId) {
-            return item;
-          }
-          found = true;
-          return resolveServerUpdate(item, server);
-        });
-        return found ? next : [...next, server];
+        // Match by server id, or by non-null clientId only.
+        // Never treat null/null clientId as a match - that rewrote every
+        // item without a clientId into one row (dup keys + false category-done).
+        const idx = prev.findIndex(
+          (item) =>
+            item.id === server.id ||
+            (server.clientId != null && item.clientId === server.clientId),
+        );
+        if (idx < 0) {
+          return [...prev, server];
+        }
+        const next = [...prev];
+        next[idx] = resolveServerUpdate(prev[idx], server);
+        return next.filter((item, i) => i === idx || item.id !== server.id);
       },
     );
   }
 
   /**
    * Replace optimistic row (matched by clientId or temporary id) with
-   * canonical server item — never append a duplicate.
+   * canonical server item - never append a duplicate.
    */
   private replaceOptimisticItem(
     listId: string,
@@ -125,7 +130,7 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
             (server.clientId != null && item.clientId === server.clientId),
         );
         if (idx < 0) {
-          // No optimistic row — still avoid dup by server id.
+          // No optimistic row - still avoid dup by server id.
           if (prev.some((item) => item.id === server.id)) {
             return prev.map((item) =>
               item.id === server.id ? resolveServerUpdate(item, server) : item,

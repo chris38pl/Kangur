@@ -34,7 +34,7 @@ function avatarColors(seed: string) {
   return AVATAR_PALETTE[hash] ?? AVATAR_PALETTE[0];
 }
 
-/** MVP: no role UI — only owner/admin may remove other non-owner members. */
+/** MVP: no role UI - only owner/admin may remove other non-owner members. */
 function canRemoveMember(
   actorRole: Props["actorRole"],
   member: WorkspaceMember,

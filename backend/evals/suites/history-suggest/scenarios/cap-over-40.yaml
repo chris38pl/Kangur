@@ -1,0 +1,38 @@
+id: cap-over-40
+scenarioVersion: 1
+name: Cap at 40 items
+adapter: shopping-history
+input:
+  locale: pl
+  generate:
+    listCount: 5
+    itemsPerList: 25
+    namePrefix: Produkt
+    listNamePrefix: Duża
+    category: other
+    baseDate: 2026-07-01T10:00:00.000Z
+expectations:
+  nonEmpty: true
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H004
+    type: no_hallucination
+  - id: H005
+    type: language
+    locale: pl
+  - id: H006
+    type: product_cap
+    max: 40
+softRules: []
+infoRules:
+  - id: I001
+    type: merge_count
+  - id: I002
+    type: avg_note_length
+  - id: I003
+    type: avg_reason_length
+  - id: I004
+    type: item_count

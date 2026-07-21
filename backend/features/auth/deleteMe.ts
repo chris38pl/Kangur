@@ -40,7 +40,7 @@ async function transferWorkspaceAwayFromUser(
 ): Promise<void> {
   const successor = pickOwnershipSuccessor(remaining);
   if (!successor) {
-    // Sole member — cascade deletes lists/items/etc.
+    // Sole member - cascade deletes lists/items/etc.
     await tx.workspace.delete({ where: { id: workspaceId } });
     return;
   }
@@ -80,7 +80,7 @@ async function transferWorkspaceAwayFromUser(
 }
 
 /**
- * Purge app-domain data for a user. DB-only — no Clerk calls.
+ * Purge app-domain data for a user. DB-only - no Clerk calls.
  * Idempotent: missing user / membership / workspace → no-op success.
  */
 export async function deleteMe(userId: string): Promise<void> {

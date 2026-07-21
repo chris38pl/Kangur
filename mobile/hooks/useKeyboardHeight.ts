@@ -3,7 +3,7 @@ import { Keyboard, Platform } from "react-native";
 
 /**
  * Keyboard height for lifting bottom sheets / forms above the soft keyboard.
- * Prefer this inside Modal — KeyboardAvoidingView is unreliable on Android there.
+ * Prefer this inside Modal - KeyboardAvoidingView is unreliable on Android there.
  */
 export function useKeyboardHeight(enabled = true): number {
   const [height, setHeight] = useState(0);

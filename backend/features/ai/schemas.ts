@@ -46,12 +46,90 @@ export const AiIngestResponseSchema = z
   .object({
     runId: z.string(),
     model: z.string(),
-    promptVersion: z.string(),
+    provider: z.string(),
+    proposalType: z.string(),
+    proposalVersion: z.number().int().positive(),
     durationMs: z.number().int().nonnegative().nullable(),
     proposal: AiProposalSchema,
     fastPath: z.boolean(),
   })
   .openapi("AiIngestResponse");
+
+export const SuggestFromHistoryItemSchema = z
+  .object({
+    proposalRowId: z.string(),
+    name: z.string().min(1).max(120),
+    amount: z.string().nullable(),
+    note: z.string().nullable(),
+    category: z.enum(SHOPPING_CATEGORIES),
+    reason: z.string().nullable().optional(),
+    timesSeen: z.number().int().min(1).max(5),
+    lastSeenAt: z.string().datetime(),
+  })
+  .openapi("SuggestFromHistoryItem");
+
+export type SuggestFromHistoryItem = z.infer<
+  typeof SuggestFromHistoryItemSchema
+>;
+
+export const SuggestFromHistoryProposalSchema = z
+  .object({
+    shoppingContext: ShoppingContextSchema,
+    items: z.array(SuggestFromHistoryItemSchema),
+  })
+  .openapi("SuggestFromHistoryProposal");
+
+export const SuggestFromHistoryResponseSchema = z
+  .object({
+    runId: z.string(),
+    model: z.string(),
+    provider: z.string(),
+    proposalType: z.string(),
+    proposalVersion: z.number().int().positive(),
+    durationMs: z.number().int().nonnegative().nullable(),
+    sourceListsCount: z.number().int().min(1).max(5),
+    proposal: SuggestFromHistoryProposalSchema,
+  })
+  .openapi("SuggestFromHistoryResponse");
+
+export const ApplySuggestFromHistoryBodySchema = z
+  .object({
+    runId: z.string(),
+    acceptedProposalRowIds: z.array(z.string()).min(1),
+  })
+  .openapi("ApplySuggestFromHistoryBody");
+
+export const ApplySuggestFromHistoryResponseSchema = z
+  .object({
+    list: z
+      .object({
+        id: z.string(),
+        workspaceId: z.string(),
+        name: z.string(),
+        emoji: z.string(),
+        status: z.enum(["active", "archived", "deleted"]),
+        isUntitled: z.boolean(),
+        itemCount: z.number().int().nonnegative(),
+        itemNames: z.array(z.string()),
+        previewItems: z.array(
+          z.object({
+            name: z.string(),
+            category: z.enum(SHOPPING_CATEGORIES),
+          }),
+        ),
+        createdAt: z.string().datetime(),
+        updatedAt: z.string().datetime(),
+      })
+      .openapi("SuggestAppliedShoppingList"),
+    applied: z.number().int().positive(),
+  })
+  .openapi("ApplySuggestFromHistoryResponse");
+
+export const AbandonSuggestFromHistoryBodySchema = z
+  .object({
+    runId: z.string(),
+  })
+  .openapi("AbandonSuggestFromHistoryBody");
 
 export const ApplyOperationSchema = z
   .discriminatedUnion("op", [

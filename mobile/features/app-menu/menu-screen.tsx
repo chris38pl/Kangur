@@ -21,9 +21,9 @@ import {
   ProfileIconBell,
   ProfileIconCard,
   ProfileIconCrown,
+  ProfileIconFeedback,
   ProfileIconHelp,
   ProfileIconInfo,
-  ProfileIconList,
   ProfileIconPeople,
   ProfileIconPerson,
   ProfileIconShield,
@@ -145,7 +145,7 @@ function itemIcon(id: AppMenuItemId, color: string) {
     case "help":
       return <ProfileIconHelp color={color} />;
     case "feedback":
-      return <ProfileIconList color={color} />;
+      return <ProfileIconFeedback color={color} />;
     case "privacy":
       return <ProfileIconShield color={color} />;
     case "terms":

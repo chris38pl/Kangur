@@ -258,7 +258,7 @@ export function LoginMethodsSection() {
     return null;
   }
 
-  // 2/3) Single OAuth provider, no password — managed by provider + offer set password
+  // 2/3) Single OAuth provider, no password - managed by provider + offer set password
   if (oauthOnlyNoPassword && oauthCount === 1) {
     const provider = hasGoogle ? "google" : "apple";
     const providerLabel = t(

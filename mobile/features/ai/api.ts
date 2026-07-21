@@ -1,3 +1,5 @@
+import { fetch as expoFetch } from "expo/fetch";
+
 import { apiFetch } from "@/lib/api/client";
 import {
   httpLogNetworkError,
@@ -8,6 +10,9 @@ import {
 import {
   AiIngestResponseSchema,
   ApplyAiProposalResponseSchema,
+  ApplySuggestFromHistoryResponseSchema,
+  SuggestFromHistoryResponseSchema,
+  type SuggestFromHistoryResponse,
 } from "./schemas";
 
 export async function ingestAi(
@@ -31,7 +36,8 @@ export async function ingestAi(
 
   let res: Response;
   try {
-    res = await fetch(`${base}${path}`, {
+    // expo/fetch + expo-file-system File (FormData) - global fetch rejects RN file parts.
+    res = await expoFetch(`${base}${path}`, {
       method,
       headers: {
         Authorization: `Bearer ${token}`,
@@ -87,4 +93,42 @@ export async function applyAi(
   });
 
   return ApplyAiProposalResponseSchema.parse(data);
+}
+
+export async function suggestFromHistory(
+  token: string,
+  workspaceId: string,
+): Promise<SuggestFromHistoryResponse> {
+  const data = await apiFetch<unknown>(
+    `/api/v1/workspaces/${workspaceId}/ai/suggest-from-history`,
+    { token, method: "POST" },
+  );
+  return SuggestFromHistoryResponseSchema.parse(data);
+}
+
+export async function applySuggestFromHistory(
+  token: string,
+  workspaceId: string,
+  body: { runId: string; acceptedProposalRowIds: string[] },
+) {
+  const data = await apiFetch<unknown>(
+    `/api/v1/workspaces/${workspaceId}/ai/suggest-from-history/apply`,
+    { token, method: "POST", body },
+  );
+  return ApplySuggestFromHistoryResponseSchema.parse(data);
+}
+
+export async function abandonSuggestFromHistory(
+  token: string,
+  workspaceId: string,
+  runId: string,
+) {
+  await apiFetch(
+    `/api/v1/workspaces/${workspaceId}/ai/suggest-from-history/abandon`,
+    {
+      token,
+      method: "POST",
+      body: { runId },
+    },
+  );
 }

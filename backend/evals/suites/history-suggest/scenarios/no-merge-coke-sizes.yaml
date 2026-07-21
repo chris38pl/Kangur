@@ -1,0 +1,90 @@
+id: no-merge-coke-sizes
+scenarioVersion: 1
+name: Coke 1L vs 2L
+adapter: shopping-history
+input:
+  locale: pl
+  lists:
+    - name: A
+      updatedAt: 2026-07-10T10:00:00.000Z
+      items:
+        - name: Coca-Cola 1L
+          category: drinks
+          amount: null
+          note: null
+        - name: Mleko
+          category: dairy
+          amount: null
+          note: null
+    - name: B
+      updatedAt: 2026-07-12T10:00:00.000Z
+      items:
+        - name: Coca-Cola 2L
+          category: drinks
+          amount: null
+          note: null
+        - name: Chleb
+          category: bakery
+          amount: null
+          note: null
+    - name: C
+      updatedAt: 2026-07-14T10:00:00.000Z
+      items:
+        - name: Coca-Cola 1L
+          category: drinks
+          amount: null
+          note: null
+        - name: Jajka
+          category: dairy
+          amount: null
+          note: null
+    - name: D
+      updatedAt: 2026-07-16T10:00:00.000Z
+      items:
+        - name: Coca-Cola 2L
+          category: drinks
+          amount: null
+          note: null
+        - name: Masło
+          category: dairy
+          amount: null
+          note: null
+    - name: E
+      updatedAt: 2026-07-18T10:00:00.000Z
+      items:
+        - name: Woda
+          category: drinks
+          amount: null
+          note: null
+        - name: Chleb
+          category: bakery
+          amount: null
+          note: null
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H004
+    type: no_hallucination
+  - id: H005
+    type: language
+    locale: pl
+  - id: H006
+    type: product_cap
+    max: 40
+  - id: H007
+    type: must_not_merge
+    pairs:
+      - a: Coca-Cola 1L
+        b: Coca-Cola 2L
+softRules: []
+infoRules:
+  - id: I001
+    type: merge_count
+  - id: I002
+    type: avg_note_length
+  - id: I003
+    type: avg_reason_length
+  - id: I004
+    type: item_count

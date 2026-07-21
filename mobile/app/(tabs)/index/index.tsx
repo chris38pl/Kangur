@@ -1,7 +1,6 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   Pressable,
   RefreshControl,
@@ -12,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { Screen } from "@/components/Screen";
+import { HomeSkeleton } from "@/components/skeleton";
 import { useColorScheme } from "@/components/useColorScheme";
 import { IconBell, IconMenu } from "@/components/tab-bar/tab-icons";
 import { brandAssets } from "@/design-system/brand-assets";
@@ -33,7 +33,11 @@ import { useWorkspaceMembers } from "@/features/workspace/useWorkspaceMembers";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { HomeWorkspaceBanner } from "@/features/workspace/home-workspace-banner";
 import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
+import { isHistorySuggestionsEnabled } from "@/lib/featureGates";
 import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
+
+const QUICK_ACTION_GAP = spacing[2];
+const QUICK_ACTIONS_VISIBLE = 4;
 
 function SectionHeader({
   title,
@@ -72,10 +76,12 @@ function QuickAction({
   icon,
   label,
   onPress,
+  width,
 }: {
   icon: string;
   label: string;
   onPress: () => void;
+  width: number;
 }) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
@@ -83,7 +89,7 @@ function QuickAction({
   return (
     <Pressable
       onPress={onPress}
-      style={{ flex: 1, alignItems: "center", gap: spacing[2] }}
+      style={{ width, alignItems: "center", gap: spacing[2] }}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
@@ -286,6 +292,7 @@ export default function HomeScreen() {
   const { createAndOpen } = useCreateList();
   const tabClearance = useTabBarClearance();
   const [refreshing, setRefreshing] = useState(false);
+  const [quickActionsWidth, setQuickActionsWidth] = useState(0);
 
   const lists = useMemo(
     () => (listsQuery.data ?? []).filter((list) => (list.itemCount ?? 0) > 0),
@@ -313,7 +320,7 @@ export default function HomeScreen() {
     });
   }, [sessionsQuery.data, listsQuery.data]);
 
-  // Empty untitled lists are hidden from Home UI already — do not auto-archive
+  // Empty untitled lists are hidden from Home UI already - do not auto-archive
   // them here (races with AI create / provisional editing and deletes the list mid-ingest).
   // Cleanup of abandoned empties happens on leave via list screen beforeRemove.
 
@@ -326,7 +333,7 @@ export default function HomeScreen() {
     ]);
   }, [workspacesQuery, listsQuery, sessionsQuery, membersQuery]);
 
-  // Tabs keep Home mounted — refresh whenever this screen is focused.
+  // Tabs keep Home mounted - refresh whenever this screen is focused.
   useFocusEffect(
     useCallback(() => {
       void refreshHome();
@@ -374,23 +381,30 @@ export default function HomeScreen() {
     { path: "screenshot", icon: "📷", label: t("home.createScreenshot") },
     { path: "clipboard", icon: "🛒", label: t("home.quickClipboard") },
     { path: "describe", icon: "📝", label: t("home.quickText") },
+    ...(isHistorySuggestionsEnabled()
+      ? [
+          {
+            path: "fromHistory" as const,
+            icon: "🕒",
+            label: t("home.quickHistory"),
+          },
+        ]
+      : []),
     { path: "empty", icon: "✨", label: t("home.createEmpty") },
   ];
 
-  if (workspacesQuery.isPending || !hydrated || listsQuery.isPending) {
-    return (
-      <Screen edges={["top"]} style={{ backgroundColor: theme.section }}>
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <ActivityIndicator color={theme.primary} />
-        </View>
-      </Screen>
-    );
+  const quickActionWidth =
+    quickActionsWidth > 0
+      ? (quickActionsWidth - QUICK_ACTION_GAP * (QUICK_ACTIONS_VISIBLE - 1)) /
+        QUICK_ACTIONS_VISIBLE
+      : 72;
+
+  if (
+    workspacesQuery.isPending ||
+    !hydrated ||
+    (Boolean(activeWorkspace?.id) && listsQuery.isPending)
+  ) {
+    return <HomeSkeleton showTabBar={false} />;
   }
 
   return (
@@ -533,16 +547,23 @@ export default function HomeScreen() {
 
         <View style={{ marginBottom: spacing[6] }}>
           <SectionHeader title={t("home.quickActions")} />
-          <View style={{ flexDirection: "row", gap: spacing[2] }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            nestedScrollEnabled
+            onLayout={(e) => setQuickActionsWidth(e.nativeEvent.layout.width)}
+            contentContainerStyle={{ gap: QUICK_ACTION_GAP }}
+          >
             {quickActions.map((action) => (
               <QuickAction
                 key={action.path}
                 icon={action.icon}
                 label={action.label}
+                width={quickActionWidth}
                 onPress={() => void createAndOpen(action.path)}
               />
             ))}
-          </View>
+          </ScrollView>
         </View>
 
         {activeWorkspace ? (

@@ -16,6 +16,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { KangurMascot } from "@/components/KangurMascot";
+import { FallbackSymbol } from "@/components/FallbackSymbol";
 import {
   ShowMoreButton,
   useListPagination,
@@ -34,6 +35,7 @@ import {
 import { BackIcon } from "@/features/auth/auth-icons";
 import { CATEGORY_BADGE_COLORS } from "@/features/shopping-item/category-badge-colors";
 import { DeleteListDialog } from "@/features/shopping-list/delete-list-dialog";
+import { updateShoppingList } from "@/features/shopping-list/api";
 import { useResumableSessions } from "@/features/shopping-list/session/useResumableSessions";
 import {
   useArchiveShoppingList,
@@ -42,11 +44,13 @@ import {
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
+import { useAppResult } from "@/components/AppResultProvider";
 import { ApiClientError } from "@/lib/api/client";
 import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
 
 import { HistoryActionsSheet } from "./history-actions-sheet";
 import { HistoryPreviewSheet } from "./history-preview-sheet";
+import { PreferredForAiSheet } from "./preferred-for-ai-sheet";
 import type { HistoryPreviewItem } from "./schemas";
 import {
   historyOpened,
@@ -70,6 +74,7 @@ type ListCardModel = {
   updatedAt: string;
   previewItems: HistoryPreviewItem[];
   itemNames: string[];
+  preferredForAi: boolean;
   kind: "active" | "archived";
   /** UI segment this card belongs to (for actions + open target). */
   group: "shopping" | "waiting" | "finished";
@@ -282,10 +287,12 @@ function HistoryCard({
   list,
   onOpenMenu,
   onPress,
+  onTogglePreferred,
 }: {
   list: ListCardModel;
   onOpenMenu: () => void;
   onPress?: () => void;
+  onTogglePreferred: () => void;
 }) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
@@ -302,68 +309,116 @@ function HistoryCard({
   const moreCount = Math.max(0, list.itemCount - previewItems.length);
 
   const body = (
-    <>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: spacing[3],
+      }}
+    >
       <ListBagIcon size={48} />
+
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text
+        <View
           style={{
-            ...typography.headline,
-            color: theme.text,
-            paddingRight: 36,
+            flexDirection: "row",
+            alignItems: "center",
           }}
-          numberOfLines={1}
         >
-          {list.name}
-        </Text>
-        <Text
+          <Text
+            style={{
+              ...typography.headline,
+              color: theme.text,
+              flex: 1,
+              minWidth: 0,
+              paddingRight: 4,
+            }}
+            numberOfLines={1}
+          >
+            {list.name}
+          </Text>
+
+          <Pressable
+            onPress={onOpenMenu}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t("history.actionsMenu")}
+            style={{
+              width: 36,
+              height: 32,
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: -spacing[1],
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 22,
+                lineHeight: 22,
+                color: theme.textMuted,
+                fontWeight: "600",
+              }}
+            >
+              ⋯
+            </Text>
+          </Pressable>
+        </View>
+
+        <View
           style={{
-            ...typography.caption,
-            color: theme.textMuted,
+            flexDirection: "row",
+            alignItems: "center",
             marginTop: 2,
           }}
-          numberOfLines={1}
         >
-          {formatRelativeUpdatedAt(list.updatedAt, relativeLabels)}
-          {" · "}
-          {t("home.productCount", { count: list.itemCount ?? 0 })}
-        </Text>
+          <Text
+            style={{
+              ...typography.caption,
+              color: theme.textMuted,
+              flex: 1,
+              minWidth: 0,
+              paddingRight: 4,
+            }}
+            numberOfLines={1}
+          >
+            {formatRelativeUpdatedAt(list.updatedAt, relativeLabels)}
+            {" · "}
+            {t("home.productCount", { count: list.itemCount ?? 0 })}
+          </Text>
+
+          <Pressable
+            onPress={onTogglePreferred}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={
+              list.preferredForAi
+                ? t("history.removeFromAi")
+                : t("history.useForAi")
+            }
+            style={{
+              width: 36,
+              height: 32,
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: -spacing[1],
+            }}
+          >
+            <FallbackSymbol
+              fallback={list.preferredForAi ? "★" : "☆"}
+              color={
+                list.preferredForAi ? brand.starActive : theme.textMuted
+              }
+              size={20}
+            />
+          </Pressable>
+        </View>
+
         <ProductBadges items={previewItems} moreCount={moreCount} />
       </View>
-      <Pressable
-        onPress={onOpenMenu}
-        hitSlop={10}
-        accessibilityRole="button"
-        accessibilityLabel={t("history.actionsMenu")}
-        style={{
-          position: "absolute",
-          top: spacing[4],
-          right: spacing[4],
-          width: 36,
-          height: 36,
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 22,
-            lineHeight: 22,
-            color: theme.textMuted,
-            fontWeight: "600",
-          }}
-        >
-          ⋯
-        </Text>
-      </Pressable>
-    </>
+    </View>
   );
 
   const cardStyle = {
-    position: "relative" as const,
-    flexDirection: "row" as const,
-    alignItems: "flex-start" as const,
-    gap: spacing[3],
     backgroundColor: theme.surface,
     borderRadius: radius.xl,
     padding: spacing[4],
@@ -391,7 +446,7 @@ export function HistoryScreen() {
   const { segment: segmentParam } = useLocalSearchParams<{
     segment?: string | string[];
   }>();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, getToken } = useAuth();
   const tabClearance = useTabBarClearance();
   const scrollRef = useRef<ScrollView>(null);
   const [query, setQuery] = useState("");
@@ -399,6 +454,9 @@ export function HistoryScreen() {
   const [menuList, setMenuList] = useState<ListCardModel | null>(null);
   const [previewList, setPreviewList] = useState<ListCardModel | null>(null);
   const [deleteList, setDeleteList] = useState<ListCardModel | null>(null);
+  const [preferredBusyId, setPreferredBusyId] = useState<string | null>(null);
+  const [preferredSheetVisible, setPreferredSheetVisible] = useState(false);
+  const { showError } = useAppResult();
 
   const workspacesQuery = useWorkspaces();
   const { activeWorkspace, hydrated } = useActiveWorkspace(workspacesQuery.data);
@@ -411,6 +469,44 @@ export function HistoryScreen() {
   const repeatMutation = useRepeatHistoryList(workspaceId);
   const restoreMutation = useRestoreHistoryList(workspaceId);
   const archiveMutation = useArchiveShoppingList(workspaceId);
+
+  const togglePreferredForAi = useCallback(
+    async (list: ListCardModel): Promise<boolean> => {
+      if (preferredBusyId) return false;
+      const next = !list.preferredForAi;
+      setPreferredBusyId(list.id);
+      try {
+        const token = await getToken();
+        if (!token) throw new Error("Missing auth token");
+        await updateShoppingList(token, list.id, { preferredForAi: next });
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ["shopping-lists", workspaceId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["shopping-lists-history", workspaceId],
+          }),
+        ]);
+        if (next) {
+          setPreferredSheetVisible(true);
+        }
+        return true;
+      } catch (err) {
+        const description =
+          err instanceof ApiClientError
+            ? err.message
+            : t("history.actionFailed");
+        showError({
+          title: t("history.actionFailedTitle"),
+          description,
+        });
+        return false;
+      } finally {
+        setPreferredBusyId(null);
+      }
+    },
+    [getToken, preferredBusyId, queryClient, showError, t, workspaceId],
+  );
 
   const resumableIds = useMemo(() => {
     const ids = new Set<string>();
@@ -435,6 +531,7 @@ export function HistoryScreen() {
         updatedAt: list.updatedAt,
         previewItems: list.previewItems ?? [],
         itemNames: list.itemNames ?? [],
+        preferredForAi: list.preferredForAi ?? false,
         kind: "active" as const,
         group: "shopping" as const,
       }));
@@ -455,6 +552,7 @@ export function HistoryScreen() {
         updatedAt: list.updatedAt,
         previewItems: list.previewItems ?? [],
         itemNames: list.itemNames ?? [],
+        preferredForAi: list.preferredForAi ?? false,
         kind: "active" as const,
         group: "waiting" as const,
       }));
@@ -468,6 +566,7 @@ export function HistoryScreen() {
       updatedAt: list.updatedAt,
       previewItems: list.previewItems ?? [],
       itemNames: list.itemNames ?? [],
+      preferredForAi: list.preferredForAi ?? false,
       kind: "archived" as const,
       group: "finished" as const,
     }));
@@ -686,6 +785,9 @@ export function HistoryScreen() {
       key={list.id}
       list={list}
       onOpenMenu={() => setMenuList(list)}
+      onTogglePreferred={() => {
+        void togglePreferredForAi(list);
+      }}
       onPress={
         list.kind === "active"
           ? () => {
@@ -710,7 +812,7 @@ export function HistoryScreen() {
       isLoadingMore: boolean;
     },
     openAsShopping: boolean,
-    /** Full filtered length — hide section when empty before pagination. */
+    /** Full filtered length - hide section when empty before pagination. */
     totalInSection: number,
   ) => {
     if (totalInSection === 0) return null;
@@ -923,6 +1025,7 @@ export function HistoryScreen() {
       <HistoryActionsSheet
         visible={menuList != null}
         listName={menuList?.name ?? ""}
+        preferredForAi={menuList?.preferredForAi ?? false}
         mode={
           menuList?.group === "shopping"
             ? "shopping"
@@ -930,7 +1033,7 @@ export function HistoryScreen() {
               ? "waiting"
               : "archived"
         }
-        busy={actionsBusy}
+        busy={actionsBusy || preferredBusyId === menuList?.id}
         onClose={() => setMenuList(null)}
         onPreview={() => {
           if (!menuList) return;
@@ -950,6 +1053,18 @@ export function HistoryScreen() {
         onRestore={() => {
           if (menuList) onRestore(menuList);
         }}
+        onTogglePreferred={() => {
+          if (!menuList) return;
+          const list = menuList;
+          void togglePreferredForAi(list).then((ok) => {
+            if (!ok) return;
+            setMenuList((current) =>
+              current?.id === list.id
+                ? { ...current, preferredForAi: !list.preferredForAi }
+                : current,
+            );
+          });
+        }}
         onDelete={() => {
           if (!menuList) return;
           const list = menuList;
@@ -964,6 +1079,11 @@ export function HistoryScreen() {
         listName={previewList?.name ?? ""}
         allowArchived={previewList?.kind === "archived"}
         onClose={() => setPreviewList(null)}
+      />
+
+      <PreferredForAiSheet
+        visible={preferredSheetVisible}
+        onClose={() => setPreferredSheetVisible(false)}
       />
 
       <DeleteListDialog

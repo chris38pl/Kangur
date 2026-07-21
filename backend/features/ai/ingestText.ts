@@ -1,6 +1,10 @@
 import type { Prisma } from "@prisma/client";
 
-import { PROMPT_VERSION } from "@/lib/openai";
+import {
+  AI_PROVIDER,
+  IMPORT_PROPOSAL_TYPE,
+  IMPORT_PROPOSAL_VERSION,
+} from "@/lib/openai";
 import { prisma } from "@/lib/prisma";
 
 import { applyUntitledListTitleFromProposal } from "./applyUntitledListTitle";
@@ -14,6 +18,11 @@ export async function ingestText(input: {
   text: string;
 }) {
   const startedAt = Date.now();
+
+  const list = await prisma.shoppingList.findUniqueOrThrow({
+    where: { id: input.listId },
+    select: { workspaceId: true },
+  });
 
   const existingItems = await prisma.shoppingItem.findMany({
     where: {
@@ -44,14 +53,17 @@ export async function ingestText(input: {
   });
 
   const durationMs = Date.now() - startedAt;
-  const run = await prisma.aiIngestRun.create({
+  const run = await prisma.aiProposalRun.create({
     data: {
+      workspaceId: list.workspaceId,
       listId: input.listId,
       userId: input.userId,
       source: input.source,
+      proposalType: IMPORT_PROPOSAL_TYPE,
+      proposalVersion: IMPORT_PROPOSAL_VERSION,
+      provider: AI_PROVIDER,
       status: "proposed",
       model: proposalResult.model,
-      promptVersion: PROMPT_VERSION,
       durationMs,
       rawResponse: proposalResult.rawResponse as Prisma.InputJsonValue,
       proposal: proposalResult.proposal as Prisma.InputJsonValue,
@@ -66,7 +78,9 @@ export async function ingestText(input: {
   return {
     runId: run.id,
     model: proposalResult.model,
-    promptVersion: PROMPT_VERSION,
+    provider: AI_PROVIDER,
+    proposalType: IMPORT_PROPOSAL_TYPE,
+    proposalVersion: IMPORT_PROPOSAL_VERSION,
     durationMs,
     proposal: proposalResult.proposal,
     fastPath: proposalResult.proposal.operations.every(

@@ -1,5 +1,5 @@
 /**
- * ADR — EventPollingProvider
+ * ADR - EventPollingProvider
  *
  * EventPollingProvider never interprets event payloads as the source of truth
  * for the shopping list. Events are only a signal to refresh canonical state
@@ -46,7 +46,7 @@ export interface EventPollingProvider {
 
 export type EventBatchMeta = {
   listId: string;
-  /** True while seeding cursor — no toast / no items refresh. */
+  /** True while seeding cursor - no toast / no items refresh. */
   bootstrap: boolean;
 };
 

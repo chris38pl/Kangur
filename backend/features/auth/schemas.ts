@@ -17,6 +17,8 @@ export const ApiErrorSchema = z
       "CONFLICT",
       "INSUFFICIENT_CREDITS",
       "HISTORY_LIMIT_EXCEEDED",
+      "PREMIUM_REQUIRED",
+      "AI_UNAVAILABLE",
     ]),
     message: z.string(),
     details: z.record(z.string(), z.unknown()).optional(),

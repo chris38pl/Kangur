@@ -7,7 +7,7 @@ type AppRouter = ReturnType<typeof useRouter>;
 /**
  * Idempotent navigation from notification taps.
  * Prefer replace to avoid stacking Home/Shopping duplicates.
- * Informational types (WORKSPACE) mark-read only — no dedicated screen.
+ * Informational types (WORKSPACE) mark-read only - no dedicated screen.
  */
 export function navigateFromNotification(
   router: AppRouter,
@@ -51,7 +51,7 @@ export function navigateFromNotification(
       return;
     }
     case "WORKSPACE":
-      // List deleted (and similar) — no detail screen.
+      // List deleted (and similar) - no detail screen.
       return;
     default:
       router.replace("/(tabs)" as never);

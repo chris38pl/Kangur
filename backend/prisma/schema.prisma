@@ -84,13 +84,14 @@ enum ShoppingCategory {
   other
 }
 
-enum AiIngestSource {
+enum AiProposalSource {
   text
   screenshot
   clipboard
+  history
 }
 
-enum AiIngestStatus {
+enum AiProposalStatus {
   proposed
   applied
   abandoned
@@ -149,9 +150,10 @@ model Workspace {
   invitations  Invitation[]
   settings     WorkspaceSettings?
   subscription Subscription?
-  lists        ShoppingList[]
-  aiUsage      AIUsage[]
-  notifications Notification[]
+  lists            ShoppingList[]
+  aiUsage          AIUsage[]
+  aiProposalRuns   AiProposalRun[]
+  notifications    Notification[]
   shoppingSessions ShoppingSession[]
 }
 
@@ -232,6 +234,8 @@ model ShoppingList {
   emoji           String
   status          ListStatus @default(active)
   isUntitled      Boolean    @default(true)
+  /** Prefer this list when generating AI proposals from history (not "favorites"). */
+  preferredForAi  Boolean    @default(false)
   createdByUserId String
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
@@ -240,10 +244,11 @@ model ShoppingList {
   createdBy User            @relation("ShoppingListCreator", fields: [createdByUserId], references: [id])
   events    ShoppingEvent[]
   items     ShoppingItem[]
-  aiRuns    AiIngestRun[]
-  sessions  ShoppingSession[]
+  aiRuns   AiProposalRun[]
+  sessions ShoppingSession[]
 
   @@index([workspaceId, status])
+  @@index([workspaceId, preferredForAi, updatedAt])
 }
 
 model ShoppingEvent {
@@ -280,23 +285,33 @@ model ShoppingItem {
   @@index([listId, status])
 }
 
-model AiIngestRun {
-  id            String         @id @default(cuid())
-  listId        String
-  userId        String
-  source        AiIngestSource
-  status        AiIngestStatus
-  model         String
-  promptVersion String
-  durationMs    Int?
-  rawResponse   Json
-  proposal      Json
-  createdAt     DateTime       @default(now())
-  appliedAt     DateTime?
+/**
+ * One AI-generated proposal, regardless of source/generator.
+ * Lifecycle: proposed → applied | abandoned.
+ * `source` = input origin; `proposalType` = which generator ran.
+ */
+model AiProposalRun {
+  id              String           @id @default(cuid())
+  workspaceId     String
+  listId          String?
+  userId          String
+  source          AiProposalSource
+  proposalType    String
+  proposalVersion Int
+  provider        String
+  model           String
+  status          AiProposalStatus
+  durationMs      Int?
+  rawResponse     Json
+  proposal        Json
+  createdAt       DateTime         @default(now())
+  appliedAt       DateTime?
 
-  list ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  list      ShoppingList? @relation(fields: [listId], references: [id], onDelete: Cascade)
 
   @@index([listId, createdAt])
+  @@index([workspaceId, createdAt])
 }
 
 model Notification {
