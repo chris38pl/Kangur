@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -156,11 +156,9 @@ export function MealProposalReviewScreen({ listId }: Props) {
   const meals = pending?.response.proposal.meals ?? [];
   const meal = meals[mealIndex];
   const allOps = pending?.response.proposal.operations ?? [];
-  const mealOps = useMemo(
-    () =>
-      meal ? allOps.filter((op) => op.ownerMealId === meal.mealId) : [],
-    [allOps, meal],
-  );
+  const mealOps = meal
+    ? allOps.filter((op) => op.ownerMealId === meal.mealId)
+    : [];
   const includedCount = mealOps.filter(
     (op) => !excluded.has(op.proposalRowId),
   ).length;

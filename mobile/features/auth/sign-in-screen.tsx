@@ -112,6 +112,7 @@ export function SignInScreen() {
     setBusy(true);
     setError(null);
     try {
+      if (!setActive) throw new Error("Clerk not ready");
       const start =
         provider === "google" ? startGoogleOAuth : startAppleOAuth;
       const { createdSessionId } = await runClerkOAuth({

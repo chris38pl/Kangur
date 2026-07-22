@@ -551,9 +551,12 @@ export default function ShoppingListScreen() {
     if (!listQuery.isSuccess || typeof listId !== "string") return;
     entryFocusApplied.current = true;
     const focus = takePendingListFocus(listId);
-    setAiSectionOpen(focus === "ai");
-    setMealSectionOpen(focus === "meal");
-    setManualAddOpen(focus === "manual");
+    // Defer so we don't sync-setState inside the effect body (react-hooks/set-state-in-effect).
+    queueMicrotask(() => {
+      setAiSectionOpen(focus === "ai");
+      setMealSectionOpen(focus === "meal");
+      setManualAddOpen(focus === "manual");
+    });
   }, [listQuery.isSuccess, listId]);
 
   const fastPathReady =
