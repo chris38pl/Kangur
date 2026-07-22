@@ -3,14 +3,11 @@ const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
 
 const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, "..");
-const sharedRoot = path.resolve(workspaceRoot, "shared");
+// Metro FileMap cannot SHA-1 files outside projectRoot reliably in this
+// monorepo layout (eager EAS bundle). sync-shared.js mirrors ../shared here.
+const sharedRoot = path.resolve(projectRoot, ".shared");
 
 const config = getDefaultConfig(projectRoot);
-
-// Watch only shared/ — watching the whole monorepo pulls backend/node_modules
-// (second React copy) and breaks Clerk context (“useAuth outside ClerkProvider”).
-config.watchFolders = [sharedRoot];
 
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),

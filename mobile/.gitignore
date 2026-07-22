@@ -21,6 +21,9 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
+# Mirrored from ../shared for Metro/EAS (see scripts/sync-shared.js)
+.shared/
+
 # debug
 npm-debug.*
 yarn-debug.*
