@@ -9,7 +9,7 @@ export const AI_CREDIT_COSTS: Record<AiProposalSource, number> = {
   clipboard: 1,
   screenshot: 2,
   history: 3,
-  /** Flat cost per meal-proposal run (1 or 2 dishes). */
+  /** Flat cost per meal-proposal run (1–5 dishes). */
   meal: 2,
 };
 

@@ -1,5 +1,6 @@
 export const SHOPPING_LIST_EMOJIS = [
   "🛒",
+  "🍽️",
   "🥩",
   "🥦",
   "🍎",

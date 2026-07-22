@@ -28,6 +28,7 @@ import {
   type CreateListPath,
 } from "@/features/shopping-list/create-list-sheet";
 import { setPendingListImport } from "@/features/shopping-list/pending-list-import";
+import { setPendingListFocus } from "@/features/shopping-list/pending-list-focus";
 import { markListProvisional } from "@/features/shopping-list/provisional-list";
 import { useCreateShoppingList } from "@/features/shopping-list/useShoppingLists";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
@@ -37,7 +38,6 @@ import {
   isHistorySuggestionsEnabled,
   isMealProposalEnabled,
 } from "@/lib/featureGates";
-import { setPendingMealComposer } from "@/features/ai/pending-meal-proposal";
 
 type CreateListContextValue = {
   openCreateList: () => void;
@@ -302,12 +302,17 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
               : path === "fromRecipe"
                 ? t("home.mealListName")
                 : t("home.aiListName"),
+          // Must be in SHOPPING_LIST_EMOJIS.
           emoji: path === "fromRecipe" ? "🍽️" : "🛒",
         });
         // Discard if user leaves before any products are saved.
         markListProvisional(list.id);
         if (path === "fromRecipe") {
-          setPendingMealComposer(list.id);
+          setPendingListFocus(list.id, "meal");
+        } else if (path === "empty") {
+          setPendingListFocus(list.id, "manual");
+        } else {
+          setPendingListFocus(list.id, "ai");
         }
         setSheetOpen(false);
 
@@ -319,9 +324,13 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
           "@/features/shopping-list/pending-list-import"
         );
         clearPendingListImport();
+        showError({
+          title: t("ai.suggestErrorTitle"),
+          description: t("list.ingestFailed"),
+        });
       }
     },
-    [activeWorkspace, createList, hydrated, runFromHistory, t],
+    [activeWorkspace, createList, hydrated, runFromHistory, showError, t],
   );
 
   const value = useMemo(

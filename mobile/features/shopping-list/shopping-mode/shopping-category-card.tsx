@@ -2,7 +2,7 @@ import {
   getShoppingCategoryIcon,
   type ShoppingCategory,
 } from "@shared/shopping-categories";
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
@@ -41,7 +41,7 @@ export function ShoppingCategoryCard({
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const badge = getCategoryBadgeColors(cat.category);
-  const webControls = Boolean(moveUp || moveDown);
+  const webControls = Platform.OS === "web" || Boolean(moveUp || moveDown);
 
   const subtitle =
     variant === "completed"

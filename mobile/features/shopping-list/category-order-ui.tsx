@@ -13,10 +13,57 @@ type HandleProps = {
 /** Long enough that a scroll flick does not start a drag (esp. Android). */
 const DRAG_LONG_PRESS_MS = Platform.OS === "android" ? 320 : 250;
 
+/**
+ * Drag handle for aisle reorder.
+ * Native: RNGH TouchableOpacity (works with NestableScrollContainer).
+ * Web: RN Pressable — RNGH TouchableOpacity + accessibilityRole="button"
+ * nests <button> inside <button> on react-native-web (GestureHandlerButton
+ * already sets role=button on the outer node).
+ */
 export function CategoryDragHandle({ onLongPress, disabled }: HandleProps) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+
+  const handleStyle = {
+    width: 40,
+    height: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    opacity: disabled ? 0.4 : 1,
+  };
+
+  const bars = (
+    <View style={{ gap: 3.5 }} pointerEvents="none">
+      {[0, 1, 2].map((i) => (
+        <View
+          key={i}
+          style={{
+            width: 18,
+            height: 2.5,
+            borderRadius: 1,
+            backgroundColor: theme.textMuted,
+          }}
+        />
+      ))}
+    </View>
+  );
+
+  if (Platform.OS === "web") {
+    return (
+      <Pressable
+        onLongPress={onLongPress}
+        disabled={disabled}
+        delayLongPress={DRAG_LONG_PRESS_MS}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={t("list.categoryOrderDragHandle")}
+        style={handleStyle}
+      >
+        {bars}
+      </Pressable>
+    );
+  }
 
   return (
     <TouchableOpacity
@@ -25,30 +72,12 @@ export function CategoryDragHandle({ onLongPress, disabled }: HandleProps) {
       delayLongPress={DRAG_LONG_PRESS_MS}
       activeOpacity={0.55}
       hitSlop={8}
-      accessibilityRole="button"
+      // Do NOT set accessibilityRole="button" — BaseButton/GestureHandlerButton
+      // already applies it; duplicating nests <button> on web if this path runs.
       accessibilityLabel={t("list.categoryOrderDragHandle")}
-      // RNGH touchable — plays nicer with NestableScrollContainer than RN Pressable.
-      style={{
-        width: 40,
-        height: 44,
-        alignItems: "center",
-        justifyContent: "center",
-        opacity: disabled ? 0.4 : 1,
-      }}
+      style={handleStyle}
     >
-      <View style={{ gap: 3.5 }} pointerEvents="none">
-        {[0, 1, 2].map((i) => (
-          <View
-            key={i}
-            style={{
-              width: 18,
-              height: 2.5,
-              borderRadius: 1,
-              backgroundColor: theme.textMuted,
-            }}
-          />
-        ))}
-      </View>
+      {bars}
     </TouchableOpacity>
   );
 }
@@ -142,7 +171,8 @@ export function CategoryOrderEditRow({
 }: EditRowProps) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
-  const webControls = Boolean(moveUp || moveDown);
+  // Always use ↑/↓ on web — drag handle is native-only (and RNGH nests buttons on web).
+  const webControls = Platform.OS === "web" || Boolean(moveUp || moveDown);
 
   return (
     <View

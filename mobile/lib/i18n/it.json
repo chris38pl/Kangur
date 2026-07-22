@@ -275,10 +275,10 @@
     "suggestApplyFailed": "Impossibile creare una lista dai prodotti selezionati. Riprova.",
     "suggestApplyNotFound": "Questo suggerimento è scaduto o non è stato trovato. Generane uno nuovo e riprova.",
     "mealProposalTitle": "From recipe",
-    "mealProposalSubtitle": "Add up to two dishes and we will prepare their ingredients.",
+    "mealProposalSubtitle": "Aggiungi fino a 5 piatti e prepareremo gli ingredienti.",
     "mealProposalPlaceholder": "e.g. spaghetti bolognese",
     "mealProposalAdd": "Add",
-    "mealProposalMaxDishes": "You can add up to 2 dishes.",
+    "mealProposalMaxDishes": "Puoi aggiungere fino a 5 piatti.",
     "mealProposalGenerate": "Generate",
     "mealProposalErrors": "Could not generate a meal proposal. Please try again.",
     "mealProposalStep": "Dish {{current}} of {{total}}",
@@ -287,7 +287,9 @@
     "mealProposalMissing": "Meal proposal not found.",
     "mealProposalBackToList": "Back to list",
     "mealProposalGenerateError": "Couldn't generate a proposal. Please try again.",
-    "mealProposalCreditsError": "Not enough AI Credits for this proposal."
+    "mealProposalCreditsError": "Not enough AI Credits for this proposal.",
+    "mealProposalGenerating": "Generazione…",
+    "mealProposalSectionTitle": "Crea lista da una ricetta con AI ✨"
   },
   "categories": {
     "fruit": "Frutta",

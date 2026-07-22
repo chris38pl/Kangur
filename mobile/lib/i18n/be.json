@@ -289,10 +289,10 @@
     "suggestApplyFailed": "Не ўдалося стварыць спіс з выбраных прадуктаў. Паспрабуйце яшчэ раз.",
     "suggestApplyNotFound": "Гэтая прапанова скончылася або не знойдзена. Згенеруйце новую і паспрабуйце зноў.",
     "mealProposalTitle": "From recipe",
-    "mealProposalSubtitle": "Add up to two dishes and we will prepare their ingredients.",
+    "mealProposalSubtitle": "Дадайце да 5 страў — мы падрыхтуем інгрэдыенты.",
     "mealProposalPlaceholder": "e.g. spaghetti bolognese",
     "mealProposalAdd": "Add",
-    "mealProposalMaxDishes": "You can add up to 2 dishes.",
+    "mealProposalMaxDishes": "Можна дадаць максімум 5 страў.",
     "mealProposalGenerate": "Generate",
     "mealProposalErrors": "Could not generate a meal proposal. Please try again.",
     "mealProposalStep": "Dish {{current}} of {{total}}",
@@ -301,7 +301,9 @@
     "mealProposalMissing": "Meal proposal not found.",
     "mealProposalBackToList": "Back to list",
     "mealProposalGenerateError": "Couldn't generate a proposal. Please try again.",
-    "mealProposalCreditsError": "Not enough AI Credits for this proposal."
+    "mealProposalCreditsError": "Not enough AI Credits for this proposal.",
+    "mealProposalGenerating": "Генерацыя…",
+    "mealProposalSectionTitle": "Стварыць спіс з рэцэпта з ШІ ✨"
   },
   "categories": {
     "fruit": "Садавіна",

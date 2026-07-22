@@ -119,7 +119,7 @@ export const MealProposalSchema = z.object({
       }),
     )
     .min(1)
-    .max(2),
+    .max(5),
   operations: z.array(MealProposalOperationSchema),
 });
 

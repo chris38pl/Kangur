@@ -81,9 +81,9 @@ export type EventPropsMap = {
       ok: boolean;
     };
   meal_proposal_generated: WorkspaceIdProps &
-    ListIdProps & { meal_count: 1 | 2 };
+    ListIdProps & { meal_count: number };
   meal_proposal_accepted: WorkspaceIdProps &
-    ListIdProps & { meal_count: 1 | 2 };
+    ListIdProps & { meal_count: number };
   meal_proposal_failed: WorkspaceIdProps &
     ListIdProps & { code: string };
   // Future (M20–M22) — names reserved; do not emit until owned in matrix + UI

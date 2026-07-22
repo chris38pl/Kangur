@@ -223,7 +223,7 @@ export const MealProposalMealSchema = z
 
 export const MealProposalAiResponseSchema = z
   .object({
-    meals: z.array(MealProposalMealSchema).min(1).max(2),
+    meals: z.array(MealProposalMealSchema).min(1).max(5),
   })
   .openapi("MealProposalAiResponse");
 
@@ -251,7 +251,7 @@ export const MealProposalSchema = z
         }),
       )
       .min(1)
-      .max(2),
+      .max(5),
     operations: z.array(MealProposalOperationSchema),
   })
   .openapi("MealProposal");
@@ -260,7 +260,7 @@ export type MealProposal = z.infer<typeof MealProposalSchema>;
 
 export const MealProposalRequestBodySchema = z
   .object({
-    dishes: z.array(z.string().trim().min(1).max(80)).min(1).max(2),
+    dishes: z.array(z.string().trim().min(1).max(80)).min(1).max(5),
   })
   .openapi("MealProposalRequestBody");
 

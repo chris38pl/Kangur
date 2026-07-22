@@ -10,7 +10,7 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -55,6 +55,7 @@ import { getShoppingList } from "@/features/shopping-list/api";
 import { CreateListOptionRow } from "@/features/shopping-list/create-list-option-row";
 import { DeleteListDialog } from "@/features/shopping-list/delete-list-dialog";
 import { takePendingListImport } from "@/features/shopping-list/pending-list-import";
+import { takePendingListFocus } from "@/features/shopping-list/pending-list-focus";
 import {
   clearListProvisional,
   isListProvisional,
@@ -154,7 +155,14 @@ export default function ShoppingListScreen() {
   const [renameOpen, setRenameOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ShoppingItem | null>(null);
   const [manualAddOpen, setManualAddOpen] = useState(false);
+  const [aiSectionOpen, setAiSectionOpen] = useState(false);
+  const [mealSectionOpen, setMealSectionOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [mealGenerating, setMealGenerating] = useState(false);
+  const entryFocusApplied = useRef(false);
+  const onMealGeneratingChange = useCallback((generating: boolean) => {
+    setMealGenerating(generating);
+  }, []);
 
   const listQuery = useQuery({
     queryKey: ["shopping-list", listId],
@@ -515,6 +523,17 @@ export default function ShoppingListScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once when list ready
   }, [listQuery.isSuccess, listId, importSource]);
 
+  // Expand the section that matches how the list was opened (FAB path).
+  useEffect(() => {
+    if (entryFocusApplied.current) return;
+    if (!listQuery.isSuccess || typeof listId !== "string") return;
+    entryFocusApplied.current = true;
+    const focus = takePendingListFocus(listId);
+    setAiSectionOpen(focus === "ai");
+    setMealSectionOpen(focus === "meal");
+    setManualAddOpen(focus === "manual");
+  }, [listQuery.isSuccess, listId]);
+
   const fastPathReady =
     reviewOperations.length > 0 &&
     reviewOperations.every((operation) => operation.op === "merge") &&
@@ -708,126 +727,220 @@ export default function ShoppingListScreen() {
         ) : (
           <>
             <View>
-              <Text style={{ ...typography.headline, color: theme.text }}>
-                {t("ai.quickAddTitle")}
-              </Text>
-              <Text
-                style={{
-                  ...typography.body,
-                  color: theme.textBody,
-                  marginTop: spacing[2],
-                }}
-              >
-                {t("ai.quickAddSubtitle")}
-              </Text>
-
-              <TextInput
-                value={aiText}
-                onChangeText={setAiText}
-                multiline
-                placeholder={t("ai.textPlaceholder")}
-                placeholderTextColor={theme.textMuted}
-                style={{
-                  marginTop: spacing[4],
-                  minHeight: 96,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  backgroundColor: theme.surface,
-                  borderRadius: radius.lg,
-                  padding: spacing[4],
-                  color: theme.text,
-                  textAlignVertical: "top",
-                }}
-              />
-
               <Pressable
-                disabled={
-                  ingestMutation.isPending ||
-                  applyMutation.isPending ||
-                  !aiText.trim()
-                }
-                onPress={startTextIngest}
-                style={{
-                  marginTop: spacing[4],
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: spacing[2],
-                  backgroundColor: theme.primary,
-                  borderRadius: radius.lg,
-                  paddingVertical: spacing[4],
-                  opacity:
-                    ingestMutation.isPending ||
-                    applyMutation.isPending ||
-                    !aiText.trim()
-                      ? 0.6
-                      : 1,
-                }}
-              >
-                {ingestMutation.isPending || applyMutation.isPending ? (
-                  <ActivityIndicator color={theme.onPrimary} />
-                ) : (
-                  <>
-                    <Text style={{ fontSize: 14, color: theme.onPrimary }}>✨</Text>
-                    <Text style={{ ...typography.label, color: theme.onPrimary }}>
-                      {t(
-                        itemCount > 0 ? "ai.addToList" : "ai.createFromText",
-                      )}
-                    </Text>
-                  </>
-                )}
-              </Pressable>
-
-              <View
+                onPress={() => setAiSectionOpen((open) => !open)}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: aiSectionOpen }}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: spacing[3],
-                  marginVertical: spacing[5],
+                  justifyContent: "space-between",
+                  minHeight: 44,
                 }}
               >
-                <View
-                  style={{ flex: 1, height: 1, backgroundColor: theme.border }}
-                />
                 <Text
                   style={{
-                    ...typography.caption,
-                    color: theme.textMuted,
-                    fontWeight: "700",
-                    letterSpacing: 1,
+                    ...typography.headline,
+                    color: aiSectionOpen ? theme.text : theme.textMuted,
+                    flex: 1,
+                    paddingRight: spacing[3],
                   }}
                 >
-                  {t("ai.orImport")}
+                  {t("ai.quickAddTitle")}
                 </Text>
-                <View
-                  style={{ flex: 1, height: 1, backgroundColor: theme.border }}
-                />
-              </View>
+                <Text
+                  style={{
+                    color: aiSectionOpen ? theme.text : theme.textMuted,
+                    fontSize: 22,
+                    lineHeight: 26,
+                    fontWeight: "600",
+                  }}
+                >
+                  {aiSectionOpen ? "▾" : "▸"}
+                </Text>
+              </Pressable>
 
-              <CreateListOptionRow
-                icon="📷"
-                title={t("home.createImage")}
-                subtitle={t("home.createImageHint")}
-                disabled={ingestMutation.isPending || applyMutation.isPending}
-                onPress={() => void startScreenshotIngest()}
-              />
-              <CreateListOptionRow
-                icon="🛒"
-                title={t("home.createClipboard")}
-                subtitle={t("home.createClipboardHint")}
-                disabled={ingestMutation.isPending || applyMutation.isPending}
-                onPress={() => void startClipboardIngest()}
-              />
+              {aiSectionOpen ? (
+                <View>
+                  <Text
+                    style={{
+                      ...typography.body,
+                      color: theme.textBody,
+                      marginTop: spacing[2],
+                    }}
+                  >
+                    {t("ai.quickAddSubtitle")}
+                  </Text>
 
-              {isMealProposalEnabled() &&
-              typeof listId === "string" &&
-              listQuery.data?.workspaceId ? (
-                <MealProposalComposer
-                  listId={listId}
-                  workspaceId={listQuery.data.workspaceId}
-                />
+                  <TextInput
+                    value={aiText}
+                    onChangeText={setAiText}
+                    multiline
+                    placeholder={t("ai.textPlaceholder")}
+                    placeholderTextColor={theme.textMuted}
+                    style={{
+                      marginTop: spacing[4],
+                      minHeight: 96,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      backgroundColor: theme.surface,
+                      borderRadius: radius.lg,
+                      padding: spacing[4],
+                      color: theme.text,
+                      textAlignVertical: "top",
+                    }}
+                  />
+
+                  <Pressable
+                    disabled={
+                      ingestMutation.isPending ||
+                      applyMutation.isPending ||
+                      !aiText.trim()
+                    }
+                    onPress={startTextIngest}
+                    style={{
+                      marginTop: spacing[4],
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: spacing[2],
+                      backgroundColor: theme.primary,
+                      borderRadius: radius.lg,
+                      paddingVertical: spacing[4],
+                      opacity:
+                        ingestMutation.isPending ||
+                        applyMutation.isPending ||
+                        !aiText.trim()
+                          ? 0.6
+                          : 1,
+                    }}
+                  >
+                    {ingestMutation.isPending || applyMutation.isPending ? (
+                      <ActivityIndicator color={theme.onPrimary} />
+                    ) : (
+                      <>
+                        <Text style={{ fontSize: 14, color: theme.onPrimary }}>
+                          ✨
+                        </Text>
+                        <Text
+                          style={{
+                            ...typography.label,
+                            color: theme.onPrimary,
+                          }}
+                        >
+                          {t(
+                            itemCount > 0
+                              ? "ai.addToList"
+                              : "ai.createFromText",
+                          )}
+                        </Text>
+                      </>
+                    )}
+                  </Pressable>
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: spacing[3],
+                      marginVertical: spacing[5],
+                    }}
+                  >
+                    <View
+                      style={{
+                        flex: 1,
+                        height: 1,
+                        backgroundColor: theme.border,
+                      }}
+                    />
+                    <Text
+                      style={{
+                        ...typography.caption,
+                        color: theme.textMuted,
+                        fontWeight: "700",
+                        letterSpacing: 1,
+                      }}
+                    >
+                      {t("ai.orImport")}
+                    </Text>
+                    <View
+                      style={{
+                        flex: 1,
+                        height: 1,
+                        backgroundColor: theme.border,
+                      }}
+                    />
+                  </View>
+
+                  <CreateListOptionRow
+                    icon="📷"
+                    title={t("home.createImage")}
+                    subtitle={t("home.createImageHint")}
+                    disabled={
+                      ingestMutation.isPending || applyMutation.isPending
+                    }
+                    onPress={() => void startScreenshotIngest()}
+                  />
+                  <CreateListOptionRow
+                    icon="🛒"
+                    title={t("home.createClipboard")}
+                    subtitle={t("home.createClipboardHint")}
+                    disabled={
+                      ingestMutation.isPending || applyMutation.isPending
+                    }
+                    onPress={() => void startClipboardIngest()}
+                  />
+                </View>
               ) : null}
             </View>
+
+            {isMealProposalEnabled() ? (
+              <View style={{ marginTop: spacing[6] }}>
+                <Pressable
+                  onPress={() => setMealSectionOpen((open) => !open)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: mealSectionOpen }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    minHeight: 44,
+                  }}
+                >
+                  <Text
+                    style={{
+                      ...typography.headline,
+                      color: mealSectionOpen ? theme.text : theme.textMuted,
+                      flex: 1,
+                      paddingRight: spacing[3],
+                    }}
+                  >
+                    {t("ai.mealProposalSectionTitle")}
+                  </Text>
+                  <Text
+                    style={{
+                      color: mealSectionOpen ? theme.text : theme.textMuted,
+                      fontSize: 22,
+                      lineHeight: 26,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {mealSectionOpen ? "▾" : "▸"}
+                  </Text>
+                </Pressable>
+
+                {mealSectionOpen &&
+                typeof listId === "string" &&
+                listQuery.data?.workspaceId ? (
+                  <MealProposalComposer
+                    listId={listId}
+                    workspaceId={listQuery.data.workspaceId}
+                    onGeneratingChange={onMealGeneratingChange}
+                    hideTitle
+                  />
+                ) : null}
+              </View>
+            ) : null}
 
             <View style={{ marginTop: spacing[6] }}>
               <Pressable
@@ -1314,17 +1427,53 @@ export default function ShoppingListScreen() {
                 router.push(`/list/${listId}/shop`);
               }
             }}
+            disabled={
+              mealGenerating ||
+              ingestMutation.isPending ||
+              applyMutation.isPending
+            }
             accessibilityRole="button"
-            accessibilityLabel={t("shoppingMode.startShopping")}
+            accessibilityLabel={
+              mealGenerating ||
+              ingestMutation.isPending ||
+              applyMutation.isPending
+                ? t("ai.mealProposalGenerating")
+                : t("shoppingMode.startShopping")
+            }
             style={{
               ...primaryButtonStyle(theme),
               borderRadius: radius.full,
               minHeight: 56,
+              opacity:
+                mealGenerating ||
+                ingestMutation.isPending ||
+                applyMutation.isPending
+                  ? 0.85
+                  : 1,
             }}
           >
-            <Text style={{ ...typography.label, color: theme.onPrimary }}>
-              {t("shoppingMode.startShopping")}
-            </Text>
+            {mealGenerating ||
+            ingestMutation.isPending ||
+            applyMutation.isPending ? (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing[2],
+                }}
+              >
+                <ActivityIndicator color={theme.onPrimary} />
+                <Text style={{ ...typography.label, color: theme.onPrimary }}>
+                  {mealGenerating
+                    ? t("ai.mealProposalGenerating")
+                    : t("ai.suggestLoadingCta")}
+                </Text>
+              </View>
+            ) : (
+              <Text style={{ ...typography.label, color: theme.onPrimary }}>
+                {t("shoppingMode.startShopping")}
+              </Text>
+            )}
           </Pressable>
         </View>
       </View>

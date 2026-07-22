@@ -1,0 +1,14 @@
+id: empty-dishes
+scenarioVersion: 1
+name: Missing dishes and fixture → INVALID_INPUT
+adapter: meal-proposal
+input:
+  locale: pl
+expectations:
+  expectError: INVALID_INPUT
+hardRules:
+  - id: H010
+    type: expect_error
+    code: INVALID_INPUT
+softRules: []
+infoRules: []

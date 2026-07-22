@@ -120,7 +120,7 @@ async function ingestMealProposalOnce(input: {
   );
 
   const proposal = dedupeMealIngredients(built.ai, existingItems);
-  const mealCount = (proposal.meals.length === 2 ? 2 : 1) as 1 | 2;
+  const mealCount = Math.min(5, Math.max(1, proposal.meals.length));
 
   const run = await prisma.aiProposalRun.create({
     data: {

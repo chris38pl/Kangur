@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -18,11 +18,31 @@ import { setPendingMealProposal } from "@/features/ai/pending-meal-proposal";
 import { Analytics } from "@/lib/analytics";
 import { ApiClientError } from "@/lib/api/client";
 
-const MAX_DISHES = 2;
+const MAX_DISHES = 5;
 
-type Props = { listId: string; workspaceId: string };
+/** Distinct chip colors for up to 5 dish badges (index = badge order). */
+const DISH_BADGE_COLORS = [
+  { background: "#DFF5EF", text: "#1F6B5F", border: "#9FD9CB" },
+  { background: "#FFE8D6", text: "#9A4E1B", border: "#F0C39A" },
+  { background: "#E4EEFF", text: "#2F4F9A", border: "#A8BFE8" },
+  { background: "#F3E5F5", text: "#7A3E8A", border: "#D2A8DB" },
+  { background: "#FFF3C4", text: "#8A6A12", border: "#E6D07A" },
+] as const;
 
-export function MealProposalComposer({ listId, workspaceId }: Props) {
+type Props = {
+  listId: string;
+  workspaceId: string;
+  onGeneratingChange?: (generating: boolean) => void;
+  /** When wrapped in an outer collapsible section, hide the in-composer title. */
+  hideTitle?: boolean;
+};
+
+export function MealProposalComposer({
+  listId,
+  workspaceId,
+  onGeneratingChange,
+  hideTitle = false,
+}: Props) {
   const { t } = useTranslation();
   const { getToken } = useAuth();
   const router = useRouter();
@@ -55,6 +75,13 @@ export function MealProposalComposer({ listId, workspaceId }: Props) {
     },
   });
 
+  const busy = generateMutation.isPending;
+
+  useEffect(() => {
+    onGeneratingChange?.(busy);
+    return () => onGeneratingChange?.(false);
+  }, [busy, onGeneratingChange]);
+
   const addDish = () => {
     const value = draft.trim();
     if (!value || dishes.length >= MAX_DISHES) return;
@@ -66,20 +93,21 @@ export function MealProposalComposer({ listId, workspaceId }: Props) {
     setDraft("");
   };
 
-  const busy = generateMutation.isPending;
   const canAdd = Boolean(draft.trim()) && dishes.length < MAX_DISHES && !busy;
   const canGenerate = dishes.length >= 1 && !busy;
 
   return (
-    <View style={{ marginTop: spacing[5] }}>
-      <Text style={{ ...typography.headline, color: theme.text }}>
-        {t("ai.mealProposalTitle")}
-      </Text>
+    <View style={{ marginTop: hideTitle ? spacing[3] : spacing[5] }}>
+      {hideTitle ? null : (
+        <Text style={{ ...typography.headline, color: theme.text }}>
+          {t("ai.mealProposalTitle")}
+        </Text>
+      )}
       <Text
         style={{
           ...typography.body,
           color: theme.textBody,
-          marginTop: spacing[2],
+          marginTop: hideTitle ? 0 : spacing[2],
         }}
       >
         {t("ai.mealProposalSubtitle")}
@@ -141,31 +169,42 @@ export function MealProposalComposer({ listId, workspaceId }: Props) {
             gap: spacing[2],
           }}
         >
-          {dishes.map((dish, index) => (
-            <Pressable
-              key={`${dish}-${index}`}
-              onPress={() =>
-                setDishes((prev) => prev.filter((_, i) => i !== index))
-              }
-              disabled={busy}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: spacing[2],
-                paddingVertical: spacing[2],
-                paddingHorizontal: spacing[3],
-                borderRadius: radius.full,
-                backgroundColor: theme.section,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <Text style={{ ...typography.caption, color: theme.text }}>
-                {dish}
-              </Text>
-              <Text style={{ color: theme.textMuted }}>×</Text>
-            </Pressable>
-          ))}
+          {dishes.map((dish, index) => {
+            const badge =
+              DISH_BADGE_COLORS[index % DISH_BADGE_COLORS.length] ??
+              DISH_BADGE_COLORS[0];
+            return (
+              <Pressable
+                key={`${dish}-${index}`}
+                onPress={() =>
+                  setDishes((prev) => prev.filter((_, i) => i !== index))
+                }
+                disabled={busy}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing[2],
+                  paddingVertical: spacing[2],
+                  paddingHorizontal: spacing[3],
+                  borderRadius: radius.full,
+                  backgroundColor: badge.background,
+                  borderWidth: 1,
+                  borderColor: badge.border,
+                }}
+              >
+                <Text
+                  style={{
+                    ...typography.caption,
+                    color: badge.text,
+                    fontWeight: "600",
+                  }}
+                >
+                  {dish}
+                </Text>
+                <Text style={{ color: badge.text, opacity: 0.7 }}>×</Text>
+              </Pressable>
+            );
+          })}
         </View>
       ) : null}
 
@@ -197,7 +236,12 @@ export function MealProposalComposer({ listId, workspaceId }: Props) {
         }}
       >
         {busy ? (
-          <ActivityIndicator color={theme.onPrimary} />
+          <>
+            <ActivityIndicator color={theme.onPrimary} />
+            <Text style={{ ...typography.label, color: theme.onPrimary }}>
+              {t("ai.mealProposalGenerating")}
+            </Text>
+          </>
         ) : (
           <>
             <Text style={{ fontSize: 14, color: theme.onPrimary }}>🍽️</Text>

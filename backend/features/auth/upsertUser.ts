@@ -32,14 +32,16 @@ export async function upsertUser({
     create: {
       clerkId,
       email: normalizedEmail,
-      locale: existing?.locale ?? deviceLocale,
+      locale: deviceLocale,
       ...(isPlatformAdminEmail(normalizedEmail)
         ? { platformRole: "ADMIN" as const }
         : {}),
     },
     update: {
       email: normalizedEmail,
-      ...(deviceLocale ? { locale: deviceLocale } : {}),
+      // Seed locale only when missing — never overwrite an explicit preference
+      // with X-Device-Locale from the current app boot (web often starts as "en").
+      ...(deviceLocale && !existing?.locale ? { locale: deviceLocale } : {}),
       ...(shouldPromote ? { platformRole: "ADMIN" as const } : {}),
       updatedAt: new Date(),
     },

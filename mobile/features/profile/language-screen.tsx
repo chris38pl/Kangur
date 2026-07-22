@@ -1,5 +1,7 @@
+import { useAuth } from "@clerk/clerk-expo";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
@@ -12,6 +14,7 @@ import {
   typography,
 } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
+import { updateMeLocale } from "@/features/profile/api";
 import {
   SUPPORTED_LOCALES,
   type AppLocale,
@@ -54,17 +57,31 @@ function CheckMark({ color }: { color: string }) {
 
 export function LanguageScreen() {
   const { t, i18n } = useTranslation();
+  const { getToken } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const current = resolveAppLocale(i18n.language);
+  const [saving, setSaving] = useState(false);
 
   const select = (locale: AppLocale) => {
-    if (locale === current) return;
-    void i18n.changeLanguage(locale).then(() => {
-      void queryClient.invalidateQueries({ queryKey: ["me"] });
-    });
+    if (locale === current || saving) return;
+    setSaving(true);
+    void (async () => {
+      try {
+        await i18n.changeLanguage(locale);
+        const token = await getToken();
+        if (token) {
+          const me = await updateMeLocale(token, locale);
+          queryClient.setQueryData(["me"], me);
+        } else {
+          void queryClient.invalidateQueries({ queryKey: ["me"] });
+        }
+      } finally {
+        setSaving(false);
+      }
+    })();
   };
 
   return (
@@ -145,8 +162,9 @@ export function LanguageScreen() {
               <Pressable
                 key={option.id}
                 onPress={() => select(option.id)}
+                disabled={saving}
                 accessibilityRole="radio"
-                accessibilityState={{ selected }}
+                accessibilityState={{ selected, disabled: saving }}
                 accessibilityLabel={option.nativeName}
                 style={{
                   minHeight: 56,
@@ -154,6 +172,7 @@ export function LanguageScreen() {
                   alignItems: "center",
                   paddingHorizontal: spacing[4],
                   gap: spacing[3],
+                  opacity: saving && !selected ? 0.55 : 1,
                   borderBottomWidth:
                     index < SUPPORTED_LOCALES.length - 1 ? 1 : 0,
                   borderBottomColor: theme.border,

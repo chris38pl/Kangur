@@ -17,6 +17,15 @@ function normalizeName(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+/** Display names: first letter uppercase (match list-from-AI style). */
+function capitalizeProductName(name: string): string {
+  const trimmed = name.trim().replace(/\s+/g, " ");
+  if (!trimmed) return trimmed;
+  const chars = Array.from(trimmed);
+  chars[0] = chars[0]!.toLocaleUpperCase();
+  return chars.join("");
+}
+
 function noteForMeals(titles: string[]): string | null {
   if (titles.length <= 1) return null;
   return `na ${titles.join(" i ")}`;
@@ -65,7 +74,7 @@ export function dedupeMealIngredients(
         byKey.set(key, {
           ownerMealId: meal.mealId,
           mealTitles: [meal.title],
-          name: ingredient.name.trim(),
+          name: capitalizeProductName(ingredient.name),
           amount: ingredient.amount?.trim() || null,
           note: ingredient.note?.trim() || null,
           category: ingredient.category,

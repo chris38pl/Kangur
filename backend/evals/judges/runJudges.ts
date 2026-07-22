@@ -1,6 +1,11 @@
 import { SHOPPING_CATEGORIES } from "@shared/shopping-categories";
 
-import { findName, namesMatch, precisionRecallF1 } from "../lib/names";
+import {
+  findName,
+  namesMatch,
+  normalizeNameKey,
+  precisionRecallF1,
+} from "../lib/names";
 import { RULE_CATALOG, ruleByType } from "../schema/ruleIds";
 import type { Evidence, RuleResult } from "../schema/report";
 import type { RuleRef, Scenario } from "../schema/scenario";
@@ -12,11 +17,14 @@ type ProposalItem = {
   category?: string;
   reason?: string | null;
   timesSeen?: number;
+  ownerMealId?: string;
+  op?: string;
 };
 
 type Proposal = {
   shoppingContext?: { title?: string; theme?: string };
   items?: ProposalItem[];
+  meals?: Array<{ mealId?: string; title?: string; icon?: string }>;
 };
 
 function resolveMeta(
@@ -62,10 +70,10 @@ function judgeJsonValid(
   error?: { code: string },
 ): RuleResult {
   return timed(resolveMeta(ref, "json_valid"), () => {
-    if (error?.code === "EMPTY_HISTORY") {
+    if (error?.code === "EMPTY_HISTORY" || error?.code === "INVALID_INPUT") {
       return {
         status: "pass",
-        message: "Skipped (empty history - no model output).",
+        message: "Skipped (controlled adapter error - no model output).",
         evidence: {},
       };
     }
@@ -401,7 +409,11 @@ function judgeNoCrash(
   error?: { code: string },
 ): RuleResult {
   return timed(resolveMeta(ref, "no_crash"), () => {
-    if (error && error.code !== "EMPTY_HISTORY") {
+    if (
+      error &&
+      error.code !== "EMPTY_HISTORY" &&
+      error.code !== "INVALID_INPUT"
+    ) {
       return {
         status: "fail",
         message: `Unexpected error: ${error.code}`,
@@ -529,7 +541,9 @@ function judgeReasonHonesty(
 function infoMergeCount(ref: RuleRef, output: Proposal | null): RuleResult {
   return timed(resolveMeta(ref, "merge_count"), () => {
     const merged =
-      output?.items?.filter((i) => (i.timesSeen ?? 1) > 1).length ?? 0;
+      output?.items?.filter(
+        (i) => (i.timesSeen ?? 1) > 1 || i.op === "merge",
+      ).length ?? 0;
     return {
       status: "info",
       message: `merge_count=${merged}`,
@@ -580,6 +594,97 @@ function infoItemCount(ref: RuleRef, output: Proposal | null): RuleResult {
       status: "info",
       message: `item_count=${count}`,
       evidence: { details: { itemCount: count } },
+    };
+  });
+}
+
+function judgeUniqueItemNames(
+  ref: RuleRef,
+  output: Proposal | null,
+): RuleResult {
+  return timed(resolveMeta(ref, "unique_item_names"), () => {
+    const names = itemNames(output);
+    const seen = new Map<string, string>();
+    const dupes: string[] = [];
+    for (const name of names) {
+      const key = normalizeNameKey(name);
+      if (!key) continue;
+      if (seen.has(key)) {
+        dupes.push(`${seen.get(key)} / ${name}`);
+      } else {
+        seen.set(key, name);
+      }
+    }
+    if (dupes.length) {
+      return {
+        status: "fail",
+        message: "Duplicate item names after normalize.",
+        evidence: { offendingItems: dupes, actual: names },
+      };
+    }
+    return {
+      status: "pass",
+      message: "Item names unique after normalize.",
+      evidence: { actual: names },
+    };
+  });
+}
+
+function judgeMealCount(ref: RuleRef, output: Proposal | null): RuleResult {
+  return timed(resolveMeta(ref, "meal_count"), () => {
+    const count = output?.meals?.length ?? 0;
+    const min = ref.min ?? 1;
+    const max = ref.max ?? 5;
+    if (count < min || count > max) {
+      return {
+        status: "fail",
+        message: `meal_count ${count} outside [${min}, ${max}].`,
+        evidence: { details: { count, min, max } },
+      };
+    }
+    return {
+      status: "pass",
+      message: `meal_count ${count} in [${min}, ${max}].`,
+      evidence: { details: { count, min, max } },
+    };
+  });
+}
+
+function judgeNoPremiumTerms(
+  ref: RuleRef,
+  output: Proposal | null,
+): RuleResult {
+  return timed(resolveMeta(ref, "no_premium_terms"), () => {
+    const patterns = ref.patterns ?? [];
+    if (!patterns.length) {
+      return {
+        status: "pass",
+        message: "No premium patterns configured.",
+        evidence: {},
+      };
+    }
+    const regexes = patterns.map((p) => new RegExp(p, "i"));
+    const offending: string[] = [];
+    for (const item of output?.items ?? []) {
+      const haystack = `${item.name} ${item.note ?? ""}`;
+      if (regexes.some((re) => re.test(haystack))) {
+        offending.push(item.name);
+      }
+    }
+    if (offending.length) {
+      return {
+        status: "warn",
+        message: "Premium/niche terms found in name or note.",
+        evidence: {
+          offendingItems: offending,
+          expected: patterns,
+        },
+      };
+    }
+    return {
+      status: "pass",
+      message: "No premium/niche terms in names/notes.",
+      evidence: { expected: patterns },
     };
   });
 }
@@ -639,6 +744,12 @@ function runOne(
       return infoAvgReason(ref, ctx.output);
     case "item_count":
       return infoItemCount(ref, ctx.output);
+    case "unique_item_names":
+      return judgeUniqueItemNames(ref, ctx.output);
+    case "meal_count":
+      return judgeMealCount(ref, ctx.output);
+    case "no_premium_terms":
+      return judgeNoPremiumTerms(ref, ctx.output);
     default:
       return timed(resolveMeta(ref, ref.type), () => ({
         status: "fail",

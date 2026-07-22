@@ -1,29 +1,41 @@
 import { NextResponse } from "next/server";
 
-import { MeResponseSchema } from "@/features/auth/schemas";
+import {
+  MeResponseSchema,
+  UpdateMeBodySchema,
+} from "@/features/auth/schemas";
 import { deleteMe } from "@/features/auth/deleteMe";
-import { ApiError } from "@/lib/auth/errors";
+import { ApiError, validationError } from "@/lib/auth/errors";
 import { verifyClerkBearer } from "@/lib/auth/clerk";
 import { requireUser } from "@/lib/auth/requireUser";
 import { isAppLocale } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
 
+function toMeDto(user: {
+  id: string;
+  clerkId: string;
+  email: string;
+  locale: string | null;
+  platformRole: "USER" | "ADMIN";
+  createdAt: Date;
+  updatedAt: Date;
+}) {
+  return MeResponseSchema.parse({
+    id: user.id,
+    clerkId: user.clerkId,
+    email: user.email,
+    locale: isAppLocale(user.locale) ? user.locale : null,
+    platformRole: user.platformRole,
+    createdAt: user.createdAt.toISOString(),
+    updatedAt: user.updatedAt.toISOString(),
+  });
+}
+
 export async function GET(request: Request) {
   try {
     const deviceLocale = request.headers.get("x-device-locale");
     const { user } = await requireUser(request, { deviceLocale });
-
-    const body = MeResponseSchema.parse({
-      id: user.id,
-      clerkId: user.clerkId,
-      email: user.email,
-      locale: isAppLocale(user.locale) ? user.locale : null,
-      platformRole: user.platformRole,
-      createdAt: user.createdAt.toISOString(),
-      updatedAt: user.updatedAt.toISOString(),
-    });
-
-    return NextResponse.json(body);
+    return NextResponse.json(toMeDto(user));
   } catch (error) {
     if (error instanceof ApiError) {
       return NextResponse.json(error.toJSON(), { status: error.status });
@@ -33,6 +45,37 @@ export async function GET(request: Request) {
     return NextResponse.json(
       { code: "INVALID_TOKEN", message: "Unable to authenticate request." },
       { status: 401 },
+    );
+  }
+}
+
+/** Update profile fields the user can edit (currently: app language). */
+export async function PATCH(request: Request) {
+  try {
+    const { user } = await requireUser(request);
+    const json: unknown = await request.json();
+    const parsed = UpdateMeBodySchema.safeParse(json);
+    if (!parsed.success) {
+      throw validationError(
+        parsed.error.issues[0]?.message ?? "Invalid profile update.",
+      );
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { locale: parsed.data.locale },
+    });
+
+    return NextResponse.json(toMeDto(updated));
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return NextResponse.json(error.toJSON(), { status: error.status });
+    }
+
+    console.error("[auth]", "MePatchFailed", error);
+    return NextResponse.json(
+      { code: "UNKNOWN", message: "Unable to update profile." },
+      { status: 500 },
     );
   }
 }

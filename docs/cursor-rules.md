@@ -62,7 +62,7 @@ Read the PRD, architecture, [roadmap.md](./roadmap.md), and [deploy.md](./deploy
   `produce | fruit | vegetables | dairy | meat | fish | frozen | drinks | bakery | snacks | household | baby | pets | pharmacy | other`
 - Meter **AI Credits** (name matters - not bare “Credits”): text/clipboard 1, screenshot 2, suggestions 3.
 - Apply list changes only after Review accept (proposal → apply).
-- Before shipping AI prompt/model changes: run `pnpm eval:ai --suite history-suggest` in `backend/` when OpenAI key is available (see `backend/evals/README.md`).
+- Before shipping AI prompt/model changes: run `pnpm eval:ai --suite history-suggest` in `backend/` when OpenAI key is available (see `backend/evals/README.md`). For Meal Proposal prompt changes, also run `pnpm eval:ai --suite meal-proposal` (offline fixtures like `dedupe-cheese-two-meals` need no key).
 
 ---
 

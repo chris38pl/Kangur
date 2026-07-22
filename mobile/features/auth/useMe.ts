@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { z } from "zod";
 
 import { apiFetch } from "@/lib/api/client";
@@ -10,7 +11,7 @@ import { APP_LOCALE_IDS } from "@shared/locales";
 
 const AppLocaleSchema = createEnumSchema(APP_LOCALE_IDS);
 
-const MeSchema = z.object({
+export const MeSchema = z.object({
   id: z.string(),
   clerkId: z.string(),
   email: z.string(),
@@ -29,7 +30,7 @@ function preferredLocale(): string {
 export function useMe(enabled = true) {
   const { getToken, isSignedIn } = useAuth();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["me"],
     enabled: enabled && Boolean(isSignedIn),
     queryFn: async () => {
@@ -44,4 +45,16 @@ export function useMe(enabled = true) {
       return MeSchema.parse(data);
     },
   });
+
+  // Restore persisted profile language after boot (web often starts as "en").
+  // Device language remains the initial fallback until /me resolves.
+  useEffect(() => {
+    const profileLocale = query.data?.locale;
+    if (!profileLocale) return;
+    const next = resolveAppLocale(profileLocale);
+    if (resolveAppLocale(i18n.language) === next) return;
+    void i18n.changeLanguage(next);
+  }, [query.data?.locale]);
+
+  return query;
 }

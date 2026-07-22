@@ -50,6 +50,51 @@ export const ScenarioInputSchema = z.object({
   locale: z.string().default("pl"),
   lists: z.array(HistoryListSchema).optional(),
   generate: GenerateSchema.optional(),
+  /** Meal proposal: dish / recipe names (1–5). */
+  dishes: z.array(z.string().trim().min(1).max(80)).min(1).max(5).optional(),
+  /** Meal proposal: existing list items for merge checks. */
+  existingItems: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        name: z.string().min(1),
+        amount: z.string().nullable().optional(),
+        note: z.string().nullable().optional(),
+        category: z.string().default("other"),
+        status: z.string().default("pending"),
+      }),
+    )
+    .optional(),
+  /**
+   * Meal proposal offline path: AI-shaped meals fixture → only
+   * `dedupeMealIngredients` (no OpenAI).
+   */
+  mealsFixture: z
+    .object({
+      meals: z
+        .array(
+          z.object({
+            mealId: z.string().min(1),
+            title: z.string().min(1),
+            icon: z.string().min(1),
+            ingredients: z
+              .array(
+                z.object({
+                  proposalRowId: z.string(),
+                  name: z.string().min(1),
+                  amount: z.string().nullable().optional(),
+                  note: z.string().nullable().optional(),
+                  category: z.string(),
+                  confidence: z.number().optional(),
+                }),
+              )
+              .min(1),
+          }),
+        )
+        .min(1)
+        .max(5),
+    })
+    .optional(),
 });
 
 export const BaselineSchema = z.object({

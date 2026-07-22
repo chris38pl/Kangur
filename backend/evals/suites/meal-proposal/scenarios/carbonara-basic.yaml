@@ -1,0 +1,40 @@
+id: carbonara-basic
+scenarioVersion: 1
+name: Carbonara staples (model)
+adapter: meal-proposal
+input:
+  locale: pl
+  dishes:
+    - Carbonara
+expectations:
+  nonEmpty: true
+  mustIncludeAny:
+    - Makaron
+    - Boczek
+    - Jajka
+    - Ser
+  minItems: 3
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H012
+    type: non_empty_items
+  - id: H014
+    type: unique_item_names
+  - id: H015
+    type: meal_count
+    min: 1
+    max: 2
+softRules:
+  - id: S007
+    type: no_premium_terms
+    patterns:
+      - Guanciale
+      - DOP
+      - Parmigiano
+      - Barilla
+infoRules:
+  - id: I004
+    type: item_count

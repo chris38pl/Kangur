@@ -5,7 +5,7 @@ import {
   extendZodWithOpenApi,
 } from "@asteasolutions/zod-to-openapi";
 
-import { ApiErrorSchema, MeResponseSchema } from "@/features/auth/schemas";
+import { ApiErrorSchema, MeResponseSchema, UpdateMeBodySchema } from "@/features/auth/schemas";
 import { PlatformOverviewResponseSchema, PlatformRealtimeResponseSchema } from "@/features/platform/schemas";
 import {
   AbandonSuggestFromHistoryBodySchema,
@@ -105,6 +105,51 @@ registry.registerPath({
       content: {
         "application/json": {
           schema: MeResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/api/v1/me",
+  summary: "Update current user profile",
+  description: "Currently supports updating app language (locale).",
+  tags: ["Auth"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: UpdateMeBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Updated user",
+      content: {
+        "application/json": {
+          schema: MeResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Validation failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
         },
       },
     },

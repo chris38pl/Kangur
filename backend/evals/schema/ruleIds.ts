@@ -88,6 +88,18 @@ export const RULE_CATALOG = {
     tier: "hard",
     severity: "critical",
   },
+  H014: {
+    id: "H014",
+    type: "unique_item_names",
+    tier: "hard",
+    severity: "major",
+  },
+  H015: {
+    id: "H015",
+    type: "meal_count",
+    tier: "hard",
+    severity: "major",
+  },
   S001: {
     id: "S001",
     type: "must_include_any",
@@ -121,6 +133,12 @@ export const RULE_CATALOG = {
   S006: {
     id: "S006",
     type: "min_items",
+    tier: "soft",
+    severity: "major",
+  },
+  S007: {
+    id: "S007",
+    type: "no_premium_terms",
     tier: "soft",
     severity: "major",
   },

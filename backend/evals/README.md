@@ -14,6 +14,9 @@ pnpm eval:ai --suite history-suggest --only grill-one-off
 pnpm eval:ai --suite history-suggest --repeat 5
 pnpm eval:ai --suite history-suggest --prompt history-v3 --compare-prompt production
 pnpm eval:ai --suite history-suggest --write-golden grill-one-off --force
+# Meal Proposal (M21) — offline fixtures need no OpenAI key
+pnpm eval:ai --suite meal-proposal --only dedupe-cheese-two-meals
+pnpm eval:ai --suite meal-proposal
 pnpm eval:prune-reports
 ```
 
@@ -23,10 +26,17 @@ pnpm eval:prune-reports
 Scenario YAML → thin Adapter → Evaluator → Judges → Report
 ```
 
-- **Adapter** (`adapters/historySuggest.ts`): validates fixture input, calls production `buildSuggestFromHistory` + `enrichSuggestFromHistory`, returns raw + normalized + corpus.
+- **Adapter** (`adapters/historySuggest.ts`, `adapters/mealProposal.ts`): validates fixture input, calls production builders (`buildSuggestFromHistory` / `buildMealProposal` + `dedupeMealIngredients`), returns raw + normalized + corpus.
 - **Evaluator**: timing, default seed (`424242`), `--repeat` stability, telemetry.
-- **Judges**: hard / soft / info with stable IDs (`H003`, `S002`, …), structured evidence, per-judge latency.
+- **Judges**: hard / soft / info with stable IDs (`H003`, `S002`, `H014`, …), structured evidence, per-judge latency.
 - **Report**: dated under `reports/YYYY-MM-DD/` (gitignored); includes repro command, cost aggregates, corpus snapshot.
+
+### Suites
+
+| Suite | Adapter | Notes |
+|-------|---------|--------|
+| `history-suggest` | `shopping-history` | Weekly grocery from history; needs OpenAI for model scenarios |
+| `meal-proposal` | `meal-proposal` | Dish → ingredients; `mealsFixture` scenarios are offline (0 tokens) |
 
 ## Suite versioning
 

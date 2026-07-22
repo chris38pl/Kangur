@@ -1,0 +1,8 @@
+name: meal-proposal
+suiteVersion: 1
+adapter: meal-proposal
+defaultModel: gpt-4.1-mini
+defaultPrompt: production
+description: >
+  Meal Proposal (M21) — dish names → supermarket ingredients;
+  offline fixtures exercise dedupe; model scenarios cover prompt quality.

@@ -84,24 +84,18 @@ export function isFeatureEnabled(
   if (isAnalyticsEnabled()) {
     const client = getPostHog() as
       | (ReturnType<typeof getPostHog> & {
-          isFeatureEnabled?: (key: string) => boolean | undefined;
           getFeatureFlag?: (key: string) => boolean | string | undefined;
         })
       | null;
-    if (client?.isFeatureEnabled) {
-      try {
-        const v = client.isFeatureEnabled(flag);
-        if (typeof v === "boolean") return v;
-      } catch {
-        // fall through
-      }
-    }
+    // Prefer getFeatureFlag: isFeatureEnabled() often returns false for
+    // flags that are not defined yet, which would hide default-on features.
     if (client?.getFeatureFlag) {
       try {
         const v = client.getFeatureFlag(flag);
         if (typeof v === "boolean") return v;
         if (v === "true") return true;
         if (v === "false") return false;
+        // undefined / other → fall through to default
       } catch {
         // fall through
       }

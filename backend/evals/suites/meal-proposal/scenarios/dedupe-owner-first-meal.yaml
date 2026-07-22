@@ -1,0 +1,43 @@
+id: dedupe-owner-first-meal
+scenarioVersion: 1
+name: ownerMealId is first meal that listed the ingredient
+adapter: meal-proposal
+input:
+  locale: pl
+  mealsFixture:
+    meals:
+      - mealId: carbonara
+        title: Carbonara
+        icon: "🍝"
+        ingredients:
+          - proposalRowId: c1
+            name: Ser
+            amount: null
+            note: null
+            category: dairy
+            confidence: 0.9
+      - mealId: pizza
+        title: Pizza
+        icon: "🍕"
+        ingredients:
+          - proposalRowId: p1
+            name: Ser
+            amount: null
+            note: null
+            category: dairy
+            confidence: 0.9
+expectations:
+  nonEmpty: true
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H014
+    type: unique_item_names
+  - id: H015
+    type: meal_count
+    min: 2
+    max: 2
+softRules: []
+infoRules:
+  - id: I004
+    type: item_count

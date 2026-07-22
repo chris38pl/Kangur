@@ -212,7 +212,7 @@ export function MealProposalReviewScreen({ listId }: Props) {
     },
     onSuccess: (result) => {
       const workspaceId = pending?.workspaceId;
-      const mealCount = (meals.length === 2 ? 2 : 1) as 1 | 2;
+      const mealCount = Math.min(5, Math.max(1, meals.length));
       if (result.applied > 0 && workspaceId) {
         Analytics.track("meal_proposal_accepted", {
           workspace_id: workspaceId,

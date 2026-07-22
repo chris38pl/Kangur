@@ -29,8 +29,8 @@ export async function POST(request: Request, context: RouteContext) {
     if (!parsed.success) throw validationError("Invalid meal proposal body.");
 
     const dishes = parsed.data.dishes.map((d) => d.trim()).filter(Boolean);
-    if (dishes.length < 1 || dishes.length > 2) {
-      throw validationError("Provide 1 or 2 dishes.");
+    if (dishes.length < 1 || dishes.length > 5) {
+      throw validationError("Provide 1 to 5 dishes.");
     }
 
     const result = await ingestMealProposal({

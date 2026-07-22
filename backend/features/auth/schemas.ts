@@ -42,3 +42,11 @@ export const MeResponseSchema = z
   .openapi("MeResponse");
 
 export type MeResponse = z.infer<typeof MeResponseSchema>;
+
+export const UpdateMeBodySchema = z
+  .object({
+    locale: AppLocaleSchema,
+  })
+  .openapi("UpdateMeBody");
+
+export type UpdateMeBody = z.infer<typeof UpdateMeBodySchema>;
