@@ -97,6 +97,10 @@
     "itemsOnList": "Položky v seznamu",
     "itemCount": "{{count}} položek",
     "categoryLabel": "Kategorie",
+    "categorySearchA11y": "Hledat kategorie",
+    "categorySearchPlaceholder": "Hledat kategorii…",
+    "categorySearchClearA11y": "Vymazat hledání kategorie",
+    "categorySearchEmpty": "Žádné odpovídající kategorie",
     "addLabel": "Přidat položku ručně",
     "namePlaceholder": "Mléko, jablka, káva...",
     "amountPlaceholder": "Množství (volitelné) – např. 2, 500 g",
@@ -123,7 +127,13 @@
     "removeItem": "Odebrat položku",
     "removeItemTitle": "Odebrat tuto položku?",
     "removeItemBody": "Produkt bude z tohoto seznamu odstraněn.",
-    "removeItemConfirm": "Odebrat"
+    "removeItemConfirm": "Odebrat",
+    "categoryOrderTitle": "Category order",
+    "categoryOrderHint": "Long-press the handle and drag to match aisle order in the store.",
+    "categoryOrderDragHandle": "Reorder category",
+    "categoryOrderMoveUp": "Move category up",
+    "categoryOrderMoveDown": "Move category down",
+    "categoryOrderHintWeb": "Use the arrows to set aisle order for the store."
   },
   "shoppingMode": {
     "title": "Nákup",
@@ -184,7 +194,9 @@
     "exitBody": "Tvůj postup se uloží a položky zůstanou v košíku na příští návštěvu.",
     "exitStay": "Zůstat",
     "exitLeave": "Opustit",
-    "invalidCategory": "Neznámá kategorie"
+    "invalidCategory": "Neznámá kategorie",
+    "categoryOrderHint": "Long-press the handle to reorder aisles for this trip.",
+    "categoryOrderHintWeb": "Use the arrows to reorder aisles for this trip."
   },
   "realtime": {
     "someone": "Někdo",

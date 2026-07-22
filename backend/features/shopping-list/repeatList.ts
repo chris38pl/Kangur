@@ -42,6 +42,7 @@ export async function repeatList(input: {
         name: list.name,
         emoji: list.emoji,
         isUntitled: list.isUntitled,
+        categoryOrder: list.categoryOrder,
         status: "active",
         createdByUserId: input.userId,
       },

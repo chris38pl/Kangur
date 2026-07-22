@@ -15,6 +15,7 @@ export const ShoppingListSchema = z.object({
   status: z.enum(["active", "archived", "deleted"]),
   isUntitled: z.boolean().default(true),
   preferredForAi: z.boolean().default(false),
+  categoryOrder: z.array(ShoppingCategorySchema).default([]),
   itemCount: z.number().int().nonnegative().default(0),
   itemNames: z.array(z.string()).default([]),
   previewItems: z.array(ShoppingListPreviewItemSchema).default([]),

@@ -54,7 +54,12 @@ export async function createShoppingList(
 export async function updateShoppingList(
   token: string,
   listId: string,
-  body: { name?: string; emoji?: string; preferredForAi?: boolean },
+  body: {
+    name?: string;
+    emoji?: string;
+    preferredForAi?: boolean;
+    categoryOrder?: string[];
+  },
 ): Promise<ShoppingList> {
   const data = await apiFetch<unknown>(`/api/v1/lists/${listId}`, {
     token,

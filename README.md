@@ -64,7 +64,7 @@ Ops runbook: **[docs/deploy.md](docs/deploy.md)**
 
 - Environments: local → staging (`staging-api.getkangur.com`) → production (`api.getkangur.com`)
 - Landing: `getkangur.com` (never serves API)
-- Order: merge → deploy backend → migrate → health → Stripe webhook → EAS build → Closed Testing → Production
+- Order: merge → deploy backend (migrate in Vercel build) → health → Stripe webhook → EAS build → Closed Testing → Production
 - Neon DBs: `kangur-dev` / `kangur-staging` / `kangur-prod`
 
 ## Notes

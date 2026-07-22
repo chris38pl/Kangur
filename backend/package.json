@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
     "build": "prisma generate && next build",
+    "build:vercel": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -18,7 +19,8 @@
     "eval:prune-reports": "tsx evals/runner/cli.ts --prune-only",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:migrate:deploy": "prisma migrate deploy"
+    "db:migrate:deploy": "prisma migrate deploy",
+    "vercel-build": "pnpm run build:vercel"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.0.0",

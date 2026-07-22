@@ -90,15 +90,21 @@ feature/xxx  →  staging  →  main
 Never guess “migrate or deploy first.” Always:
 
 1. **Merge branch** (`feature/*` → `staging`, later `staging` → `main`)
-2. **Deploy Backend** (Vercel)
-3. **Run Prisma migrations** - `pnpm db:migrate:deploy` against that env’s `DIRECT_URL`
-4. **Verify API health** - smoke: auth, list CRUD, billing route reachable
-5. **Verify Stripe webhook** - Dashboard deliveries + checkout smoke
-6. **Build Mobile** - EAS `preview` (staging) or `production` (main)
-7. **Closed Testing** - Google Play closed/internal track (staging path)
-8. **Production** - store production track (after `main` deploy + acceptance)
+2. **Deploy Backend** (Vercel) - build runs `pnpm build:vercel` (`prisma migrate deploy` → `prisma generate` → `next build`) via [`backend/vercel.json`](../backend/vercel.json)
+3. **Verify API health** - smoke: auth, list CRUD, billing route reachable
+4. **Verify Stripe webhook** - Dashboard deliveries + checkout smoke
+5. **Build Mobile** - EAS `preview` (staging) or `production` (main)
+6. **Closed Testing** - Google Play closed/internal track (staging path)
+7. **Production** - store production track (after `main` deploy + acceptance)
 
-Same order for staging and production releases. Migrations run **after** backend deploy so the live code matches the new schema as soon as migrate finishes.
+Same order for staging and production. Migrations apply **during the Vercel build** (before the new deployment goes live). Failed migrate fails the build — new code without schema does not ship.
+
+Manual escape hatch (local / broken deploy):
+
+```bash
+cd backend
+pnpm db:migrate:deploy   # against that env’s DIRECT_URL
+```
 
 Local Stripe webhooks:
 
@@ -148,8 +154,12 @@ Disable feature flag? (kill switch without full rollback)
 - `staging` → `staging-api.getkangur.com` (Preview / Staging env vars - map branch `staging` to the staging domain)
 - Landing `getkangur.com` on production - same Next.js `backend/` deploy (`app/(marketing)/`); set `NEXT_PUBLIC_SITE_URL=https://getkangur.com`
 - Root directory: `backend`
-- Build: `prisma generate && next build` (see `backend/package.json`)
+- Build: `pnpm build:vercel` (see [`backend/vercel.json`](../backend/vercel.json) + `backend/package.json`)
+  - `prisma migrate deploy` (needs `DIRECT_URL`)
+  - `prisma generate && next build`
+- CI / local `pnpm build` does **not** migrate (dummy DB in CI) — only Vercel uses `build:vercel`
 - Prefer **Neon → Vercel integration** for `DATABASE_URL` / `DIRECT_URL` per environment
+- Ensure `DIRECT_URL` is set for **Production** and **Preview** (staging) build env — migrate fails closed without it
 
 ### 6.2 Neon (Postgres)
 
@@ -166,7 +176,7 @@ Disable feature flag? (kill switch without full rollback)
 
 ```bash
 cd backend
-pnpm db:migrate:deploy   # uses DIRECT_URL
+pnpm db:migrate:deploy   # manual / local; Vercel runs this in build:vercel
 ```
 
 ### 6.3 Clerk
@@ -358,8 +368,8 @@ Current workflow: [.github/workflows/ci.yml](../.github/workflows/ci.yml) - back
 ### 10.1 First-time staging / production setup
 
 1. Create Neon DB/branch (`kangur-staging` or `kangur-prod`)
-2. Set Vercel env vars for that environment (including Neon URLs)
-3. Deploy backend once → run `pnpm db:migrate:deploy`
+2. Set Vercel env vars for that environment (including Neon `DATABASE_URL` + `DIRECT_URL`)
+3. Deploy backend once — `build:vercel` applies pending migrations automatically
 4. Configure Clerk keys (Dev for staging, Prod for production)
 5. Create Stripe webhook endpoint + Price IDs for that mode; set secrets
 6. Set OpenAI key from the correct project (Development vs Production)

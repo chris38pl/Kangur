@@ -89,6 +89,10 @@
     "itemsOnList": "Articles sur la liste",
     "itemCount": "{{count}} articles",
     "categoryLabel": "Catégorie",
+    "categorySearchA11y": "Rechercher des catégories",
+    "categorySearchPlaceholder": "Rechercher une catégorie…",
+    "categorySearchClearA11y": "Effacer la recherche de catégorie",
+    "categorySearchEmpty": "Aucune catégorie correspondante",
     "addLabel": "Ajouter un article manuellement",
     "namePlaceholder": "Lait, pommes, café...",
     "amountPlaceholder": "Quantité (facultatif) - ex. 2, 500 g",
@@ -115,7 +119,13 @@
     "removeItem": "Retirer l'article",
     "removeItemTitle": "Retirer cet article ?",
     "removeItemBody": "Le produit sera retiré de cette liste.",
-    "removeItemConfirm": "Retirer"
+    "removeItemConfirm": "Retirer",
+    "categoryOrderTitle": "Category order",
+    "categoryOrderHint": "Long-press the handle and drag to match aisle order in the store.",
+    "categoryOrderDragHandle": "Reorder category",
+    "categoryOrderMoveUp": "Move category up",
+    "categoryOrderMoveDown": "Move category down",
+    "categoryOrderHintWeb": "Use the arrows to set aisle order for the store."
   },
   "shoppingMode": {
     "title": "Courses",
@@ -176,7 +186,9 @@
     "exitBody": "Votre progression sera enregistrée et les articles resteront dans votre panier pour la prochaine visite.",
     "exitStay": "Rester",
     "exitLeave": "Quitter",
-    "invalidCategory": "Catégorie inconnue"
+    "invalidCategory": "Catégorie inconnue",
+    "categoryOrderHint": "Long-press the handle to reorder aisles for this trip.",
+    "categoryOrderHintWeb": "Use the arrows to reorder aisles for this trip."
   },
   "realtime": {
     "someone": "Quelqu'un",

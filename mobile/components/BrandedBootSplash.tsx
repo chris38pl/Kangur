@@ -1,25 +1,29 @@
 import { useEffect } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
+  withRepeat,
   withSequence,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
 
 import { brandAssets } from "@/design-system/brand-assets";
+import { brand } from "@/design-system/tokens";
 
 const ENTER_DELAY_MS = 100;
 const ENTER_DURATION_MS = 400;
 const EXIT_DURATION_MS = 260;
+const CIRCLE_EXPAND_MS = 900;
 
-const MASCOT_WIDTH_RATIO = 0.45;
-const MASCOT_MIN_PX = 168;
-const MASCOT_MAX_PX = 280;
+/** Splash mascot — larger than home hero for boot presence. */
+const MASCOT_SIZE_PX = 320;
+/** Circle sits tightly under the mascot. */
+const CIRCLE_SIZE_RATIO = 0.8;
 
 type Props = {
   /** When true, run exit (full overlay fade) then call onExitComplete. */
@@ -28,24 +32,19 @@ type Props = {
 };
 
 /**
- * Cold-start brand splash: white canvas + single mascot (lift → bounce → fade).
+ * Cold-start brand splash: white canvas + mascot over an expanding mint circle.
  * Ignores SafeArea - optically centered on the physical screen.
  */
 export function BrandedBootSplash({ exiting, onExitComplete }: Props) {
-  const { width: windowWidth } = useWindowDimensions();
-  const mascotSize = Math.min(
-    MASCOT_MAX_PX,
-    Math.max(MASCOT_MIN_PX, Math.round(windowWidth * MASCOT_WIDTH_RATIO)),
-  );
-  const shadowWidth = Math.round(mascotSize * 0.62);
-  const shadowHeight = Math.round(mascotSize * 0.12);
+  const mascotSize = MASCOT_SIZE_PX;
+  const circleSize = Math.round(mascotSize * CIRCLE_SIZE_RATIO);
 
   const overlayOpacity = useSharedValue(1);
   const mascotOpacity = useSharedValue(0);
   const scale = useSharedValue(0.92);
   const translateY = useSharedValue(20);
-  const shadowOpacity = useSharedValue(0.55);
-  const shadowScale = useSharedValue(0.95);
+  const circleOpacity = useSharedValue(0);
+  const circleScale = useSharedValue(0.28);
 
   useEffect(() => {
     const cubicOut = Easing.out(Easing.cubic);
@@ -69,21 +68,36 @@ export function BrandedBootSplash({ exiting, onExitComplete }: Props) {
         withTiming(0, { duration: 160, easing: cubicOut }),
       ),
     );
-    shadowOpacity.value = withDelay(
+
+    // Soft mint disc grows under the mascot, then breathes while boot waits.
+    circleOpacity.value = withDelay(
+      ENTER_DELAY_MS,
+      withTiming(1, { duration: ENTER_DURATION_MS, easing: cubicOut }),
+    );
+    circleScale.value = withDelay(
       ENTER_DELAY_MS,
       withSequence(
-        withTiming(0.8, { duration: ENTER_DURATION_MS, easing: cubicOut }),
-        withTiming(0.6, { duration: 200, easing: cubicOut }),
+        withTiming(1, {
+          duration: CIRCLE_EXPAND_MS,
+          easing: Easing.out(Easing.cubic),
+        }),
+        withRepeat(
+          withSequence(
+            withTiming(1.03, {
+              duration: 1100,
+              easing: Easing.inOut(Easing.sin),
+            }),
+            withTiming(1, {
+              duration: 1100,
+              easing: Easing.inOut(Easing.sin),
+            }),
+          ),
+          -1,
+          false,
+        ),
       ),
     );
-    shadowScale.value = withDelay(
-      ENTER_DELAY_MS,
-      withSequence(
-        withTiming(1.05, { duration: ENTER_DURATION_MS, easing: cubicOut }),
-        withTiming(1, { duration: 200, easing: cubicOut }),
-      ),
-    );
-  }, [mascotOpacity, scale, shadowOpacity, shadowScale, translateY]);
+  }, [circleOpacity, circleScale, mascotOpacity, scale, translateY]);
 
   useEffect(() => {
     if (!exiting) return;
@@ -107,9 +121,9 @@ export function BrandedBootSplash({ exiting, onExitComplete }: Props) {
     transform: [{ translateY: translateY.value }, { scale: scale.value }],
   }));
 
-  const shadowStyle = useAnimatedStyle(() => ({
-    opacity: shadowOpacity.value * mascotOpacity.value,
-    transform: [{ scaleX: shadowScale.value }, { scaleY: shadowScale.value }],
+  const circleStyle = useAnimatedStyle(() => ({
+    opacity: circleOpacity.value * 0.85 * mascotOpacity.value,
+    transform: [{ scale: circleScale.value }],
   }));
 
   return (
@@ -119,22 +133,25 @@ export function BrandedBootSplash({ exiting, onExitComplete }: Props) {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
-      <View style={styles.stage}>
+      <View style={[styles.stage, { width: circleSize, height: circleSize }]}>
         <Animated.View
           style={[
-            styles.shadow,
+            styles.circle,
             {
-              width: shadowWidth,
-              height: shadowHeight,
-              borderRadius: shadowHeight / 2,
-              marginBottom: -shadowHeight * 0.35,
+              width: circleSize,
+              height: circleSize,
+              borderRadius: circleSize / 2,
             },
-            shadowStyle,
+            circleStyle,
           ]}
         />
         <Animated.Image
           source={brandAssets.splashMascot}
-          style={[{ width: mascotSize, height: mascotSize }, mascotStyle]}
+          style={[
+            styles.mascot,
+            { width: mascotSize, height: mascotSize },
+            mascotStyle,
+          ]}
           resizeMode="contain"
         />
       </View>
@@ -153,7 +170,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  shadow: {
-    backgroundColor: "rgba(27, 44, 59, 0.22)",
+  circle: {
+    position: "absolute",
+    backgroundColor: brand.accent,
+  },
+  mascot: {
+    zIndex: 1,
   },
 });

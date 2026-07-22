@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { resolveShoppingCategoryOrder } from "@shared/shopping-categories";
 
 import {
   archiveShoppingList,
@@ -108,12 +109,34 @@ export function useUpdateShoppingList(listId: string | null) {
       name?: string;
       emoji?: string;
       preferredForAi?: boolean;
+      categoryOrder?: string[];
     }) => {
       const token = await getToken();
       if (!token || !listId) {
         throw new Error("Missing auth token or list id");
       }
       return updateShoppingList(token, listId, input);
+    },
+    onMutate: async (input) => {
+      if (!listId || input.categoryOrder === undefined) return undefined;
+      await queryClient.cancelQueries({ queryKey: ["shopping-list", listId] });
+      const previous = queryClient.getQueryData<ShoppingList>([
+        "shopping-list",
+        listId,
+      ]);
+      if (previous) {
+        queryClient.setQueryData<ShoppingList>(["shopping-list", listId], {
+          ...previous,
+          categoryOrder: resolveShoppingCategoryOrder(input.categoryOrder),
+        });
+      }
+      // Never invalidate shopping-items on aisle reorder (SSoT inbound / no flicker).
+      return { previous };
+    },
+    onError: (_error, input, context) => {
+      if (listId && input.categoryOrder !== undefined && context?.previous) {
+        queryClient.setQueryData(["shopping-list", listId], context.previous);
+      }
     },
     onSuccess: async (updated) => {
       queryClient.setQueryData(["shopping-list", updated.id], updated);

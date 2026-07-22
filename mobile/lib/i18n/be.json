@@ -97,6 +97,10 @@
     "itemsOnList": "Тавары ў спісе",
     "itemCount": "{{count}} тавараў",
     "categoryLabel": "Катэгорыя",
+    "categorySearchA11y": "Пошук катэгорый",
+    "categorySearchPlaceholder": "Шукаць катэгорыю…",
+    "categorySearchClearA11y": "Ачысціць пошук катэгорыі",
+    "categorySearchEmpty": "Няма падыходных катэгорый",
     "addLabel": "Дадаць тавар уручную",
     "namePlaceholder": "Малако, яблыкі, кава...",
     "amountPlaceholder": "Колькасць (неабавязкова) - напрыклад 2, 500 г",
@@ -123,7 +127,13 @@
     "removeItem": "Прыбраць тавар",
     "removeItemTitle": "Прыбраць гэты тавар?",
     "removeItemBody": "Тавар будзе выдалены з гэтага спісу.",
-    "removeItemConfirm": "Прыбраць"
+    "removeItemConfirm": "Прыбраць",
+    "categoryOrderTitle": "Category order",
+    "categoryOrderHint": "Long-press the handle and drag to match aisle order in the store.",
+    "categoryOrderDragHandle": "Reorder category",
+    "categoryOrderMoveUp": "Move category up",
+    "categoryOrderMoveDown": "Move category down",
+    "categoryOrderHintWeb": "Use the arrows to set aisle order for the store."
   },
   "shoppingMode": {
     "title": "Пакупкі",
@@ -184,7 +194,9 @@
     "exitBody": "Твой прагрэс будзе захаваны, і тавары застануцца ў кошыку да наступнага візіту.",
     "exitStay": "Застацца",
     "exitLeave": "Выйсці",
-    "invalidCategory": "Невядомая катэгорыя"
+    "invalidCategory": "Невядомая катэгорыя",
+    "categoryOrderHint": "Long-press the handle to reorder aisles for this trip.",
+    "categoryOrderHintWeb": "Use the arrows to reorder aisles for this trip."
   },
   "realtime": {
     "someone": "Нехта",

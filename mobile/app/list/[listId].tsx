@@ -1,17 +1,23 @@
-import { getShoppingCategoryOrder } from "@shared/shopping-categories";
+import {
+  getShoppingCategoryIcon,
+  mergeActiveCategoryOrder,
+  resolveShoppingCategoryOrder,
+  type ShoppingCategory as SharedShoppingCategory,
+} from "@shared/shopping-categories";
 import { useAuth } from "@clerk/clerk-expo";
 import * as Clipboard from "expo-clipboard";
+import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
   Keyboard,
+  Platform,
   Pressable,
-  ScrollView,
   Text,
   TextInput,
   View,
@@ -53,6 +59,12 @@ import {
   isListProvisional,
 } from "@/features/shopping-list/provisional-list";
 import { RenameListSheet } from "@/features/shopping-list/rename-list-sheet";
+import {
+  CategoryOrderEditRow,
+  CategoryOrderHint,
+} from "@/features/shopping-list/category-order-ui";
+import { CategoryReorderList } from "@/features/shopping-list/category-reorder-list";
+import { NestableScreenScroll } from "@/features/shopping-list/nestable-screen-scroll";
 import {
   useArchiveShoppingList,
   useUpdateShoppingList,
@@ -387,7 +399,9 @@ export default function ShoppingListScreen() {
     reviewOperations.every((operation) => operation.op === "merge") &&
     reviewOperations.every((operation) => operation.confidence >= 0.85);
 
-  const categoryOrder = getShoppingCategoryOrder();
+  const categoryOrder = resolveShoppingCategoryOrder(
+    listQuery.data?.categoryOrder,
+  );
   const activeItems = (itemsQuery.data ?? [])
     .filter((item) => item.status !== "removed")
     .slice()
@@ -401,6 +415,27 @@ export default function ShoppingListScreen() {
       return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
     });
   const itemCount = activeItems.length;
+
+  const categoriesOnList = useMemo(() => {
+    const seen = new Set<SharedShoppingCategory>();
+    const ordered: SharedShoppingCategory[] = [];
+    for (const category of categoryOrder) {
+      if (
+        activeItems.some((item) => item.category === category) &&
+        !seen.has(category)
+      ) {
+        seen.add(category);
+        ordered.push(category);
+      }
+    }
+    return ordered;
+  }, [activeItems, categoryOrder]);
+
+  const onCategoryReorder = (data: SharedShoppingCategory[]) => {
+    const nextOrder = mergeActiveCategoryOrder(categoryOrder, data);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    updateList.mutate({ categoryOrder: nextOrder });
+  };
 
   const confirmDeleteList = () => {
     if (typeof listId !== "string") return;
@@ -493,7 +528,7 @@ export default function ShoppingListScreen() {
           </View>
         </View>
 
-        <ScrollView
+        <NestableScreenScroll
           style={{ flex: 1 }}
           contentContainerStyle={{
             paddingHorizontal: spacing[6],
@@ -983,6 +1018,41 @@ export default function ShoppingListScreen() {
               </View>
             ) : null}
 
+            {categoriesOnList.length > 1 ? (
+              <View style={{ marginTop: spacing[8] }}>
+                <Text
+                  style={{
+                    ...typography.headline,
+                    color: theme.text,
+                  }}
+                >
+                  {t("list.categoryOrderTitle")}
+                </Text>
+                <CategoryOrderHint>
+                  {t(
+                    Platform.OS === "web"
+                      ? "list.categoryOrderHintWeb"
+                      : "list.categoryOrderHint",
+                  )}
+                </CategoryOrderHint>
+                <CategoryReorderList
+                  data={categoriesOnList}
+                  keyExtractor={(item) => item}
+                  onReorder={onCategoryReorder}
+                  renderItem={({ item, drag, isActive, moveUp, moveDown }) => (
+                    <CategoryOrderEditRow
+                      icon={getShoppingCategoryIcon(item)}
+                      label={t(`categories.${item}`)}
+                      onLongPress={drag}
+                      isActive={isActive}
+                      moveUp={moveUp}
+                      moveDown={moveDown}
+                    />
+                  )}
+                />
+              </View>
+            ) : null}
+
             <Text
               style={{
                 ...typography.headline,
@@ -1081,7 +1151,7 @@ export default function ShoppingListScreen() {
             </Pressable>
           </>
         )}
-        </ScrollView>
+        </NestableScreenScroll>
 
         <View
           style={{

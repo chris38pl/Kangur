@@ -89,6 +89,10 @@
     "itemsOnList": "Items on list",
     "itemCount": "{{count}} items",
     "categoryLabel": "Category",
+    "categorySearchA11y": "Search categories",
+    "categorySearchPlaceholder": "Search category…",
+    "categorySearchClearA11y": "Clear category search",
+    "categorySearchEmpty": "No matching categories",
     "addLabel": "Add item manually",
     "namePlaceholder": "Milk, apples, coffee...",
     "amountPlaceholder": "Amount (optional) - e.g. 2, 500 g",
@@ -115,7 +119,13 @@
     "removeItem": "Remove item",
     "removeItemTitle": "Remove this item?",
     "removeItemBody": "The product will be removed from this list.",
-    "removeItemConfirm": "Remove"
+    "removeItemConfirm": "Remove",
+    "categoryOrderTitle": "Category order",
+    "categoryOrderHint": "Long-press the handle and drag to match aisle order in the store.",
+    "categoryOrderDragHandle": "Reorder category",
+    "categoryOrderMoveUp": "Move category up",
+    "categoryOrderMoveDown": "Move category down",
+    "categoryOrderHintWeb": "Use the arrows to set aisle order for the store."
   },
   "shoppingMode": {
     "title": "Shopping",
@@ -176,7 +186,9 @@
     "exitBody": "Your progress will be saved, and items will stay in your basket for the next visit.",
     "exitStay": "Stay",
     "exitLeave": "Leave",
-    "invalidCategory": "Unknown category"
+    "invalidCategory": "Unknown category",
+    "categoryOrderHint": "Long-press the handle to reorder aisles for this trip.",
+    "categoryOrderHintWeb": "Use the arrows to reorder aisles for this trip."
   },
   "realtime": {
     "someone": "Someone",

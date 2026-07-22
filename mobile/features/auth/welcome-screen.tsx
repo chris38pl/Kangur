@@ -1,3 +1,4 @@
+import * as WebBrowser from "expo-web-browser";
 import { Link } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { Trans, useTranslation } from "react-i18next";
@@ -11,8 +12,10 @@ import {
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { AuthBrandHero } from "@/features/auth/auth-brand-hero";
 
-const TERMS_PLACEHOLDER_URL = "https://getkangur.com/terms";
-const PRIVACY_PLACEHOLDER_URL = "https://getkangur.com/privacy";
+const LEGAL_URLS = {
+  terms: "https://getkangur.com/terms",
+  privacy: "https://getkangur.com/privacy",
+} as const;
 
 export function WelcomeScreen() {
   const { t } = useTranslation();
@@ -106,9 +109,7 @@ export function WelcomeScreen() {
                     accessibilityRole="link"
                     style={legalLinkStyle}
                     onPress={() => {
-                      console.info("[auth]", "OpenTerms", {
-                        url: TERMS_PLACEHOLDER_URL,
-                      });
+                      void WebBrowser.openBrowserAsync(LEGAL_URLS.terms);
                     }}
                   />
                 ),
@@ -117,9 +118,7 @@ export function WelcomeScreen() {
                     accessibilityRole="link"
                     style={legalLinkStyle}
                     onPress={() => {
-                      console.info("[auth]", "OpenPrivacy", {
-                        url: PRIVACY_PLACEHOLDER_URL,
-                      });
+                      void WebBrowser.openBrowserAsync(LEGAL_URLS.privacy);
                     }}
                   />
                 ),

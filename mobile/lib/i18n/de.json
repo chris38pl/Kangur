@@ -89,6 +89,10 @@
     "itemsOnList": "Artikel auf der Liste",
     "itemCount": "{{count}} Artikel",
     "categoryLabel": "Kategorie",
+    "categorySearchA11y": "Kategorien suchen",
+    "categorySearchPlaceholder": "Kategorie suchen…",
+    "categorySearchClearA11y": "Kategoriesuche löschen",
+    "categorySearchEmpty": "Keine passenden Kategorien",
     "addLabel": "Artikel manuell hinzufügen",
     "namePlaceholder": "Milch, Äpfel, Kaffee...",
     "amountPlaceholder": "Menge (optional) – z. B. 2, 500 g",
@@ -115,7 +119,13 @@
     "removeItem": "Artikel entfernen",
     "removeItemTitle": "Diesen Artikel entfernen?",
     "removeItemBody": "Das Produkt wird aus dieser Liste entfernt.",
-    "removeItemConfirm": "Entfernen"
+    "removeItemConfirm": "Entfernen",
+    "categoryOrderTitle": "Category order",
+    "categoryOrderHint": "Long-press the handle and drag to match aisle order in the store.",
+    "categoryOrderDragHandle": "Reorder category",
+    "categoryOrderMoveUp": "Move category up",
+    "categoryOrderMoveDown": "Move category down",
+    "categoryOrderHintWeb": "Use the arrows to set aisle order for the store."
   },
   "shoppingMode": {
     "title": "Einkaufen",
@@ -176,7 +186,9 @@
     "exitBody": "Dein Fortschritt wird gespeichert, und die Artikel bleiben für den nächsten Besuch in deinem Warenkorb.",
     "exitStay": "Bleiben",
     "exitLeave": "Verlassen",
-    "invalidCategory": "Unbekannte Kategorie"
+    "invalidCategory": "Unbekannte Kategorie",
+    "categoryOrderHint": "Long-press the handle to reorder aisles for this trip.",
+    "categoryOrderHintWeb": "Use the arrows to reorder aisles for this trip."
   },
   "realtime": {
     "someone": "Jemand",

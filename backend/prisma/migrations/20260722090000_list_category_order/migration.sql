@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "ShoppingList" ADD COLUMN "categoryOrder" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

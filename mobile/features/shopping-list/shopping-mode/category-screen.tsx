@@ -217,20 +217,30 @@ export function ShoppingCategoryScreen({
     }
   }
 
+  const listCategoryOrder = listQuery.data?.categoryOrder;
+
   const next = useMemo(
     () =>
       category && itemsQuery.data
-        ? nextCategoryWithActive(itemsQuery.data, category)
+        ? nextCategoryWithActive(
+            itemsQuery.data,
+            category,
+            listCategoryOrder,
+          )
         : null,
-    [category, itemsQuery.data],
+    [category, itemsQuery.data, listCategoryOrder],
   );
 
   const tripPosition = useMemo(
     () =>
       category && itemsQuery.data
-        ? getCategoryTripPosition(itemsQuery.data, category)
+        ? getCategoryTripPosition(
+            itemsQuery.data,
+            category,
+            listCategoryOrder,
+          )
         : null,
-    [category, itemsQuery.data],
+    [category, itemsQuery.data, listCategoryOrder],
   );
 
   const patchCacheStatus = useCallback(
@@ -513,7 +523,8 @@ export function ShoppingCategoryScreen({
           >
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={{ ...typography.headline, color: theme.text }}>
-                {tripPosition.current >= tripPosition.total
+                {/* Align with hint/CTA: last = no remaining active aisles. */}
+                {!next || tripPosition.current >= tripPosition.total
                   ? t("shoppingMode.categoryProgressTitleLast")
                   : t("shoppingMode.categoryProgressTitle", {
                       current: tripPosition.current,

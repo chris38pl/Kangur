@@ -89,6 +89,10 @@
     "itemsOnList": "Artículos en la lista",
     "itemCount": "{{count}} artículos",
     "categoryLabel": "Categoría",
+    "categorySearchA11y": "Buscar categorías",
+    "categorySearchPlaceholder": "Buscar categoría…",
+    "categorySearchClearA11y": "Borrar búsqueda de categoría",
+    "categorySearchEmpty": "No hay categorías coincidentes",
     "addLabel": "Añadir artículo manualmente",
     "namePlaceholder": "Leche, manzanas, café...",
     "amountPlaceholder": "Cantidad (opcional) - p. ej. 2, 500 g",
@@ -115,7 +119,13 @@
     "removeItem": "Quitar artículo",
     "removeItemTitle": "¿Quitar este artículo?",
     "removeItemBody": "El producto se quitará de esta lista.",
-    "removeItemConfirm": "Quitar"
+    "removeItemConfirm": "Quitar",
+    "categoryOrderTitle": "Category order",
+    "categoryOrderHint": "Long-press the handle and drag to match aisle order in the store.",
+    "categoryOrderDragHandle": "Reorder category",
+    "categoryOrderMoveUp": "Move category up",
+    "categoryOrderMoveDown": "Move category down",
+    "categoryOrderHintWeb": "Use the arrows to set aisle order for the store."
   },
   "shoppingMode": {
     "title": "Comprando",
@@ -176,7 +186,9 @@
     "exitBody": "Tu progreso se guardará y los artículos seguirán en tu cesta para la próxima visita.",
     "exitStay": "Quedarme",
     "exitLeave": "Salir",
-    "invalidCategory": "Categoría desconocida"
+    "invalidCategory": "Categoría desconocida",
+    "categoryOrderHint": "Long-press the handle to reorder aisles for this trip.",
+    "categoryOrderHintWeb": "Use the arrows to reorder aisles for this trip."
   },
   "realtime": {
     "someone": "Alguien",

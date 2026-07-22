@@ -1,5 +1,5 @@
 import {
-  getShoppingCategoryOrder,
+  resolveShoppingCategoryOrder,
   type ShoppingCategory,
 } from "@shared/shopping-categories";
 
@@ -59,13 +59,20 @@ function toCategoryProgress(
   };
 }
 
+function resolvedOrder(
+  categoryOrder?: readonly string[] | null,
+): ShoppingCategory[] {
+  return resolveShoppingCategoryOrder(categoryOrder);
+}
+
 /**
- * Categories that still have ACTIVE items, ordered by Store Flow SSOT.
+ * Categories that still have ACTIVE items, ordered by list aisle order.
  */
 export function getActiveCategoryProgress(
   items: ShoppingItem[],
+  categoryOrder?: readonly string[] | null,
 ): CategoryProgress[] {
-  const order = getShoppingCategoryOrder();
+  const order = resolvedOrder(categoryOrder);
   const byCat = collectByCategory(items);
   const result: CategoryProgress[] = [];
 
@@ -85,8 +92,9 @@ export function getActiveCategoryProgress(
  */
 export function getCompletedCategoryProgress(
   items: ShoppingItem[],
+  categoryOrder?: readonly string[] | null,
 ): CategoryProgress[] {
-  const order = getShoppingCategoryOrder();
+  const order = resolvedOrder(categoryOrder);
   const byCat = collectByCategory(items);
   const result: CategoryProgress[] = [];
 
@@ -136,8 +144,9 @@ export function sortItemsInCategory(items: ShoppingItem[]): ShoppingItem[] {
 export function nextCategoryWithActive(
   items: ShoppingItem[],
   current: ShoppingCategory,
+  categoryOrder?: readonly string[] | null,
 ): CategoryProgress | null {
-  const active = getActiveCategoryProgress(items);
+  const active = getActiveCategoryProgress(items, categoryOrder);
   const idx = active.findIndex((c) => c.category === current);
   if (idx < 0) {
     return active[0] ?? null;
@@ -149,8 +158,9 @@ export function nextCategoryWithActive(
 export function getCategoryTripPosition(
   items: ShoppingItem[],
   category: ShoppingCategory,
+  categoryOrder?: readonly string[] | null,
 ): { current: number; total: number } | null {
-  const order = getShoppingCategoryOrder();
+  const order = resolvedOrder(categoryOrder);
   const tracked = order.filter((cat) =>
     items.some((i) => i.category === cat && i.status !== "removed"),
   );

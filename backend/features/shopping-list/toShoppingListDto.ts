@@ -1,4 +1,5 @@
 import type { ShoppingList } from "@prisma/client";
+import { resolveShoppingCategoryOrder } from "@shared/shopping-categories";
 
 import type { ShoppingListDTO } from "./schemas";
 
@@ -19,6 +20,7 @@ export function toShoppingListDto(
     status: list.status,
     isUntitled: list.isUntitled,
     preferredForAi: list.preferredForAi,
+    categoryOrder: resolveShoppingCategoryOrder(list.categoryOrder),
     itemCount: list.itemCount ?? 0,
     itemNames: list.itemNames ?? [],
     previewItems: list.previewItems ?? [],

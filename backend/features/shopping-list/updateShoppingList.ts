@@ -1,3 +1,5 @@
+import { resolveShoppingCategoryOrder } from "@shared/shopping-categories";
+
 import { prisma } from "@/lib/prisma";
 import { authorizeList } from "@/lib/authorize";
 import { validationError } from "@/lib/auth/errors";
@@ -12,6 +14,7 @@ export async function updateShoppingList(input: {
   name?: string;
   emoji?: string;
   preferredForAi?: boolean;
+  categoryOrder?: string[];
 }): Promise<ShoppingListDTO> {
   // Finished (archived) lists can still be starred for AI - allow archived when
   // preferredForAi is part of the update.
@@ -28,6 +31,11 @@ export async function updateShoppingList(input: {
     throw validationError("Name must be between 1 and 64 characters.");
   }
 
+  const categoryOrder =
+    input.categoryOrder === undefined
+      ? undefined
+      : resolveShoppingCategoryOrder(input.categoryOrder);
+
   const updated = await prisma.shoppingList.update({
     where: { id: list.id },
     data: {
@@ -36,6 +44,7 @@ export async function updateShoppingList(input: {
       ...(input.preferredForAi !== undefined
         ? { preferredForAi: input.preferredForAi }
         : {}),
+      ...(categoryOrder !== undefined ? { categoryOrder } : {}),
     },
   });
 

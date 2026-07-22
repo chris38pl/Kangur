@@ -97,6 +97,10 @@
     "itemsOnList": "Товари в списку",
     "itemCount": "{{count}} товарів",
     "categoryLabel": "Категорія",
+    "categorySearchA11y": "Пошук категорій",
+    "categorySearchPlaceholder": "Шукати категорію…",
+    "categorySearchClearA11y": "Очистити пошук категорії",
+    "categorySearchEmpty": "Немає відповідних категорій",
     "addLabel": "Додати товар вручну",
     "namePlaceholder": "Молоко, яблука, кава...",
     "amountPlaceholder": "Кількість (необов’язково) - напр. 2, 500 г",
@@ -123,7 +127,13 @@
     "removeItem": "Прибрати товар",
     "removeItemTitle": "Прибрати цей товар?",
     "removeItemBody": "Товар буде видалено з цього списку.",
-    "removeItemConfirm": "Прибрати"
+    "removeItemConfirm": "Прибрати",
+    "categoryOrderTitle": "Category order",
+    "categoryOrderHint": "Long-press the handle and drag to match aisle order in the store.",
+    "categoryOrderDragHandle": "Reorder category",
+    "categoryOrderMoveUp": "Move category up",
+    "categoryOrderMoveDown": "Move category down",
+    "categoryOrderHintWeb": "Use the arrows to set aisle order for the store."
   },
   "shoppingMode": {
     "title": "Покупки",
@@ -184,7 +194,9 @@
     "exitBody": "Ваш прогрес буде збережено, і товари залишаться у кошику до наступного візиту.",
     "exitStay": "Залишитись",
     "exitLeave": "Вийти",
-    "invalidCategory": "Невідома категорія"
+    "invalidCategory": "Невідома категорія",
+    "categoryOrderHint": "Long-press the handle to reorder aisles for this trip.",
+    "categoryOrderHintWeb": "Use the arrows to reorder aisles for this trip."
   },
   "realtime": {
     "someone": "Хтось",

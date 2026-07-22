@@ -97,6 +97,10 @@
     "itemsOnList": "Pozycje na liście",
     "itemCount": "{{count}} pozycji",
     "categoryLabel": "Kategoria",
+    "categorySearchA11y": "Szukaj kategorii",
+    "categorySearchPlaceholder": "Szukaj kategorii…",
+    "categorySearchClearA11y": "Wyczyść wyszukiwanie kategorii",
+    "categorySearchEmpty": "Brak pasujących kategorii",
     "addLabel": "Dodaj pozycję ręcznie",
     "namePlaceholder": "Mleko, jabłka, kawa...",
     "amountPlaceholder": "Ilość (opcjonalnie) - np. 2, 500 g",
@@ -123,7 +127,13 @@
     "removeItem": "Usuń pozycję",
     "removeItemTitle": "Usunąć tę pozycję?",
     "removeItemBody": "Produkt zniknie z tej listy.",
-    "removeItemConfirm": "Usuń"
+    "removeItemConfirm": "Usuń",
+    "categoryOrderTitle": "Kolejność kategorii",
+    "categoryOrderHint": "Przytrzymaj uchwyt i przeciągnij, żeby dopasować kolejność alejek w sklepie.",
+    "categoryOrderDragHandle": "Zmień kolejność kategorii",
+    "categoryOrderMoveUp": "Przenieś kategorię w górę",
+    "categoryOrderMoveDown": "Przenieś kategorię w dół",
+    "categoryOrderHintWeb": "Użyj strzałek, żeby ustawić kolejność alejek w sklepie."
   },
   "shoppingMode": {
     "title": "Zakupy",
@@ -184,7 +194,9 @@
     "exitBody": "Twój postęp zostanie zapisany, a produkty pozostaną w koszyku na następną wizytę.",
     "exitStay": "Zostań",
     "exitLeave": "Wyjdź",
-    "invalidCategory": "Nieznana kategoria"
+    "invalidCategory": "Nieznana kategoria",
+    "categoryOrderHint": "Przytrzymaj uchwyt, żeby zmienić kolejność alejek w trakcie zakupów.",
+    "categoryOrderHintWeb": "Użyj strzałek, żeby zmienić kolejność alejek w trakcie zakupów."
   },
   "realtime": {
     "someone": "Ktoś",

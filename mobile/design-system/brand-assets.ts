@@ -5,7 +5,7 @@ export const brandAssets = {
   icon: require("@/assets/brand/kangur-icon.webp"),
   hero: require("@/assets/brand/kangur-hero.webp"),
   /** Cold-start brand boot mascot (single, consistent). */
-  splashMascot: require("@/assets/brand/list-bag.webp"),
+  splashMascot: require("@/assets/brand/splash-mascot.webp"),
   leaveShopping: require("@/assets/brand/leave-shopping.webp"),
   error: require("@/assets/brand/error.webp"),
   createListMascot: require("@/assets/brand/create-list-mascot.webp"),

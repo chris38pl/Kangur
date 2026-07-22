@@ -97,6 +97,10 @@
     "itemsOnList": "Товары в списке",
     "itemCount": "{{count}} товаров",
     "categoryLabel": "Категория",
+    "categorySearchA11y": "Поиск категорий",
+    "categorySearchPlaceholder": "Искать категорию…",
+    "categorySearchClearA11y": "Очистить поиск категории",
+    "categorySearchEmpty": "Нет подходящих категорий",
     "addLabel": "Добавить товар вручную",
     "namePlaceholder": "Молоко, яблоки, кофе...",
     "amountPlaceholder": "Количество (необязательно) - напр. 2, 500 г",
@@ -123,7 +127,13 @@
     "removeItem": "Удалить товар",
     "removeItemTitle": "Удалить этот товар?",
     "removeItemBody": "Товар будет удалён из этого списка.",
-    "removeItemConfirm": "Удалить"
+    "removeItemConfirm": "Удалить",
+    "categoryOrderTitle": "Category order",
+    "categoryOrderHint": "Long-press the handle and drag to match aisle order in the store.",
+    "categoryOrderDragHandle": "Reorder category",
+    "categoryOrderMoveUp": "Move category up",
+    "categoryOrderMoveDown": "Move category down",
+    "categoryOrderHintWeb": "Use the arrows to set aisle order for the store."
   },
   "shoppingMode": {
     "title": "Покупки",
@@ -184,7 +194,9 @@
     "exitBody": "Ваш прогресс будет сохранён, и товары останутся в корзине до следующего визита.",
     "exitStay": "Остаться",
     "exitLeave": "Выйти",
-    "invalidCategory": "Неизвестная категория"
+    "invalidCategory": "Неизвестная категория",
+    "categoryOrderHint": "Long-press the handle to reorder aisles for this trip.",
+    "categoryOrderHintWeb": "Use the arrows to reorder aisles for this trip."
   },
   "realtime": {
     "someone": "Кто-то",

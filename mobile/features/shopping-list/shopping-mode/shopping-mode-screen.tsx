@@ -1,17 +1,23 @@
 import { useAuth } from "@clerk/clerk-expo";
-import { type ShoppingCategory } from "@shared/shopping-categories";
-import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
+import {
+  mergeActiveCategoryOrder,
+  resolveShoppingCategoryOrder,
+  type ShoppingCategory,
+} from "@shared/shopping-categories";
+import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { shoppingDensity } from "@/design-system/shopping-density";
@@ -21,21 +27,26 @@ import { OfflineStatusBanner } from "@/features/offline/OfflineStatusBanner";
 import { startShoppingSession } from "@/features/notifications/api";
 import type { ShoppingItem } from "@/features/shopping-item/schemas";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
+import { CategoryOrderHint } from "@/features/shopping-list/category-order-ui";
+import { CategoryReorderList } from "@/features/shopping-list/category-reorder-list";
+import { NestableScreenScroll } from "@/features/shopping-list/nestable-screen-scroll";
 import { useShoppingSession } from "@/features/shopping-list/session/useShoppingSession";
 import { notifyFinishedForActiveSession } from "@/features/shopping-list/session/notify-finished";
-import { useShoppingList } from "@/features/shopping-list/useShoppingLists";
+import {
+  useShoppingList,
+  useUpdateShoppingList,
+} from "@/features/shopping-list/useShoppingLists";
 import { useWorkspaceMembers } from "@/features/workspace/useWorkspaceMembers";
 import { createClientId } from "@/lib/createClientId";
 import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
 import { RemoteChangeToast, useListRealtime } from "@/lib/realtime";
-import { useQueryClient } from "@tanstack/react-query";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AddItemSheet } from "./add-item-sheet";
 import {
   getActiveCategoryProgress,
   getCompletedCategoryProgress,
   getListShoppingProgress,
+  type CategoryProgress,
 } from "./category-progress";
 import { ShoppingCategoryCard } from "./shopping-category-card";
 import { ShoppingFab } from "./shopping-fab";
@@ -72,6 +83,7 @@ export function ShoppingModeScreen({ listId }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const listQuery = useShoppingList(listId);
+  const updateList = useUpdateShoppingList(listId);
   const itemsQuery = useShoppingItems(listId);
   const membersQuery = useWorkspaceMembers(listQuery.data?.workspaceId ?? null);
   const session = useShoppingSession(listId);
@@ -130,14 +142,16 @@ export function ShoppingModeScreen({ listId }: Props) {
     [itemsQuery.data],
   );
 
+  const listCategoryOrder = listQuery.data?.categoryOrder;
+
   const categories = useMemo(
-    () => getActiveCategoryProgress(items),
-    [items],
+    () => getActiveCategoryProgress(items, listCategoryOrder),
+    [items, listCategoryOrder],
   );
 
   const completedCategories = useMemo(
-    () => getCompletedCategoryProgress(items),
-    [items],
+    () => getCompletedCategoryProgress(items, listCategoryOrder),
+    [items, listCategoryOrder],
   );
 
   const listProgress = useMemo(() => getListShoppingProgress(items), [items]);
@@ -161,6 +175,14 @@ export function ShoppingModeScreen({ listId }: Props) {
   const openCategory = (category: ShoppingCategory) => {
     allowLeave();
     router.push(`/list/${listId}/shop/${category}`);
+  };
+
+  const onReorderCategories = (data: CategoryProgress[]) => {
+    const fullOrder = resolveShoppingCategoryOrder(listCategoryOrder);
+    const newActive = data.map((c) => c.category);
+    const nextOrder = mergeActiveCategoryOrder(fullOrder, newActive);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    updateList.mutate({ categoryOrder: nextOrder });
   };
 
   if (listQuery.isPending || itemsQuery.isPending) {
@@ -253,7 +275,7 @@ export function ShoppingModeScreen({ listId }: Props) {
             paddingBottom: spacing[2] + insets.bottom,
           }}
         />
-        <ScrollView
+        <NestableScreenScroll
           contentContainerStyle={{
             padding: spacing[6],
             paddingBottom: 100 + insets.bottom,
@@ -266,91 +288,106 @@ export function ShoppingModeScreen({ listId }: Props) {
           }}
           scrollEventThrottle={16}
         >
-        <ShoppingListSummaryCard
-          title={listQuery.data?.name ?? t("shoppingMode.title")}
-          updatedLabel={updatedLabel}
-          bought={listProgress.bought}
-          total={listProgress.total}
-          progress={listProgress.progress}
-          members={membersQuery.data ?? []}
-        />
+          <ShoppingListSummaryCard
+            title={listQuery.data?.name ?? t("shoppingMode.title")}
+            updatedLabel={updatedLabel}
+            bought={listProgress.bought}
+            total={listProgress.total}
+            progress={listProgress.progress}
+            members={membersQuery.data ?? []}
+          />
 
-        {categories.length > 0 ? (
-          <View style={{ marginBottom: spacing[2] }}>
-            <SectionTitle>{t("shoppingMode.categoriesSection")}</SectionTitle>
-            {categories.map((cat) => (
-              <ShoppingCategoryCard
-                key={cat.category}
-                cat={cat}
-                variant="active"
-                onPress={openCategory}
+          {categories.length > 0 ? (
+            <View style={{ marginBottom: spacing[2] }}>
+              <SectionTitle>{t("shoppingMode.categoriesSection")}</SectionTitle>
+              <CategoryOrderHint>
+                {t(
+                  Platform.OS === "web"
+                    ? "shoppingMode.categoryOrderHintWeb"
+                    : "shoppingMode.categoryOrderHint",
+                )}
+              </CategoryOrderHint>
+              <CategoryReorderList
+                data={categories}
+                keyExtractor={(item) => item.category}
+                onReorder={onReorderCategories}
+                renderItem={({ item, drag, isActive, moveUp, moveDown }) => (
+                  <ShoppingCategoryCard
+                    cat={item}
+                    variant="active"
+                    onPress={openCategory}
+                    onDrag={drag}
+                    isDragging={isActive}
+                    moveUp={moveUp}
+                    moveDown={moveDown}
+                  />
+                )}
               />
-            ))}
-          </View>
-        ) : null}
+            </View>
+          ) : null}
 
-        {completedCategories.length > 0 ? (
-          <View style={{ marginTop: categories.length > 0 ? spacing[4] : 0 }}>
-            <SectionTitle>
-              {t("shoppingMode.alreadyBoughtSection")}
-            </SectionTitle>
-            {completedCategories.map((cat) => (
-              <ShoppingCategoryCard
-                key={`done-${cat.category}`}
-                cat={cat}
-                variant="completed"
-                onPress={openCategory}
-              />
-            ))}
-          </View>
-        ) : null}
+          {completedCategories.length > 0 ? (
+            <View style={{ marginTop: categories.length > 0 ? spacing[4] : 0 }}>
+              <SectionTitle>
+                {t("shoppingMode.alreadyBoughtSection")}
+              </SectionTitle>
+              {completedCategories.map((cat) => (
+                <ShoppingCategoryCard
+                  key={`done-${cat.category}`}
+                  cat={cat}
+                  variant="completed"
+                  onPress={openCategory}
+                />
+              ))}
+            </View>
+          ) : null}
 
-        {showFinishCta ? (
-          <View
-            style={{
-              marginTop: spacing[6],
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ ...typography.headline, color: theme.text }}>
-              {t("shoppingMode.allDone")}
-            </Text>
-            <Pressable
-              onPress={() => {
-                allowLeave();
-                const unavailable = (itemsQuery.data ?? []).filter(
-                  (i) => i.status === "unavailable",
-                ).length;
-                void notifyFinishedForActiveSession(
-                  listId,
-                  getToken,
-                  unavailable,
-                );
-                router.push(`/list/${listId}/shop/finish`);
-              }}
+          {showFinishCta ? (
+            <View
               style={{
                 marginTop: spacing[6],
-                backgroundColor: theme.primary,
-                borderRadius: radius.md,
-                paddingVertical: spacing[4],
-                paddingHorizontal: spacing[8],
-                minHeight: shoppingDensity.primaryCtaMinHeight,
-                justifyContent: "center",
+                alignItems: "center",
               }}
             >
-              <Text style={{ ...typography.label, color: "#fff" }}>
-                {t("shoppingMode.finishShopping")}
+              <Text style={{ ...typography.headline, color: theme.text }}>
+                {t("shoppingMode.allDone")}
               </Text>
-            </Pressable>
-          </View>
-        ) : null}
-      </ScrollView>
+              <Pressable
+                onPress={() => {
+                  allowLeave();
+                  const unavailable = (itemsQuery.data ?? []).filter(
+                    (i) => i.status === "unavailable",
+                  ).length;
+                  void notifyFinishedForActiveSession(
+                    listId,
+                    getToken,
+                    unavailable,
+                  );
+                  router.push(`/list/${listId}/shop/finish`);
+                }}
+                style={{
+                  marginTop: spacing[6],
+                  backgroundColor: theme.primary,
+                  borderRadius: radius.md,
+                  paddingVertical: spacing[4],
+                  paddingHorizontal: spacing[8],
+                  minHeight: shoppingDensity.primaryCtaMinHeight,
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ ...typography.label, color: "#fff" }}>
+                  {t("shoppingMode.finishShopping")}
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
+        </NestableScreenScroll>
 
-      <ShoppingFab
-        visible={fabVisible}
-        expanded={fabVisible}
-        onPress={() => setAddOpen(true)}
-      />
+        <ShoppingFab
+          visible={fabVisible}
+          expanded={fabVisible}
+          onPress={() => setAddOpen(true)}
+        />
       </View>
 
       <AddItemSheet

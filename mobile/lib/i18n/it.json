@@ -89,6 +89,10 @@
     "itemsOnList": "Articoli nella lista",
     "itemCount": "{{count}} articoli",
     "categoryLabel": "Categoria",
+    "categorySearchA11y": "Cerca categorie",
+    "categorySearchPlaceholder": "Cerca categoria…",
+    "categorySearchClearA11y": "Cancella ricerca categoria",
+    "categorySearchEmpty": "Nessuna categoria corrispondente",
     "addLabel": "Aggiungi articolo manualmente",
     "namePlaceholder": "Latte, mele, caffè...",
     "amountPlaceholder": "Quantità (opzionale) - es. 2, 500 g",
@@ -115,7 +119,13 @@
     "removeItem": "Rimuovi articolo",
     "removeItemTitle": "Rimuovere questo articolo?",
     "removeItemBody": "Il prodotto verrà rimosso da questa lista.",
-    "removeItemConfirm": "Rimuovi"
+    "removeItemConfirm": "Rimuovi",
+    "categoryOrderTitle": "Category order",
+    "categoryOrderHint": "Long-press the handle and drag to match aisle order in the store.",
+    "categoryOrderDragHandle": "Reorder category",
+    "categoryOrderMoveUp": "Move category up",
+    "categoryOrderMoveDown": "Move category down",
+    "categoryOrderHintWeb": "Use the arrows to set aisle order for the store."
   },
   "shoppingMode": {
     "title": "Spesa",
@@ -176,7 +186,9 @@
     "exitBody": "I tuoi progressi verranno salvati e gli articoli resteranno nel carrello per la prossima visita.",
     "exitStay": "Resta",
     "exitLeave": "Esci",
-    "invalidCategory": "Categoria sconosciuta"
+    "invalidCategory": "Categoria sconosciuta",
+    "categoryOrderHint": "Long-press the handle to reorder aisles for this trip.",
+    "categoryOrderHintWeb": "Use the arrows to reorder aisles for this trip."
   },
   "realtime": {
     "someone": "Qualcuno",

@@ -921,6 +921,13 @@
           "preferredForAi": {
             "type": "boolean"
           },
+          "categoryOrder": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShoppingCategory"
+            },
+            "default": []
+          },
           "itemCount": {
             "type": "integer",
             "minimum": 0
@@ -969,21 +976,6 @@
           "deleted"
         ]
       },
-      "HistoryPreviewItem": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "category": {
-            "$ref": "#/components/schemas/ShoppingCategory"
-          }
-        },
-        "required": [
-          "name",
-          "category"
-        ]
-      },
       "ShoppingCategory": {
         "type": "string",
         "enum": [
@@ -1008,6 +1000,21 @@
           "garden",
           "diy",
           "other"
+        ]
+      },
+      "HistoryPreviewItem": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/ShoppingCategory"
+          }
+        },
+        "required": [
+          "name",
+          "category"
         ]
       },
       "HistoryListResponse": {
@@ -1047,6 +1054,13 @@
           },
           "preferredForAi": {
             "type": "boolean"
+          },
+          "categoryOrder": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShoppingCategory"
+            },
+            "default": []
           },
           "itemCount": {
             "type": "integer",
@@ -1117,6 +1131,12 @@
           },
           "preferredForAi": {
             "type": "boolean"
+          },
+          "categoryOrder": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShoppingCategory"
+            }
           }
         }
       },

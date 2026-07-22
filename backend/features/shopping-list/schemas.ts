@@ -6,6 +6,8 @@ import { ShoppingCategorySchema } from "@/features/shopping-item/schemas";
 
 extendZodWithOpenApi(z);
 
+const CategoryOrderSchema = z.array(ShoppingCategorySchema);
+
 export const ShoppingListStatusSchema = z
   .enum(["active", "archived", "deleted"])
   .openapi("ShoppingListStatus");
@@ -26,6 +28,8 @@ export const ShoppingListDTOSchema = z
     status: ShoppingListStatusSchema,
     isUntitled: z.boolean(),
     preferredForAi: z.boolean(),
+    /** Per-list aisle order; empty = use shared defaults. */
+    categoryOrder: CategoryOrderSchema.default([]),
     itemCount: z.number().int().nonnegative(),
     /** All non-removed item names - used for client search. */
     itemNames: z.array(z.string()).default([]),
@@ -47,6 +51,7 @@ export const HistoryListDTOSchema = z
     status: ShoppingListStatusSchema,
     isUntitled: z.boolean(),
     preferredForAi: z.boolean(),
+    categoryOrder: CategoryOrderSchema.default([]),
     itemCount: z.number().int().nonnegative(),
     itemNames: z.array(z.string()).default([]),
     previewItems: z.array(HistoryPreviewItemSchema),
@@ -91,12 +96,14 @@ export const UpdateShoppingListBodySchema = z
         message: "Invalid shopping list emoji.",
       }),
     preferredForAi: z.boolean().optional(),
+    categoryOrder: CategoryOrderSchema.optional(),
   })
   .refine(
     (value) =>
       value.name !== undefined ||
       value.emoji !== undefined ||
-      value.preferredForAi !== undefined,
+      value.preferredForAi !== undefined ||
+      value.categoryOrder !== undefined,
     {
       message: "At least one field is required.",
     },
