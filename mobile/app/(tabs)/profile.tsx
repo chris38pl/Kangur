@@ -1,6 +1,5 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useQueryClient } from "@tanstack/react-query";
-import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { type ReactNode } from "react";
 import {
@@ -45,6 +44,7 @@ import { useShoppingLists } from "@/features/shopping-list/useShoppingLists";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
+import { getAppBuildInfo } from "@/lib/app-build-info";
 import i18n, { localeMeta, resolveAppLocale } from "@/lib/i18n";
 
 function displayNameFromEmail(email: string | undefined): string {
@@ -258,8 +258,15 @@ export default function ProfileScreen() {
   const isPremium =
     workspacesQuery.data?.some((w) => w.plan === "premium") ?? false;
 
-  const appVersion =
-    Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? "1.0.0";
+  const buildInfo = getAppBuildInfo();
+  const appVersionLabel = buildInfo.isDevelopment
+    ? t("about.developmentBuild")
+    : buildInfo.build !== "-"
+      ? t("about.versionWithBuild", {
+          version: buildInfo.version,
+          build: buildInfo.build,
+        })
+      : t("about.versionLine", { version: buildInfo.version });
 
   const languageLabel = localeMeta(resolveAppLocale(i18n.language)).nativeName;
 
@@ -529,7 +536,7 @@ export default function ProfileScreen() {
           <ProfileMenuRow
             icon={<ProfileIconInfo color={theme.primary} />}
             title={t("profile.aboutApp")}
-            value={appVersion}
+            value={appVersionLabel}
             onPress={() => router.push("/about" as never)}
           />
         </SectionCard>

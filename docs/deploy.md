@@ -266,23 +266,29 @@ Profiles live in [mobile/eas.json](../mobile/eas.json). They do **not** inject `
 - `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `EXPO_PUBLIC_APP_ENV` (`development` \| `preview` \| `production`)
 
-Push uses Expo Push API (`exp.host/.../push/send`); keep EAS `projectId` in `app.json` consistent.
+Push uses Expo Push API (`exp.host/.../push/send`); keep EAS `projectId` in `app.config.ts` consistent.
 
 ### 6.8 PostHog + Sentry
 
-Enable from **Closed Testing** onward. Tag every event/crash with `environment=development|staging|production`.
+Enable from **Closed Testing** onward (**M13.11** — full catalogue, privacy rules, flags, and rollout order in [roadmap.md](./roadmap.md) § M13.11). Tag every event/crash with `environment=development|staging|production`.
 
-#### PostHog - required events
+#### PostHog - required events (summary)
+
+Full list + props in M13.11. Minimum for Closed Testing:
 
 | Event | When |
 |-------|------|
+| `account_created` | First account / sign-up success |
 | `workspace_created` | Workspace created |
 | `shopping_started` | Enter Shopping Mode |
 | `shopping_finished` | Finish Shopping → Summary |
-| `premium_purchased` | Premium checkout completed / entitlement active |
+| `shopping_cancelled` | Exit Shopping Mode without finish |
+| `premium_purchased` / `subscription_activated` | Premium entitlement active (prefer webhook) |
 | `ai_import_started` | AI import (screenshot/text) started |
-| `ai_import_completed` | AI import succeeded |
-| `ai_import_failed` | AI import failed |
+| `ai_import_accepted` / `ai_import_completed` | AI import applied |
+| `ai_import_rejected` / `ai_import_failed` | Abandoned or failed |
+
+No autocapture; no Session Replay in MVP.
 
 #### Sentry - required context
 
@@ -350,15 +356,21 @@ Source of truth: [mobile/.env.example](../mobile/.env.example). **No secrets** (
 
 ## 8. Mobile versioning
 
-| Field | Example | Location |
-|-------|---------|----------|
-| `version` | `1.0.3` | `mobile/app.json` → `expo.version` |
-| `android.versionCode` | `23` | `mobile/app.json` → `expo.android.versionCode` |
-| `ios.buildNumber` | `23` | `mobile/app.json` → `expo.ios.buildNumber` |
+Canonical config: [`mobile/app.config.ts`](../mobile/app.config.ts) (not `app.json`).
 
-**Rule:** increment `versionCode` / `buildNumber` on **every** store release. EAS `production` has `autoIncrement: true`, but keep `app.json` (or remote app version source) consistent so humans and Sentry agree.
+| Field | When it changes | Example | Source |
+|-------|-----------------|---------|--------|
+| **Version** (semver) | Milestone / product release only | M13 → `0.9.0`, M14 → `0.10.0`, MVP → `1.0.0` | `version` in `app.config.ts` |
+| **Build** | Every EAS **preview** and **production** APK | `121`, `122`, `123` | Native `versionCode` / `buildNumber` via EAS `autoIncrement` + `appVersionSource: "remote"` |
+| **Environment** | Per EAS profile | `development` / `preview` / `production` | `EXPO_PUBLIC_APP_ENV` in [`eas.json`](../mobile/eas.json) → `extra.appEnv` |
+| **Commit** | Every EAS build | `95d8561` | `EAS_BUILD_GIT_COMMIT_HASH` → `extra.gitCommit` |
+| **API host** | Build-time API URL | `staging.getkangur.com` | `EXPO_PUBLIC_API_URL` (shown on About for misconfig detection) |
 
-Sentry / PostHog release label: `1.0.3 (23)`.
+**Do not** bump semver on every preview APK. Between milestones testers report e.g. `0.10.0 (Build 122)`.
+
+UI: [`getAppBuildInfo()`](../mobile/lib/app-build-info.ts) powers About + Profile. Dev Client shows **Development Build** (no product semver). About shows Version, Build, Environment badge, Commit (tap to copy), and API.
+
+Sentry / PostHog release label: `{{version}} ({{build}})`.
 
 ---
 
@@ -402,7 +414,7 @@ Current workflow: [.github/workflows/ci.yml](../.github/workflows/ci.yml) - back
 
 ### 10.2 Every release
 
-Follow [§4 Deployment order](#4-deployment-order). Then bump mobile version numbers ([§8](#8-mobile-versioning)).
+Follow [§4 Deployment order](#4-deployment-order). Bump **semver** only on product milestones; EAS auto-increments **build** on preview/production ([§8](#8-mobile-versioning)).
 
 ### 10.3 Safety
 

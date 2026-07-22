@@ -13,19 +13,36 @@ import {
 } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
 
+export type PreferredForAiSheetVariant = "added" | "removed" | "limit";
+
 type Props = {
   visible: boolean;
+  variant: PreferredForAiSheetVariant;
   onClose: () => void;
 };
 
 /**
- * Post-star confirmation sheet - back · kangaroo · heading · body · Continue.
+ * Star feedback sheet - added / removed / max-5 limit.
  */
-export function PreferredForAiSheet({ visible, onClose }: Props) {
+export function PreferredForAiSheet({ visible, variant, onClose }: Props) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
+
+  const titleKey =
+    variant === "added"
+      ? "history.aiPreferredAddedTitle"
+      : variant === "removed"
+        ? "history.aiPreferredRemovedTitle"
+        : "history.aiPreferredLimitTitle";
+
+  const bodyKey =
+    variant === "added"
+      ? "history.aiPreferredAddedBody"
+      : variant === "removed"
+        ? "history.aiPreferredRemovedBody"
+        : "history.aiPreferredLimitBody";
 
   return (
     <Modal
@@ -96,7 +113,7 @@ export function PreferredForAiSheet({ visible, onClose }: Props) {
                 marginTop: spacing[4],
               }}
             >
-              {t("history.aiPreferredAddedTitle")}
+              {t(titleKey)}
             </Text>
 
             <Text
@@ -108,7 +125,7 @@ export function PreferredForAiSheet({ visible, onClose }: Props) {
                 paddingHorizontal: spacing[2],
               }}
             >
-              {t("history.aiPreferredAddedBody")}
+              {t(bodyKey)}
             </Text>
           </View>
 

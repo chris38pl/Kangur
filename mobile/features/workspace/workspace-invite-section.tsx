@@ -1,5 +1,5 @@
 import * as Clipboard from "expo-clipboard";
-import { useState } from "react";
+import { useState, type RefObject } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -23,10 +23,18 @@ import {
   useWorkspaceInvitations,
 } from "./useWorkspaceInvites";
 
+type FieldFocusHandlers = {
+  onFocus: () => void;
+  onBlur: () => void;
+};
+
 type Props = {
   workspaceId: string;
   canManage: boolean;
-  onEmailFocus?: () => void;
+  /** Keep invite email + send CTA above the keyboard (same pattern as auth). */
+  emailFieldRef?: RefObject<View | null>;
+  emailFocus?: FieldFocusHandlers;
+  formBlockRef?: (node: View | null) => void;
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -34,7 +42,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function WorkspaceInviteSection({
   workspaceId,
   canManage,
-  onEmailFocus,
+  emailFieldRef,
+  emailFocus,
+  formBlockRef,
 }: Props) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
@@ -130,47 +140,56 @@ export function WorkspaceInviteSection({
         {t("workspace.inviteTitle")}
       </Text>
 
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder={t("workspace.inviteEmailPlaceholder")}
-        placeholderTextColor={theme.textMuted}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="email"
-        textContentType="emailAddress"
-        onFocus={onEmailFocus}
-        style={{ ...fieldStyle, marginTop: spacing[3] }}
-      />
+      <View ref={formBlockRef} collapsable={false}>
+        <View
+          ref={emailFieldRef}
+          collapsable={false}
+          style={{ marginTop: spacing[3] }}
+        >
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder={t("workspace.inviteEmailPlaceholder")}
+            placeholderTextColor={theme.textMuted}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+            onFocus={emailFocus?.onFocus}
+            onBlur={emailFocus?.onBlur}
+            style={fieldStyle}
+          />
+        </View>
 
-      <Pressable
-        onPress={sendInvite}
-        disabled={createMutation.isPending}
-        accessibilityRole="button"
-        style={{
-          marginTop: spacing[3],
-          backgroundColor: theme.primary,
-          borderRadius: radius.md,
-          paddingVertical: spacing[4],
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: spacing[2],
-          opacity: createMutation.isPending ? 0.7 : 1,
-        }}
-      >
-        {createMutation.isPending ? (
-          <ActivityIndicator color={theme.onPrimary} />
-        ) : (
-          <>
-            <Text style={{ fontSize: 16, color: theme.onPrimary }}>✈️</Text>
-            <Text style={{ ...typography.label, color: theme.onPrimary }}>
-              {t("workspace.inviteSend")}
-            </Text>
-          </>
-        )}
-      </Pressable>
+        <Pressable
+          onPress={sendInvite}
+          disabled={createMutation.isPending}
+          accessibilityRole="button"
+          style={{
+            marginTop: spacing[3],
+            backgroundColor: theme.primary,
+            borderRadius: radius.md,
+            paddingVertical: spacing[4],
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: spacing[2],
+            opacity: createMutation.isPending ? 0.7 : 1,
+          }}
+        >
+          {createMutation.isPending ? (
+            <ActivityIndicator color={theme.onPrimary} />
+          ) : (
+            <>
+              <Text style={{ fontSize: 16, color: theme.onPrimary }}>✈️</Text>
+              <Text style={{ ...typography.label, color: theme.onPrimary }}>
+                {t("workspace.inviteSend")}
+              </Text>
+            </>
+          )}
+        </Pressable>
+      </View>
 
       <View
         style={{

@@ -355,8 +355,12 @@
     "useForAi": "Použít pro AI",
     "removeFromAi": "Odebrat z AI",
     "useForAiHint": "Upřednostnit tento seznam při návrzích AI",
-    "aiPreferredAddedTitle": "Přidáno k návrhům AI",
-    "aiPreferredAddedBody": "Tento seznam se nyní zohlední při generování nákupního seznamu na základě vaší historie nákupů.",
+    "aiPreferredAddedTitle": "Přidáno k oblíbeným AI",
+    "aiPreferredAddedBody": "Tento seznam bude preferován, když Kangur generuje nákupní návrhy z vaší historie.",
+    "aiPreferredRemovedTitle": "Odebráno z oblíbených AI",
+    "aiPreferredRemovedBody": "Tento seznam už nebude preferován při generování návrhů z nákupní historie.",
+    "aiPreferredLimitTitle": "Už máte 5 oblíbených",
+    "aiPreferredLimitBody": "Hvězdičkou můžete označit maximálně 5 seznamů pro AI. Nejdřív hvězdičku u některé oblíbené odeberte a pak přidejte nový.",
     "continue": "Pokračovat",
     "actionFailedTitle": "Něco se pokazilo"
   },
@@ -798,14 +802,22 @@
     "appName": "Kangur",
     "version": "Verze",
     "versionLine": "Verze {{version}}",
+    "versionWithBuild": "Verze {{version}} (Build {{build}})",
+    "developmentBuild": "Development Build",
     "privacy": "Zásady ochrany osobních údajů",
     "terms": "Podmínky používání",
     "copyrightLine": "© {{year}} Kangur",
     "rightsReserved": "Všechna práva vyhrazena.",
     "environment": "Prostředí",
+    "env": {
+      "development": "Development",
+      "preview": "Preview",
+      "production": "Production"
+    },
     "api": "API",
     "build": "Build",
-    "commit": "Commit"
+    "commit": "Commit",
+    "commitCopied": "Zkopírováno"
   },
   "helpSupport": {
     "title": "Nápověda a podpora",

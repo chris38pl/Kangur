@@ -1,6 +1,6 @@
 import { getWorkspaceIconEmoji } from "@shared/workspace-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -28,7 +28,7 @@ import { WorkspaceInviteSection } from "@/features/workspace/workspace-invite-se
 import { WorkspaceMembersList } from "@/features/workspace/workspace-members-list";
 import { WorkspaceSummaryCard } from "@/features/workspace/workspace-summary-card";
 import { WorkspaceSwitcher } from "@/features/workspace/workspace-switcher";
-import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
+import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
 
 export default function WorkspaceScreen() {
@@ -37,9 +37,15 @@ export default function WorkspaceScreen() {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const tabClearance = useTabBarClearance();
-  const keyboardHeight = useKeyboardHeight();
-  const scrollRef = useRef<ScrollView>(null);
-  const inviteFocusedRef = useRef(false);
+  const {
+    scrollRef,
+    onScroll,
+    bindFieldFocus,
+    setFormBlockRef,
+    keyboardHeight,
+  } = useKeyboardScroll();
+  const emailFieldRef = useRef<View>(null);
+  const emailFocus = bindFieldFocus(emailFieldRef);
   const workspacesQuery = useWorkspaces();
   const { activeWorkspace, activeId, setActiveId, hydrated } =
     useActiveWorkspace(workspacesQuery.data);
@@ -52,27 +58,6 @@ export default function WorkspaceScreen() {
   const goHome = () => {
     router.navigate("/(tabs)" as never);
   };
-
-  const scrollInviteFieldIntoView = () => {
-    inviteFocusedRef.current = true;
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        scrollRef.current?.scrollToEnd({ animated: true });
-      }, 80);
-    });
-  };
-
-  useEffect(() => {
-    if (keyboardHeight <= 0) {
-      inviteFocusedRef.current = false;
-      return;
-    }
-    if (!inviteFocusedRef.current) return;
-    const handle = setTimeout(() => {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    }, 50);
-    return () => clearTimeout(handle);
-  }, [keyboardHeight]);
 
   if (workspacesQuery.isPending || !hydrated) {
     return (
@@ -183,12 +168,14 @@ export default function WorkspaceScreen() {
       <ScrollView
         ref={scrollRef}
         style={{ flex: 1 }}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={{
           paddingHorizontal: spacing[6],
           paddingTop: spacing[5],
           paddingBottom:
             keyboardHeight > 0
-              ? keyboardHeight + spacing[6]
+              ? keyboardHeight + spacing[10]
               : tabClearance,
         }}
         keyboardShouldPersistTaps="handled"
@@ -261,7 +248,9 @@ export default function WorkspaceScreen() {
             activeWorkspace.role === "owner" ||
             activeWorkspace.role === "admin"
           }
-          onEmailFocus={scrollInviteFieldIntoView}
+          emailFieldRef={emailFieldRef}
+          emailFocus={emailFocus}
+          formBlockRef={setFormBlockRef}
         />
 
         <WorkspaceSwitcher

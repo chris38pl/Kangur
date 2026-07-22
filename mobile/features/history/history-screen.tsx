@@ -1,4 +1,5 @@
 import { useAuth } from "@clerk/clerk-expo";
+import { MAX_PREFERRED_FOR_AI_LISTS } from "@shared/ai-history";
 import { getShoppingCategoryIcon } from "@shared/shopping-categories";
 import { useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
@@ -36,6 +37,7 @@ import { BackIcon } from "@/features/auth/auth-icons";
 import { CATEGORY_BADGE_COLORS } from "@/features/shopping-item/category-badge-colors";
 import { DeleteListDialog } from "@/features/shopping-list/delete-list-dialog";
 import { updateShoppingList } from "@/features/shopping-list/api";
+import type { ShoppingList } from "@/features/shopping-list/schemas";
 import { useResumableSessions } from "@/features/shopping-list/session/useResumableSessions";
 import {
   useArchiveShoppingList,
@@ -50,7 +52,10 @@ import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
 
 import { HistoryActionsSheet } from "./history-actions-sheet";
 import { HistoryPreviewSheet } from "./history-preview-sheet";
-import { PreferredForAiSheet } from "./preferred-for-ai-sheet";
+import {
+  PreferredForAiSheet,
+  type PreferredForAiSheetVariant,
+} from "./preferred-for-ai-sheet";
 import type { HistoryPreviewItem } from "./schemas";
 import {
   historyOpened,
@@ -455,7 +460,10 @@ export function HistoryScreen() {
   const [previewList, setPreviewList] = useState<ListCardModel | null>(null);
   const [deleteList, setDeleteList] = useState<ListCardModel | null>(null);
   const [preferredBusyId, setPreferredBusyId] = useState<string | null>(null);
-  const [preferredSheetVisible, setPreferredSheetVisible] = useState(false);
+  const [preferredSheet, setPreferredSheet] = useState<{
+    visible: boolean;
+    variant: PreferredForAiSheetVariant;
+  }>({ visible: false, variant: "added" });
   const { showError } = useAppResult();
 
   const workspacesQuery = useWorkspaces();
@@ -470,16 +478,66 @@ export function HistoryScreen() {
   const restoreMutation = useRestoreHistoryList(workspaceId);
   const archiveMutation = useArchiveShoppingList(workspaceId);
 
+  const countPreferredForAi = useCallback(() => {
+    const active = activeListsQuery.data ?? [];
+    const history = historyQuery.data ?? [];
+    const ids = new Set<string>();
+    for (const list of active) {
+      if (list.preferredForAi) ids.add(list.id);
+    }
+    for (const list of history) {
+      if (list.preferredForAi) ids.add(list.id);
+    }
+    return ids.size;
+  }, [activeListsQuery.data, historyQuery.data]);
+
+  const patchPreferredCaches = useCallback(
+    (listId: string, preferredForAi: boolean) => {
+      const patch = (lists: ShoppingList[] | undefined) => {
+        if (!lists) return lists;
+        return lists.map((list) =>
+          list.id === listId ? { ...list, preferredForAi } : list,
+        );
+      };
+      queryClient.setQueryData<ShoppingList[]>(
+        ["shopping-lists", workspaceId],
+        (prev) => patch(prev),
+      );
+      queryClient.setQueryData<ShoppingList[]>(
+        ["shopping-lists-history", workspaceId],
+        (prev) => patch(prev),
+      );
+      queryClient.setQueryData<ShoppingList>(["shopping-list", listId], (prev) =>
+        prev ? { ...prev, preferredForAi } : prev,
+      );
+    },
+    [queryClient, workspaceId],
+  );
+
   const togglePreferredForAi = useCallback(
     async (list: ListCardModel): Promise<boolean> => {
       if (preferredBusyId) return false;
       const next = !list.preferredForAi;
+
+      if (next && countPreferredForAi() >= MAX_PREFERRED_FOR_AI_LISTS) {
+        setPreferredSheet({ visible: true, variant: "limit" });
+        return false;
+      }
+
+      // Optimistic: star lights up / clears immediately, sheet opens with it.
+      patchPreferredCaches(list.id, next);
+      setPreferredSheet({
+        visible: true,
+        variant: next ? "added" : "removed",
+      });
       setPreferredBusyId(list.id);
+
       try {
         const token = await getToken();
         if (!token) throw new Error("Missing auth token");
         await updateShoppingList(token, list.id, { preferredForAi: next });
-        await Promise.all([
+        // Soft reconcile — UI already matches; keep caches fresh without blocking.
+        void Promise.all([
           queryClient.invalidateQueries({
             queryKey: ["shopping-lists", workspaceId],
           }),
@@ -487,11 +545,20 @@ export function HistoryScreen() {
             queryKey: ["shopping-lists-history", workspaceId],
           }),
         ]);
-        if (next) {
-          setPreferredSheetVisible(true);
-        }
         return true;
       } catch (err) {
+        patchPreferredCaches(list.id, list.preferredForAi);
+        setPreferredSheet({ visible: false, variant: next ? "added" : "removed" });
+
+        const isLimit =
+          err instanceof ApiClientError &&
+          err.status === 409 &&
+          err.details?.code === "PREFERRED_FOR_AI_LIMIT";
+        if (isLimit) {
+          setPreferredSheet({ visible: true, variant: "limit" });
+          return false;
+        }
+
         const description =
           err instanceof ApiClientError
             ? err.message
@@ -505,7 +572,16 @@ export function HistoryScreen() {
         setPreferredBusyId(null);
       }
     },
-    [getToken, preferredBusyId, queryClient, showError, t, workspaceId],
+    [
+      countPreferredForAi,
+      getToken,
+      patchPreferredCaches,
+      preferredBusyId,
+      queryClient,
+      showError,
+      t,
+      workspaceId,
+    ],
   );
 
   const resumableIds = useMemo(() => {
@@ -1056,11 +1132,17 @@ export function HistoryScreen() {
         onTogglePreferred={() => {
           if (!menuList) return;
           const list = menuList;
+          setMenuList((current) =>
+            current?.id === list.id
+              ? { ...current, preferredForAi: !list.preferredForAi }
+              : current,
+          );
           void togglePreferredForAi(list).then((ok) => {
-            if (!ok) return;
+            if (ok) return;
+            // Revert menu row if blocked (limit) or failed.
             setMenuList((current) =>
               current?.id === list.id
-                ? { ...current, preferredForAi: !list.preferredForAi }
+                ? { ...current, preferredForAi: list.preferredForAi }
                 : current,
             );
           });
@@ -1082,8 +1164,11 @@ export function HistoryScreen() {
       />
 
       <PreferredForAiSheet
-        visible={preferredSheetVisible}
-        onClose={() => setPreferredSheetVisible(false)}
+        visible={preferredSheet.visible}
+        variant={preferredSheet.variant}
+        onClose={() =>
+          setPreferredSheet((current) => ({ ...current, visible: false }))
+        }
       />
 
       <DeleteListDialog

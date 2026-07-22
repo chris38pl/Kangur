@@ -1,8 +1,9 @@
 import { resolveShoppingCategoryOrder } from "@shared/shopping-categories";
+import { MAX_PREFERRED_FOR_AI_LISTS } from "@shared/ai-history";
 
 import { prisma } from "@/lib/prisma";
 import { authorizeList } from "@/lib/authorize";
-import { validationError } from "@/lib/auth/errors";
+import { conflict, validationError } from "@/lib/auth/errors";
 
 import { normalizeShoppingListName } from "./normalizeName";
 import { toShoppingListDto } from "./toShoppingListDto";
@@ -29,6 +30,23 @@ export async function updateShoppingList(input: {
 
   if (name !== undefined && (name.length < 1 || name.length > 64)) {
     throw validationError("Name must be between 1 and 64 characters.");
+  }
+
+  if (input.preferredForAi === true && !list.preferredForAi) {
+    const preferredCount = await prisma.shoppingList.count({
+      where: {
+        workspaceId: list.workspaceId,
+        preferredForAi: true,
+        status: { in: ["active", "archived"] },
+        id: { not: list.id },
+      },
+    });
+    if (preferredCount >= MAX_PREFERRED_FOR_AI_LISTS) {
+      throw conflict(
+        `You can mark up to ${MAX_PREFERRED_FOR_AI_LISTS} lists for AI. Unstar one first.`,
+        { code: "PREFERRED_FOR_AI_LIMIT", limit: MAX_PREFERRED_FOR_AI_LISTS },
+      );
+    }
   }
 
   const categoryOrder =

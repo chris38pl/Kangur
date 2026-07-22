@@ -341,8 +341,12 @@
     "useForAi": "Utiliser pour l’IA",
     "removeFromAi": "Retirer de l’IA",
     "useForAiHint": "Préférer cette liste pour les propositions IA",
-    "aiPreferredAddedTitle": "Ajouté aux propositions IA",
-    "aiPreferredAddedBody": "Cette liste sera désormais prise en compte lors de la génération d’une liste à partir de votre historique d’achats.",
+    "aiPreferredAddedTitle": "Ajouté aux favoris IA",
+    "aiPreferredAddedBody": "Cette liste sera préférée lorsque Kangur génère des propositions de courses à partir de votre historique.",
+    "aiPreferredRemovedTitle": "Retiré des favoris IA",
+    "aiPreferredRemovedBody": "Cette liste ne sera plus préférée lors de la génération de propositions à partir de votre historique.",
+    "aiPreferredLimitTitle": "Vous avez déjà 5 favoris",
+    "aiPreferredLimitBody": "Vous pouvez marquer jusqu’à 5 listes pour l’IA. Retirez l’étoile d’une favorite actuelle, puis ajoutez-en une nouvelle.",
     "continue": "Continuer",
     "actionFailedTitle": "Une erreur est survenue"
   },
@@ -772,14 +776,22 @@
     "appName": "Kangur",
     "version": "Version",
     "versionLine": "Version {{version}}",
+    "versionWithBuild": "Version {{version}} (Build {{build}})",
+    "developmentBuild": "Development Build",
     "privacy": "Politique de confidentialité",
     "terms": "Conditions d’utilisation",
     "copyrightLine": "© {{year}} Kangur",
     "rightsReserved": "Tous droits réservés.",
     "environment": "Environnement",
+    "env": {
+      "development": "Development",
+      "preview": "Preview",
+      "production": "Production"
+    },
     "api": "API",
     "build": "Build",
-    "commit": "Commit"
+    "commit": "Commit",
+    "commitCopied": "Copié"
   },
   "helpSupport": {
     "title": "Aide et assistance",

@@ -355,8 +355,12 @@
     "useForAi": "Для предложений ИИ",
     "removeFromAi": "Убрать из ИИ",
     "useForAiHint": "Предпочитать этот список при генерации предложений",
-    "aiPreferredAddedTitle": "Добавлено к предложениям ИИ",
-    "aiPreferredAddedBody": "Этот список теперь будет учитываться при создании списка на основе вашей истории покупок.",
+    "aiPreferredAddedTitle": "Добавлено в избранное ИИ",
+    "aiPreferredAddedBody": "Этот список будет предпочтителен, когда Kangur создаёт предложения покупок на основе вашей истории.",
+    "aiPreferredRemovedTitle": "Убрано из избранного ИИ",
+    "aiPreferredRemovedBody": "Этот список больше не будет предпочтителен при создании предложений из истории покупок.",
+    "aiPreferredLimitTitle": "У вас уже 5 избранных",
+    "aiPreferredLimitBody": "Можно отметить звёздочкой не больше 5 списков для ИИ. Снимите звёздочку с одного из текущих избранных, затем добавьте новый.",
     "continue": "Продолжить",
     "actionFailedTitle": "Что-то пошло не так"
   },
@@ -798,14 +802,22 @@
     "appName": "Kangur",
     "version": "Версия",
     "versionLine": "Версия {{version}}",
+    "versionWithBuild": "Версия {{version}} (Build {{build}})",
+    "developmentBuild": "Development Build",
     "privacy": "Политика конфиденциальности",
     "terms": "Условия использования",
     "copyrightLine": "© {{year}} Kangur",
     "rightsReserved": "Все права защищены.",
     "environment": "Окружение",
+    "env": {
+      "development": "Development",
+      "preview": "Preview",
+      "production": "Production"
+    },
     "api": "API",
     "build": "Сборка",
-    "commit": "Коммит"
+    "commit": "Коммит",
+    "commitCopied": "Скопировано"
   },
   "helpSupport": {
     "title": "Помощь и поддержка",

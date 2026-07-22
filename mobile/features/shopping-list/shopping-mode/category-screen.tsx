@@ -7,7 +7,6 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   Pressable,
   Text,
@@ -18,6 +17,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 
+import {
+  ShoppingCategorySkeleton,
+  SkeletonBone,
+} from "@/components/skeleton";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
 import { shoppingDensity } from "@/design-system/shopping-density";
@@ -299,21 +302,7 @@ export function ShoppingCategoryScreen({
     );
   }
 
-  if (itemsQuery.isPending) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: theme.section,
-        }}
-      >
-        <ActivityIndicator color={theme.primary} />
-      </View>
-    );
-  }
-
+  const isPending = itemsQuery.isPending;
   const badge = getCategoryBadgeColors(category);
   const nextBadge = next ? getCategoryBadgeColors(next.category) : null;
   const bannerCategory = next?.category ?? category;
@@ -371,15 +360,24 @@ export function ShoppingCategoryScreen({
               >
                 {t(`categories.${category}`)}
               </Text>
-              <Text
-                style={{
-                  ...typography.caption,
-                  color: theme.textMuted,
-                  marginTop: 2,
-                }}
-              >
-                {t("shoppingMode.remainingShort", { count: active.length })}
-              </Text>
+              {isPending ? (
+                <SkeletonBone
+                  width={72}
+                  height={12}
+                  borderRadius={6}
+                  style={{ marginTop: 4 }}
+                />
+              ) : (
+                <Text
+                  style={{
+                    ...typography.caption,
+                    color: theme.textMuted,
+                    marginTop: 2,
+                  }}
+                >
+                  {t("shoppingMode.remainingShort", { count: active.length })}
+                </Text>
+              )}
             </View>
           </View>
         </View>
@@ -393,6 +391,10 @@ export function ShoppingCategoryScreen({
             paddingBottom: 100 + insets.bottom,
           }}
         >
+        {isPending ? (
+          <ShoppingCategorySkeleton />
+        ) : (
+          <>
         {categoryDone ? (
           <View
             style={{
@@ -613,6 +615,8 @@ export function ShoppingCategoryScreen({
             </Pressable>
           </View>
         ) : null}
+          </>
+        )}
       </ScrollView>
       </View>
 

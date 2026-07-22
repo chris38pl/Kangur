@@ -1,4 +1,3 @@
-import { SHOPPING_CATEGORIES } from "@shared/shopping-categories";
 import { useEffect, useRef, useState } from "react";
 import {
   Keyboard,
@@ -13,14 +12,10 @@ import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
+import { CategoryChips } from "@/features/shopping-item/category-chips";
 import type { ShoppingCategory } from "@/features/shopping-item/schemas";
 import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
 import { useSheetBottomPadding } from "@/hooks/useSafeAreaLayout";
-
-const CATEGORY_PICKER_ORDER = [
-  "other",
-  ...SHOPPING_CATEGORIES.filter((cat) => cat !== "other"),
-] as const;
 
 type Props = {
   visible: boolean;
@@ -170,36 +165,9 @@ export function AddItemSheet({
               style={fieldStyle}
             />
 
-            <ScrollView
-              horizontal
-              style={{ marginTop: spacing[3] }}
-              showsHorizontalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            >
-              {CATEGORY_PICKER_ORDER.map((cat) => (
-                <Pressable
-                  key={cat}
-                  onPress={() => setCategory(cat)}
-                  style={{
-                    marginRight: spacing[2],
-                    paddingHorizontal: spacing[3],
-                    paddingVertical: spacing[2],
-                    borderRadius: radius.md,
-                    backgroundColor:
-                      category === cat ? theme.primary : theme.bg,
-                  }}
-                >
-                  <Text
-                    style={{
-                      ...typography.caption,
-                      color: category === cat ? "#fff" : theme.text,
-                    }}
-                  >
-                    {t(`categories.${cat}`)}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
+            <View style={{ marginTop: spacing[5] }}>
+              <CategoryChips value={category} onChange={setCategory} />
+            </View>
 
             <Pressable
               onPress={submit}

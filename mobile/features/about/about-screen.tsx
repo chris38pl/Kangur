@@ -1,6 +1,7 @@
-import Constants from "expo-constants";
+import * as Clipboard from "expo-clipboard";
 import * as WebBrowser from "expo-web-browser";
 import { useRouter } from "expo-router";
+import { useState, type ReactNode } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -11,6 +12,10 @@ import { brandAssets } from "@/design-system/brand-assets";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { ProfileIconChevronRight } from "@/features/profile/profile-icons";
+import {
+  getAppBuildInfo,
+  type AppEnvironment,
+} from "@/lib/app-build-info";
 
 const LANDING_BASE = "https://getkangur.com";
 
@@ -19,40 +24,18 @@ const LEGAL_URLS = {
   terms: `${LANDING_BASE}/terms`,
 } as const;
 
-function resolveAboutInfo() {
-  const version =
-    Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? "1.0.0";
-  const build =
-    Constants.nativeBuildVersion ??
-    Constants.expoConfig?.ios?.buildNumber ??
-    Constants.expoConfig?.android?.versionCode?.toString() ??
-    "-";
-  const extra = Constants.expoConfig?.extra as
-    | { appEnv?: string; gitCommit?: string; apiLabel?: string }
-    | undefined;
-  const environment =
-    extra?.appEnv ??
-    process.env.EXPO_PUBLIC_APP_ENV?.trim() ??
-    (__DEV__ ? "development" : "production");
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
-  let api = extra?.apiLabel ?? "-";
-  if (apiUrl) {
-    try {
-      api = new URL(apiUrl).host;
-    } catch {
-      api = apiUrl;
-    }
+function envBadgeColors(
+  environment: AppEnvironment,
+  theme: (typeof colors)["light"],
+): { bg: string; text: string } {
+  switch (environment) {
+    case "development":
+      return { bg: `${theme.success}22`, text: theme.success };
+    case "preview":
+      return { bg: `${theme.warning}22`, text: theme.warning };
+    case "production":
+      return { bg: `${theme.primary}22`, text: theme.primary };
   }
-  const commit =
-    extra?.gitCommit ?? process.env.EXPO_PUBLIC_GIT_COMMIT?.trim() ?? "-";
-
-  return {
-    versionLine: build !== "-" ? `${version} (${build})` : version,
-    environment,
-    api,
-    build,
-    commit,
-  };
 }
 
 function LegalRow({
@@ -108,15 +91,19 @@ function InfoRow({
   label,
   value,
   showDivider,
+  onPress,
+  trailing,
 }: {
   label: string;
   value: string;
   showDivider?: boolean;
+  onPress?: () => void;
+  trailing?: ReactNode;
 }) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
 
-  return (
+  const body = (
     <View
       style={{
         minHeight: 64,
@@ -124,21 +111,75 @@ function InfoRow({
         paddingVertical: spacing[3],
         borderBottomWidth: showDivider ? 1 : 0,
         borderBottomColor: theme.border,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing[3],
       }}
     >
-      <Text style={{ ...typography.caption, color: theme.textMuted }}>
-        {label}
-      </Text>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={{ ...typography.caption, color: theme.textMuted }}>
+          {label}
+        </Text>
+        <Text
+          style={{
+            ...typography.body,
+            color: theme.text,
+            fontWeight: "600",
+            marginTop: 2,
+          }}
+          selectable={!onPress}
+          numberOfLines={2}
+        >
+          {value}
+        </Text>
+      </View>
+      {trailing}
+    </View>
+  );
+
+  if (!onPress) return body;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${value}`}
+    >
+      {({ pressed }) => (
+        <View style={{ opacity: pressed ? 0.7 : 1 }}>{body}</View>
+      )}
+    </Pressable>
+  );
+}
+
+function EnvironmentBadge({ environment }: { environment: AppEnvironment }) {
+  const { t } = useTranslation();
+  const scheme = useColorScheme() ?? "light";
+  const theme = colors[scheme];
+  const badge = envBadgeColors(environment, theme);
+  const label = t(`about.env.${environment}`);
+
+  return (
+    <View
+      style={{
+        alignSelf: "flex-start",
+        marginTop: 4,
+        paddingHorizontal: spacing[3],
+        paddingVertical: spacing[1],
+        borderRadius: radius.full,
+        backgroundColor: badge.bg,
+      }}
+      accessibilityRole="text"
+      accessibilityLabel={`${t("about.environment")}: ${label}`}
+    >
       <Text
         style={{
-          ...typography.body,
-          color: theme.text,
-          fontWeight: "600",
-          marginTop: 2,
+          ...typography.caption,
+          color: badge.text,
+          fontWeight: "700",
         }}
-        selectable
       >
-        {value}
+        {label}
       </Text>
     </View>
   );
@@ -150,8 +191,25 @@ export function AboutScreen() {
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const info = resolveAboutInfo();
+  const info = getAppBuildInfo();
   const copyrightYear = new Date().getFullYear();
+  const [commitCopied, setCommitCopied] = useState(false);
+
+  const headerSubtitle = info.isDevelopment
+    ? t("about.developmentBuild")
+    : info.build !== "-"
+      ? t("about.versionWithBuild", {
+          version: info.version,
+          build: info.build,
+        })
+      : t("about.versionLine", { version: info.version });
+
+  const copyCommit = async () => {
+    if (!info.commit) return;
+    await Clipboard.setStringAsync(info.commit);
+    setCommitCopied(true);
+    setTimeout(() => setCommitCopied(false), 2000);
+  };
 
   return (
     <Screen edges={["top"]} style={{ backgroundColor: theme.bg }}>
@@ -230,8 +288,11 @@ export function AboutScreen() {
               textAlign: "center",
             }}
           >
-            {t("about.versionLine", { version: info.versionLine })}
+            {headerSubtitle}
           </Text>
+          <View style={{ marginTop: spacing[3] }}>
+            <EnvironmentBadge environment={info.environment} />
+          </View>
         </View>
 
         <View
@@ -254,19 +315,49 @@ export function AboutScreen() {
             showDivider
             onPress={() => void WebBrowser.openBrowserAsync(LEGAL_URLS.terms)}
           />
-          <InfoRow
-            label={t("about.version")}
-            value={info.versionLine}
-            showDivider
-          />
-          <InfoRow
-            label={t("about.environment")}
-            value={info.environment}
-            showDivider
-          />
-          <InfoRow label={t("about.api")} value={info.api} showDivider />
-          <InfoRow label={t("about.build")} value={info.build} showDivider />
-          <InfoRow label={t("about.commit")} value={info.commit} />
+          {!info.isDevelopment ? (
+            <>
+              <InfoRow
+                label={t("about.version")}
+                value={info.version}
+                showDivider
+              />
+              <InfoRow
+                label={t("about.build")}
+                value={info.build}
+                showDivider
+              />
+            </>
+          ) : null}
+          <View
+            style={{
+              minHeight: 64,
+              paddingHorizontal: spacing[4],
+              paddingVertical: spacing[3],
+              borderBottomWidth: 1,
+              borderBottomColor: theme.border,
+            }}
+          >
+            <Text style={{ ...typography.caption, color: theme.textMuted }}>
+              {t("about.environment")}
+            </Text>
+            <EnvironmentBadge environment={info.environment} />
+          </View>
+          {info.commit ? (
+            <InfoRow
+              label={t("about.commit")}
+              value={commitCopied ? t("about.commitCopied") : info.commit}
+              showDivider
+              onPress={() => void copyCommit()}
+            />
+          ) : (
+            <InfoRow
+              label={t("about.commit")}
+              value="-"
+              showDivider
+            />
+          )}
+          <InfoRow label={t("about.api")} value={info.apiHost} />
         </View>
 
         <View style={{ flex: 1, minHeight: spacing[10] }} />

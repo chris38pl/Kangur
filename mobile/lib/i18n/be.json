@@ -355,8 +355,12 @@
     "useForAi": "Для прапаноў AI",
     "removeFromAi": "Прыбраць з AI",
     "useForAiHint": "Аддаваць перавагу гэтаму спісу пры генерацыі прапаноў",
-    "aiPreferredAddedTitle": "Дададзена да прапаноў AI",
-    "aiPreferredAddedBody": "Гэты спіс цяпер будзе ўлічвацца пры стварэнні спіса на аснове вашай гісторыі пакупак.",
+    "aiPreferredAddedTitle": "Дададзена ў абраныя AI",
+    "aiPreferredAddedBody": "Гэты спіс будзе прыярытэтным, калі Kangur генеруе прапановы пакупак на аснове вашай гісторыі.",
+    "aiPreferredRemovedTitle": "Прыбрана з абраных AI",
+    "aiPreferredRemovedBody": "Гэты спіс больш не будзе прыярытэтным пры генерацыі прапаноў з гісторыі пакупак.",
+    "aiPreferredLimitTitle": "У вас ужо 5 абраных",
+    "aiPreferredLimitBody": "Можна пазначыць зоркай максімум 5 спісаў для AI. Зніміце зорку з аднаго з цяперашніх абраных, а потым дадайце новы.",
     "continue": "Працягнуць",
     "actionFailedTitle": "Нешта пайшло не так"
   },
@@ -798,14 +802,22 @@
     "appName": "Kangur",
     "version": "Версія",
     "versionLine": "Версія {{version}}",
+    "versionWithBuild": "Версія {{version}} (Build {{build}})",
+    "developmentBuild": "Development Build",
     "privacy": "Палітыка прыватнасці",
     "terms": "Правілы карыстання",
     "copyrightLine": "© {{year}} Kangur",
     "rightsReserved": "Усе правы абаронены.",
     "environment": "Асяроддзе",
+    "env": {
+      "development": "Development",
+      "preview": "Preview",
+      "production": "Production"
+    },
     "api": "API",
     "build": "Зборка",
-    "commit": "Каміт"
+    "commit": "Каміт",
+    "commitCopied": "Скапіявана"
   },
   "helpSupport": {
     "title": "Дапамога і падтрымка",

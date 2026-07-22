@@ -33,7 +33,7 @@ Kangur Platform (Next.js REST + OpenAPI)
 | Sync (MVP) | Smart polling behind `RealtimeProvider` |
 | Sync (later) | Ably / Supabase Realtime / SSE - undecided; cost-driven |
 | Storage | No permanent screenshots; no UploadThing unless justified later |
-| Observability | PostHog + Sentry from Closed Testing (see [deploy.md](./deploy.md)) |
+| Observability | PostHog + Sentry from Closed Testing (**M13.11** in [roadmap.md](./roadmap.md)); internal Metrics = M13.5 |
 
 **Docs:** `prd.md`, `architecture.md`, `cursor-rules.md`, `roadmap.md`, `deploy.md`.
 
@@ -397,6 +397,10 @@ Mobile Metrics.record → BufferMetrics → batch every ~20s
 Design locks (preserved for when M13.7 ships): anonymous `clientInstanceId`; counter deltas + gauge last-value + capped hist samples; GaugeTTL (~90s) for `active_pollers` / sync queue / failed ops; fire-and-forget flush; prefer client over proxy when data exists. Still out of ingest scope: OTel exporters, per-workspace slices, refresh-delay / sync successRate / lastError instrumentation, durable metric storage.
 
 Also future: OTel/Prometheus exporters (same call sites), tracing, ETag `304_ratio`, WS metrics, load-test playbook, `estimated_monthly_ws_cost`.
+
+### Product analytics & crash reporting (M13.11, pre-release)
+
+**Sentry** (mobile + Next.js) for crashes / API / AI / sync errors with opaque `userId` + `workspaceId`, release = version+build. **PostHog** for business funnel events + feature flags only (no autocapture, **no Session Replay in MVP**). Keep M13.5 `Metrics` façade separate. Env kill switches in `featureGates.ts` remain hard overrides above PostHog flags. Full catalogue and privacy rules: [roadmap.md](./roadmap.md) § M13.11.
 
 ---
 

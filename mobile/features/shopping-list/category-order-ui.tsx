@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
+import { TouchableOpacity } from "react-native-gesture-handler";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
@@ -9,19 +10,24 @@ type HandleProps = {
   disabled?: boolean;
 };
 
+/** Long enough that a scroll flick does not start a drag (esp. Android). */
+const DRAG_LONG_PRESS_MS = Platform.OS === "android" ? 320 : 250;
+
 export function CategoryDragHandle({ onLongPress, disabled }: HandleProps) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
 
   return (
-    <Pressable
+    <TouchableOpacity
       onLongPress={onLongPress}
       disabled={disabled}
-      delayLongPress={120}
+      delayLongPress={DRAG_LONG_PRESS_MS}
+      activeOpacity={0.55}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={t("list.categoryOrderDragHandle")}
+      // RNGH touchable — plays nicer with NestableScrollContainer than RN Pressable.
       style={{
         width: 40,
         height: 44,
@@ -30,7 +36,7 @@ export function CategoryDragHandle({ onLongPress, disabled }: HandleProps) {
         opacity: disabled ? 0.4 : 1,
       }}
     >
-      <View style={{ gap: 3.5 }}>
+      <View style={{ gap: 3.5 }} pointerEvents="none">
         {[0, 1, 2].map((i) => (
           <View
             key={i}
@@ -43,7 +49,7 @@ export function CategoryDragHandle({ onLongPress, disabled }: HandleProps) {
           />
         ))}
       </View>
-    </Pressable>
+    </TouchableOpacity>
   );
 }
 

@@ -341,8 +341,12 @@
     "useForAi": "Für KI nutzen",
     "removeFromAi": "Von KI entfernen",
     "useForAiHint": "Diese Liste bei KI-Vorschlägen bevorzugen",
-    "aiPreferredAddedTitle": "Für KI-Vorschläge markiert",
-    "aiPreferredAddedBody": "Diese Liste wird jetzt bei der Erstellung einer Einkaufsliste auf Basis deiner Einkaufshistorie berücksichtigt.",
+    "aiPreferredAddedTitle": "Zu KI-Favoriten hinzugefügt",
+    "aiPreferredAddedBody": "Diese Liste wird bevorzugt, wenn Kangur Einkaufsvorschläge aus deiner Historie erstellt.",
+    "aiPreferredRemovedTitle": "Aus KI-Favoriten entfernt",
+    "aiPreferredRemovedBody": "Diese Liste wird bei Einkaufsvorschlägen aus der Historie nicht mehr bevorzugt.",
+    "aiPreferredLimitTitle": "Du hast bereits 5 Favoriten",
+    "aiPreferredLimitBody": "Du kannst bis zu 5 Listen für die KI markieren. Entferne zuerst den Stern bei einer aktuellen Favoritenliste, dann kannst du eine neue hinzufügen.",
     "continue": "Weiter",
     "actionFailedTitle": "Etwas ist schiefgelaufen"
   },
@@ -772,14 +776,22 @@
     "appName": "Kangur",
     "version": "Version",
     "versionLine": "Version {{version}}",
+    "versionWithBuild": "Version {{version}} (Build {{build}})",
+    "developmentBuild": "Development Build",
     "privacy": "Datenschutzerklärung",
     "terms": "Nutzungsbedingungen",
     "copyrightLine": "© {{year}} Kangur",
     "rightsReserved": "Alle Rechte vorbehalten.",
     "environment": "Umgebung",
+    "env": {
+      "development": "Development",
+      "preview": "Preview",
+      "production": "Production"
+    },
     "api": "API",
     "build": "Build",
-    "commit": "Commit"
+    "commit": "Commit",
+    "commitCopied": "Kopiert"
   },
   "helpSupport": {
     "title": "Hilfe & Support",
