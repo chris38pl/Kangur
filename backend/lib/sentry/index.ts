@@ -63,7 +63,7 @@ export function initSentry(): void {
     sampleRate: 1,
     beforeSend(event: {
       level?: string;
-      exception?: { values?: Array<{ mechanism?: { handled?: boolean } }> };
+      exception?: { values?: { mechanism?: { handled?: boolean } }[] };
     }) {
       if (environment === "production") {
         const unhandled = event.exception?.values?.some(
