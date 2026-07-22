@@ -1,0 +1,26 @@
+---
+description: Always add i18n keys to every locale with real translations
+alwaysApply: true
+---
+
+# Mobile i18n — all locales required
+
+When adding or changing any user-facing string under `mobile/`, update **every** locale file in `mobile/lib/i18n/`:
+
+`en`, `pl`, `de`, `fr`, `es`, `it`, `cs`, `ru`, `uk`, `be`
+
+## Rules
+
+- Never ship a key only in `pl.json` / `en.json`.
+- Do **not** leave English placeholders in non-English locales when neighboring keys in that file are already translated.
+- Keep the same key path and interpolation (`{{count}}`, etc.) across all files.
+- For count plurals, add the forms that locale needs (e.g. PL/CS/RU/UK/BE: `_one` / `_few` / `_many` / `_other`; EN/DE/FR/ES/IT: usually `_one` / `_other`).
+- Before finishing: confirm the new key exists in all 10 JSON files (quick scan or script).
+
+## Example
+
+```text
+❌ Added list.filterAll only to pl.json
+✅ Added list.filterAll to en + pl + de + fr + es + it + cs + ru + uk + be
+   with proper translations in each language
+```

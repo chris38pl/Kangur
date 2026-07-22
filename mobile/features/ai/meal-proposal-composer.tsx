@@ -11,10 +11,15 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { useAppResult } from "@/components/AppResultProvider";
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { createMealProposal } from "@/features/ai/api";
 import { setPendingMealProposal } from "@/features/ai/pending-meal-proposal";
+import {
+  getCreditShortage,
+  isInsufficientCreditsError,
+} from "@/lib/ai/insufficientCredits";
 import { Analytics } from "@/lib/analytics";
 import { ApiClientError } from "@/lib/api/client";
 
@@ -46,6 +51,7 @@ export function MealProposalComposer({
   const { t } = useTranslation();
   const { getToken } = useAuth();
   const router = useRouter();
+  const { showInsufficientCredits } = useAppResult();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const [draft, setDraft] = useState("");
@@ -72,6 +78,16 @@ export function MealProposalComposer({
             ? String(error.status)
             : "generate_error",
       });
+      if (isInsufficientCreditsError(error)) {
+        const shortage = getCreditShortage(error) ?? {
+          needed: 2,
+          remaining: 0,
+        };
+        showInsufficientCredits({
+          ...shortage,
+          description: t("ai.mealProposalCreditsError"),
+        });
+      }
     },
   });
 
@@ -252,7 +268,8 @@ export function MealProposalComposer({
         )}
       </Pressable>
 
-      {generateMutation.isError ? (
+      {generateMutation.isError &&
+      !isInsufficientCreditsError(generateMutation.error) ? (
         <Text
           style={{
             ...typography.caption,
@@ -260,10 +277,7 @@ export function MealProposalComposer({
             marginTop: spacing[2],
           }}
         >
-          {generateMutation.error instanceof ApiClientError &&
-          generateMutation.error.status === 402
-            ? t("ai.mealProposalCreditsError")
-            : t("ai.mealProposalGenerateError")}
+          {t("ai.mealProposalGenerateError")}
         </Text>
       ) : null}
     </View>

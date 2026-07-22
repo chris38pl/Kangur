@@ -1,0 +1,23 @@
+---
+description: Protect shared worktree when multiple chats/branches run in parallel
+alwaysApply: true
+---
+
+# No silent branch / worktree mutation
+
+Multiple chats may share this repo. Do not change branches or discard local work unless the user explicitly asks in **this** chat.
+
+NEVER run without an explicit user request in this chat:
+
+- `git checkout` / `git switch`
+- `git stash` / `git stash pop` / `git stash apply`
+- `git reset --hard`
+- `git clean -fd`
+- `git restore` / `git checkout -- <paths>`
+- `git rebase` (unless the user asked for it)
+
+If another branch is needed: **stop and ask**.
+
+Before large edits: verify `git branch --show-current` matches the branch this chat is for. If it does not, stop and ask.
+
+Exception: when the user explicitly asks to merge feature → staging or staging → main, follow `git-merge-staging`.

@@ -202,6 +202,15 @@ export function ShoppingModeScreen({ listId }: Props) {
     router.push(`/list/${listId}/shop/${category}`);
   };
 
+  const goBackToEdit = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    allowLeave();
+    router.replace(`/list/${listId}`);
+  };
+
   const onReorderCategories = (data: CategoryProgress[]) => {
     const fullOrder = resolveShoppingCategoryOrder(listCategoryOrder);
     const newActive = data.map((c) => c.category);
@@ -346,8 +355,50 @@ export function ShoppingModeScreen({ listId }: Props) {
                       />
                     )}
                   />
+                  <Pressable
+                    onPress={goBackToEdit}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("shoppingMode.backToEditList")}
+                    style={{
+                      marginTop: spacing[4],
+                      paddingVertical: spacing[3],
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        ...typography.label,
+                        fontWeight: "500",
+                        color: theme.textMuted,
+                      }}
+                    >
+                      {t("shoppingMode.backToEditList")}
+                    </Text>
+                  </Pressable>
                 </View>
-              ) : null}
+              ) : (
+                <Pressable
+                  onPress={goBackToEdit}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("shoppingMode.backToEditList")}
+                  style={{
+                    marginTop: spacing[4],
+                    marginBottom: spacing[2],
+                    paddingVertical: spacing[3],
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      ...typography.label,
+                      fontWeight: "500",
+                      color: theme.textMuted,
+                    }}
+                  >
+                    {t("shoppingMode.backToEditList")}
+                  </Text>
+                </Pressable>
+              )}
 
               {completedCategories.length > 0 ? (
                 <View

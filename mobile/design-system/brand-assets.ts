@@ -23,4 +23,5 @@ export const brandAssets = {
   shoppingFinished: require("@/assets/brand/shopping-finished.webp"),
   listCreated: require("@/assets/brand/list-created.webp"),
   silentMode: require("@/assets/brand/silent-mode.webp"),
+  noCredits: require("@/assets/brand/no-credits.webp"),
 } as const;

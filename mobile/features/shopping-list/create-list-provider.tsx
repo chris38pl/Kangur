@@ -33,6 +33,10 @@ import { markListProvisional } from "@/features/shopping-list/provisional-list";
 import { useCreateShoppingList } from "@/features/shopping-list/useShoppingLists";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
+import {
+  getCreditShortage,
+  isInsufficientCreditsError,
+} from "@/lib/ai/insufficientCredits";
 import { ApiClientError } from "@/lib/api/client";
 import {
   isHistorySuggestionsEnabled,
@@ -58,7 +62,11 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
-  const { showError, visible: appResultVisible } = useAppResult();
+  const {
+    showError,
+    showInsufficientCredits,
+    visible: appResultVisible,
+  } = useAppResult();
   const workspacesQuery = useWorkspaces();
   const { activeWorkspace, hydrated } = useActiveWorkspace(workspacesQuery.data);
   const createList = useCreateShoppingList(activeWorkspace?.id ?? null);
@@ -138,9 +146,13 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
           });
           return;
         }
-        if (error.code === "INSUFFICIENT_CREDITS" || error.status === 402) {
-          showError({
-            title: t("ai.suggestErrorTitle"),
+        if (isInsufficientCreditsError(error)) {
+          const shortage = getCreditShortage(error) ?? {
+            needed: 3,
+            remaining: 0,
+          };
+          showInsufficientCredits({
+            ...shortage,
             description: t("ai.suggestInsufficientCredits"),
           });
           return;
@@ -178,7 +190,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         setSuggestLoading(false);
       }
     }
-  }, [activeWorkspace, getToken, hydrated, showError, t]);
+  }, [activeWorkspace, getToken, hydrated, showError, showInsufficientCredits, t]);
 
   const confirmSuggest = useCallback(
     async (acceptedIds: string[]) => {

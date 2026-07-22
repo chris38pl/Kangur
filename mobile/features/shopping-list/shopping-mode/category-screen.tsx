@@ -603,18 +603,31 @@ export function ShoppingCategoryScreen({
                   : t("shoppingMode.finishShopping")}
               </Text>
             </Pressable>
-            <Pressable
-              onPress={() => {
-                router.replace(`/list/${listId}/shop`);
-              }}
-              style={{ paddingVertical: spacing[2], alignItems: "center" }}
-            >
-              <Text style={{ ...typography.label, color: theme.primary }}>
-                {t("shoppingMode.backToCategories")}
-              </Text>
-            </Pressable>
           </View>
         ) : null}
+
+        <Pressable
+          onPress={() => {
+            router.replace(`/list/${listId}/shop`);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={t("shoppingMode.backToCategories")}
+          style={{
+            marginTop: categoryDone ? spacing[3] : spacing[6],
+            paddingVertical: spacing[3],
+            alignItems: "center",
+          }}
+        >
+          <Text
+            style={{
+              ...typography.label,
+              fontWeight: "500",
+              color: theme.textMuted,
+            }}
+          >
+            {t("shoppingMode.backToCategories")}
+          </Text>
+        </Pressable>
           </>
         )}
       </ScrollView>

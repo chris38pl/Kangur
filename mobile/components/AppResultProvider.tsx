@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import {
   createContext,
   useCallback,
@@ -13,6 +14,8 @@ import {
   AppResultScreen,
   type AppResultVariant,
 } from "@/components/AppResultScreen";
+import { InsufficientCreditsScreen } from "@/components/InsufficientCreditsScreen";
+import type { CreditShortage } from "@/lib/ai/insufficientCredits";
 
 export type ShowAppResultOptions = {
   variant?: AppResultVariant;
@@ -28,11 +31,21 @@ export type ShowAppResultOptions = {
   image?: ImageSourcePropType;
 };
 
+export type ShowInsufficientCreditsOptions = CreditShortage & {
+  /** Override default body copy for a specific AI action. */
+  description?: string;
+  /** Called after dismiss when the user taps Premium (default: /premium). */
+  onPremium?: () => void;
+  /** Called after dismiss when the user taps back. */
+  onBack?: () => void;
+};
+
 type AppResultContextValue = {
   /** True while the global result Modal is visible. */
   visible: boolean;
   show: (options: ShowAppResultOptions) => void;
   showError: (options: Omit<ShowAppResultOptions, "variant">) => void;
+  showInsufficientCredits: (options: ShowInsufficientCreditsOptions) => void;
   dismiss: () => void;
 };
 
@@ -42,19 +55,26 @@ type ActiveResult = ShowAppResultOptions & {
   variant: AppResultVariant;
 };
 
+type ActiveInsufficientCredits = ShowInsufficientCreditsOptions;
+
 /**
- * Root-level host for {@link AppResultScreen}. Mount once near the app root
- * so errors/results stack above route Modals and can be reused app-wide.
+ * Root-level host for {@link AppResultScreen} and
+ * {@link InsufficientCreditsScreen}. Mount once near the app root so
+ * errors/results stack above route Modals and can be reused app-wide.
  */
 export function AppResultProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const [active, setActive] = useState<ActiveResult | null>(null);
+  const [creditsGate, setCreditsGate] =
+    useState<ActiveInsufficientCredits | null>(null);
 
   const dismiss = useCallback(() => {
     setActive(null);
+    setCreditsGate(null);
   }, []);
 
   const show = useCallback((options: ShowAppResultOptions) => {
+    setCreditsGate(null);
     setActive({
       variant: options.variant ?? "info",
       title: options.title,
@@ -74,14 +94,23 @@ export function AppResultProvider({ children }: { children: ReactNode }) {
     [show],
   );
 
+  const showInsufficientCredits = useCallback(
+    (options: ShowInsufficientCreditsOptions) => {
+      setActive(null);
+      setCreditsGate(options);
+    },
+    [],
+  );
+
   const value = useMemo(
     () => ({
-      visible: active != null,
+      visible: active != null || creditsGate != null,
       show,
       showError,
+      showInsufficientCredits,
       dismiss,
     }),
-    [active, show, showError, dismiss],
+    [active, creditsGate, show, showError, showInsufficientCredits, dismiss],
   );
 
   return (
@@ -111,6 +140,26 @@ export function AppResultProvider({ children }: { children: ReactNode }) {
             : undefined
         }
         onBack={dismiss}
+      />
+      <InsufficientCreditsScreen
+        visible={creditsGate != null}
+        needed={creditsGate?.needed ?? 0}
+        remaining={creditsGate?.remaining ?? 0}
+        description={creditsGate?.description}
+        onPremium={() => {
+          const next = creditsGate?.onPremium;
+          dismiss();
+          if (next) {
+            next();
+          } else {
+            router.push("/premium");
+          }
+        }}
+        onBack={() => {
+          const next = creditsGate?.onBack;
+          dismiss();
+          next?.();
+        }}
       />
     </AppResultContext.Provider>
   );

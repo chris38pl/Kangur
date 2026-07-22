@@ -29,6 +29,7 @@ import {
   ListDetailSkeleton,
   ListHeaderTitleSkeleton,
 } from "@/components/skeleton";
+import { useAppResult } from "@/components/AppResultProvider";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
 import { primaryButtonStyle } from "@/design-system/shopping-density";
@@ -39,6 +40,10 @@ import { MealProposalComposer } from "@/features/ai/meal-proposal-composer";
 import type { ProposalOperation } from "@/features/ai/schemas";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { CategoryChips } from "@/features/shopping-item/category-chips";
+import {
+  ListStatusFilterChips,
+  type ListStatusFilter,
+} from "@/features/shopping-item/list-status-filter-chips";
 import { EditItemSheet } from "@/features/shopping-item/edit-item-sheet";
 import { RemoteChangeToast, useListRealtime } from "@/lib/realtime";
 import { ListItemRow } from "@/features/shopping-item/list-item-row";
@@ -73,6 +78,10 @@ import {
 } from "@/features/shopping-list/useShoppingLists";
 import { createClientId } from "@/lib/createClientId";
 import { isAiReviewEnabled } from "@/lib/aiReview";
+import {
+  getCreditShortage,
+  isInsufficientCreditsError,
+} from "@/lib/ai/insufficientCredits";
 import { Analytics } from "@/lib/analytics";
 import { oncePerUser } from "@/lib/analytics/once";
 import { createRequestId } from "@/lib/analytics/requestId";
@@ -135,6 +144,7 @@ export default function ShoppingListScreen() {
   const keyboardHeight = useKeyboardHeight();
   const router = useRouter();
   const navigation = useNavigation();
+  const { showInsufficientCredits } = useAppResult();
   const { listId, import: importSource } = useLocalSearchParams<{
     listId: string;
     import?: string;
@@ -159,6 +169,7 @@ export default function ShoppingListScreen() {
   const [mealSectionOpen, setMealSectionOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [mealGenerating, setMealGenerating] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<ListStatusFilter>("all");
   const entryFocusApplied = useRef(false);
   const onMealGeneratingChange = useCallback((generating: boolean) => {
     setMealGenerating(generating);
@@ -327,6 +338,17 @@ export default function ShoppingListScreen() {
       }
       setSentryRequestId(null);
       aiRequestIdRef.current = null;
+      if (isInsufficientCreditsError(error)) {
+        const shortage = getCreditShortage(error) ?? {
+          needed: 1,
+          remaining: 0,
+        };
+        showInsufficientCredits({
+          ...shortage,
+          description: t("ai.insufficientCreditsBody"),
+        });
+        return;
+      }
       if (error instanceof ApiClientError && error.code === "NOT_FOUND") {
         Alert.alert(t("list.missingTitle"), t("list.missingBody"), [
           {
@@ -555,6 +577,19 @@ export default function ShoppingListScreen() {
       return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
     });
   const itemCount = activeItems.length;
+  const statusFilterCounts = useMemo(
+    () => ({
+      pending: activeItems.filter((item) => item.status === "pending").length,
+      bought: activeItems.filter((item) => item.status === "bought").length,
+      unavailable: activeItems.filter((item) => item.status === "unavailable")
+        .length,
+    }),
+    [activeItems],
+  );
+  const filteredItems =
+    statusFilter === "all"
+      ? activeItems
+      : activeItems.filter((item) => item.status === statusFilter);
 
   const categoriesOnList = useMemo(() => {
     const seen = new Set<SharedShoppingCategory>();
@@ -1318,16 +1353,39 @@ export default function ShoppingListScreen() {
               {t("list.itemsOnList")}
             </Text>
 
+            {itemCount > 0 ? (
+              <View style={{ marginTop: spacing[3] }}>
+                <ListStatusFilterChips
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  counts={statusFilterCounts}
+                />
+              </View>
+            ) : null}
+
             <View style={{ marginTop: spacing[3] }}>
               {itemCount > 0 ? (
-                activeItems.map((item, index) => (
-                  <ListItemRow
-                    key={item.id}
-                    item={item}
-                    showDivider={index < activeItems.length - 1}
-                    onMenuPress={() => openItemMenu(item)}
-                  />
-                ))
+                filteredItems.length > 0 ? (
+                  filteredItems.map((item, index) => (
+                    <ListItemRow
+                      key={item.id}
+                      item={item}
+                      showDivider={index < filteredItems.length - 1}
+                      onMenuPress={() => openItemMenu(item)}
+                    />
+                  ))
+                ) : (
+                  <Text
+                    style={{
+                      ...typography.body,
+                      color: theme.textMuted,
+                      textAlign: "center",
+                      paddingVertical: spacing[6],
+                    }}
+                  >
+                    {t("list.filterEmpty")}
+                  </Text>
+                )
               ) : (
                 <View
                   style={{
@@ -1423,16 +1481,24 @@ export default function ShoppingListScreen() {
         >
           <Pressable
             onPress={() => {
-              if (typeof listId === "string") {
+              if (typeof listId === "string" && itemCount > 0) {
                 router.push(`/list/${listId}/shop`);
               }
             }}
             disabled={
+              itemCount === 0 ||
               mealGenerating ||
               ingestMutation.isPending ||
               applyMutation.isPending
             }
             accessibilityRole="button"
+            accessibilityState={{
+              disabled:
+                itemCount === 0 ||
+                mealGenerating ||
+                ingestMutation.isPending ||
+                applyMutation.isPending,
+            }}
             accessibilityLabel={
               mealGenerating ||
               ingestMutation.isPending ||
@@ -1445,10 +1511,11 @@ export default function ShoppingListScreen() {
               borderRadius: radius.full,
               minHeight: 56,
               opacity:
+                itemCount === 0 ||
                 mealGenerating ||
                 ingestMutation.isPending ||
                 applyMutation.isPending
-                  ? 0.85
+                  ? 0.45
                   : 1,
             }}
           >

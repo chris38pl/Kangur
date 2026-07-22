@@ -32,8 +32,11 @@ export type AiCreditsBalance = {
   periodStart: string;
 };
 
-export function insufficientCredits(message = "Insufficient AI Credits."): ApiError {
-  return new ApiError("INSUFFICIENT_CREDITS", message, 402);
+export function insufficientCredits(
+  message = "Insufficient AI Credits.",
+  details?: { needed: number; remaining: number },
+): ApiError {
+  return new ApiError("INSUFFICIENT_CREDITS", message, 402, details);
 }
 
 export async function getAiCreditsBalance(
@@ -78,8 +81,10 @@ export async function assertCanIngest(
   const balance = await getAiCreditsBalance(workspaceId);
   if (balance.unlimited) return;
   if ((balance.remaining ?? 0) < cost) {
+    const remaining = balance.remaining ?? 0;
     throw insufficientCredits(
-      `Not enough AI Credits. Need ${cost}, have ${balance.remaining ?? 0}.`,
+      `Not enough AI Credits. Need ${cost}, have ${remaining}.`,
+      { needed: cost, remaining },
     );
   }
 }
