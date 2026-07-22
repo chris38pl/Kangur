@@ -89,6 +89,7 @@ enum AiProposalSource {
   screenshot
   clipboard
   history
+  meal
 }
 
 enum AiProposalStatus {

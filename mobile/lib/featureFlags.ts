@@ -45,6 +45,14 @@ function envHardKillHistory(): boolean | null {
   return null;
 }
 
+function envHardKillMealProposal(): boolean | null {
+  const raw =
+    process.env.EXPO_PUBLIC_MEAL_PROPOSAL_ENABLED?.trim().toLowerCase();
+  if (raw === "0" || raw === "false" || raw === "off") return false;
+  if (raw === "1" || raw === "true" || raw === "on") return true;
+  return null;
+}
+
 /**
  * Resolution: DEV override → env hard kill → PostHog → default.
  */
@@ -61,6 +69,14 @@ export function isFeatureEnabled(
     if (kill === false) return false;
     if (kill === true) {
       // env force-on still allows PostHog off later; treat as soft default on
+      defaultValue = true;
+    }
+  }
+
+  if (flag === FeatureFlags.mealProposal) {
+    const kill = envHardKillMealProposal();
+    if (kill === false) return false;
+    if (kill === true) {
       defaultValue = true;
     }
   }

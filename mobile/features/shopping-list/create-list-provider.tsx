@@ -33,7 +33,11 @@ import { useCreateShoppingList } from "@/features/shopping-list/useShoppingLists
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { ApiClientError } from "@/lib/api/client";
-import { isHistorySuggestionsEnabled } from "@/lib/featureGates";
+import {
+  isHistorySuggestionsEnabled,
+  isMealProposalEnabled,
+} from "@/lib/featureGates";
+import { setPendingMealComposer } from "@/features/ai/pending-meal-proposal";
 
 type CreateListContextValue = {
   openCreateList: () => void;
@@ -293,11 +297,18 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
 
         const list = await createList.mutateAsync({
           name:
-            path === "empty" ? t("home.defaultListName") : t("home.aiListName"),
-          emoji: "🛒",
+            path === "empty"
+              ? t("home.defaultListName")
+              : path === "fromRecipe"
+                ? t("home.mealListName")
+                : t("home.aiListName"),
+          emoji: path === "fromRecipe" ? "🍽️" : "🛒",
         });
         // Discard if user leaves before any products are saved.
         markListProvisional(list.id);
+        if (path === "fromRecipe") {
+          setPendingMealComposer(list.id);
+        }
         setSheetOpen(false);
 
         router.replace(`/list/${list.id}` as never);
@@ -325,6 +336,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         visible={sheetOpen}
         busy={createList.isPending || preparing}
         showFromHistory={isHistorySuggestionsEnabled()}
+        showFromRecipe={isMealProposalEnabled()}
         onClose={() => setSheetOpen(false)}
         onSelect={(path) => void createAndOpen(path)}
       />

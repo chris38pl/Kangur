@@ -76,7 +76,11 @@
     "comingSoon": "Bientôt disponible",
     "comingSoonBadge": "Bientôt",
     "defaultListName": "Liste de courses",
-    "aiListName": "Import IA"
+    "aiListName": "Import IA",
+    "quickFromRecipe": "Recipe",
+    "createFromRecipe": "From recipe",
+    "createFromRecipeHint": "Turn dishes into a shopping list",
+    "mealListName": "Recipe ingredients"
   },
   "list": {
     "title": "Liste de courses",
@@ -269,7 +273,21 @@
     "suggestSwipeTip": "Glissez à droite pour ajouter une proposition. Glissez à gauche pour rejeter !",
     "suggestErrorTitle": "Une erreur s’est produite",
     "suggestApplyFailed": "Impossible de créer une liste à partir des produits sélectionnés. Réessayez.",
-    "suggestApplyNotFound": "Cette suggestion a expiré ou est introuvable. Générez-en une nouvelle et réessayez."
+    "suggestApplyNotFound": "Cette suggestion a expiré ou est introuvable. Générez-en une nouvelle et réessayez.",
+    "mealProposalTitle": "From recipe",
+    "mealProposalSubtitle": "Add up to two dishes and we will prepare their ingredients.",
+    "mealProposalPlaceholder": "e.g. spaghetti bolognese",
+    "mealProposalAdd": "Add",
+    "mealProposalMaxDishes": "You can add up to 2 dishes.",
+    "mealProposalGenerate": "Generate",
+    "mealProposalErrors": "Could not generate a meal proposal. Please try again.",
+    "mealProposalStep": "Dish {{current}} of {{total}}",
+    "mealProposalIngredients": "Ingredients",
+    "mealProposalReject": "Reject entire dish",
+    "mealProposalMissing": "Meal proposal not found.",
+    "mealProposalBackToList": "Back to list",
+    "mealProposalGenerateError": "Couldn't generate a proposal. Please try again.",
+    "mealProposalCreditsError": "Not enough AI Credits for this proposal."
   },
   "categories": {
     "fruit": "Fruits",
@@ -604,7 +622,6 @@
     "methodEmailPassword": "E-mail + mot de passe",
     "passwordNotSet": "Aucun mot de passe défini",
     "passwordManagedByGoogle": "Le mot de passe est géré par Google.",
-    "passwordManagedByApple": "Le mot de passe est géré par Apple.",
     "disconnect": "Déconnecter",
     "disconnectTitle": "Déconnecter {{provider}} ?",
     "disconnectBody": "Vous ne pourrez plus vous connecter avec cette méthode.",
@@ -627,7 +644,8 @@
     "healthCheck": "Vérifier l'état de l'API",
     "healthOk": "API opérationnelle",
     "healthFail": "API inaccessible - définissez EXPO_PUBLIC_API_URL",
-    "apiUrlMissing": "EXPO_PUBLIC_API_URL n'est pas défini"
+    "apiUrlMissing": "EXPO_PUBLIC_API_URL n'est pas défini",
+    "passwordManagedByApple": "Le mot de passe est géré par Apple."
   },
   "privacy": {
     "common": {

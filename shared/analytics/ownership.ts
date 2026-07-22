@@ -37,6 +37,9 @@ export const EVENT_OWNERSHIP = {
   history_repeat: "mobile",
   history_repeat_completed: "mobile",
   history_restore: "mobile",
+  meal_proposal_generated: "backend",
+  meal_proposal_accepted: "mobile",
+  meal_proposal_failed: "mobile_or_backend_failure",
   // Future placeholders (emit later)
   recipe_discovery_opened: "mobile",
   recipe_card_liked: "mobile",

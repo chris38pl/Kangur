@@ -20,6 +20,16 @@ export function isFeatureEnabled(
     }
   }
 
+  if (flag === FeatureFlags.mealProposal) {
+    const raw = process.env.MEAL_PROPOSAL_ENABLED?.trim().toLowerCase();
+    if (raw === "0" || raw === "false" || raw === "off") return false;
+    if (raw === "1" || raw === "true" || raw === "on") {
+      defaultValue = true;
+    } else if (raw === undefined || raw === "") {
+      defaultValue = true;
+    }
+  }
+
   if (isAnalyticsEnabled()) {
     const client = getPostHog() as
       | (ReturnType<typeof getPostHog> & {

@@ -11,7 +11,9 @@ import {
   AiIngestResponseSchema,
   ApplyAiProposalResponseSchema,
   ApplySuggestFromHistoryResponseSchema,
+  MealProposalResponseSchema,
   SuggestFromHistoryResponseSchema,
+  type MealProposalResponse,
   type SuggestFromHistoryResponse,
 } from "./schemas";
 
@@ -131,4 +133,28 @@ export async function abandonSuggestFromHistory(
       body: { runId },
     },
   );
+}
+
+export async function createMealProposal(
+  token: string,
+  listId: string,
+  dishes: string[],
+): Promise<MealProposalResponse> {
+  const data = await apiFetch<unknown>(
+    `/api/v1/lists/${listId}/ai/meal-proposal`,
+    { token, method: "POST", body: { dishes } },
+  );
+  return MealProposalResponseSchema.parse(data);
+}
+
+export async function abandonMealProposal(
+  token: string,
+  listId: string,
+  runId: string,
+) {
+  await apiFetch(`/api/v1/lists/${listId}/ai/meal-proposal/abandon`, {
+    token,
+    method: "POST",
+    body: { runId },
+  });
 }

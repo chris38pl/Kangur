@@ -28,12 +28,14 @@ export type CreateListPath =
   | "photo"
   | "describe"
   | "voice"
-  | "fromHistory";
+  | "fromHistory"
+  | "fromRecipe";
 
 type Props = {
   visible: boolean;
   busy?: boolean;
   showFromHistory?: boolean;
+  showFromRecipe?: boolean;
   onClose: () => void;
   onSelect: (path: CreateListPath) => void;
 };
@@ -42,6 +44,7 @@ export function CreateListSheet({
   visible,
   busy,
   showFromHistory = false,
+  showFromRecipe = false,
   onClose,
   onSelect,
 }: Props) {
@@ -183,6 +186,14 @@ export function CreateListSheet({
                   subtitle={t("home.createDescribeHint")}
                   onPress={() => onSelect("describe")}
                 />
+                {showFromRecipe ? (
+                  <CreateListOptionRow
+                    icon="🍽️"
+                    title={t("home.createFromRecipe")}
+                    subtitle={t("home.createFromRecipeHint")}
+                    onPress={() => onSelect("fromRecipe")}
+                  />
+                ) : null}
                 {showFromHistory ? (
                   <CreateListOptionRow
                     icon="✨"

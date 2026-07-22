@@ -76,7 +76,11 @@
     "comingSoon": "Demnächst",
     "comingSoonBadge": "Bald",
     "defaultListName": "Einkaufsliste",
-    "aiListName": "KI-Import"
+    "aiListName": "KI-Import",
+    "quickFromRecipe": "Recipe",
+    "createFromRecipe": "From recipe",
+    "createFromRecipeHint": "Turn dishes into a shopping list",
+    "mealListName": "Recipe ingredients"
   },
   "list": {
     "title": "Einkaufsliste",
@@ -269,7 +273,21 @@
     "suggestSwipeTip": "Nach rechts wischen zum Hinzufügen. Nach links wischen zum Ablehnen!",
     "suggestErrorTitle": "Etwas ist schiefgelaufen",
     "suggestApplyFailed": "Liste aus den ausgewählten Produkten konnte nicht erstellt werden. Bitte erneut versuchen.",
-    "suggestApplyNotFound": "Dieser Vorschlag ist abgelaufen oder wurde nicht gefunden. Erzeuge einen neuen und versuche es erneut."
+    "suggestApplyNotFound": "Dieser Vorschlag ist abgelaufen oder wurde nicht gefunden. Erzeuge einen neuen und versuche es erneut.",
+    "mealProposalTitle": "From recipe",
+    "mealProposalSubtitle": "Add up to two dishes and we will prepare their ingredients.",
+    "mealProposalPlaceholder": "e.g. spaghetti bolognese",
+    "mealProposalAdd": "Add",
+    "mealProposalMaxDishes": "You can add up to 2 dishes.",
+    "mealProposalGenerate": "Generate",
+    "mealProposalErrors": "Could not generate a meal proposal. Please try again.",
+    "mealProposalStep": "Dish {{current}} of {{total}}",
+    "mealProposalIngredients": "Ingredients",
+    "mealProposalReject": "Reject entire dish",
+    "mealProposalMissing": "Meal proposal not found.",
+    "mealProposalBackToList": "Back to list",
+    "mealProposalGenerateError": "Couldn't generate a proposal. Please try again.",
+    "mealProposalCreditsError": "Not enough AI Credits for this proposal."
   },
   "categories": {
     "fruit": "Obst",
@@ -604,7 +622,6 @@
     "methodEmailPassword": "E-Mail + Passwort",
     "passwordNotSet": "Kein Passwort festgelegt",
     "passwordManagedByGoogle": "Passwort wird von Google verwaltet.",
-    "passwordManagedByApple": "Passwort wird von Apple verwaltet.",
     "disconnect": "Trennen",
     "disconnectTitle": "{{provider}} trennen?",
     "disconnectBody": "Du kannst dich mit dieser Methode nicht mehr anmelden.",
@@ -627,7 +644,8 @@
     "healthCheck": "API-Status prüfen",
     "healthOk": "API erreichbar",
     "healthFail": "API nicht erreichbar – EXPO_PUBLIC_API_URL setzen",
-    "apiUrlMissing": "EXPO_PUBLIC_API_URL ist nicht gesetzt"
+    "apiUrlMissing": "EXPO_PUBLIC_API_URL ist nicht gesetzt",
+    "passwordManagedByApple": "Passwort wird von Apple verwaltet."
   },
   "privacy": {
     "common": {

@@ -32,5 +32,9 @@ export const IMPORT_PROPOSAL_VERSION = 4;
 export const HISTORY_PROPOSAL_TYPE = "shopping-history";
 export const HISTORY_PROPOSAL_VERSION = 5;
 
+/** Meal proposal → shopping list ingredients. */
+export const MEAL_PROPOSAL_TYPE = "meal-proposal";
+export const MEAL_PROPOSAL_VERSION = 1;
+
 /** @deprecated Use IMPORT_PROPOSAL_VERSION */
 export const PROMPT_VERSION = `v${IMPORT_PROPOSAL_VERSION}`;

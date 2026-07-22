@@ -84,7 +84,11 @@
     "comingSoon": "Незабаром",
     "comingSoonBadge": "Скоро",
     "defaultListName": "Список покупок",
-    "aiListName": "Імпорт за допомогою ШІ"
+    "aiListName": "Імпорт за допомогою ШІ",
+    "quickFromRecipe": "Recipe",
+    "createFromRecipe": "From recipe",
+    "createFromRecipeHint": "Turn dishes into a shopping list",
+    "mealListName": "Recipe ingredients"
   },
   "list": {
     "title": "Список покупок",
@@ -283,7 +287,21 @@
     "suggestSwipeTip": "Проведіть праворуч, щоб додати пропозицію. Проведіть ліворуч, щоб відхилити!",
     "suggestErrorTitle": "Щось пішло не так",
     "suggestApplyFailed": "Не вдалося створити список із вибраних продуктів. Спробуйте ще раз.",
-    "suggestApplyNotFound": "Ця пропозиція закінчилася або її не знайдено. Згенеруйте нову і спробуйте знову."
+    "suggestApplyNotFound": "Ця пропозиція закінчилася або її не знайдено. Згенеруйте нову і спробуйте знову.",
+    "mealProposalTitle": "From recipe",
+    "mealProposalSubtitle": "Add up to two dishes and we will prepare their ingredients.",
+    "mealProposalPlaceholder": "e.g. spaghetti bolognese",
+    "mealProposalAdd": "Add",
+    "mealProposalMaxDishes": "You can add up to 2 dishes.",
+    "mealProposalGenerate": "Generate",
+    "mealProposalErrors": "Could not generate a meal proposal. Please try again.",
+    "mealProposalStep": "Dish {{current}} of {{total}}",
+    "mealProposalIngredients": "Ingredients",
+    "mealProposalReject": "Reject entire dish",
+    "mealProposalMissing": "Meal proposal not found.",
+    "mealProposalBackToList": "Back to list",
+    "mealProposalGenerateError": "Couldn't generate a proposal. Please try again.",
+    "mealProposalCreditsError": "Not enough AI Credits for this proposal."
   },
   "categories": {
     "fruit": "Фрукти",
@@ -630,7 +648,6 @@
     "methodEmailPassword": "Email + пароль",
     "passwordNotSet": "Пароль не встановлено",
     "passwordManagedByGoogle": "Паролем керує Google.",
-    "passwordManagedByApple": "Паролем керує Apple.",
     "disconnect": "Від’єднати",
     "disconnectTitle": "Від’єднати {{provider}}?",
     "disconnectBody": "Ви більше не зможете входити цим способом.",
@@ -653,7 +670,8 @@
     "healthCheck": "Перевірити стан API",
     "healthOk": "API працює",
     "healthFail": "API недоступний - встановіть EXPO_PUBLIC_API_URL",
-    "apiUrlMissing": "EXPO_PUBLIC_API_URL не встановлено"
+    "apiUrlMissing": "EXPO_PUBLIC_API_URL не встановлено",
+    "passwordManagedByApple": "Паролем керує Apple."
   },
   "privacy": {
     "common": {

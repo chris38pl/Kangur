@@ -35,6 +35,7 @@ import { primaryButtonStyle } from "@/design-system/shopping-density";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { applyAi, ingestAi } from "@/features/ai/api";
 import { buildScreenshotIngestFormData } from "@/features/ai/buildScreenshotIngestFormData";
+import { MealProposalComposer } from "@/features/ai/meal-proposal-composer";
 import type { ProposalOperation } from "@/features/ai/schemas";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { CategoryChips } from "@/features/shopping-item/category-chips";
@@ -78,6 +79,7 @@ import { ApiClientError } from "@/lib/api/client";
 import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
 import { setSentryRequestId } from "@/lib/sentry/init";
 import type { AiImportSource } from "@shared/analytics/events";
+import { isMealProposalEnabled } from "@/lib/featureGates";
 
 function buildApplyOperations(operations: ProposalOperation[]) {
   return operations.map((operation) => {
@@ -816,6 +818,15 @@ export default function ShoppingListScreen() {
                 disabled={ingestMutation.isPending || applyMutation.isPending}
                 onPress={() => void startClipboardIngest()}
               />
+
+              {isMealProposalEnabled() &&
+              typeof listId === "string" &&
+              listQuery.data?.workspaceId ? (
+                <MealProposalComposer
+                  listId={listId}
+                  workspaceId={listQuery.data.workspaceId}
+                />
+              ) : null}
             </View>
 
             <View style={{ marginTop: spacing[6] }}>

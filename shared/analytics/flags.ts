@@ -6,6 +6,7 @@
 export const FeatureFlags = {
   historySuggestions: "history_suggestions",
   recipeDiscovery: "recipe_discovery",
+  mealProposal: "meal_proposal",
   shoppingV2: "shopping_v2",
   premiumPaywall: "premium_paywall",
   appleSignIn: "apple_sign_in",

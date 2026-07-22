@@ -76,7 +76,11 @@
     "comingSoon": "In arrivo",
     "comingSoonBadge": "Presto",
     "defaultListName": "Lista della spesa",
-    "aiListName": "Importazione AI"
+    "aiListName": "Importazione AI",
+    "quickFromRecipe": "Recipe",
+    "createFromRecipe": "From recipe",
+    "createFromRecipeHint": "Turn dishes into a shopping list",
+    "mealListName": "Recipe ingredients"
   },
   "list": {
     "title": "Lista della spesa",
@@ -269,7 +273,21 @@
     "suggestSwipeTip": "Scorri a destra per aggiungere una proposta. Scorri a sinistra per rifiutare!",
     "suggestErrorTitle": "Qualcosa è andato storto",
     "suggestApplyFailed": "Impossibile creare una lista dai prodotti selezionati. Riprova.",
-    "suggestApplyNotFound": "Questo suggerimento è scaduto o non è stato trovato. Generane uno nuovo e riprova."
+    "suggestApplyNotFound": "Questo suggerimento è scaduto o non è stato trovato. Generane uno nuovo e riprova.",
+    "mealProposalTitle": "From recipe",
+    "mealProposalSubtitle": "Add up to two dishes and we will prepare their ingredients.",
+    "mealProposalPlaceholder": "e.g. spaghetti bolognese",
+    "mealProposalAdd": "Add",
+    "mealProposalMaxDishes": "You can add up to 2 dishes.",
+    "mealProposalGenerate": "Generate",
+    "mealProposalErrors": "Could not generate a meal proposal. Please try again.",
+    "mealProposalStep": "Dish {{current}} of {{total}}",
+    "mealProposalIngredients": "Ingredients",
+    "mealProposalReject": "Reject entire dish",
+    "mealProposalMissing": "Meal proposal not found.",
+    "mealProposalBackToList": "Back to list",
+    "mealProposalGenerateError": "Couldn't generate a proposal. Please try again.",
+    "mealProposalCreditsError": "Not enough AI Credits for this proposal."
   },
   "categories": {
     "fruit": "Frutta",
@@ -604,7 +622,6 @@
     "methodEmailPassword": "Email + password",
     "passwordNotSet": "Nessuna password impostata",
     "passwordManagedByGoogle": "La password è gestita da Google.",
-    "passwordManagedByApple": "La password è gestita da Apple.",
     "disconnect": "Disconnetti",
     "disconnectTitle": "Disconnettere {{provider}}?",
     "disconnectBody": "Non potrai più accedere con questo metodo.",
@@ -627,7 +644,8 @@
     "healthCheck": "Verifica stato API",
     "healthOk": "API operativa",
     "healthFail": "API non raggiungibile - imposta EXPO_PUBLIC_API_URL",
-    "apiUrlMissing": "EXPO_PUBLIC_API_URL non è impostato"
+    "apiUrlMissing": "EXPO_PUBLIC_API_URL non è impostato",
+    "passwordManagedByApple": "La password è gestita da Apple."
   },
   "privacy": {
     "common": {

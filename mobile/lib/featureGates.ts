@@ -4,3 +4,8 @@ import { FeatureFlags, isFeatureEnabled } from "@/lib/featureFlags";
 export function isHistorySuggestionsEnabled(): boolean {
   return isFeatureEnabled(FeatureFlags.historySuggestions, true);
 }
+
+/** Meal proposal → shopping list (M21). */
+export function isMealProposalEnabled(): boolean {
+  return isFeatureEnabled(FeatureFlags.mealProposal, true);
+}

@@ -9,12 +9,15 @@ type WorkspaceGateInput = {
   id: string;
 };
 
-/**
- * History → AI shopping list suggestions.
- * Backend is source of truth; mobile may hide FAB for UX only.
- */
 export function isHistorySuggestionsEnabled(
   _workspace: WorkspaceGateInput,
 ): boolean {
   return isFeatureEnabled(FeatureFlags.historySuggestions, true);
+}
+
+/** Meal proposal → shopping list (M21). Default on; kill via MEAL_PROPOSAL_ENABLED=0. */
+export function isMealProposalEnabled(
+  _workspace: WorkspaceGateInput,
+): boolean {
+  return isFeatureEnabled(FeatureFlags.mealProposal, true);
 }

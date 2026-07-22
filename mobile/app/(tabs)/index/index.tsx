@@ -33,7 +33,10 @@ import { useWorkspaceMembers } from "@/features/workspace/useWorkspaceMembers";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { HomeWorkspaceBanner } from "@/features/workspace/home-workspace-banner";
 import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
-import { isHistorySuggestionsEnabled } from "@/lib/featureGates";
+import {
+  isHistorySuggestionsEnabled,
+  isMealProposalEnabled,
+} from "@/lib/featureGates";
 import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
 
 const QUICK_ACTION_GAP = spacing[2];
@@ -381,6 +384,15 @@ export default function HomeScreen() {
     { path: "screenshot", icon: "📷", label: t("home.createScreenshot") },
     { path: "clipboard", icon: "🛒", label: t("home.quickClipboard") },
     { path: "describe", icon: "📝", label: t("home.quickText") },
+    ...(isMealProposalEnabled()
+      ? [
+          {
+            path: "fromRecipe" as const,
+            icon: "🍽️",
+            label: t("home.quickFromRecipe"),
+          },
+        ]
+      : []),
     ...(isHistorySuggestionsEnabled()
       ? [
           {

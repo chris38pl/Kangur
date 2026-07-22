@@ -76,7 +76,11 @@
     "comingSoon": "Próximamente",
     "comingSoonBadge": "Pronto",
     "defaultListName": "Lista de la compra",
-    "aiListName": "Importación con IA"
+    "aiListName": "Importación con IA",
+    "quickFromRecipe": "Recipe",
+    "createFromRecipe": "From recipe",
+    "createFromRecipeHint": "Turn dishes into a shopping list",
+    "mealListName": "Recipe ingredients"
   },
   "list": {
     "title": "Lista de la compra",
@@ -269,7 +273,21 @@
     "suggestSwipeTip": "Desliza a la derecha para añadir una propuesta. ¡Desliza a la izquierda para rechazar!",
     "suggestErrorTitle": "Algo salió mal",
     "suggestApplyFailed": "No se pudo crear una lista con los productos seleccionados. Inténtalo de nuevo.",
-    "suggestApplyNotFound": "Esta sugerencia caducó o no se encontró. Genera una nueva e inténtalo de nuevo."
+    "suggestApplyNotFound": "Esta sugerencia caducó o no se encontró. Genera una nueva e inténtalo de nuevo.",
+    "mealProposalTitle": "From recipe",
+    "mealProposalSubtitle": "Add up to two dishes and we will prepare their ingredients.",
+    "mealProposalPlaceholder": "e.g. spaghetti bolognese",
+    "mealProposalAdd": "Add",
+    "mealProposalMaxDishes": "You can add up to 2 dishes.",
+    "mealProposalGenerate": "Generate",
+    "mealProposalErrors": "Could not generate a meal proposal. Please try again.",
+    "mealProposalStep": "Dish {{current}} of {{total}}",
+    "mealProposalIngredients": "Ingredients",
+    "mealProposalReject": "Reject entire dish",
+    "mealProposalMissing": "Meal proposal not found.",
+    "mealProposalBackToList": "Back to list",
+    "mealProposalGenerateError": "Couldn't generate a proposal. Please try again.",
+    "mealProposalCreditsError": "Not enough AI Credits for this proposal."
   },
   "categories": {
     "fruit": "Fruta",
@@ -604,7 +622,6 @@
     "methodEmailPassword": "Correo + contraseña",
     "passwordNotSet": "Sin contraseña establecida",
     "passwordManagedByGoogle": "La contraseña la gestiona Google.",
-    "passwordManagedByApple": "La contraseña la gestiona Apple.",
     "disconnect": "Desconectar",
     "disconnectTitle": "¿Desconectar {{provider}}?",
     "disconnectBody": "Ya no podrás iniciar sesión con este método.",
@@ -627,7 +644,8 @@
     "healthCheck": "Comprobar estado de la API",
     "healthOk": "API operativa",
     "healthFail": "API inaccesible - configura EXPO_PUBLIC_API_URL",
-    "apiUrlMissing": "EXPO_PUBLIC_API_URL no está configurada"
+    "apiUrlMissing": "EXPO_PUBLIC_API_URL no está configurada",
+    "passwordManagedByApple": "La contraseña la gestiona Apple."
   },
   "privacy": {
     "common": {

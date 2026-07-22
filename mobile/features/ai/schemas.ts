@@ -101,3 +101,36 @@ export const ApplyAiProposalResponseSchema = z.object({
   applied: z.number(),
   items: z.array(z.unknown()),
 });
+
+export const MealProposalOperationSchema = ProposalOperationSchema.extend({
+  ownerMealId: z.string(),
+});
+
+export type MealProposalOperation = z.infer<typeof MealProposalOperationSchema>;
+
+export const MealProposalSchema = z.object({
+  shoppingContext: ShoppingContextSchema.optional(),
+  meals: z
+    .array(
+      z.object({
+        mealId: z.string(),
+        title: z.string(),
+        icon: z.string(),
+      }),
+    )
+    .min(1)
+    .max(2),
+  operations: z.array(MealProposalOperationSchema),
+});
+
+export const MealProposalResponseSchema = z.object({
+  runId: z.string(),
+  model: z.string(),
+  provider: z.string(),
+  proposalType: z.string(),
+  proposalVersion: z.number().int().positive(),
+  durationMs: z.number().nullable(),
+  proposal: MealProposalSchema,
+});
+
+export type MealProposalResponse = z.infer<typeof MealProposalResponseSchema>;

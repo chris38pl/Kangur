@@ -80,10 +80,17 @@ export type EventPropsMap = {
       estimated_cost_usd?: number;
       ok: boolean;
     };
+  meal_proposal_generated: WorkspaceIdProps &
+    ListIdProps & { meal_count: 1 | 2 };
+  meal_proposal_accepted: WorkspaceIdProps &
+    ListIdProps & { meal_count: 1 | 2 };
+  meal_proposal_failed: WorkspaceIdProps &
+    ListIdProps & { code: string };
   // Future (M20–M22) — names reserved; do not emit until owned in matrix + UI
   recipe_discovery_opened: Record<string, never>;
   recipe_card_liked: { card_index: number };
   recipe_card_rejected: { card_index: number };
+  /** @deprecated Prefer meal_proposal_accepted */
   recipe_to_list_accepted: WorkspaceIdProps & ListIdProps;
   store_recommendation_shown: WorkspaceIdProps & ListIdProps;
   store_recommendation_selected: WorkspaceIdProps &
