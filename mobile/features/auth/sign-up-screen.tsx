@@ -1,6 +1,6 @@
 import { useOAuth, useSignUp } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
-import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -31,7 +31,10 @@ import {
   GoogleIcon,
   MailIcon,
 } from "@/features/auth/auth-icons";
+import { logAuthSuccess, runClerkOAuth } from "@/features/auth/oauth";
 import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
+
+WebBrowser.maybeCompleteAuthSession();
 
 type Step = "landing" | "email" | "verify";
 
@@ -41,7 +44,12 @@ export function SignUpScreen() {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const { signUp, setActive, isLoaded } = useSignUp();
-  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+  const { startOAuthFlow: startGoogleOAuth } = useOAuth({
+    strategy: "oauth_google",
+  });
+  const { startOAuthFlow: startAppleOAuth } = useOAuth({
+    strategy: "oauth_apple",
+  });
   const {
     scrollRef,
     onScroll,
@@ -98,7 +106,12 @@ export function SignUpScreen() {
 
       if (signUp.status === "complete" && signUp.createdSessionId) {
         await setActive({ session: signUp.createdSessionId });
-        console.info("[auth]", "SignUp", { method: "email" });
+        logAuthSuccess({
+          event: "SignUp",
+          provider: "email",
+          email: email.trim(),
+          createdSession: true,
+        });
         return;
       }
 
@@ -123,7 +136,12 @@ export function SignUpScreen() {
 
       if (result.status === "complete" && result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
-        console.info("[auth]", "SignUp", { method: "email", verified: true });
+        logAuthSuccess({
+          event: "SignUp",
+          provider: "email",
+          email: email.trim(),
+          createdSession: true,
+        });
         return;
       }
 
@@ -136,21 +154,34 @@ export function SignUpScreen() {
     }
   };
 
-  const onGoogle = async () => {
+  const onOAuth = async (provider: "google" | "apple") => {
     setBusy(true);
     setError(null);
     try {
-      const { createdSessionId, setActive: setOAuthActive } =
-        await startOAuthFlow({
-          redirectUrl: Linking.createURL("/"),
+      const start =
+        provider === "google" ? startGoogleOAuth : startAppleOAuth;
+      const { createdSessionId } = await runClerkOAuth({
+        startOAuthFlow: start,
+      });
+      if (createdSessionId) {
+        await setActive({ session: createdSessionId });
+        logAuthSuccess({
+          event: "SignUp",
+          provider,
+          createdSession: true,
         });
-      if (createdSessionId && setOAuthActive) {
-        await setOAuthActive({ session: createdSessionId });
-        console.info("[auth]", "SignUp", { method: "google" });
       }
     } catch (err) {
-      console.info("[auth]", "GoogleFailed", err);
-      setError(getClerkErrorMessage(err, t, "auth.errors.googleFailed"));
+      console.info("[auth]", "OAuthFailed", { provider, err });
+      setError(
+        getClerkErrorMessage(
+          err,
+          t,
+          provider === "google"
+            ? "auth.errors.googleFailed"
+            : "auth.errors.appleFailed",
+        ),
+      );
     } finally {
       setBusy(false);
     }
@@ -302,7 +333,7 @@ export function SignUpScreen() {
 
           <Pressable
             disabled={busy || !isLoaded}
-            onPress={() => void onGoogle()}
+            onPress={() => void onOAuth("google")}
             style={{ ...pillSecondary, opacity: busy ? 0.7 : 1 }}
           >
             {busy ? (
@@ -318,17 +349,24 @@ export function SignUpScreen() {
           </Pressable>
 
           <Pressable
-            disabled
+            disabled={busy || !isLoaded}
+            onPress={() => void onOAuth("apple")}
             style={{
               ...pillSecondary,
               marginTop: spacing[3],
-              opacity: 0.45,
+              opacity: busy ? 0.7 : 1,
             }}
           >
-            <AppleIcon size={20} />
-            <Text style={{ ...typography.label, color: theme.text }}>
-              {t("auth.continueApple")}
-            </Text>
+            {busy ? (
+              <ActivityIndicator color={theme.primary} />
+            ) : (
+              <>
+                <AppleIcon size={20} />
+                <Text style={{ ...typography.label, color: theme.text }}>
+                  {t("auth.continueApple")}
+                </Text>
+              </>
+            )}
           </Pressable>
 
           <View

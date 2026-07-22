@@ -508,7 +508,8 @@
     "memberCount_many": "{{count}} участников",
     "memberCount_other": "{{count}} участников",
     "join": "Присоединиться",
-    "decline": "Отклонить"
+    "decline": "Отклонить",
+    "mismatchHint": "Войди в приглашённый аккаунт и попробуй снова."
   },
   "billing": {
     "aiCredits": "AI Credits",
@@ -795,7 +796,8 @@
         "captcha_invalid": "Проверка безопасности не пройдена. Попробуйте снова.",
         "user_locked": "Этот аккаунт временно заблокирован.",
         "user_banned": "Этот аккаунт заблокирован."
-      }
+      },
+      "appleFailed": "Не удалось войти через Apple."
     }
   },
   "appMenu": {

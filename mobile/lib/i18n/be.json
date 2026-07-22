@@ -508,7 +508,8 @@
     "memberCount_many": "{{count}} удзельнікаў",
     "memberCount_other": "{{count}} удзельнікаў",
     "join": "Далучыцца",
-    "decline": "Адхіліць"
+    "decline": "Адхіліць",
+    "mismatchHint": "Увайдзі ў запрошаны ўліковы запіс і паспрабуй зноў."
   },
   "billing": {
     "aiCredits": "AI Credits",
@@ -795,7 +796,8 @@
         "captcha_invalid": "Праверку бяспекі не пройдзена. Паспрабуй зноў.",
         "user_locked": "Гэты уліковы запіс часова заблакаваны.",
         "user_banned": "Гэты уліковы запіс заблакаваны."
-      }
+      },
+      "appleFailed": "Не атрымалася ўвайсці праз Apple."
     }
   },
   "appMenu": {

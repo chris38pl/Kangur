@@ -508,7 +508,8 @@
     "memberCount_many": "{{count}} členů",
     "memberCount_other": "{{count}} členů",
     "join": "Připojit se",
-    "decline": "Odmítnout"
+    "decline": "Odmítnout",
+    "mismatchHint": "Přihlas se pozvaným účtem a zkus to znovu."
   },
   "billing": {
     "aiCredits": "AI Credits",
@@ -795,7 +796,8 @@
         "captcha_invalid": "Bezpečnostní kontrola selhala. Zkus to znovu.",
         "user_locked": "Tento účet je dočasně uzamčen.",
         "user_banned": "Tento účet je zablokovaný."
-      }
+      },
+      "appleFailed": "Přihlášení přes Apple selhalo."
     }
   },
   "appMenu": {

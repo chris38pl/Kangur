@@ -9,6 +9,7 @@ import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { AppleIcon, GoogleIcon } from "@/features/auth/auth-icons";
 import { getClerkErrorMessage } from "@/features/auth/clerk-error";
+import { logAuthSuccess } from "@/features/auth/oauth";
 
 function Card({ children }: { children: ReactNode }) {
   const scheme = useColorScheme() ?? "light";
@@ -206,19 +207,22 @@ export function LoginMethodsSection() {
     try {
       const start =
         provider === "google" ? startGoogleOAuth : startAppleOAuth;
-      const { createdSessionId, setActive, signIn, signUp, authSessionResult } =
-        await start({
-          redirectUrl: Linking.createURL("/account"),
-        });
+      const { createdSessionId, setActive } = await start({
+        redirectUrl: Linking.createURL("/account"),
+      });
 
-      // Linking into existing account usually returns external account on user.
+      // Linking into existing account keeps the same Clerk user.id.
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
       }
-      void signIn;
-      void signUp;
-      void authSessionResult;
       await user.reload();
+      logAuthSuccess({
+        event: "LinkProvider",
+        provider,
+        email: user.primaryEmailAddress?.emailAddress ?? null,
+        userId: user.id,
+        createdSession: Boolean(createdSessionId),
+      });
     } catch (err) {
       console.info("[auth]", "LinkProviderFailed", { provider, err });
       Alert.alert(getClerkErrorMessage(err, t, "profile.connectFailed"));
@@ -253,9 +257,36 @@ export function LoginMethodsSection() {
     );
   };
 
-  // 1) Email + password only
+  // 1) Email + password only — still offer connect Google / Apple (same Clerk user).
   if (emailOnly) {
-    return null;
+    return (
+      <View style={{ marginTop: spacing[6] }}>
+        <Text
+          style={{
+            ...typography.headline,
+            color: theme.text,
+            marginBottom: spacing[3],
+          }}
+        >
+          {t("profile.loginMethods")}
+        </Text>
+        <Card>
+          <MethodRow
+            active={hasGoogle}
+            icon={<GoogleIcon size={20} />}
+            title={t("profile.providerGoogle")}
+            showDivider
+            trailing={linkAction("google", hasGoogle)}
+          />
+          <MethodRow
+            active={hasApple}
+            icon={<AppleIcon size={20} />}
+            title={t("profile.providerApple")}
+            trailing={linkAction("apple", hasApple)}
+          />
+        </Card>
+      </View>
+    );
   }
 
   // 2/3) Single OAuth provider, no password - managed by provider + offer set password

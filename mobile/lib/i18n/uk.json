@@ -508,7 +508,8 @@
     "memberCount_many": "{{count}} учасників",
     "memberCount_other": "{{count}} учасників",
     "join": "Приєднатись",
-    "decline": "Відхилити"
+    "decline": "Відхилити",
+    "mismatchHint": "Увійди в запрошений обліковий запис і спробуй знову."
   },
   "billing": {
     "aiCredits": "AI Credits",
@@ -795,7 +796,8 @@
         "captcha_invalid": "Перевірку безпеки не пройдено. Спробуйте знову.",
         "user_locked": "Цей обліковий запис тимчасово заблоковано.",
         "user_banned": "Цей обліковий запис заблоковано."
-      }
+      },
+      "appleFailed": "Не вдалося увійти через Apple."
     }
   },
   "appMenu": {

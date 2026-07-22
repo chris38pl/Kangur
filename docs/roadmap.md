@@ -114,6 +114,7 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 | M13.6 | Platform Console Realtime | done |
 | M13.8 | Public landing + legal | done |
 | M13.9 | Brand Boot Animation | done |
+| M13.10 | Apple Sign In | done |
 | M13.11 | Observability & Product Analytics | done |
 | M14 | Polish + RC | pending |
 | M15 | Custom categories (post-MVP) | pending |
@@ -160,14 +161,14 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 **Goal:** Sign up / sign in via **email/password** and **Google**; Bearer JWT → `requireUser()` → `UserContext`; `GET /api/v1/me`.
 
 **Status:** done (2026-07-16)  
-**Deferred:** Apple Sign In (architecture-ready; implement before App Store path)
+**Follow-up:** Apple Sign In → **M13.10** (done)
 
 **Creates:**
 - Prisma `User` (`clerkId`, `email`, nullable `locale`, timestamps)
 - `backend/lib/auth/clerk.ts`, `requireUser.ts` → `UserContext`, `errors.ts`
 - `backend/app/api/v1/me/route.ts` + OpenAPI from Zod
 - `mobile` ClerkProvider + secure token cache, `(auth)` screens, route guards, `useMe()`, Profile sign out
-- Env keys / Google redirect notes in `.env.example` + README (Apple deferred)
+- Env keys / Google + Apple redirect notes in `.env.example` + README
 
 **Depends on:** M01  
 **Complexity:** M  
@@ -175,10 +176,40 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 **Acceptance:**
 - [x] Email/password sign-up and sign-in (Clerk + mobile screens)
 - [x] Google OAuth (mobile; Clerk Dashboard + `kangur://` redirect)
-- [x] Apple Sign In **deferred** (not in M02)
+- [x] Apple Sign In shipped in **M13.10**
 - [x] `GET /api/v1/me` → 401 `{ code, message }` unauthenticated; 200 user DTO when valid; upsert + `updatedAt` touch; locale from device when null
 - [x] Signed-out users redirected from tabs → auth; session restore via secure store
 - [x] `requireUser` returns `UserContext`; single `useMe()`; auth `console.info` logs
+
+---
+
+## M13.10 - Apple Sign In
+
+**Goal:** Sign in with Apple on auth screens (`oauth_apple`), native iOS capability, account linking, invite compatibility via primary email SSoT — no Apple/relay business exceptions.
+
+**Status:** done (2026-07-22)
+
+**Creates/updates:**
+- Auth screens: Google + Apple via shared `runClerkOAuth` / `logAuthSuccess` (DEV)
+- `ios.usesAppleSignIn` + `expo-apple-authentication` plugin (`app.config.ts`)
+- Profile login-methods: connect Apple for email-only and OAuth users (same Clerk `user.id`)
+- Invite preview mismatch returns `provider` like accept
+- Docs / `.env.example`: redirect `kangur://`, primary email SSoT; design lock in architecture
+
+**Design lock:** Workspace / Invitations / Membership use only Clerk `userId`/`clerkId` + primary email (`normalizeEmail`). Private Relay is a normal primary email — no code branches on `@privaterelay.appleid.com`.
+
+**Depends on:** M02  
+**Complexity:** S–M  
+
+**Acceptance:**
+- [x] Sign in / sign up with Apple enabled on auth screens (Clerk OAuth; iOS + Android)
+- [x] Native Expo config (`usesAppleSignIn`, `expo-apple-authentication`)
+- [x] Profile can link Apple (email-only and Google) without creating a second Clerk/DB user
+- [x] Invite mismatch preview includes `provider`; match remains strict email equality
+- [x] README / `.env.example` / roadmap no longer mark Apple as deferred
+- [ ] Device QA after Clerk Dashboard + Apple Developer setup **and** `expo prebuild` + new Development/Preview EAS iOS build
+
+**Ops note:** After native changes, run `expo prebuild` (local) **and** ship a new EAS Development / Preview iOS build before testing Sign in with Apple on device. Dashboard credentials are configured outside the repo.
 
 ---
 

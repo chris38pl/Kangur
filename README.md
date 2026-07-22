@@ -39,9 +39,9 @@ cp mobile/.env.example mobile/.env
 ```
 
 Fill Neon `DATABASE_URL` (pooled) + `DIRECT_URL` (direct).  
-Set Clerk keys (`CLERK_SECRET_KEY`, publishable keys) and enable email/password + Google; allow unverified email for MVP.  
+Set Clerk keys (`CLERK_SECRET_KEY`, publishable keys) and enable email/password, Google, and Apple; allow unverified email for MVP.  
 Set `EXPO_PUBLIC_API_URL` to `http://<LAN-IP>:3000` or an Expo tunnel - **not** `localhost` on a physical device.  
-Google OAuth: add Clerk redirect URIs for Expo scheme `kangur://`. Apple auth is deferred.
+OAuth: add Clerk redirect URIs for Expo scheme `kangur://` (Google + Apple). Primary email from Clerk is the invite SSoT (including Apple Private Relay). After native Apple config changes, run `expo prebuild` (local) and a new Development/Preview EAS iOS build before device testing.
 
 3. Prisma migrate (backend)
 

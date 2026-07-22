@@ -29,6 +29,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "app.kangur.mobile",
+    usesAppleSignIn: true,
   },
   android: {
     package: "app.kangur.mobile",
@@ -52,6 +53,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "expo-router",
     "expo-dev-client",
+    "expo-apple-authentication",
     [
       "expo-splash-screen",
       {

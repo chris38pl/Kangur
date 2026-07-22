@@ -456,6 +456,15 @@ Update rows as source of truth; append events; **never** replay events to rebuil
 - Image size/MIME limits  
 - Stripe webhook verification (billing → entitlement only)  
 
+### Auth identity & invitations (design lock)
+
+Workspace membership, invitations, and billing identity **must not** branch on OAuth provider or email domain:
+
+1. **Clerk `userId` / `clerkId`** — user identity for membership and sessions.
+2. **Primary email from Clerk** — invitation matching via `normalizeEmail` (strict equality).
+
+Apple Private Relay (`@privaterelay.appleid.com`) is a normal primary email. There are **no** product exceptions for Apple, Google, or relay addresses. Account linking (Profile → login methods) attaches providers to the same Clerk user; it must not create a second DB `User` row.
+
 Roles: workspace `owner` / `admin` / `member` - invites & billing: owner + admin.
 
 Platform: `User.platformRole` (`USER` | `ADMIN`). Platform Console and `/api/v1/platform/*` require `ADMIN` via `requirePlatformAdmin` - hiding menu items is not authorization.

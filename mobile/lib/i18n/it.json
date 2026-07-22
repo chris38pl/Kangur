@@ -484,7 +484,8 @@
     "memberCount_one": "{{count}} membro",
     "memberCount_other": "{{count}} membri",
     "join": "Unisciti",
-    "decline": "Rifiuta"
+    "decline": "Rifiuta",
+    "mismatchHint": "Accedi con l'account invitato e riprova."
   },
   "billing": {
     "aiCredits": "Crediti AI",
@@ -769,7 +770,8 @@
         "captcha_invalid": "Controllo di sicurezza non riuscito. Riprova.",
         "user_locked": "Questo account è temporaneamente bloccato.",
         "user_banned": "Questo account è bloccato."
-      }
+      },
+      "appleFailed": "Accesso con Apple non riuscito."
     }
   },
   "appMenu": {

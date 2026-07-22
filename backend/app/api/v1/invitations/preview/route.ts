@@ -25,6 +25,7 @@ export async function GET(request: Request) {
       rawToken: parsed.data.token,
       userId: user.id,
       userEmail: user.email,
+      clerkId: user.clerkId,
     });
 
     const body = InvitationPreviewResponseSchema.parse(result);

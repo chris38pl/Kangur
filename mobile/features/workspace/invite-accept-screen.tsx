@@ -444,6 +444,15 @@ export function InviteAcceptScreen() {
               provider: providerLabel(state.provider, t),
             })}
           </Text>
+          <Text
+            style={{
+              ...typography.body,
+              color: theme.textBody,
+              marginTop: spacing[2],
+            }}
+          >
+            {t("invite.mismatchHint")}
+          </Text>
           <Pressable
             onPress={() => void switchAccount()}
             style={{ ...pillPrimary, marginTop: spacing[6] }}

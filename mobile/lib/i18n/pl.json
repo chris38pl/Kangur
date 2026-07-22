@@ -494,7 +494,7 @@
     "needAuthTitle": "Zaloguj się, aby dołączyć",
     "needAuthBody": "Zaloguj się na zaproszony e-mail, aby zaakceptować zaproszenie do przestrzeni.",
     "signIn": "Zaloguj się",
-    "mismatchTitle": "Złe konto",
+    "mismatchTitle": "To zaproszenie zostało wysłane na inny adres e-mail",
     "mismatchBelongsTo": "Zaproszenie należy do {{email}}",
     "mismatchLoggedIn": "Jesteś zalogowany jako {{email}} ({{provider}})",
     "providerGoogle": "Google",
@@ -520,7 +520,8 @@
     "memberCount_many": "{{count}} członków",
     "memberCount_other": "{{count}} członków",
     "join": "Dołącz",
-    "decline": "Odrzuć"
+    "decline": "Odrzuć",
+    "mismatchHint": "Zaloguj się właściwym kontem i spróbuj ponownie."
   },
   "billing": {
     "aiCredits": "Kredyty AI",
@@ -803,7 +804,8 @@
         "captcha_invalid": "Weryfikacja bezpieczeństwa nieudana. Spróbuj ponownie.",
         "user_locked": "Konto jest tymczasowo zablokowane.",
         "user_banned": "To konto jest zablokowane."
-      }
+      },
+      "appleFailed": "Logowanie Apple nieudane."
     }
   },
   "appMenu": {

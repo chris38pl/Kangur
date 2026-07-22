@@ -460,7 +460,7 @@
     "needAuthTitle": "Sign in to join",
     "needAuthBody": "Sign in with the invited email to accept this workspace invitation.",
     "signIn": "Sign in",
-    "mismatchTitle": "Wrong account",
+    "mismatchTitle": "This invitation was sent to a different email address",
     "mismatchBelongsTo": "Invitation belongs to {{email}}",
     "mismatchLoggedIn": "You are logged in as {{email}} ({{provider}})",
     "providerGoogle": "Google",
@@ -484,7 +484,8 @@
     "memberCount_one": "{{count}} member",
     "memberCount_other": "{{count}} members",
     "join": "Join",
-    "decline": "Decline"
+    "decline": "Decline",
+    "mismatchHint": "Sign in with the invited account and try again."
   },
   "billing": {
     "aiCredits": "AI Credits",
@@ -765,7 +766,8 @@
         "captcha_invalid": "Security check failed. Try again.",
         "user_locked": "This account is temporarily locked.",
         "user_banned": "This account is blocked."
-      }
+      },
+      "appleFailed": "Apple sign-in failed."
     }
   },
   "appMenu": {

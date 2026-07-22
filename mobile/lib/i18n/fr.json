@@ -484,7 +484,8 @@
     "memberCount_one": "{{count}} membre",
     "memberCount_other": "{{count}} membres",
     "join": "Rejoindre",
-    "decline": "Refuser"
+    "decline": "Refuser",
+    "mismatchHint": "Connecte-toi avec le compte invité et réessaie."
   },
   "billing": {
     "aiCredits": "Crédits IA",
@@ -769,7 +770,8 @@
         "captcha_invalid": "Échec de la vérification de sécurité. Réessayez.",
         "user_locked": "Ce compte est temporairement verrouillé.",
         "user_banned": "Ce compte est bloqué."
-      }
+      },
+      "appleFailed": "Échec de la connexion Apple."
     }
   },
   "appMenu": {

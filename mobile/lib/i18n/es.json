@@ -484,7 +484,8 @@
     "memberCount_one": "{{count}} miembro",
     "memberCount_other": "{{count}} miembros",
     "join": "Unirse",
-    "decline": "Rechazar"
+    "decline": "Rechazar",
+    "mismatchHint": "Inicia sesión con la cuenta invitada e inténtalo de nuevo."
   },
   "billing": {
     "aiCredits": "Créditos de IA",
@@ -765,7 +766,8 @@
         "captcha_invalid": "Error en la comprobación de seguridad. Inténtalo de nuevo.",
         "user_locked": "Esta cuenta está bloqueada temporalmente.",
         "user_banned": "Esta cuenta está bloqueada."
-      }
+      },
+      "appleFailed": "Error al iniciar sesión con Apple."
     }
   },
   "appMenu": {

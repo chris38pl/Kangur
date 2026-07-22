@@ -268,6 +268,8 @@ Profiles live in [mobile/eas.json](../mobile/eas.json). They do **not** inject `
 
 Push uses Expo Push API (`exp.host/.../push/send`); keep EAS `projectId` in `app.config.ts` consistent.
 
+**Sign in with Apple (native):** `app.config.ts` sets `ios.usesAppleSignIn` and the `expo-apple-authentication` plugin. After those native changes, run `expo prebuild` (local iOS) **and** ship a new EAS **Development / Preview iOS** build before device QA. Enable Apple in Clerk Dashboard + Apple Developer (Services ID / key) — credentials are not stored in the repo. OAuth redirects use scheme `kangur://`.
+
 ### 6.8 PostHog + Sentry
 
 Enable from **Closed Testing** onward (**M13.11** — full catalogue, privacy rules, flags, and rollout order in [roadmap.md](./roadmap.md) § M13.11). Tag every event/crash with `environment=development|staging|production`.

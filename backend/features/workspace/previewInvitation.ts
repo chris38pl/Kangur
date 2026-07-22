@@ -1,4 +1,5 @@
 import { notFound, forbidden } from "@/lib/auth/errors";
+import { resolveAuthProvider } from "@/lib/auth/resolveAuthProvider";
 import { displayNameFromEmail } from "@/lib/displayName";
 import { normalizeEmail } from "@/lib/email/normalizeEmail";
 import { hashInviteToken } from "@/lib/invite/token";
@@ -28,6 +29,7 @@ export async function previewInvitation(input: {
   rawToken: string;
   userId: string;
   userEmail: string;
+  clerkId: string;
 }): Promise<InvitationPreview> {
   const token = input.rawToken?.trim();
   if (!token) {
@@ -56,10 +58,12 @@ export async function previewInvitation(input: {
   }
 
   if (normalizeEmail(invitation.email) !== normalizeEmail(input.userEmail)) {
+    const provider = await resolveAuthProvider(input.clerkId);
     throw forbidden("Invitation belongs to a different email.", {
       reason: "email_mismatch",
       invitationEmail: invitation.email,
       currentEmail: input.userEmail,
+      provider,
     });
   }
 

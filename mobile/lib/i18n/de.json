@@ -484,7 +484,8 @@
     "memberCount_one": "{{count}} Mitglied",
     "memberCount_other": "{{count}} Mitglieder",
     "join": "Beitreten",
-    "decline": "Ablehnen"
+    "decline": "Ablehnen",
+    "mismatchHint": "Melde dich mit dem eingeladenen Konto an und versuche es erneut."
   },
   "billing": {
     "aiCredits": "AI Credits",
@@ -769,7 +770,8 @@
         "captcha_invalid": "Sicherheitsprüfung fehlgeschlagen. Versuche es erneut.",
         "user_locked": "Dieses Konto ist vorübergehend gesperrt.",
         "user_banned": "Dieses Konto ist blockiert."
-      }
+      },
+      "appleFailed": "Apple-Anmeldung fehlgeschlagen."
     }
   },
   "appMenu": {
