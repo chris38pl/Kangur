@@ -49,10 +49,10 @@ This keeps future surfaces (`app.getkangur.com`, `admin.getkangur.com`) independ
 feature/*
       │
       ▼
-Pull Request → staging
+Local merge → staging  (+ push origin staging)
       │
       ▼
-Deploy Preview (staging)
+Vercel deploy staging (build:vercel + migrate)
       │
       ▼
 Smoke tests
@@ -64,7 +64,7 @@ Google Play Closed Testing
 Akceptacja
       │
       ▼
-Pull Request → main
+Local merge staging → main  (+ push)   [when releasing]
       │
       ▼
 Deploy Production
@@ -81,8 +81,31 @@ feature/xxx  →  staging  →  main
 
 - **`staging`** - shared pre-production API + Closed Testing builds
 - **`main`** - production API + store production
-- **PR previews** - isolated Vercel URLs for a single change (optional check before merging to `staging`)
+- **Default merge path:** local `git checkout` target → `git pull` → `git merge` source → `git push` (no GitHub PR / `gh` required). GitHub PRs are optional when you want review UI.
 
+### 3.1 Merge feature → staging (agent / ops)
+
+```bash
+git fetch origin staging <feature-branch>
+git checkout staging
+git pull origin staging
+git merge <feature-branch>    # fast-forward when possible
+git push origin staging
+```
+
+Vercel picks up `staging` and runs `pnpm build:vercel` (`prisma migrate deploy` included).
+
+### 3.2 Promote staging → main
+
+```bash
+git fetch origin main staging
+git checkout main
+git pull origin main
+git merge staging
+git push origin main
+```
+
+Only when explicitly releasing to production.
 ---
 
 ## 4. Deployment order

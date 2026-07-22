@@ -1,0 +1,43 @@
+---
+description: Local git merge flow into staging/main (no gh required)
+alwaysApply: true
+---
+
+# Git merge workflow (staging / main)
+
+When the user asks to merge a feature into **staging** (or staging into **main**), do **not** require `gh`. Prefer the local merge + push path used for Kangur releases.
+
+## feature/* → staging (default)
+
+```bash
+git fetch origin staging <feature-branch>
+git checkout staging
+git pull origin staging
+git merge <feature-branch>   # prefer fast-forward when possible
+git push origin staging
+```
+
+- Confirm working tree is clean (except allowed local-only paths like `.cursor/`).
+- Feature branch should already be pushed if it was shared; merging locally does not require a GitHub PR.
+- After push, Vercel deploys `staging` and runs `pnpm build:vercel` (includes `prisma migrate deploy`).
+
+## staging → main (production)
+
+Same local merge pattern when the user explicitly asks to promote to production:
+
+```bash
+git fetch origin main staging
+git checkout main
+git pull origin main
+git merge staging
+git push origin main
+```
+
+Only create a GitHub PR if the user explicitly asks for a PR review / `gh pr create`.
+
+## Do not
+
+- Block on missing `gh` CLI — use local merge + `git push`.
+- Force-push `staging` or `main`.
+- Merge with uncommitted secret files (`.env`, credentials).
+- Skip `git pull` on the target branch before merging.
