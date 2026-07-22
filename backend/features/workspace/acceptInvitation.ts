@@ -62,7 +62,7 @@ export async function acceptInvitation(
   const provider = await resolveAuthProvider(input.clerkId);
 
   try {
-    return await prisma.$transaction(
+    const result = await prisma.$transaction(
       async (tx) => {
         const invitation = await tx.invitation.findUnique({
           where: { tokenHash },
@@ -185,13 +185,24 @@ export async function acceptInvitation(
             icon: invitation.workspace.icon,
           },
           role: invitation.role === "owner" ? "member" : invitation.role,
-          alreadyMember: false,
+          alreadyMember: false as const,
         };
       },
       {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
       },
     );
+
+    if (!result.alreadyMember) {
+      const { Analytics } = await import("@/lib/analytics");
+      Analytics.track(
+        "invitation_accepted",
+        { workspace_id: result.workspace.id },
+        input.userId,
+      );
+    }
+
+    return result;
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

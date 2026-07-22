@@ -280,6 +280,8 @@ export default function ProfileScreen() {
 
   const onSignOut = async () => {
     console.info("[auth]", "SignOut", { clerkId: userId });
+    const { Analytics } = await import("@/lib/analytics");
+    Analytics.reset();
     await signOut();
     queryClient.removeQueries({ queryKey: ["me"] });
   };

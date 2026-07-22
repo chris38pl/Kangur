@@ -16,6 +16,8 @@ import { useAppStartup } from "@/features/startup/AppStartupController";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { ApiClientError } from "@/lib/api/client";
+import { Analytics } from "@/lib/analytics";
+import { getAppBuildInfo } from "@/lib/app-build-info";
 import {
   primaryButtonStyle,
   secondaryButtonStyle,
@@ -91,6 +93,31 @@ export default function TabLayout() {
       notifyBootReady();
     }
   }, [homeReady, me.isError, notifyBootReady]);
+
+  useEffect(() => {
+    if (!homeReady || !me.data || !activeWorkspace) return;
+    const build = getAppBuildInfo();
+    Analytics.identify(me.data.id, {
+      appVersion: build.version,
+      build: build.build,
+      environment:
+        build.environment === "preview" ? "staging" : build.environment,
+      platform: "mobile",
+      language: me.data.locale ?? undefined,
+      workspaceRole: activeWorkspace.role,
+      subscriptionPlan: activeWorkspace.plan === "premium" ? "premium" : "free",
+    });
+    Analytics.groupWorkspace(activeWorkspace.id, {
+      workspacePlan: activeWorkspace.plan === "premium" ? "premium" : "free",
+      memberCount: activeWorkspace.memberCount,
+    });
+    void import("@/lib/sentry/init").then(
+      ({ setSentryUser, setSentryWorkspace }) => {
+        setSentryUser(me.data.id);
+        setSentryWorkspace(activeWorkspace.id);
+      },
+    );
+  }, [homeReady, me.data, activeWorkspace]);
 
   if (!isLoaded) {
     return <HomeSkeleton />;

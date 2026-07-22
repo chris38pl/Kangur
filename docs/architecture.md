@@ -400,7 +400,7 @@ Also future: OTel/Prometheus exporters (same call sites), tracing, ETag `304_rat
 
 ### Product analytics & crash reporting (M13.11, pre-release)
 
-**Sentry** (mobile + Next.js) for crashes / API / AI / sync errors with opaque `userId` + `workspaceId`, release = version+build. **PostHog** for business funnel events + feature flags only (no autocapture, **no Session Replay in MVP**). Keep M13.5 `Metrics` façade separate. Env kill switches in `featureGates.ts` remain hard overrides above PostHog flags. Full catalogue and privacy rules: [roadmap.md](./roadmap.md) § M13.11.
+**Sentry** (mobile + Next.js) for crashes / API / AI / sync errors with opaque `userId` + `workspaceId`, release = version+build, Release Health on, traces ≈ 0, prod handled sampling ~20%. **PostHog** for business funnel events + feature flags only (no autocapture, **no Session Replay in MVP**). Emit only via typed `Analytics.track` (`shared/analytics/events.ts` + ownership matrix); `schemaVersion` auto-attached; offline = PostHog RN SDK queue. Keep M13.5 `Metrics` façade separate. Flag resolution: DEV override → env hard kill → PostHog → default. Full catalogue and privacy rules: [roadmap.md](./roadmap.md) § M13.11.
 
 ---
 

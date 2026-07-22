@@ -18,14 +18,17 @@ import { useDataSyncEngineBootstrap } from "@/features/data-sync-engine/useBoots
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { AppStartupController } from "@/features/startup/AppStartupController";
 import { AppQueryProvider } from "@/lib/query/client";
+import { SentryErrorBoundary } from "@/lib/sentry/ErrorBoundary";
+import { initSentry } from "@/lib/sentry/init";
 import { suppressClerkDevKeysWarning } from "@/lib/suppress-clerk-dev-warning";
 
 import "../global.css";
 import "@/lib/i18n";
 
 suppressClerkDevKeysWarning();
+initSentry();
 
-export { ErrorBoundary } from "expo-router";
+export { SentryErrorBoundary as ErrorBoundary };
 
 export const unstable_settings = {
   initialRouteName: "index",

@@ -53,5 +53,15 @@ export async function createWorkspace(
     return created;
   });
 
+  const { Analytics } = await import("@/lib/analytics");
+  Analytics.track(
+    "workspace_created",
+    {
+      workspace_id: workspace.id,
+      is_default_home: false,
+    },
+    input.userId,
+  );
+
   return toWorkspaceDto(workspace, "owner");
 }

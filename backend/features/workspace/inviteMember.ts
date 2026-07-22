@@ -162,6 +162,13 @@ export async function inviteMember(
     rawToken,
   });
 
+  const { Analytics } = await import("@/lib/analytics");
+  Analytics.track(
+    "invitation_sent",
+    { workspace_id: input.workspaceId },
+    input.actorUserId,
+  );
+
   return {
     status,
     invitation: {

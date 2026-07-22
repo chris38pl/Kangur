@@ -2,6 +2,7 @@ import type { AppLocale } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
 import { normalizeEmail } from "@/lib/email/normalizeEmail";
 import { isPlatformAdminEmail } from "@/lib/platform/isPlatformAdminEmail";
+import { Analytics } from "@/lib/analytics";
 
 export type UpsertUserInput = {
   clerkId: string;
@@ -21,11 +22,12 @@ export async function upsertUser({
 }: UpsertUserInput) {
   const normalizedEmail = normalizeEmail(email);
   const existing = await prisma.user.findUnique({ where: { clerkId } });
+  const isNew = !existing;
   const shouldPromote =
     existing?.platformRole !== "ADMIN" &&
     isPlatformAdminEmail(normalizedEmail);
 
-  return prisma.user.upsert({
+  const user = await prisma.user.upsert({
     where: { clerkId },
     create: {
       clerkId,
@@ -42,4 +44,10 @@ export async function upsertUser({
       updatedAt: new Date(),
     },
   });
+
+  if (isNew) {
+    Analytics.track("account_created", {}, user.id);
+  }
+
+  return user;
 }

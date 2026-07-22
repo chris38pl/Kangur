@@ -274,21 +274,22 @@ Enable from **Closed Testing** onward (**M13.11** — full catalogue, privacy ru
 
 #### PostHog - required events (summary)
 
-Full list + props in M13.11. Minimum for Closed Testing:
+Full list + props + ownership in M13.11 / `shared/analytics/`. Minimum for Closed Testing:
 
 | Event | When |
 |-------|------|
-| `account_created` | First account / sign-up success |
-| `workspace_created` | Workspace created |
+| `account_created` | First account upsert (backend) |
+| `workspace_created` | Workspace created (backend) |
 | `shopping_started` | Enter Shopping Mode |
 | `shopping_finished` | Finish Shopping → Summary |
 | `shopping_cancelled` | Exit Shopping Mode without finish |
-| `premium_purchased` / `subscription_activated` | Premium entitlement active (prefer webhook) |
-| `ai_import_started` | AI import (screenshot/text) started |
-| `ai_import_accepted` / `ai_import_completed` | AI import applied |
+| `subscription_activated` | Premium entitlement active (Stripe webhook only) |
+| `ai_import_started` | AI import (screenshot/text/clipboard) started |
+| `ai_import_edited` | User edited ≥1 Review row before apply |
+| `ai_import_accepted` | AI import applied with ≥1 item |
 | `ai_import_rejected` / `ai_import_failed` | Abandoned or failed |
 
-No autocapture; no Session Replay in MVP.
+No autocapture; no Session Replay in MVP. Every event includes `schemaVersion` + `environment`.
 
 #### Sentry - required context
 
@@ -298,8 +299,10 @@ Attach on every event/session:
 |-------|---------|
 | `release` | `1.0.3 (23)` - semver + build number |
 | `environment` | `development` \| `staging` \| `production` |
-| `userId` | Clerk / platform user id |
+| `userId` | Opaque platform user id |
 | `workspaceId` | Active workspace id |
+| `domain` / `severity` | Closed enums when set |
+| `requestId` | Logical op (e.g. one AI import) |
 | device model | e.g. Samsung S25 |
 | OS version | e.g. Android 14 |
 
@@ -336,7 +339,10 @@ Source of truth: [backend/.env.example](../backend/.env.example).
 | `RESEND_API_KEY` / `EMAIL_FROM` | optional | optional | preferred | Invites |
 | `INVITE_ACCEPT_URL_BASE` | `kangur://invite` | same | same | |
 | `PLATFORM_ADMIN_EMAILS` | optional | optional | optional | Bootstrap admins |
-| PostHog / Sentry secrets | optional locally | required for Closed Testing+ | required | When wired |
+| `POSTHOG_KEY` / `POSTHOG_HOST` | optional | Closed Testing+ | required | Product analytics (noop if unset) |
+| `ANALYTICS_ENABLED` | `0` | `1` | `1` | Force on in local; kill with `0` |
+| `SENTRY_DSN` | optional | Closed Testing+ | required | Crash/API errors |
+| `SENTRY_DEV` | `0` | — | — | Force Sentry on in development |
 
 Vercel system vars (`VERCEL`, `VERCEL_ENV`, `VERCEL_URL`, …) are auto-injected - do not paste into local `.env`.
 
@@ -351,6 +357,10 @@ Source of truth: [mobile/.env.example](../mobile/.env.example). **No secrets** (
 | `EXPO_PUBLIC_APP_ENV` | `development` | `preview` | `production` |
 | `EXPO_PUBLIC_AI_REVIEW_ENABLED` | as needed | as needed | as needed |
 | `EXPO_PUBLIC_HISTORY_SUGGESTIONS_ENABLED` | optional UX hide | optional | optional |
+| `EXPO_PUBLIC_POSTHOG_KEY` / `HOST` | optional | Closed Testing+ | required |
+| `EXPO_PUBLIC_ANALYTICS_ENABLED` | `0` | — | — | Force on in local Dev Client |
+| `EXPO_PUBLIC_SENTRY_DSN` | optional | Closed Testing+ | required |
+| `EXPO_PUBLIC_SENTRY_DEV` | `0` | — | — | Force Sentry on in development |
 
 ---
 

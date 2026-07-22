@@ -1,32 +1,33 @@
 /**
- * No-op telemetry hooks for History (M11).
- * Wire to Metrics / analytics later without changing call sites.
+ * History product analytics (M11 / M13.11).
+ * Emits via Analytics wrapper only.
  */
 
+import { Analytics } from "@/lib/analytics";
+
 export function historyOpened(): void {
-  // future: history_opened
+  Analytics.track("history_opened", {});
 }
 
 export function historySearch(query: string): void {
   if (!query.trim()) return;
-  // future: history_search
-  void query;
+  Analytics.track("history_search", { had_query: true });
 }
 
 export function historyRepeat(sourceListId: string): void {
-  // future: history_repeat (intent)
-  void sourceListId;
+  Analytics.track("history_repeat", { source_list_id: sourceListId });
 }
 
 export function historyRepeatCompleted(input: {
   sourceListId: string;
   newListId: string;
 }): void {
-  // future: history_repeat_completed
-  void input;
+  Analytics.track("history_repeat_completed", {
+    source_list_id: input.sourceListId,
+    new_list_id: input.newListId,
+  });
 }
 
 export function historyRestore(listId: string): void {
-  // future: history_restore
-  void listId;
+  Analytics.track("history_restore", { list_id: listId });
 }

@@ -38,6 +38,7 @@ import {
 } from "@/features/profile/profile-icons";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
+import { Analytics } from "@/lib/analytics";
 import { ApiClientError } from "@/lib/api/client";
 
 const activatingKey = (workspaceId: string) =>
@@ -1053,6 +1054,12 @@ export function PremiumScreen() {
       void (async () => {
         await workspacesQuery.refetch();
         const workspaceId = workspaceIdRef.current;
+        if (workspaceId) {
+          Analytics.track("paywall_viewed", {
+            workspace_id: workspaceId,
+            surface: "premium_screen",
+          });
+        }
         if (!workspaceId || !canManage || planRef.current !== "premium") {
           return;
         }
@@ -1117,6 +1124,7 @@ export function PremiumScreen() {
     try {
       const token = await getToken();
       if (!token) throw new Error("Missing auth token");
+      Analytics.track("checkout_started", { workspace_id: workspace.id });
       await AsyncStorage.setItem(activatingKey(workspace.id), "1");
       setActivating(true);
       const { url } = await createBillingCheckout(token, workspace.id);

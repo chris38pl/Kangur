@@ -34,6 +34,8 @@ import {
 import { useWorkspaceMembers } from "@/features/workspace/useWorkspaceMembers";
 import { createClientId } from "@/lib/createClientId";
 import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
+import { Analytics } from "@/lib/analytics";
+import { oncePerUser } from "@/lib/analytics/once";
 import { RemoteChangeToast, useListRealtime } from "@/lib/realtime";
 
 import { AddItemSheet } from "./add-item-sheet";
@@ -91,7 +93,20 @@ export function ShoppingModeScreen({ listId }: Props) {
     workspaceId: listQuery.data?.workspaceId ?? null,
   });
 
-  const { allowLeave, exitDialog } = useShoppingModeExitGuard(true);
+  const { allowLeave, exitDialog } = useShoppingModeExitGuard(true, {
+    onCancelled: () => {
+      const workspaceId = listQuery.data?.workspaceId;
+      if (!workspaceId) return;
+      const count = (itemsQuery.data ?? []).filter(
+        (i) => i.status !== "removed",
+      ).length;
+      Analytics.track("shopping_cancelled", {
+        workspace_id: workspaceId,
+        list_id: listId,
+        item_count: count,
+      });
+    },
+  });
 
   useEffect(() => {
     void activateKeepAwakeAsync("shopping-mode");
@@ -108,7 +123,22 @@ export function ShoppingModeScreen({ listId }: Props) {
     ) {
       startedRef.current = true;
       void (async () => {
-        await session.start(listQuery.data!.workspaceId);
+        const workspaceId = listQuery.data!.workspaceId;
+        await session.start(workspaceId);
+        const itemCount = (itemsQuery.data ?? []).filter(
+          (i) => i.status !== "removed",
+        ).length;
+        Analytics.track("shopping_started", {
+          workspace_id: workspaceId,
+          list_id: listId,
+          item_count: itemCount,
+        });
+        void oncePerUser("first_shopping_session", () => {
+          Analytics.track("first_shopping_session", {
+            workspace_id: workspaceId,
+            list_id: listId,
+          });
+        });
         try {
           const token = await getToken();
           if (!token) return;

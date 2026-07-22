@@ -72,6 +72,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           "Allow Kangur to use the camera to capture shopping lists.",
       },
     ],
+    [
+      "@sentry/react-native/expo",
+      {
+        organization: process.env.SENTRY_ORG ?? undefined,
+        project: process.env.SENTRY_PROJECT ?? undefined,
+        // Warn-only: missing auth token must not fail EAS builds.
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

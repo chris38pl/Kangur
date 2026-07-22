@@ -38,6 +38,7 @@ import { intlLocaleTag } from "@/lib/i18n/locales";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
 import { useShoppingSession } from "@/features/shopping-list/session/useShoppingSession";
 import { useShoppingList } from "@/features/shopping-list/useShoppingLists";
+import { Analytics } from "@/lib/analytics";
 
 type Props = {
   listId: string;
@@ -370,6 +371,21 @@ export function FinishSummaryScreen({
     onSuccess: async () => {
       const workspaceId = listQuery.data?.workspaceId;
       if (workspaceId) {
+        const itemCount =
+          boughtItems.length + unavailableItems.length + remaining;
+        const startedMs = sessionSnapshot?.startedAt
+          ? new Date(sessionSnapshot.startedAt).getTime()
+          : finishedAt.getTime();
+        const durationSec = Math.max(
+          0,
+          Math.round((finishedAt.getTime() - startedMs) / 1000),
+        );
+        Analytics.track("shopping_finished", {
+          workspace_id: workspaceId,
+          list_id: listId,
+          item_count: itemCount,
+          duration_sec: durationSec,
+        });
         queryClient.setQueryData(
           ["shopping-lists", workspaceId],
           (prev: { id: string }[] | undefined) =>

@@ -9,12 +9,17 @@ import { LeaveShoppingDialog } from "./leave-shopping-dialog";
  * Call `allowLeave()` before intentional navigation (finish, continue).
  * Renders branded exit sheet via `exitDialog`.
  */
-export function useShoppingModeExitGuard(enabled: boolean): {
+export function useShoppingModeExitGuard(
+  enabled: boolean,
+  options?: { onCancelled?: () => void },
+): {
   allowLeave: () => void;
   exitDialog: ReactNode;
 } {
   const navigation = useNavigation();
   const allowLeaveRef = useRef(false);
+  const onCancelledRef = useRef(options?.onCancelled);
+  onCancelledRef.current = options?.onCancelled;
   const [visible, setVisible] = useState(false);
 
   const allowLeave = useCallback(() => {
@@ -28,6 +33,7 @@ export function useShoppingModeExitGuard(enabled: boolean): {
   const onLeave = useCallback(() => {
     allowLeaveRef.current = true;
     setVisible(false);
+    onCancelledRef.current?.();
     if (navigation.canGoBack()) {
       navigation.goBack();
     }

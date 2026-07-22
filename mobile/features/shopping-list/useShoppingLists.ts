@@ -59,6 +59,16 @@ export function useCreateShoppingList(workspaceId: string | null) {
     onSuccess: async (list) => {
       // Must run before shopping-lists refetch - Home archives empty non-provisional lists.
       markListProvisional(list.id);
+      if (workspaceId) {
+        const { oncePerUser } = await import("@/lib/analytics/once");
+        const { Analytics } = await import("@/lib/analytics");
+        void oncePerUser("first_list_created", () => {
+          Analytics.track("first_list_created", {
+            workspace_id: workspaceId,
+            list_id: list.id,
+          });
+        });
+      }
       await queryClient.invalidateQueries({
         queryKey: ["shopping-lists", workspaceId],
       });

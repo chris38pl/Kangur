@@ -1,8 +1,49 @@
 import type { SubscriptionStatus } from "@prisma/client";
 import type Stripe from "stripe";
 
+import { Analytics } from "@/lib/analytics";
 import { prisma } from "@/lib/prisma";
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe";
+
+function emitSubscriptionAnalytics(input: {
+  workspaceId: string;
+  prevStatus: SubscriptionStatus | null;
+  nextStatus: SubscriptionStatus;
+  deleted?: boolean;
+}): void {
+  const { workspaceId, prevStatus, nextStatus, deleted } = input;
+  if (prevStatus === nextStatus && !deleted) return;
+
+  const wasEntitled =
+    prevStatus === "active" || prevStatus === "trialing" || prevStatus === null;
+  const isEntitled = nextStatus === "active" || nextStatus === "trialing";
+
+  if (isEntitled && prevStatus !== "active" && prevStatus !== "trialing") {
+    Analytics.track(
+      "subscription_activated",
+      { workspace_id: workspaceId },
+      workspaceId,
+    );
+    return;
+  }
+
+  if (deleted && wasEntitled) {
+    Analytics.track(
+      "subscription_expired",
+      { workspace_id: workspaceId },
+      workspaceId,
+    );
+    return;
+  }
+
+  if (nextStatus === "cancelled" && prevStatus !== "cancelled") {
+    Analytics.track(
+      "subscription_cancelled",
+      { workspace_id: workspaceId },
+      workspaceId,
+    );
+  }
+}
 
 export function mapStripeSubscriptionStatus(
   status: Stripe.Subscription.Status,
@@ -50,6 +91,7 @@ function subscriptionPeriodEnd(sub: Stripe.Subscription): Date | null {
 export async function upsertSubscriptionFromStripe(input: {
   subscription: Stripe.Subscription;
   workspaceId?: string | null;
+  deleted?: boolean;
 }): Promise<void> {
   const sub = input.subscription;
   const customerId =
@@ -100,6 +142,12 @@ export async function upsertSubscriptionFromStripe(input: {
         currentPeriodEnd,
       },
     });
+    emitSubscriptionAnalytics({
+      workspaceId,
+      prevStatus: null,
+      nextStatus: status,
+      deleted: input.deleted,
+    });
     return;
   }
 
@@ -115,6 +163,7 @@ export async function upsertSubscriptionFromStripe(input: {
     return;
   }
 
+  const prevStatus = existing.status;
   await prisma.subscription.update({
     where: { id: existing.id },
     data: {
@@ -123,6 +172,12 @@ export async function upsertSubscriptionFromStripe(input: {
       stripeSubscriptionId: sub.id,
       currentPeriodEnd,
     },
+  });
+  emitSubscriptionAnalytics({
+    workspaceId: existing.workspaceId,
+    prevStatus,
+    nextStatus: status,
+    deleted: input.deleted,
   });
 }
 
@@ -172,7 +227,10 @@ export async function handleStripeWebhook(input: {
     case "customer.subscription.updated":
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
-      await upsertSubscriptionFromStripe({ subscription });
+      await upsertSubscriptionFromStripe({
+        subscription,
+        deleted: event.type === "customer.subscription.deleted",
+      });
       break;
     }
     default:

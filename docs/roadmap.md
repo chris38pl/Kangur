@@ -114,7 +114,7 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 | M13.6 | Platform Console Realtime | done |
 | M13.8 | Public landing + legal | done |
 | M13.9 | Brand Boot Animation | done |
-| M13.11 | Observability & Product Analytics | pending |
+| M13.11 | Observability & Product Analytics | done |
 | M14 | Polish + RC | pending |
 | M15 | Custom categories (post-MVP) | pending |
 | M13.7 | Client Metrics Ingestion | deferred (post-release) |
@@ -757,14 +757,20 @@ AI Generate from History requires an **active Premium workspace** *and* still go
 
 ## M13.11 - Observability & Product Analytics
 
-**Status:** pending (pre-release / Closed Testing blocker for M14 RC)
+**Status:** done (code + docs; staging key verify remains for Closed Testing)
 
 **Goal:** Production-ready **error monitoring**, **product analytics**, and **feature flags** before the first public release — using **Sentry** + **PostHog** only. No vanity analytics (button clicks, screen views, scroll). Privacy-first: business events and crashes, not list contents.
+
+**Guiding principle:** Observability helps product decisions and production diagnosis — not maximal data collection. Every new event needs a clear business or technical purpose.
 
 **Relation to M13.5 / M13.7:**
 - **M13.5** = internal Metrics facade (ops / Platform Console) — keep as-is
 - **M13.7** = client metrics ingest to Platform Console — **post-release**, separate
 - **M13.11** = vendor crash + product funnels + rollout flags for store/Closed Testing
+
+**Explicitly out of MVP:** Mixpanel, Amplitude, Firebase Analytics, OpenTelemetry, Prometheus, Grafana, data lake, custom event bus, Session Replay, autocapture, vanity events, routing PostHog through `Metrics.*`.
+
+**Non-goals:** BI platform, data warehouse, UX heatmaps/scroll/session replay, infra monitoring (CPU/RAM/K8s), replacing app logs, collecting telemetry “just in case”.
 
 **Depends on:** M13 (Premium events), M13.5 (env / About build identity), M13.9 (release labeling)  
 **Blocks:** M14 RC / Closed Testing “wire PostHog + Sentry” ([deploy.md](./deploy.md) §6.8)  
@@ -801,12 +807,30 @@ flowchart TB
 
 | Topic | Decision |
 |--------|----------|
-| Vendors | **Sentry** (errors/perf) + **PostHog** (product events + feature flags) |
+| Vendors | **Sentry** (errors + Release Health) + **PostHog** (product events + feature flags) |
+| Event names | **snake_case**, past tense (`shopping_started`); **no** `mobile_`/`backend_` prefixes |
+| Flag names | **snake_case**, positive capability; **no** `enable_` / `new_` / `flag_` |
+| PostHog project | One project; property `environment` on every event |
+| `schemaVersion` | Auto-merged in `Analytics.track` (`ANALYTICS_SCHEMA_VERSION = 1`) |
+| `first_*` | Once per **user** (AsyncStorage gate) |
+| Premium activate | **Backend only** (Stripe webhook) |
+| Sentry | Errors-only + Release Health; `tracesSampleRate ≈ 0` |
+| Sampling (prod) | 100% crashes/fatals; **~20%** handled |
+| Groups | `group('workspace', id)` + workspace properties |
+| identify | **Merge** person properties only — never full replace |
+| Call sites | **Only** `Analytics.track` / `identify` / `group` / `reset` — never raw `posthog.capture` |
+| Types | `track(EventName, Props)` — compile error on wrong props |
+| `requestId` | One **logical operation** (e.g. AI Import→Apply); next Import = new id |
+| Offline | PostHog RN SDK queue (no custom queue); backend fire-and-forget |
+| AI cost | `estimated_cost_usd` only (USD) |
+| Source maps EAS | Warn-only |
+| Dev without keys | Noop |
 | Analytics style | Business / funnel events only — **no** `button_clicked` / `screen_viewed` / scroll |
 | Session Replay | **Off for MVP** (see below) |
 | Metrics facade | Unchanged; do **not** route PostHog through `Metrics.*` |
 | Env kill switches | Keep `featureGates.ts` env overrides as **hard kill** above PostHog flags |
-| PII in events | Opaque `userId` (Clerk id) + `workspaceId` only; **no** email, names, list/item text, AI payloads |
+| Flag resolution | DEV override → env hard kill → PostHog → safe default |
+| PII in events | Opaque `userId` + `workspaceId` only; **no** email, names, list/item text, AI payloads |
 
 ### Session Replay (decision)
 
@@ -912,12 +936,14 @@ Props: `list_id` (opaque uuid), `item_count` (number only), `duration_sec` optio
 | Event | When |
 |-------|------|
 | `ai_import_started` | Ingest kicked off |
+| `ai_import_edited` | User changed ≥1 Review row before apply |
 | `ai_import_accepted` | Apply with ≥1 accepted item |
 | `ai_import_rejected` | Abandon / reject-all / cancel before apply |
-| `ai_import_failed` | Ingest/apply hard failure |
+| `ai_import_failed` | Ingest/apply hard failure (mobile and/or backend 5xx) |
+| `ai_model_completed` | Backend model call finished (cost props only) |
 | `history_ai_generate_started` / `_reviewed` / `_applied` / `_cancelled` | Existing stubs (M13) |
 
-Props: `source`, `credit_cost`, `proposal_item_count` — **never** proposal text.
+Props: `source`, `credit_cost`, `proposal_item_count`, `request_id`, `edited_count`, `estimated_cost_usd` — **never** proposal text.
 
 **Collaboration**
 
@@ -956,16 +982,17 @@ Props: `source`, `credit_cost`, `proposal_item_count` — **never** proposal tex
 ```
 featureGates.isXEnabled(ctx)
         ↓
-  1. Env hard kill (existing HISTORY_SUGGESTIONS_ENABLED etc.) → force off
-  2. Else PostHog flag / multivariate
-  3. Else safe default (usually off for new surfaces, on for shipped)
+  1. Local DEV override (mobile only)
+  2. Env hard kill (existing HISTORY_SUGGESTIONS_ENABLED etc.) → force off
+  3. Else PostHog flag / multivariate
+  4. Else safe default (usually off for new surfaces, on for shipped)
 ```
 
 | Layer | Path |
 |-------|------|
 | Mobile | `mobile/lib/featureFlags.ts` + keep `featureGates.ts` as façade |
 | Backend | `backend/lib/featureFlags.ts` + existing `featureGates.ts` |
-| Bootstrap | Fetch flags after auth; cache; refresh on foreground / interval |
+| Names | `history_suggestions`, `recipe_discovery`, `shopping_v2`, `premium_paywall`, `apple_sign_in` |
 
 #### Rollout strategy
 
@@ -1012,12 +1039,17 @@ Dashboards live in PostHog; no custom warehouse in MVP.
 
 ```
 shared/analytics/
-  events.ts          # EventName union + prop types
-  funnel.ts          # optional funnel step helpers / docs comments
+  events.ts          # EventName + EventPropsMap + ANALYTICS_SCHEMA_VERSION
+  ownership.ts       # EVENT_OWNERSHIP matrix (required before new events)
+  domains.ts         # ErrorDomain + ErrorSeverity
+  flags.ts           # FeatureFlags name constants
+  index.ts
 
 mobile/lib/analytics/
   index.ts           # track / identify / group / reset
   posthog.ts         # SDK wiring + no-op
+  once.ts            # first_* once-per-user
+  requestId.ts       # logical-op request ids
 mobile/lib/sentry/
   init.ts
   ErrorBoundary.tsx
@@ -1026,13 +1058,17 @@ mobile/lib/featureFlags.ts
 backend/lib/analytics/
   index.ts
   posthog.ts
-backend/lib/sentry/    # or @sentry/nextjs project files at root
+  aiCost.ts          # estimated_cost_usd helper
+backend/lib/sentry/
 backend/lib/featureFlags.ts
+backend/instrumentation.ts
 
 # Wire stubs:
 mobile/features/history/historyTelemetry.ts
 backend/features/ai/historyAiAnalytics.ts
 ```
+
+**Event ownership (happy path — no dual emit):** see `shared/analytics/ownership.ts`. Backend owns `account_created`, `workspace_created`, invitations, History AI, Premium subscription webhooks. Mobile owns shopping, AI import UX, paywall/checkout, `first_*`, History UI.
 
 Docs touch: [architecture.md](./architecture.md) §10.5 addendum; [deploy.md](./deploy.md) §6.8 expand event table to match catalogue above.
 
@@ -1095,14 +1131,26 @@ Docs touch: [architecture.md](./architecture.md) §10.5 addendum; [deploy.md](./
 
 ### Acceptance
 
-- [ ] Sentry receives crashes / unhandled exceptions from mobile staging build with `release` + `environment` + opaque `userId` / `workspaceId`
-- [ ] Backend 5xx and AI/sync failures appear in Sentry with `domain` tags; **no** list/AI content in payloads
-- [ ] PostHog receives catalogue events only (no autocapture); funnels Activation / AI / Premium visible on staging
-- [ ] Existing history + history-AI stubs emit through Analytics service
-- [ ] Feature flag read path works; env kill switch still forces off
-- [ ] Session Replay disabled in all environments
-- [ ] `.env.example` + deploy.md document new vars; Privacy Policy mentions processors
-- [ ] Dev builds remain usable without Sentry/PostHog keys (no-op)
+- [x] Typed `Analytics.track(EventName, Props)` + `schemaVersion` on every event; ownership matrix in `shared/analytics/ownership.ts`
+- [x] No raw `posthog.capture` call sites — wrappers only; noop without keys
+- [x] Sentry mobile ErrorBoundary + init (Release Health, sampling, domain/severity/requestId tags)
+- [x] Backend Sentry via `instrumentation.ts`; PostHog webhook Premium + AI cost (`estimated_cost_usd`)
+- [x] Core catalogue wired: activation, shopping, AI import (+ `ai_import_edited`), invites, paywall/checkout, history stubs
+- [x] Feature flags: DEV override → env kill → PostHog → default; `history_suggestions` via `featureGates`
+- [x] identify merge + workspace `group`; `requestId` scoped to one AI import op
+- [x] `.env.example` + roadmap/deploy/architecture docs updated
+- [x] Session Replay disabled; guiding principle / non-goals documented
+- [ ] Staging live verify: Sentry crash + PostHog funnel with real keys (Closed Testing keys in EAS/Vercel)
+- [ ] Privacy Policy mentions Sentry + PostHog processors (M13.8 copy pass)
+
+### Definition of Done
+
+- All events go only through Analytics wrappers
+- Sentry reports errors when DSN configured (staging/production)
+- PostHog collects only the defined catalogue
+- Risky features can use Feature Flags (pattern + DEV override + env kill)
+- App runs correctly without analytics keys (noop)
+- architecture / roadmap / deploy docs updated
 
 ### Out of scope
 
@@ -1110,17 +1158,18 @@ Docs touch: [architecture.md](./architecture.md) §10.5 addendum; [deploy.md](./
 - OTel / Prometheus exporters (still future with M13.7+)  
 - Replacing M13.5 Metrics / Platform Console  
 - Implementing M20/M21–M23 events (names reserved only)
+- Mixpanel / Amplitude / Firebase Analytics / custom data lake
 
-### Open Questions (decide before coding)
+### Locked answers (formerly open questions)
 
-1. **PostHog project split:** one project with `environment` property vs separate staging/production projects?  
-2. **`first_*` events:** once per **user** or once per **workspace**?  
-3. **Server vs client for Premium:** emit `subscription_activated` **only** from Stripe webhook (recommended) or also client-side confirm?  
-4. **Sentry performance:** enable tracing in Closed Testing or errors-only until post-launch?  
-5. **EU residency:** PostHog/Sentry EU cloud required for PL launch compliance narrative?  
-6. **Flag defaults for shipped features:** History Suggest / AI Review stay env-gated only, or also mirrored as PostHog flags at 100%?  
-7. **Group analytics:** PostHog `group` by workspace — enable in MVP or defer?  
-8. **Source map upload:** block EAS release on Sentry upload failure, or warn-only?
+1. **PostHog:** one project + `environment` property  
+2. **`first_*`:** once per **user**  
+3. **Premium:** webhook-only `subscription_activated`  
+4. **Sentry:** errors-only + Release Health; traces ≈ 0  
+5. **EU:** default hosts `eu.i.posthog.com` (override via env)  
+6. **Flags:** env kill remains; PostHog optional overlay  
+7. **Groups:** workspace group enabled in MVP  
+8. **Source maps:** warn-only on EAS
 
 ---
 

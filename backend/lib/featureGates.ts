@@ -3,6 +3,8 @@
  * env → premium → rollout → beta logic evolves.
  */
 
+import { FeatureFlags, isFeatureEnabled } from "@/lib/featureFlags";
+
 type WorkspaceGateInput = {
   id: string;
 };
@@ -14,10 +16,5 @@ type WorkspaceGateInput = {
 export function isHistorySuggestionsEnabled(
   _workspace: WorkspaceGateInput,
 ): boolean {
-  const raw = process.env.HISTORY_SUGGESTIONS_ENABLED?.trim().toLowerCase();
-  if (raw === "0" || raw === "false" || raw === "off") {
-    return false;
-  }
-  // Default on when unset - ship ready; flip off via env for kill-switch.
-  return true;
+  return isFeatureEnabled(FeatureFlags.historySuggestions, true);
 }

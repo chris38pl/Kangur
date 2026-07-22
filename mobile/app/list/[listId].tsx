@@ -71,8 +71,13 @@ import {
 } from "@/features/shopping-list/useShoppingLists";
 import { createClientId } from "@/lib/createClientId";
 import { isAiReviewEnabled } from "@/lib/aiReview";
+import { Analytics } from "@/lib/analytics";
+import { oncePerUser } from "@/lib/analytics/once";
+import { createRequestId } from "@/lib/analytics/requestId";
 import { ApiClientError } from "@/lib/api/client";
 import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
+import { setSentryRequestId } from "@/lib/sentry/init";
+import type { AiImportSource } from "@shared/analytics/events";
 
 function buildApplyOperations(operations: ProposalOperation[]) {
   return operations.map((operation) => {
@@ -134,6 +139,9 @@ export default function ShoppingListScreen() {
   const { getToken, isSignedIn } = useAuth();
   const queryClient = useQueryClient();
   const importTriggered = useRef(false);
+  const aiRequestIdRef = useRef<string | null>(null);
+  const aiSourceRef = useRef<AiImportSource>("text");
+  const aiOriginalOpsRef = useRef<ProposalOperation[]>([]);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -201,10 +209,79 @@ export default function ShoppingListScreen() {
       queryClient.setQueryData(["shopping-items", listId], result.items);
       return result;
     },
-    onSuccess: () => {
+    onError: (error) => {
+      const workspaceId = listQuery.data?.workspaceId;
+      if (workspaceId && typeof listId === "string") {
+        Analytics.track("ai_import_failed", {
+          workspace_id: workspaceId,
+          list_id: listId,
+          request_id: aiRequestIdRef.current ?? undefined,
+          source: aiSourceRef.current,
+          code:
+            error instanceof ApiClientError ? error.code : "apply_failed",
+        });
+      }
+      setSentryRequestId(null);
+      aiRequestIdRef.current = null;
+    },
+    onSuccess: (_result, variables) => {
+      const workspaceId = listQuery.data?.workspaceId;
+      const acceptedCount = variables.operations.filter(
+        (op) => op.op !== "ignore",
+      ).length;
+      if (workspaceId && typeof listId === "string") {
+        const original = aiOriginalOpsRef.current;
+        let editedCount = 0;
+        if (original.length > 0) {
+          for (const op of variables.operations) {
+            const base = original.find(
+              (row) => row.proposalRowId === op.proposalRowId,
+            );
+            if (!base) {
+              editedCount += 1;
+              continue;
+            }
+            if (
+              base.op !== op.op ||
+              base.name !== op.name ||
+              (base.amount ?? null) !== (op.amount ?? null) ||
+              (base.note ?? null) !== (op.note ?? null) ||
+              base.category !== op.category
+            ) {
+              editedCount += 1;
+            }
+          }
+        }
+        if (editedCount > 0) {
+          Analytics.track("ai_import_edited", {
+            workspace_id: workspaceId,
+            list_id: listId,
+            request_id: aiRequestIdRef.current ?? undefined,
+            edited_count: editedCount,
+          });
+        }
+        if (acceptedCount >= 1) {
+          Analytics.track("ai_import_accepted", {
+            workspace_id: workspaceId,
+            list_id: listId,
+            request_id: aiRequestIdRef.current ?? undefined,
+            source: aiSourceRef.current,
+            proposal_item_count: acceptedCount,
+          });
+          void oncePerUser("first_ai_import", () => {
+            Analytics.track("first_ai_import", {
+              workspace_id: workspaceId,
+              source: aiSourceRef.current,
+            });
+          });
+        }
+      }
       setReviewRunId(null);
       setReviewOperations([]);
       setAiText("");
+      setSentryRequestId(null);
+      aiRequestIdRef.current = null;
+      aiOriginalOpsRef.current = [];
       if (typeof listId === "string") {
         clearListProvisional(listId);
         void queryClient.invalidateQueries({
@@ -227,6 +304,19 @@ export default function ShoppingListScreen() {
       return ingestAi(token, listId, formData);
     },
     onError: (error) => {
+      const workspaceId = listQuery.data?.workspaceId;
+      if (workspaceId && typeof listId === "string") {
+        Analytics.track("ai_import_failed", {
+          workspace_id: workspaceId,
+          list_id: listId,
+          request_id: aiRequestIdRef.current ?? undefined,
+          source: aiSourceRef.current,
+          code:
+            error instanceof ApiClientError ? error.code : "ingest_failed",
+        });
+      }
+      setSentryRequestId(null);
+      aiRequestIdRef.current = null;
       if (error instanceof ApiClientError && error.code === "NOT_FOUND") {
         Alert.alert(t("list.missingTitle"), t("list.missingBody"), [
           {
@@ -256,6 +346,10 @@ export default function ShoppingListScreen() {
         });
         void queryClient.invalidateQueries({ queryKey: ["shopping-lists"] });
       }
+
+      aiOriginalOpsRef.current = result.proposal.operations.map((op) => ({
+        ...op,
+      }));
 
       if (isAiReviewEnabled()) {
         setReviewRunId(result.runId);
@@ -322,12 +416,28 @@ export default function ShoppingListScreen() {
     router.replace("/(tabs)" as never);
   };
 
+  const startAiIngest = (source: AiImportSource, formData: FormData) => {
+    const workspaceId = listQuery.data?.workspaceId;
+    if (!workspaceId || typeof listId !== "string") return;
+    const requestId = createRequestId();
+    aiRequestIdRef.current = requestId;
+    aiSourceRef.current = source;
+    setSentryRequestId(requestId);
+    Analytics.track("ai_import_started", {
+      workspace_id: workspaceId,
+      list_id: listId,
+      request_id: requestId,
+      source,
+    });
+    ingestMutation.mutate(formData);
+  };
+
   const startTextIngest = () => {
     Keyboard.dismiss();
     const formData = new FormData();
     formData.append("source", "text");
     formData.append("text", aiText.trim());
-    ingestMutation.mutate(formData);
+    startAiIngest("text", formData);
   };
 
   const startClipboardIngest = async (textOverride?: string) => {
@@ -338,7 +448,7 @@ export default function ShoppingListScreen() {
     formData.append("source", "clipboard");
     formData.append("text", text);
     setAiText(text);
-    ingestMutation.mutate(formData);
+    startAiIngest("clipboard", formData);
   };
 
   const startScreenshotIngest = async (asset?: {
@@ -358,8 +468,17 @@ export default function ShoppingListScreen() {
     }
     try {
       const formData = await buildScreenshotIngestFormData(picked);
-      ingestMutation.mutate(formData);
+      startAiIngest("screenshot", formData);
     } catch (error) {
+      const workspaceId = listQuery.data?.workspaceId;
+      if (workspaceId && typeof listId === "string") {
+        Analytics.track("ai_import_failed", {
+          workspace_id: workspaceId,
+          list_id: listId,
+          source: "screenshot",
+          code: "screenshot_build_failed",
+        });
+      }
       Alert.alert(
         t("list.title"),
         error instanceof Error ? error.message : t("list.ingestFailed"),
@@ -1006,6 +1125,18 @@ export default function ShoppingListScreen() {
 
                 <Pressable
                   onPress={() => {
+                    const workspaceId = listQuery.data?.workspaceId;
+                    if (workspaceId && typeof listId === "string") {
+                      Analytics.track("ai_import_rejected", {
+                        workspace_id: workspaceId,
+                        list_id: listId,
+                        request_id: aiRequestIdRef.current ?? undefined,
+                        source: aiSourceRef.current,
+                      });
+                    }
+                    setSentryRequestId(null);
+                    aiRequestIdRef.current = null;
+                    aiOriginalOpsRef.current = [];
                     setReviewRunId(null);
                     setReviewOperations([]);
                   }}
