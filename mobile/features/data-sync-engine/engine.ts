@@ -1,3 +1,9 @@
+import type { ShoppingItem } from "@/features/shopping-item/schemas";
+import { MetricNames } from "@shared/metrics/names";
+import { getMetrics } from "@/lib/metrics";
+import { createClientId, isLegacyLocalItemId, isUuid } from "@/lib/createClientId";
+import { ApiClientError } from "@/lib/api/client";
+
 import { compressOperations } from "./compress";
 import { Connectivity } from "./connectivity";
 import { conflictResolver } from "./conflict-resolver";
@@ -14,10 +20,10 @@ import {
   type SyncOperation,
 } from "./types";
 import { SyncWorker, type SyncTransport } from "./worker";
-import { createClientId, isLegacyLocalItemId, isUuid } from "@/lib/createClientId";
-import { ApiClientError } from "@/lib/api/client";
 
 const DEBOUNCE_MS = 1000;
+const REFRESH_DEBOUNCE_MS = 250;
+const REFRESH_POLL_IDLE_MS = 100;
 
 export type EnqueueInput = {
   listId: string;
@@ -41,6 +47,10 @@ class DataSyncEngineImpl {
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private started = false;
   private syncCache: SyncCacheAdapter | null = null;
+
+  private refreshDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private refreshDeferTimer: ReturnType<typeof setTimeout> | null = null;
+  private refreshWaitingListId: string | null = null;
 
   setSyncCacheAdapter(adapter: SyncCacheAdapter): void {
     this.syncCache = adapter;
@@ -247,6 +257,110 @@ class DataSyncEngineImpl {
       pendingCount: pending,
       syncedCount: doneIds.length,
     });
+
+    // Ops enqueued while the worker was running must not wait for another tap.
+    if (pending > 0 && this.connectivity.isOnline()) {
+      this.scheduleFlush(listId);
+    }
+  }
+
+  /**
+   * Inbound GET reconcile: last local outbound op wins over stale server rows.
+   * Realtime / queryFn must use this instead of writing raw server lists.
+   */
+  async reconcileServerSnapshot(
+    listId: string,
+    serverItems: ShoppingItem[],
+  ): Promise<ShoppingItem[]> {
+    const outboundOps = await this.queue.getAll(listId);
+    if (!this.syncCache) {
+      const { overlayLocalOutboundStatuses } = await import(
+        "./overlay-local-ops"
+      );
+      return overlayLocalOutboundStatuses(serverItems, outboundOps);
+    }
+    return this.syncCache.reconcileServerSnapshot(
+      listId,
+      serverItems,
+      outboundOps,
+    );
+  }
+
+  /**
+   * Realtime hint: something changed on the server for this list.
+   * Never force-invalidate while outbound ops are in flight (avoids UX rollback).
+   */
+  requestItemsRefresh(listId: string): void {
+    this.clearRefreshDefer();
+    this.refreshWaitingListId = listId;
+
+    const attempt = async () => {
+      if (this.refreshWaitingListId !== listId) return;
+
+      const busy = await this.outboundBusyCount(listId);
+      if (busy === 0) {
+        this.refreshWaitingListId = null;
+        this.scheduleInvalidate(listId);
+        return;
+      }
+
+      getMetrics().increment(MetricNames.realtimeRefreshDeferred);
+
+      if (!this.connectivity.isOnline()) {
+        this.refreshWaitingListId = null;
+        this.clearRefreshDebounce();
+        getMetrics().increment(MetricNames.realtimeRefreshCancelledOffline);
+        return;
+      }
+
+      // Keep waiting — never force a GET that would overwrite optimistic UI.
+      this.refreshDeferTimer = setTimeout(() => {
+        this.refreshDeferTimer = null;
+        void attempt();
+      }, REFRESH_POLL_IDLE_MS);
+    };
+
+    void attempt();
+  }
+
+  cancelItemsRefresh(): void {
+    this.clearRefreshDebounce();
+    this.clearRefreshDefer();
+    this.refreshWaitingListId = null;
+  }
+
+  private scheduleInvalidate(listId: string): void {
+    this.clearRefreshDebounce();
+    this.refreshDebounceTimer = setTimeout(() => {
+      this.refreshDebounceTimer = null;
+      getMetrics().increment(MetricNames.realtimeRefreshRequests);
+      this.syncCache?.invalidateShoppingItems(listId);
+    }, REFRESH_DEBOUNCE_MS);
+  }
+
+  private clearRefreshDebounce(): void {
+    if (this.refreshDebounceTimer) {
+      clearTimeout(this.refreshDebounceTimer);
+      this.refreshDebounceTimer = null;
+    }
+  }
+
+  private clearRefreshDefer(): void {
+    if (this.refreshDeferTimer) {
+      clearTimeout(this.refreshDeferTimer);
+      this.refreshDeferTimer = null;
+    }
+  }
+
+  /** PENDING + SYNCING + FAILED — local mutation still owns item status. */
+  async outboundBusyCount(listId?: string): Promise<number> {
+    const all = await this.queue.getAll(listId);
+    return all.filter(
+      (op) =>
+        op.state === "PENDING" ||
+        op.state === "SYNCING" ||
+        op.state === "FAILED",
+    ).length;
   }
 
   async retry(ids?: string[]): Promise<void> {

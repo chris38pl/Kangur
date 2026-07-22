@@ -222,7 +222,7 @@ Contrast; hit slops; status not by color alone; labels on icon-only actions.
 | Cross-screen UI chrome (rare) | Light Zustand **only if needed** |
 | Forms | React Hook Form + Zod |
 | Auth | Clerk |
-| Sync → cache | `RealtimeProvider` invalidates/patches Query |
+| Sync → cache | `DataSyncEngine` + `SyncCacheAdapter` (`reconcileServerSnapshot` / transport results); Realtime only hints via `requestItemsRefresh` |
 
 **Do not add:** Redux, MobX, Redux-Saga, global React Context for server state.
 
@@ -320,7 +320,8 @@ Scenario YAML → thin Adapter (prod generator) → Evaluator (timing/seed/repea
 - **Public API:** `start` / `stop` / `pollNow` / `isRunning` / `getCurrentListId` (+ optional `destroy`).  
 - **Lifecycle:** mount→start; unmount→stop; background→pause; foreground→pollNow+resume; offline→pause; online→pollNow+resume; listId change→stop old+start new.  
 - **Adaptive intervals:** 3s → 5s (30s idle) → 10s (2min idle); backoff only on successful empty polls; reset to 3s on events.  
-- Fetch `ShoppingEvent`s after last known event id; **events are a refresh signal only** - never rebuild list state from payloads. Cache ownership: **SyncCacheAdapter + React Query**. Soft toast is presentation-only (never triggers refresh).  
+- Fetch `ShoppingEvent`s after last known event id; **events are a refresh signal only** - never rebuild list state from payloads.  
+- **Inbound SSoT:** Realtime → `DataSyncEngine.requestItemsRefresh` → (wait while outbound busy) → invalidate → `useShoppingItems` GET → `reconcileServerSnapshot` (merge + **last local operation wins** overlay) → React Query. Realtime **never** calls `queryClient` directly. Soft toast is presentation-only (never triggers refresh).  
 - Future: `WebSocketTransport` without changing `useListRealtime()`; server push for **active list only**; ETag / 304 on events.
 
 ---

@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import type { ShoppingItem } from "@/features/shopping-item/schemas";
 
+import { overlayLocalOutboundStatuses } from "./overlay-local-ops";
 import type { SyncOperation } from "./types";
 
 export type SyncOperationResult =
@@ -11,13 +12,25 @@ export type SyncOperationResult =
 
 /**
  * Adapter between DataSyncEngine and app cache.
- * Not a source of truth - only applies transport results.
+ * Owns materializing GET results and transport success into React Query.
+ * Never blind-overwrite shopping-items with a raw server list.
  */
 export interface SyncCacheAdapter {
   applyOperationResult(
     operation: SyncOperation,
     result: SyncOperationResult,
   ): void;
+  /**
+   * Inbound GET path: merge server list with outbound local ops, then write cache.
+   * Returns the reconciled list (also set into React Query).
+   */
+  reconcileServerSnapshot(
+    listId: string,
+    serverItems: ShoppingItem[],
+    outboundOps: SyncOperation[],
+  ): ShoppingItem[];
+  /** Request React Query to re-run shopping-items queryFn (which reconciles). */
+  invalidateShoppingItems(listId: string): void;
 }
 
 /**
@@ -85,6 +98,22 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
       default:
         return;
     }
+  }
+
+  reconcileServerSnapshot(
+    listId: string,
+    serverItems: ShoppingItem[],
+    outboundOps: SyncOperation[],
+  ): ShoppingItem[] {
+    // Return reconciled rows; React Query queryFn (or caller) owns the write.
+    void listId;
+    return overlayLocalOutboundStatuses(serverItems, outboundOps);
+  }
+
+  invalidateShoppingItems(listId: string): void {
+    void this.queryClient.invalidateQueries({
+      queryKey: shoppingItemsKey(listId),
+    });
   }
 
   private reconcileItem(listId: string, server: ShoppingItem): void {

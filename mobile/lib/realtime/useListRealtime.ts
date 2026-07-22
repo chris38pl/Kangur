@@ -4,11 +4,11 @@ import type { TFunction } from "i18next";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
+import { DataSyncEngine } from "@/features/data-sync-engine";
 import { useMe } from "@/features/auth/useMe";
 import type { ShoppingEvent } from "@/features/shopping-item/schemas";
 import type { WorkspaceMember } from "@/features/workspace/schemas";
 
-import { scheduleItemsRefresh } from "./scheduleItemsRefresh";
 import { showRemoteChangeToast } from "./remote-change-toast-store";
 import { subscribeListEvents } from "./subscription";
 
@@ -81,7 +81,8 @@ export function useListRealtime(
       onBatch: (events, meta) => {
         if (meta.bootstrap) return;
 
-        scheduleItemsRefresh(queryClient, meta.listId);
+        // Signal only — Sync Engine decides when/how to refresh cache.
+        DataSyncEngine.requestItemsRefresh(meta.listId);
 
         const members = workspaceIdRef.current
           ? queryClient.getQueryData<WorkspaceMember[]>([

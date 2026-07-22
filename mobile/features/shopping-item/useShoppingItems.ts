@@ -1,6 +1,8 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { DataSyncEngine } from "@/features/data-sync-engine";
+
 import {
   createShoppingItem,
   listShoppingItems,
@@ -19,7 +21,9 @@ export function useShoppingItems(listId: string | null, enabled = true) {
       if (!token || !listId) {
         throw new Error("Missing auth token or list id");
       }
-      return listShoppingItems(token, listId);
+      const serverItems = await listShoppingItems(token, listId);
+      // GET → merge/overlay (last local op wins) → cache — never raw overwrite.
+      return DataSyncEngine.reconcileServerSnapshot(listId, serverItems);
     },
   });
 }

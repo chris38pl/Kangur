@@ -7,14 +7,18 @@ import { createRestSyncTransport } from "@/features/data-sync-engine/rest-transp
 import { ReactQuerySyncCacheAdapter } from "@/features/data-sync-engine/sync-cache-adapter";
 
 /**
- * Architecture rule:
+ * Architecture rule (shopping-items SSoT):
  *
- * Shopping item cache MUST be mutated only by:
- * - optimistic UI writes
- * - SyncCacheAdapter after transport results (success path)
+ * Writers:
+ * 1. Optimistic UI + DataSyncEngine.enqueue (outbound)
+ * 2. SyncCacheAdapter.applyOperationResult after transport success
+ * 3. SyncCacheAdapter.reconcileServerSnapshot after GET / refresh (inbound)
  *
- * Never invalidate or mutate shopping-items here.
- * Cache reconciliation is owned exclusively by SyncCacheAdapter.
+ * Realtime / EventPolling never calls queryClient directly — only
+ * DataSyncEngine.requestItemsRefresh (hint). Engine decides wait / invalidate.
+ *
+ * Never blind-replace shopping-items with a raw server list while outbound
+ * ops exist; reconcile uses last local operation wins per itemId.
  */
 export function useDataSyncEngineBootstrap() {
   const { getToken } = useAuth();
