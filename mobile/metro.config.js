@@ -8,7 +8,10 @@ const projectRoot = __dirname;
 // monorepo layout (eager EAS bundle). sync-shared.js mirrors ../shared here.
 const sharedRoot = path.resolve(projectRoot, ".shared");
 
-const config = getDefaultConfig(projectRoot);
+// NativeWind must wrap first — it can replace resolver hooks.
+const config = withNativeWind(getDefaultConfig(projectRoot), {
+  input: "./global.css",
+});
 
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
@@ -18,7 +21,7 @@ config.resolver.disableHierarchicalLookup = true;
 /**
  * Map package.json "exports" subpaths that Metro misses when
  * unstable_enablePackageExports is false (needed for Hermes/web stability).
- * PostHog RN eagerly imports @posthog/core/surveys.
+ * PostHog RN eagerly imports @posthog/core/surveys (+ error-tracking).
  */
 function resolvePostHogCoreSubpath(moduleName) {
   if (
@@ -67,8 +70,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   return context.resolveRequest(context, moduleName, platform);
 };
 
-// Avoid web/ESM export maps breaking Hermes in Expo Go (common on RN 0.79+)
-// Keep false; PostHog subpaths handled above.
+// Keep false for Hermes/web; PostHog subpaths handled above.
 config.resolver.unstable_enablePackageExports = false;
 
-module.exports = withNativeWind(config, { input: "./global.css" });
+module.exports = config;
