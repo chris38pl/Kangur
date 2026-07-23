@@ -20,8 +20,12 @@ export async function listShoppingLists(
 export async function getShoppingList(
   token: string,
   listId: string,
+  options?: { allowArchived?: boolean },
 ): Promise<ShoppingList> {
-  const data = await apiFetch<unknown>(`/api/v1/lists/${listId}`, { token });
+  const q = options?.allowArchived ? "?allowArchived=1" : "";
+  const data = await apiFetch<unknown>(`/api/v1/lists/${listId}${q}`, {
+    token,
+  });
   return ShoppingListSchema.parse(data);
 }
 

@@ -309,8 +309,12 @@ export function FinishSummaryScreen({
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const listQuery = useShoppingList(listId);
-  const itemsQuery = useShoppingItems(listId);
+  const listQuery = useShoppingList(listId, true, {
+    allowArchived: viewer,
+  });
+  const itemsQuery = useShoppingItems(listId, true, {
+    allowArchived: viewer,
+  });
   const session = useShoppingSession(listId);
   const [showAllBought, setShowAllBought] = useState(false);
 
@@ -411,6 +415,46 @@ export function FinishSummaryScreen({
       >
         <ActivityIndicator color={theme.primary} />
       </View>
+    );
+  }
+
+  if (viewer && (listQuery.isError || itemsQuery.isError)) {
+    return (
+      <Screen style={{ backgroundColor: theme.section }}>
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: spacing[6],
+            justifyContent: "center",
+            alignItems: "center",
+            gap: spacing[4],
+          }}
+        >
+          <Text
+            style={{
+              ...typography.title,
+              color: theme.text,
+              textAlign: "center",
+            }}
+          >
+            {t("history.loadFailed")}
+          </Text>
+          <Pressable
+            onPress={onHeaderBack}
+            style={{
+              backgroundColor: theme.primary,
+              borderRadius: radius.full,
+              paddingVertical: spacing[4],
+              paddingHorizontal: spacing[6],
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ ...typography.label, color: theme.onPrimary }}>
+              {t("invite.goHome")}
+            </Text>
+          </Pressable>
+        </View>
+      </Screen>
     );
   }
 

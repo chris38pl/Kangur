@@ -18,7 +18,9 @@ export async function GET(request: Request, context: RouteContext) {
   try {
     const { listId } = await context.params;
     const { user } = await requireUser(request);
-    const list = await getShoppingList(listId, user.id);
+    const url = new URL(request.url);
+    const allowArchived = url.searchParams.get("allowArchived") === "1";
+    const list = await getShoppingList(listId, user.id, { allowArchived });
     return NextResponse.json(ShoppingListDTOSchema.parse(list));
   } catch (error) {
     if (error instanceof ApiError) {

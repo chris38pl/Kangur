@@ -43,18 +43,23 @@ export function useShoppingLists(
   });
 }
 
-export function useShoppingList(listId: string | null, enabled = true) {
+export function useShoppingList(
+  listId: string | null,
+  enabled = true,
+  options?: { allowArchived?: boolean },
+) {
   const { getToken, isSignedIn } = useAuth();
+  const allowArchived = options?.allowArchived === true;
 
   return useQuery({
-    queryKey: ["shopping-list", listId],
+    queryKey: ["shopping-list", listId, allowArchived ? "archived" : "active"],
     enabled: enabled && Boolean(isSignedIn) && Boolean(listId),
     queryFn: async (): Promise<ShoppingList> => {
       const token = await getToken();
       if (!token || !listId) {
         throw new Error("Missing auth token or list id");
       }
-      return getShoppingList(token, listId);
+      return getShoppingList(token, listId, { allowArchived });
     },
   });
 }

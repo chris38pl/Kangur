@@ -10,18 +10,25 @@ import {
 } from "./api";
 import type { ItemStatus, ShoppingCategory } from "./schemas";
 
-export function useShoppingItems(listId: string | null, enabled = true) {
+export function useShoppingItems(
+  listId: string | null,
+  enabled = true,
+  options?: { allowArchived?: boolean },
+) {
   const { getToken, isSignedIn } = useAuth();
+  const allowArchived = options?.allowArchived === true;
 
   return useQuery({
-    queryKey: ["shopping-items", listId],
+    queryKey: ["shopping-items", listId, allowArchived ? "archived" : "active"],
     enabled: enabled && Boolean(isSignedIn) && Boolean(listId),
     queryFn: async () => {
       const token = await getToken();
       if (!token || !listId) {
         throw new Error("Missing auth token or list id");
       }
-      const serverItems = await listShoppingItems(token, listId);
+      const serverItems = await listShoppingItems(token, listId, {
+        allowArchived,
+      });
       // GET → merge/overlay (last local op wins) → cache — never raw overwrite.
       return DataSyncEngine.reconcileServerSnapshot(listId, serverItems);
     },
