@@ -4,7 +4,7 @@ const expoConfig = require("eslint-config-expo/flat");
 module.exports = [
   ...expoConfig,
   {
-    ignores: ["node_modules/", ".expo/", "dist/"],
+    ignores: ["node_modules/", ".expo/", "dist/", "scripts/", "index.js"],
   },
   {
     // React Compiler eslint rules false-positive on Reanimated shared values /

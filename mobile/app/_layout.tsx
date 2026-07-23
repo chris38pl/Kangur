@@ -9,7 +9,7 @@ import {
   ThemeProvider,
 } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppResultProvider } from "@/components/AppResultProvider";
@@ -17,6 +17,12 @@ import { colors } from "@/design-system/tokens";
 import { useDataSyncEngineBootstrap } from "@/features/data-sync-engine/useBootstrap";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { AppStartupController } from "@/features/startup/AppStartupController";
+import {
+  bootLog,
+  checkRequiredPublicEnv,
+  hideNativeSplashLogged,
+} from "@/lib/boot-diagnostics";
+import { getPostHog, isAnalyticsEnabled } from "@/lib/analytics/posthog";
 import { AppQueryProvider } from "@/lib/query/client";
 import { SentryErrorBoundary } from "@/lib/sentry/ErrorBoundary";
 import { initSentry } from "@/lib/sentry/init";
@@ -25,8 +31,11 @@ import { suppressClerkDevKeysWarning } from "@/lib/suppress-clerk-dev-warning";
 import "../global.css";
 import "@/lib/i18n";
 
+bootLog("root_layout_module", "app/_layout.tsx evaluating");
+
 suppressClerkDevKeysWarning();
 initSentry();
+bootLog("root_layout_module", "initSentry done");
 
 export { SentryErrorBoundary as ErrorBoundary };
 
@@ -34,7 +43,12 @@ export const unstable_settings = {
   initialRouteName: "index",
 };
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch((e: unknown) => {
+  bootLog(
+    "splash_native_hide",
+    `preventAutoHideAsync failed: ${e instanceof Error ? e.message : String(e)}`,
+  );
+});
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
@@ -57,15 +71,46 @@ const lightTheme = {
  * Native splash hide is owned by AppStartupController (brand handoff).
  */
 function ClerkEffects({ children }: { children: ReactNode }) {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
+  useEffect(() => {
+    bootLog(
+      "clerk_provider",
+      `useAuth isLoaded=${String(isLoaded)} isSignedIn=${String(isSignedIn)}`,
+    );
+  }, [isLoaded, isSignedIn]);
   useDataSyncEngineBootstrap();
   usePushRegistration(Boolean(isSignedIn));
   return <>{children}</>;
 }
 
+function PostHogBootProbe() {
+  useEffect(() => {
+    const enabled = isAnalyticsEnabled();
+    bootLog("posthog", `isAnalyticsEnabled=${String(enabled)}`);
+    if (enabled) {
+      const client = getPostHog();
+      bootLog("posthog", `getPostHog client=${client ? "ok" : "null"}`);
+    }
+  }, []);
+  return null;
+}
+
+function NavigationBootProbe() {
+  useEffect(() => {
+    bootLog("navigation_stack", "Stack mounted (ThemeProvider+Stack tree)");
+  }, []);
+  return null;
+}
+
 export default function RootLayout() {
+  bootLog("root_layout_render", "RootLayout render()");
+  const env = checkRequiredPublicEnv();
+
   if (!publishableKey) {
-    throw new Error("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY");
+    void hideNativeSplashLogged("missing_clerk_key");
+    throw new Error(
+      `Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY (env missing: ${env.missing.join(",") || "none listed"})`,
+    );
   }
 
   return (
@@ -76,7 +121,9 @@ export default function RootLayout() {
             <ThemeProvider value={lightTheme}>
               <AppResultProvider>
                 <ClerkEffects>
+                  <PostHogBootProbe />
                   <AppStartupController>
+                    <NavigationBootProbe />
                     <Stack>
                       <Stack.Screen name="index" options={{ headerShown: false }} />
                       <Stack.Screen name="(auth)" options={{ headerShown: false }} />

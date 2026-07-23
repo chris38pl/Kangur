@@ -18,12 +18,6 @@ type SentryLike = {
 let SentryMod: SentryLike | null | undefined;
 let initialized = false;
 
-function mapEnvironment(): string {
-  const env = getAppBuildInfo().environment;
-  if (env === "preview") return "staging";
-  return env;
-}
-
 export function isSentryEnabled(): boolean {
   const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN?.trim();
   if (!dsn) return false;
@@ -60,7 +54,8 @@ export function initSentry(): void {
   const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN?.trim();
   if (!dsn) return;
   const info = getAppBuildInfo();
-  const environment = mapEnvironment();
+  // 1:1 with EXPO_PUBLIC_APP_ENV / EAS profile (development | preview | production)
+  const environment = info.environment;
   const release =
     info.build !== "-"
       ? `${info.version} (${info.build})`

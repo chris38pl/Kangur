@@ -23,9 +23,22 @@ export type WorkspaceGroupProperties = {
   memberCount?: number;
 };
 
+function baseEnvironmentProps(): {
+  environment: string;
+  appVersion: string;
+  build: string;
+} {
+  const info = getAppBuildInfo();
+  return {
+    environment: info.environment,
+    appVersion: info.version,
+    build: info.build,
+  };
+}
+
 /**
  * Typed product analytics. Never call PostHog SDK from call sites.
- * Adds schemaVersion automatically. No-op when keys missing / development default.
+ * Adds schemaVersion + environment automatically. No-op when keys missing / development default.
  */
 export function track<E extends EventName>(
   name: E,
@@ -35,18 +48,17 @@ export function track<E extends EventName>(
   const client = getPostHog();
   if (!client) return;
   try {
-    const env = getAppBuildInfo().environment;
     client.capture(name, {
       ...props,
       schemaVersion: ANALYTICS_SCHEMA_VERSION,
-      environment: env === "preview" ? "staging" : env,
+      ...baseEnvironmentProps(),
     });
   } catch {
     // fire-and-forget
   }
 }
 
-/** Merge person properties — never full replace. */
+/** Merge person properties — never full replace. Always attaches environment. */
 export function identify(
   userId: string,
   properties?: PersonProperties,
@@ -55,7 +67,10 @@ export function identify(
   const client = getPostHog();
   if (!client) return;
   try {
-    client.identify(userId, properties ?? {});
+    client.identify(userId, {
+      ...properties,
+      ...baseEnvironmentProps(),
+    });
   } catch {
     // fire-and-forget
   }
@@ -67,7 +82,12 @@ export function setPersonProperties(properties: PersonProperties): void {
   if (!client) return;
   try {
     // PostHog RN: capture with $set merges person properties
-    client.capture("$set", { $set: properties });
+    client.capture("$set", {
+      $set: {
+        ...properties,
+        ...baseEnvironmentProps(),
+      },
+    });
   } catch {
     // fire-and-forget
   }

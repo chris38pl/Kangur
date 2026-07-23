@@ -254,13 +254,15 @@ Invite emails when `RESEND_API_KEY` + `EMAIL_FROM` are set. Without them, invite
 
 ### 6.7 Expo Push / EAS
 
-| EAS profile | Distribution | Typical API URL |
-|-------------|--------------|-----------------|
-| `development` | Dev client, internal | `http://<LAN-IP>:3000` |
-| `preview` | Internal → Closed Testing | `https://staging-api.getkangur.com` |
-| `production` | Store | `https://api.getkangur.com` |
+| EAS profile | Android / iOS id | App name | Typical API URL |
+|-------------|------------------|----------|-----------------|
+| `development` | `app.kangur.dev` | Kangur DEV (green badge) | `http://<LAN-IP>:3000` |
+| `preview` | `app.kangur` | Kangur | `https://staging-api.getkangur.com` |
+| `production` | `app.kangur` | Kangur | `https://api.getkangur.com` |
 
-Profiles live in [mobile/eas.json](../mobile/eas.json). They do **not** inject `EXPO_PUBLIC_*` today - set via **EAS Secrets** or `env` per profile:
+Dual-install: DEV and store builds can sit side-by-side on one device. `preview` and `production` **must** share `app.kangur` (Play listing application ID) so Play updates replace Internal Testing.
+
+Profiles live in [mobile/eas.json](../mobile/eas.json). They set `EXPO_PUBLIC_APP_ENV`; other `EXPO_PUBLIC_*` via **EAS Secrets** / environment:
 
 - `EXPO_PUBLIC_API_URL`
 - `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`
@@ -268,11 +270,18 @@ Profiles live in [mobile/eas.json](../mobile/eas.json). They do **not** inject `
 
 Push uses Expo Push API (`exp.host/.../push/send`); keep EAS `projectId` in `app.config.ts` consistent.
 
-**Sign in with Apple (native):** `app.config.ts` sets `ios.usesAppleSignIn` and the `expo-apple-authentication` plugin. After those native changes, run `expo prebuild` (local iOS) **and** ship a new EAS **Development / Preview iOS** build before device QA. Enable Apple in Clerk Dashboard + Apple Developer (Services ID / key) — credentials are not stored in the repo. OAuth redirects use scheme `kangur://`.
+**Sign in with Apple (native):** `app.config.ts` sets `ios.usesAppleSignIn` and the `expo-apple-authentication` plugin. After those native changes, run `expo prebuild` (local iOS) **and** ship a new EAS **Development / Preview iOS** build before device QA. Enable Apple in Clerk Dashboard + Apple Developer (Services ID / key) — credentials are not stored in the repo. OAuth redirects: store `kangur://`, DEV `kangur-dev://`.
+
+#### Dual-install checklist (`app.kangur.dev`)
+
+- [ ] Clerk: allow redirect scheme `kangur-dev://` (and native apps) for Development instance
+- [ ] Google Cloud OAuth: Android client for package `app.kangur.dev` + SHA-1 of the **development** keystore (EAS credentials)
+- [ ] First `eas build --profile development` — EAS creates a separate Android keystore for the new package
+- [ ] Local invites / deep links while on DEV: use `kangur-dev://` (store builds keep `kangur://`)
 
 ### 6.8 PostHog + Sentry
 
-Enable from **Closed Testing** onward (**M13.11** — full catalogue, privacy rules, flags, and rollout order in [roadmap.md](./roadmap.md) § M13.11). Tag every event/crash with `environment=development|staging|production`.
+Enable from **Closed Testing** onward (**M13.11** — full catalogue, privacy rules, flags, and rollout order in [roadmap.md](./roadmap.md) § M13.11). Tag every event/crash with `environment=development|preview|production` (1:1 with `EXPO_PUBLIC_APP_ENV` / EAS profile; **no** `preview` → `staging` remap). Branch/host names like `staging-api.getkangur.com` stay separate from this property.
 
 #### PostHog - required events (summary)
 
@@ -291,7 +300,7 @@ Full list + props + ownership in M13.11 / `shared/analytics/`. Minimum for Close
 | `ai_import_accepted` | AI import applied with ≥1 item |
 | `ai_import_rejected` / `ai_import_failed` | Abandoned or failed |
 
-No autocapture; no Session Replay in MVP. Every event includes `schemaVersion` + `environment`.
+No autocapture; no Session Replay in MVP. Every event includes `schemaVersion` + `environment`. Mobile also registers `environment` as a PostHog super-property and attaches it on identify / person `$set`.
 
 #### Sentry - required context
 
@@ -300,7 +309,7 @@ Attach on every event/session:
 | Field | Example |
 |-------|---------|
 | `release` | `1.0.3 (23)` - semver + build number |
-| `environment` | `development` \| `staging` \| `production` |
+| `environment` | `development` \| `preview` \| `production` |
 | `userId` | Opaque platform user id |
 | `workspaceId` | Active workspace id |
 | `domain` / `severity` | Closed enums when set |

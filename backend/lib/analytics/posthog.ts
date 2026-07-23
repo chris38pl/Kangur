@@ -18,9 +18,10 @@ type PostHogNodeLike = {
 
 let client: PostHogNodeLike | null | undefined;
 
+/** Align with mobile EAS profiles: development | preview | production. */
 function resolveEnvironment(): string {
   const v = process.env.VERCEL_ENV?.trim();
-  if (v === "preview") return "staging";
+  if (v === "preview") return "preview";
   if (v === "production") return "production";
   if (process.env.NODE_ENV === "production") return "production";
   return "development";

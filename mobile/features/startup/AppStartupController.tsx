@@ -1,5 +1,4 @@
 import { useAuth } from "@clerk/clerk-expo";
-import * as SplashScreen from "expo-splash-screen";
 import {
   createContext,
   type ReactNode,
@@ -18,7 +17,12 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
+import { BootDiagnosticsOverlay } from "@/components/BootDiagnosticsOverlay";
 import { BrandedBootSplash } from "@/components/BrandedBootSplash";
+import {
+  bootLog,
+  hideNativeSplashLogged,
+} from "@/lib/boot-diagnostics";
 
 const MIN_MS = 850;
 const MAX_MS = 1500;
@@ -68,6 +72,14 @@ export function AppStartupController({ children }: Props) {
   const exitRequestedRef = useRef(false);
   const contentOpacity = useSharedValue(phase === "done" ? 1 : 0);
 
+  useEffect(() => {
+    bootLog(
+      "app_startup_controller",
+      `mount phase=${phase} clerkLoaded=${String(isLoaded)} signedIn=${String(isSignedIn)}`,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only probe
+  }, []);
+
   const requestExit = useCallback(() => {
     if (exitRequestedRef.current) return;
     if (phaseRef.current !== "enter") return;
@@ -79,6 +91,10 @@ export function AppStartupController({ children }: Props) {
     if (!(maxHit || (bootReadyRef.current && minOk))) return;
 
     exitRequestedRef.current = true;
+    bootLog(
+      "app_startup_controller",
+      `exit phase start elapsed=${elapsed} bootReady=${String(bootReadyRef.current)}`,
+    );
     setPhase("exit");
     contentOpacity.value = withTiming(1, {
       duration: CONTENT_FADE_MS,
@@ -88,12 +104,13 @@ export function AppStartupController({ children }: Props) {
 
   const notifyBootReady = useCallback(() => {
     bootReadyRef.current = true;
+    bootLog("boot_ready", "notifyBootReady()");
     requestExit();
   }, [requestExit]);
 
   // Hide native splash as soon as branded overlay (or app) is up - do not wait for Clerk.
   useEffect(() => {
-    void SplashScreen.hideAsync();
+    void hideNativeSplashLogged("AppStartupController.mount");
   }, []);
 
   // Timers: try exit at min and hard-cap at max.
@@ -112,12 +129,14 @@ export function AppStartupController({ children }: Props) {
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) {
-      notifyBootReady();
+      // Defer to avoid cascading setState-in-effect lint on bootReady flag.
+      queueMicrotask(() => notifyBootReady());
     }
   }, [isLoaded, isSignedIn, notifyBootReady]);
 
   const onExitComplete = useCallback(() => {
     coldStartSplashConsumed = true;
+    bootLog("app_startup_controller", "brand splash exit complete → done");
     setPhase("done");
   }, []);
 
@@ -145,6 +164,9 @@ export function AppStartupController({ children }: Props) {
             exiting={phase === "exit"}
             onExitComplete={onExitComplete}
           />
+        ) : null}
+        {process.env.EXPO_PUBLIC_BOOT_DIAG === "1" ? (
+          <BootDiagnosticsOverlay bootComplete={phase === "done"} />
         ) : null}
       </View>
     </AppStartupContext.Provider>

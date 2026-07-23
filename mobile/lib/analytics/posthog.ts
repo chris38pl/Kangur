@@ -1,4 +1,5 @@
 import { getAppBuildInfo } from "@/lib/app-build-info";
+import { bootLog } from "@/lib/boot-diagnostics";
 
 type PostHogLike = {
   capture: (event: string, properties?: Record<string, unknown>) => void;
@@ -9,15 +10,10 @@ type PostHogLike = {
     properties?: Record<string, unknown>,
   ) => void;
   reset: () => void;
+  register?: (properties: Record<string, unknown>) => void | Promise<void>;
 };
 
 let client: PostHogLike | null | undefined;
-
-function mapEnvironment(): string {
-  const env = getAppBuildInfo().environment;
-  if (env === "preview") return "staging";
-  return env;
-}
 
 /**
  * Analytics enabled when PostHog key is set and not forced off.
@@ -59,6 +55,7 @@ export function getPostHog(): PostHogLike | null {
     const host =
       process.env.EXPO_PUBLIC_POSTHOG_HOST?.trim() ||
       "https://eu.i.posthog.com";
+    const info = getAppBuildInfo();
     client = new PostHog(apiKey, {
       host,
       captureAppLifecycleEvents: false,
@@ -66,10 +63,19 @@ export function getPostHog(): PostHogLike | null {
       disable_surveys: true,
       // SDK queues offline; no custom queue
     });
-    // Attach super-properties-like defaults via first identify callers
-    void mapEnvironment;
+    bootLog("posthog", `PostHog SDK constructed host=${host}`);
+    // Super-properties on every capture (incl. SDK lifecycle if re-enabled)
+    void client.register?.({
+      environment: info.environment,
+      appVersion: info.version,
+      build: info.build,
+    });
     return client;
-  } catch {
+  } catch (e) {
+    bootLog(
+      "posthog",
+      `PostHog init FAILED: ${e instanceof Error ? e.message : String(e)}`,
+    );
     client = null;
     return null;
   }

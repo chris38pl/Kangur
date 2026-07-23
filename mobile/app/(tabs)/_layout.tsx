@@ -18,6 +18,7 @@ import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { ApiClientError } from "@/lib/api/client";
 import { Analytics } from "@/lib/analytics";
 import { getAppBuildInfo } from "@/lib/app-build-info";
+import { bootLog } from "@/lib/boot-diagnostics";
 import {
   primaryButtonStyle,
   secondaryButtonStyle,
@@ -28,6 +29,10 @@ function TabsWithBar() {
   const theme = colors[colorScheme];
   const { t } = useTranslation();
   const { openCreateList } = useCreateList();
+
+  useEffect(() => {
+    bootLog("first_screen", "TabsWithBar (tab navigator) mounted");
+  }, []);
 
   return (
     <Tabs
@@ -67,6 +72,14 @@ export default function TabLayout() {
   const { t } = useTranslation();
   const { isSignedIn, isLoaded, signOut } = useAuth();
   const { notifyBootReady } = useAppStartup();
+
+  useEffect(() => {
+    bootLog(
+      "tabs_layout",
+      `TabLayout mount isLoaded=${String(isLoaded)} isSignedIn=${String(isSignedIn)}`,
+    );
+  }, [isLoaded, isSignedIn]);
+
   const me = useMe(Boolean(isSignedIn));
   const workspacesQuery = useWorkspaces(Boolean(isSignedIn) && Boolean(me.data));
   const { activeWorkspace, hydrated } = useActiveWorkspace(workspacesQuery.data);

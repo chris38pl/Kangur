@@ -892,7 +892,7 @@ flowchart TB
 
 | Field | Source |
 |-------|--------|
-| `environment` | Map `EXPO_PUBLIC_APP_ENV` / Vercel: `development` → `development`, `preview` → `staging`, `production` → `production` |
+| `environment` | 1:1 with `EXPO_PUBLIC_APP_ENV` / EAS profile / Vercel `VERCEL_ENV`: `development` \| `preview` \| `production` (do **not** remap `preview` → `staging`) |
 | `release` | `{{version}} ({{build}})` — same as About / [deploy.md](./deploy.md) §8 |
 | `dist` / commit | EAS `gitCommitHash` / Vercel `VERCEL_GIT_COMMIT_SHA` |
 | Source maps | EAS upload on Android/iOS release; Next.js Sentry build plugin on Vercel |
@@ -1107,13 +1107,15 @@ Docs touch: [architecture.md](./architecture.md) §10.5 addendum; [deploy.md](./
 
 ### 7. Environment matrix
 
-| | development | staging (`preview`) | production |
-|--|-------------|---------------------|------------|
-| PostHog events | Off or separate project | On | On |
+| | development | preview | production |
+|--|-------------|---------|------------|
+| PostHog events | Off unless forced | On | On |
 | Sentry | Off unless `SENTRY_DEV=1` | On | On |
 | Feature flags | Local defaults / optional PostHog | PostHog | PostHog |
 | Session Replay | Off | Off | Off |
 | Auto-capture | Off | Off | Off |
+| Mobile package | `app.kangur.dev` | `app.kangur` | `app.kangur` |
+| Deep-link scheme | `kangur-dev://` | `kangur://` | `kangur://` |
 
 ---
 
