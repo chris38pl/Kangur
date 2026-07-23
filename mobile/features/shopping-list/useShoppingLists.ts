@@ -13,12 +13,24 @@ import { markListProvisional } from "./provisional-list";
 import type { ShoppingList } from "./schemas";
 import { persistShoppingListsCache } from "@/lib/query/persist-bootstrap";
 
-export function useShoppingLists(workspaceId: string | null, enabled = true) {
+type ListQueryOptions = {
+  /** Lists tab: avoid focus/mount refetch spinner — pull-to-refresh only. */
+  refetchOnMount?: boolean | "always";
+  refetchOnWindowFocus?: boolean | "always";
+};
+
+export function useShoppingLists(
+  workspaceId: string | null,
+  enabled = true,
+  options?: ListQueryOptions,
+) {
   const { getToken, isSignedIn } = useAuth();
 
   return useQuery({
     queryKey: ["shopping-lists", workspaceId],
     enabled: enabled && Boolean(isSignedIn) && Boolean(workspaceId),
+    refetchOnMount: options?.refetchOnMount,
+    refetchOnWindowFocus: options?.refetchOnWindowFocus,
     queryFn: async () => {
       const token = await getToken();
       if (!token || !workspaceId) {

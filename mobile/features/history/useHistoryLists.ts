@@ -7,12 +7,23 @@ import {
   restoreHistoryList,
 } from "./api";
 
-export function useHistoryLists(workspaceId: string | null, enabled = true) {
+type HistoryQueryOptions = {
+  refetchOnMount?: boolean | "always";
+  refetchOnWindowFocus?: boolean | "always";
+};
+
+export function useHistoryLists(
+  workspaceId: string | null,
+  enabled = true,
+  options?: HistoryQueryOptions,
+) {
   const { getToken, isSignedIn } = useAuth();
 
   return useQuery({
     queryKey: ["shopping-lists-history", workspaceId],
     enabled: enabled && Boolean(isSignedIn) && Boolean(workspaceId),
+    refetchOnMount: options?.refetchOnMount,
+    refetchOnWindowFocus: options?.refetchOnWindowFocus,
     queryFn: async () => {
       const token = await getToken();
       if (!token || !workspaceId) {

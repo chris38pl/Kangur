@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   Pressable,
@@ -469,9 +468,14 @@ export function HistoryScreen() {
   const workspaceId = activeWorkspace?.id ?? null;
   const queryClient = useQueryClient();
 
-  const activeListsQuery = useShoppingLists(workspaceId, hydrated);
-  const sessionsQuery = useResumableSessions(hydrated);
-  const historyQuery = useHistoryLists(workspaceId, hydrated);
+  // No mount/focus refetch here — keep cached lists visible; user pull refreshes.
+  const listQueryOpts = {
+    refetchOnMount: false as const,
+    refetchOnWindowFocus: false as const,
+  };
+  const activeListsQuery = useShoppingLists(workspaceId, hydrated, listQueryOpts);
+  const sessionsQuery = useResumableSessions(hydrated, listQueryOpts);
+  const historyQuery = useHistoryLists(workspaceId, hydrated, listQueryOpts);
   const repeatMutation = useRepeatHistoryList(workspaceId);
   const restoreMutation = useRestoreHistoryList(workspaceId);
   const archiveMutation = useArchiveShoppingList(workspaceId);
@@ -719,10 +723,10 @@ export function HistoryScreen() {
     (historyQuery.isRefetching && !historyQuery.isLoading) ||
     (sessionsQuery.isRefetching && !sessionsQuery.isLoading);
 
-  /** Background refetch with cache — badge in header, not RefreshControl spinner. */
-  const backgroundSyncing = refreshing && !loading;
-
   const [pullRefreshing, setPullRefreshing] = useState(false);
+
+  /** Background refetch with cache — text badge only (no spinner); pull uses RefreshControl. */
+  const backgroundSyncing = refreshing && !loading && !pullRefreshing;
 
   const actionsBusy =
     (repeatMutation.isPending &&
@@ -988,14 +992,11 @@ export function HistoryScreen() {
                   accessibilityRole="text"
                   accessibilityLabel={t("offline.syncing")}
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
                     flexShrink: 0,
                     height: typography.headline.lineHeight,
+                    justifyContent: "center",
                   }}
                 >
-                  <ActivityIndicator size="small" color={theme.primary} />
                   <Text
                     numberOfLines={1}
                     style={{
