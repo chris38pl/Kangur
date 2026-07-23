@@ -263,6 +263,12 @@ export function WorkspaceBrowserScreen() {
         );
         queryClient.setQueryData(ACTIVE_WORKSPACE_ID_QUERY_KEY, item.id);
         await AsyncStorage.setItem("kangur.activeWorkspaceId", item.id);
+        await queryClient.invalidateQueries({
+          queryKey: ["shopping-lists", item.id],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ["shopping-lists-history", item.id],
+        });
         setMenuItem(null);
         router.replace("/(tabs)" as never);
       } catch (error) {

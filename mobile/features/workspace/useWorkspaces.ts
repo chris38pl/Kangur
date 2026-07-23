@@ -2,7 +2,6 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-import { useMe } from "@/features/auth/useMe";
 import {
   ADMIN_BROWSING_WORKSPACE_QUERY_KEY,
   useAdminBrowsingWorkspaceId,
@@ -15,8 +14,6 @@ import { persistWorkspacesCache } from "@/lib/query/persist-bootstrap";
 
 export function useWorkspaces(enabled = true) {
   const { getToken, isSignedIn } = useAuth();
-  const meQuery = useMe();
-  const isPlatformAdmin = meQuery.data?.platformRole === "ADMIN";
   const { browsingId } = useAdminBrowsingWorkspaceId();
 
   const membershipsQuery = useQuery({
@@ -36,7 +33,6 @@ export function useWorkspaces(enabled = true) {
     enabled:
       enabled &&
       Boolean(isSignedIn) &&
-      isPlatformAdmin &&
       Boolean(browsingId) &&
       !(membershipsQuery.data ?? []).some((w) => w.id === browsingId),
     queryFn: async () => {
@@ -56,14 +52,14 @@ export function useWorkspaces(enabled = true) {
     return [overlay, ...membershipsQuery.data];
   }, [membershipsQuery.data, overlayQuery.data]);
 
+  const overlayPending =
+    Boolean(browsingId) &&
+    overlayQuery.isPending &&
+    !(membershipsQuery.data ?? []).some((w) => w.id === browsingId);
+
   return {
     ...membershipsQuery,
     data,
-    isPending:
-      membershipsQuery.isPending ||
-      (Boolean(browsingId) &&
-        isPlatformAdmin &&
-        overlayQuery.isPending &&
-        !(membershipsQuery.data ?? []).some((w) => w.id === browsingId)),
+    isPending: membershipsQuery.isPending || overlayPending,
   };
 }

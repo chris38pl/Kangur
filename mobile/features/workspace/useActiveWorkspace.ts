@@ -5,6 +5,7 @@ import { useCallback, useEffect } from "react";
 import {
   ADMIN_BROWSING_WORKSPACE_ID_QUERY_KEY,
   readAdminBrowsingWorkspaceId,
+  useAdminBrowsingWorkspaceId,
   writeAdminBrowsingWorkspaceId,
 } from "@/features/platform-workspaces/admin-browsing";
 
@@ -20,6 +21,7 @@ export const ACTIVE_WORKSPACE_ID_QUERY_KEY = ["active-workspace-id"] as const;
  */
 export function useActiveWorkspace(workspaces: Workspace[] | undefined) {
   const queryClient = useQueryClient();
+  const { browsingId } = useAdminBrowsingWorkspaceId();
 
   const idQuery = useQuery({
     queryKey: ACTIVE_WORKSPACE_ID_QUERY_KEY,
@@ -30,23 +32,41 @@ export function useActiveWorkspace(workspaces: Workspace[] | undefined) {
   const storedId = idQuery.data ?? null;
   const hydrated = idQuery.isSuccess || idQuery.isError;
 
-  const activeWorkspace =
-    workspaces?.find((w) => w.id === storedId) ?? workspaces?.[0] ?? null;
+  const matched = workspaces?.find((w) => w.id === storedId) ?? null;
+  /** Admin enter can set storedId before the browsed workspace is merged into `workspaces`. */
+  const waitingForAdminOverlay =
+    Boolean(storedId) &&
+    Boolean(browsingId) &&
+    storedId === browsingId &&
+    matched == null;
 
-  // Persist fallback when stored id is missing/invalid
+  const activeWorkspace = waitingForAdminOverlay
+    ? null
+    : (matched ?? workspaces?.[0] ?? null);
+
+  // Persist fallback when stored id is missing/invalid — never while admin overlay is loading.
   useEffect(() => {
     if (!hydrated || !activeWorkspace) return;
     if (storedId === activeWorkspace.id) return;
+    if (waitingForAdminOverlay) return;
+    if (storedId && browsingId && storedId === browsingId) return;
     void AsyncStorage.setItem(STORAGE_KEY, activeWorkspace.id).then(() => {
       queryClient.setQueryData(ACTIVE_WORKSPACE_ID_QUERY_KEY, activeWorkspace.id);
     });
-  }, [hydrated, activeWorkspace, storedId, queryClient]);
+  }, [
+    hydrated,
+    activeWorkspace,
+    storedId,
+    browsingId,
+    waitingForAdminOverlay,
+    queryClient,
+  ]);
 
   const setActiveId = useCallback(
     async (id: string) => {
-      const browsingId = await readAdminBrowsingWorkspaceId();
+      const currentBrowsingId = await readAdminBrowsingWorkspaceId();
       // Leaving admin-browsed space for another workspace clears the overlay.
-      if (browsingId && browsingId !== id) {
+      if (currentBrowsingId && currentBrowsingId !== id) {
         await writeAdminBrowsingWorkspaceId(null);
         queryClient.setQueryData(ADMIN_BROWSING_WORKSPACE_ID_QUERY_KEY, null);
         queryClient.removeQueries({
@@ -61,7 +81,7 @@ export function useActiveWorkspace(workspaces: Workspace[] | undefined) {
 
   return {
     activeWorkspace,
-    activeId: activeWorkspace?.id ?? null,
+    activeId: activeWorkspace?.id ?? storedId,
     /** Raw AsyncStorage id — use to prefetch lists before workspaces resolve. */
     storedId,
     setActiveId,

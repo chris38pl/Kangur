@@ -464,8 +464,11 @@ export function HistoryScreen() {
   const { showError } = useAppResult();
 
   const workspacesQuery = useWorkspaces();
-  const { activeWorkspace, hydrated } = useActiveWorkspace(workspacesQuery.data);
-  const workspaceId = activeWorkspace?.id ?? null;
+  const { activeWorkspace, hydrated, storedId } = useActiveWorkspace(
+    workspacesQuery.data,
+  );
+  // Prefer resolved workspace; fall back to stored id while admin overlay loads.
+  const workspaceId = activeWorkspace?.id ?? storedId ?? null;
   const queryClient = useQueryClient();
 
   // No mount/focus refetch here — keep cached lists visible; user pull refreshes.

@@ -305,17 +305,20 @@ export default function HomeScreen() {
   const workspacesQuery = useWorkspaces();
   const notificationsQuery = useNotifications();
   const prefsQuery = useNotificationPreferences();
-  const { activeWorkspace, hydrated } = useActiveWorkspace(workspacesQuery.data);
-  const membersQuery = useWorkspaceMembers(activeWorkspace?.id ?? null, hydrated);
-  const listsQuery = useShoppingLists(activeWorkspace?.id ?? null, hydrated);
+  const { activeWorkspace, hydrated, storedId } = useActiveWorkspace(
+    workspacesQuery.data,
+  );
+  const workspaceIdForQueries = activeWorkspace?.id ?? storedId ?? null;
+  const membersQuery = useWorkspaceMembers(workspaceIdForQueries, hydrated);
+  const listsQuery = useShoppingLists(workspaceIdForQueries, hydrated);
   const sessionsQuery = useResumableSessions(hydrated);
-  const creditsQuery = useAiCredits(activeWorkspace?.id ?? null);
+  const creditsQuery = useAiCredits(workspaceIdForQueries);
   const { createAndOpen } = useCreateList();
   const tabClearance = useTabBarClearance();
   const [refreshing, setRefreshing] = useState(false);
   const [quickActionsWidth, setQuickActionsWidth] = useState(0);
 
-  const workspaceId = activeWorkspace?.id ?? null;
+  const workspaceId = workspaceIdForQueries;
   const credits = creditsQuery.data;
   const creditsLimit = credits?.limit ?? 0;
   const creditsRemaining = credits?.remaining ?? 0;

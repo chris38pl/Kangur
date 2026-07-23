@@ -249,8 +249,13 @@ export default function ProfileScreen() {
   const queryClient = useQueryClient();
 
   const workspacesQuery = useWorkspaces();
-  const { activeWorkspace, hydrated } = useActiveWorkspace(workspacesQuery.data);
-  const listsQuery = useShoppingLists(activeWorkspace?.id ?? null, hydrated);
+  const { activeWorkspace, hydrated, storedId } = useActiveWorkspace(
+    workspacesQuery.data,
+  );
+  const listsQuery = useShoppingLists(
+    activeWorkspace?.id ?? storedId ?? null,
+    hydrated,
+  );
 
   const spacesCount = workspacesQuery.data?.length ?? 0;
   const lists = listsQuery.data ?? [];
