@@ -139,7 +139,7 @@ export async function inviteMember(
     });
   }
 
-  const { acceptUrl, delivered } = await sendInviteEmail({
+  const { delivered } = await sendInviteEmail({
     to: email,
     inviterName,
     workspaceName: workspace.name,
@@ -159,7 +159,6 @@ export async function inviteMember(
     inviteeEmail: email,
     actorUserId: input.actorUserId,
     actorDisplayName: inviterName,
-    rawToken,
   });
 
   const { Analytics } = await import("@/lib/analytics");
@@ -177,8 +176,6 @@ export async function inviteMember(
       role,
       expiresAt: expiresAt.toISOString(),
     },
-    token: rawToken,
-    acceptUrl,
     emailDelivered: delivered,
   };
 }

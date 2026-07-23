@@ -137,28 +137,16 @@ export const ApplyOperationSchema = z
       op: z.literal("create"),
       proposalRowId: z.string(),
       clientId: z.string().optional(),
-      name: z.string().min(1).max(120),
-      amount: z.string().nullable().optional(),
-      note: z.string().nullable().optional(),
-      category: z.enum(SHOPPING_CATEGORIES),
     }),
     z.object({
       op: z.literal("merge"),
       proposalRowId: z.string(),
       targetItemId: z.string(),
-      name: z.string().min(1).max(120).optional(),
-      amount: z.string().nullable().optional(),
-      note: z.string().nullable().optional(),
-      category: z.enum(SHOPPING_CATEGORIES).optional(),
     }),
     z.object({
       op: z.literal("update"),
       proposalRowId: z.string(),
       targetItemId: z.string(),
-      name: z.string().min(1).max(120).optional(),
-      amount: z.string().nullable().optional(),
-      note: z.string().nullable().optional(),
-      category: z.enum(SHOPPING_CATEGORIES).optional(),
       status: z
         .enum(["pending", "bought", "unavailable", "removed"])
         .optional(),
@@ -173,6 +161,7 @@ export const ApplyOperationSchema = z
 export const ApplyAiProposalBodySchema = z
   .object({
     runId: z.string(),
+    /** Decisions only — name/amount/category rehydrated from stored proposal. */
     operations: z.array(ApplyOperationSchema),
   })
   .openapi("ApplyAiProposalBody");

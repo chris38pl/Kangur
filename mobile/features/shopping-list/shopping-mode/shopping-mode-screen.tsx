@@ -17,6 +17,7 @@ import { ShoppingModeSkeleton } from "@/components/skeleton";
 import { useColorScheme } from "@/components/useColorScheme";
 import { shoppingDensity } from "@/design-system/shopping-density";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
+import { LoadingTransition } from "@/lib/motion";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { OfflineStatusBanner } from "@/features/offline/OfflineStatusBanner";
 import { startShoppingSession } from "@/features/notifications/api";
@@ -36,6 +37,7 @@ import { createClientId } from "@/lib/createClientId";
 import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
 import { Analytics } from "@/lib/analytics";
 import { oncePerUser } from "@/lib/analytics/once";
+import { openTask } from "@/lib/navigation";
 import { RemoteChangeToast, useListRealtime } from "@/lib/realtime";
 
 import { AddItemSheet } from "./add-item-sheet";
@@ -49,6 +51,7 @@ import { ShoppingCategoryCard } from "./shopping-category-card";
 import { ShoppingFab } from "./shopping-fab";
 import { ShoppingListSummaryCard } from "./shopping-list-summary-card";
 import { useShoppingModeExitGuard } from "./shopping-mode-exit-guard";
+import { leaveShoppingTask } from "./shopping-task-intent";
 
 type Props = {
   listId: string;
@@ -93,8 +96,8 @@ export function ShoppingModeScreen({ listId }: Props) {
     workspaceId: listQuery.data?.workspaceId ?? null,
   });
 
-  const { allowLeave, exitDialog } = useShoppingModeExitGuard(true, {
-    onCancelled: () => {
+  const { allowLeave, exitDialog } = useShoppingModeExitGuard(true, listId, {
+    onLeave: () => {
       const workspaceId = listQuery.data?.workspaceId;
       if (!workspaceId) return;
       const count = (itemsQuery.data ?? []).filter(
@@ -199,16 +202,13 @@ export function ShoppingModeScreen({ listId }: Props) {
 
   const openCategory = (category: ShoppingCategory) => {
     allowLeave();
-    router.push(`/list/${listId}/shop/${category}`);
+    openTask(`/list/${listId}/shop/${category}`);
   };
 
   const goBackToEdit = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
+    // Intentional return to list editor — no exit confirmation sheet.
     allowLeave();
-    router.replace(`/list/${listId}`);
+    leaveShoppingTask(listId);
   };
 
   const onReorderCategories = (data: CategoryProgress[]) => {
@@ -244,10 +244,13 @@ export function ShoppingModeScreen({ listId }: Props) {
           >
             <Pressable
               onPress={() => {
-                if (router.canGoBack()) router.back();
-                else {
+                // Header back = same as Android back → confirm exit sheet.
+                // (Intentional "back to edit" uses goBackToEdit without sheet.)
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
                   allowLeave();
-                  router.replace(`/list/${listId}`);
+                  leaveShoppingTask(listId);
                 }
               }}
               hitSlop={10}
@@ -308,10 +311,11 @@ export function ShoppingModeScreen({ listId }: Props) {
           }}
           scrollEventThrottle={16}
         >
-          {isPending ? (
-            <ShoppingModeSkeleton />
-          ) : (
-            <>
+          <LoadingTransition
+            variant="inline"
+            loading={isPending}
+            skeleton={<ShoppingModeSkeleton />}
+          >
               <ShoppingListSummaryCard
                 title={listQuery.data?.name ?? t("shoppingMode.title")}
                 updatedLabel={updatedLabel}
@@ -326,6 +330,9 @@ export function ShoppingModeScreen({ listId }: Props) {
                   <SectionTitle>
                     {t("shoppingMode.categoriesSection")}
                   </SectionTitle>
+                  <CategoryOrderHint>
+                    {t("shoppingMode.tapCategoryHint")}
+                  </CategoryOrderHint>
                   <CategoryOrderHint>
                     {t(
                       Platform.OS === "web"
@@ -441,7 +448,7 @@ export function ShoppingModeScreen({ listId }: Props) {
                         getToken,
                         unavailable,
                       );
-                      router.push(`/list/${listId}/shop/finish`);
+                      openTask(`/list/${listId}/shop/finish`);
                     }}
                     style={{
                       marginTop: spacing[6],
@@ -459,8 +466,7 @@ export function ShoppingModeScreen({ listId }: Props) {
                   </Pressable>
                 </View>
               ) : null}
-            </>
-          )}
+          </LoadingTransition>
         </NestableScreenScroll>
 
         {!isPending ? (

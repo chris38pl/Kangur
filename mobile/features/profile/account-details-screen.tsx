@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import { FeedbackSheet } from "@/components/feedback-sheet";
 import { Screen } from "@/components/Screen";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
@@ -120,8 +121,9 @@ export function AccountDetailsScreen() {
   const router = useRouter();
   const { user, isLoaded } = useUser();
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
-  const showSoon = () => Alert.alert(t("profile.comingSoon"));
+  const showSoon = () => setComingSoonOpen(true);
 
   const displayName =
     user?.fullName?.trim() ||
@@ -311,6 +313,15 @@ export function AccountDetailsScreen() {
 
         <LoginMethodsSection />
       </ScrollView>
+
+      <FeedbackSheet
+        visible={comingSoonOpen}
+        image={brandAssets.createListMascot}
+        title={t("profile.comingSoon")}
+        body={t("profile.comingSoonBody")}
+        primaryLabel={t("common.return")}
+        onPrimary={() => setComingSoonOpen(false)}
+      />
     </Screen>
   );
 }

@@ -9,7 +9,8 @@ export type ApiErrorCode =
   | "INSUFFICIENT_CREDITS"
   | "HISTORY_LIMIT_EXCEEDED"
   | "PREMIUM_REQUIRED"
-  | "AI_UNAVAILABLE";
+  | "AI_UNAVAILABLE"
+  | "RATE_LIMITED";
 
 export class ApiError extends Error {
   readonly code: ApiErrorCode;

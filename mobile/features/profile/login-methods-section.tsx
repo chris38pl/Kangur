@@ -5,7 +5,9 @@ import { useState, type ReactNode } from "react";
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { FeedbackSheet } from "@/components/feedback-sheet";
 import { useColorScheme } from "@/components/useColorScheme";
+import { brandAssets } from "@/design-system/brand-assets";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { AppleIcon, GoogleIcon } from "@/features/auth/auth-icons";
 import { getClerkErrorMessage } from "@/features/auth/clerk-error";
@@ -133,6 +135,9 @@ export function LoginMethodsSection() {
   const [busyProvider, setBusyProvider] = useState<"google" | "apple" | null>(
     null,
   );
+  const [disconnectTarget, setDisconnectTarget] = useState<
+    "google" | "apple" | null
+  >(null);
 
   if (!isLoaded || !user) {
     return (
@@ -164,42 +169,30 @@ export function LoginMethodsSection() {
 
   const canDisconnectOAuth = passwordEnabled || oauthCount > 1;
 
-  const disconnectProvider = async (provider: "google" | "apple") => {
+  const confirmDisconnect = (provider: "google" | "apple") => {
     const account = provider === "google" ? googleAccount : appleAccount;
     if (!account || !canDisconnectOAuth) return;
+    setDisconnectTarget(provider);
+  };
 
-    Alert.alert(
-      t("profile.disconnectTitle", {
-        provider: t(
-          provider === "google"
-            ? "profile.providerGoogle"
-            : "profile.providerApple",
-        ),
-      }),
-      t("profile.disconnectBody"),
-      [
-        { text: t("workspace.cancel"), style: "cancel" },
-        {
-          text: t("profile.disconnectConfirm"),
-          style: "destructive",
-          onPress: () => {
-            void (async () => {
-              setBusyProvider(provider);
-              try {
-                await account.destroy();
-                await user.reload();
-              } catch (err) {
-                Alert.alert(
-                  getClerkErrorMessage(err, t, "profile.disconnectFailed"),
-                );
-              } finally {
-                setBusyProvider(null);
-              }
-            })();
-          },
-        },
-      ],
-    );
+  const runDisconnect = async () => {
+    const provider = disconnectTarget;
+    if (!provider) return;
+    const account = provider === "google" ? googleAccount : appleAccount;
+    if (!account) {
+      setDisconnectTarget(null);
+      return;
+    }
+    setBusyProvider(provider);
+    try {
+      await account.destroy();
+      await user.reload();
+      setDisconnectTarget(null);
+    } catch (err) {
+      Alert.alert(getClerkErrorMessage(err, t, "profile.disconnectFailed"));
+    } finally {
+      setBusyProvider(null);
+    }
   };
 
   const connectProvider = async (provider: "google" | "apple") => {
@@ -241,7 +234,7 @@ export function LoginMethodsSection() {
     if (connected) {
       if (!canDisconnectOAuth) return null;
       return (
-        <Pressable onPress={() => void disconnectProvider(provider)} hitSlop={8}>
+        <Pressable onPress={() => confirmDisconnect(provider)} hitSlop={8}>
           <Text style={{ ...typography.label, color: theme.danger }}>
             {t("profile.disconnect")}
           </Text>
@@ -257,9 +250,117 @@ export function LoginMethodsSection() {
     );
   };
 
+  const disconnectSheet = (
+    <FeedbackSheet
+      visible={disconnectTarget != null}
+      image={brandAssets.silentMode}
+      title={t("profile.disconnectTitle", {
+        provider: t(
+          disconnectTarget === "apple"
+            ? "profile.providerApple"
+            : "profile.providerGoogle",
+        ),
+      })}
+      body={t("profile.disconnectBody")}
+      primaryLabel={t("profile.disconnectConfirm")}
+      onPrimary={() => void runDisconnect()}
+      secondaryLabel={t("workspace.cancel")}
+      onSecondary={() => {
+        if (!busyProvider) setDisconnectTarget(null);
+      }}
+      primaryDestructive
+      busy={busyProvider != null && disconnectTarget != null}
+    />
+  );
+
   // 1) Email + password only — still offer connect Google / Apple (same Clerk user).
   if (emailOnly) {
     return (
+      <>
+        <View style={{ marginTop: spacing[6] }}>
+          <Text
+            style={{
+              ...typography.headline,
+              color: theme.text,
+              marginBottom: spacing[3],
+            }}
+          >
+            {t("profile.loginMethods")}
+          </Text>
+          <Card>
+            <MethodRow
+              active={hasGoogle}
+              icon={<GoogleIcon size={20} />}
+              title={t("profile.providerGoogle")}
+              showDivider
+              trailing={linkAction("google", hasGoogle)}
+            />
+            <MethodRow
+              active={hasApple}
+              icon={<AppleIcon size={20} />}
+              title={t("profile.providerApple")}
+              trailing={linkAction("apple", hasApple)}
+            />
+          </Card>
+        </View>
+        {disconnectSheet}
+      </>
+    );
+  }
+
+  // 2/3) Single OAuth provider, no password - managed by provider + offer set password
+  if (oauthOnlyNoPassword && oauthCount === 1) {
+    const provider = hasGoogle ? "google" : "apple";
+    const providerLabel = t(
+      provider === "google" ? "profile.providerGoogle" : "profile.providerApple",
+    );
+
+    return (
+      <>
+        <View style={{ marginTop: spacing[6] }}>
+          <Text
+            style={{
+              ...typography.headline,
+              color: theme.text,
+              marginBottom: spacing[3],
+            }}
+          >
+            {t("profile.loginMethod")}
+          </Text>
+          <Card>
+            <MethodRow
+              active
+              icon={
+                provider === "google" ? (
+                  <GoogleIcon size={20} />
+                ) : (
+                  <AppleIcon size={20} />
+                )
+              }
+              title={providerLabel}
+              showDivider
+            />
+            <MethodRow
+              active={false}
+              title={t("profile.passwordNotSet")}
+              trailing={
+                <Pressable onPress={openChangePassword} hitSlop={8}>
+                  <Text style={{ ...typography.label, color: theme.primary }}>
+                    {t("profile.setPasswordTitle")}
+                  </Text>
+                </Pressable>
+              }
+            />
+          </Card>
+        </View>
+        {disconnectSheet}
+      </>
+    );
+  }
+
+  // 4/5) Multiple methods (or OAuth + password / both OAuth)
+  return (
+    <>
       <View style={{ marginTop: spacing[6] }}>
         <Text
           style={{
@@ -268,9 +369,30 @@ export function LoginMethodsSection() {
             marginBottom: spacing[3],
           }}
         >
-          {t("profile.loginMethods")}
+          {multi || oauthCount > 0
+            ? t("profile.loginMethods")
+            : t("profile.loginMethod")}
         </Text>
         <Card>
+          <MethodRow
+            active={passwordEnabled}
+            title={t("profile.methodEmailPassword")}
+            subtitle={
+              passwordEnabled
+                ? t("profile.passwordMasked")
+                : t("profile.passwordNotSet")
+            }
+            showDivider
+            trailing={
+              <Pressable onPress={openChangePassword} hitSlop={8}>
+                <Text style={{ ...typography.label, color: theme.primary }}>
+                  {passwordEnabled
+                    ? t("profile.changePassword")
+                    : t("profile.setPasswordTitle")}
+                </Text>
+              </Pressable>
+            }
+          />
           <MethodRow
             active={hasGoogle}
             icon={<GoogleIcon size={20} />}
@@ -286,105 +408,8 @@ export function LoginMethodsSection() {
           />
         </Card>
       </View>
-    );
-  }
-
-  // 2/3) Single OAuth provider, no password - managed by provider + offer set password
-  if (oauthOnlyNoPassword && oauthCount === 1) {
-    const provider = hasGoogle ? "google" : "apple";
-    const providerLabel = t(
-      provider === "google" ? "profile.providerGoogle" : "profile.providerApple",
-    );
-
-    return (
-      <View style={{ marginTop: spacing[6] }}>
-        <Text
-          style={{
-            ...typography.headline,
-            color: theme.text,
-            marginBottom: spacing[3],
-          }}
-        >
-          {t("profile.loginMethod")}
-        </Text>
-        <Card>
-          <MethodRow
-            active
-            icon={
-              provider === "google" ? (
-                <GoogleIcon size={20} />
-              ) : (
-                <AppleIcon size={20} />
-              )
-            }
-            title={providerLabel}
-            showDivider
-          />
-          <MethodRow
-            active={false}
-            title={t("profile.passwordNotSet")}
-            trailing={
-              <Pressable onPress={openChangePassword} hitSlop={8}>
-                <Text style={{ ...typography.label, color: theme.primary }}>
-                  {t("profile.setPasswordTitle")}
-                </Text>
-              </Pressable>
-            }
-          />
-        </Card>
-      </View>
-    );
-  }
-
-  // 4/5) Multiple methods (or OAuth + password / both OAuth)
-  return (
-    <View style={{ marginTop: spacing[6] }}>
-      <Text
-        style={{
-          ...typography.headline,
-          color: theme.text,
-          marginBottom: spacing[3],
-        }}
-      >
-        {multi || oauthCount > 0
-          ? t("profile.loginMethods")
-          : t("profile.loginMethod")}
-      </Text>
-      <Card>
-        <MethodRow
-          active={passwordEnabled}
-          title={t("profile.methodEmailPassword")}
-          subtitle={
-            passwordEnabled
-              ? t("profile.passwordMasked")
-              : t("profile.passwordNotSet")
-          }
-          showDivider
-          trailing={
-            <Pressable onPress={openChangePassword} hitSlop={8}>
-              <Text style={{ ...typography.label, color: theme.primary }}>
-                {passwordEnabled
-                  ? t("profile.changePassword")
-                  : t("profile.setPasswordTitle")}
-              </Text>
-            </Pressable>
-          }
-        />
-        <MethodRow
-          active={hasGoogle}
-          icon={<GoogleIcon size={20} />}
-          title={t("profile.providerGoogle")}
-          showDivider
-          trailing={linkAction("google", hasGoogle)}
-        />
-        <MethodRow
-          active={hasApple}
-          icon={<AppleIcon size={20} />}
-          title={t("profile.providerApple")}
-          trailing={linkAction("apple", hasApple)}
-        />
-      </Card>
-    </View>
+      {disconnectSheet}
+    </>
   );
 }
 

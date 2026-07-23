@@ -5,11 +5,13 @@ import { NotificationListResponseSchema } from "@/features/notifications/schemas
 import { ensureNotificationHandlersRegistered } from "@/features/notifications/registerHandlers";
 import { ApiError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
+import { assertRateLimit } from "@/lib/rateLimit";
 
 export async function GET(request: Request) {
   try {
     ensureNotificationHandlersRegistered();
     const { user } = await requireUser(request);
+    assertRateLimit("notifications", user.id);
     const [rows, unreadCount] = await Promise.all([
       notificationRepository.listForUser(user.id),
       notificationRepository.unreadCount(user.id),

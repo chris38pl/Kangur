@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Pressable,
@@ -16,6 +17,8 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { useAppResult } from "@/components/AppResultProvider";
+import { FeedbackSheet } from "@/components/feedback-sheet";
 import { KangurMascot } from "@/components/KangurMascot";
 import { FallbackSymbol } from "@/components/FallbackSymbol";
 import {
@@ -26,6 +29,7 @@ import { Screen } from "@/components/Screen";
 import { ListsSkeleton } from "@/components/skeleton";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
+import { LoadingTransition, FadeInContent } from "@/lib/motion";
 import {
   brand,
   colors,
@@ -46,9 +50,10 @@ import {
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
-import { useAppResult } from "@/components/AppResultProvider";
 import { ApiClientError } from "@/lib/api/client";
 import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
+import { goRoot } from "@/lib/navigation";
+import { PremiumHintRow } from "@/features/billing/premium-hint-row";
 
 import { HistoryActionsSheet } from "./history-actions-sheet";
 import { HistoryPreviewSheet } from "./history-preview-sheet";
@@ -221,6 +226,7 @@ function ProductBadges({
   );
 }
 
+/** Same badge style as list edit filters (`ListStatusFilterChips`). */
 function SegmentedControl({
   value,
   onChange,
@@ -233,58 +239,45 @@ function SegmentedControl({
   const theme = colors[scheme];
 
   return (
-    <View
-      style={{
-        marginBottom: spacing[4],
-        padding: 3,
-        borderRadius: radius.md,
-        backgroundColor: theme.border,
-        flexDirection: "row",
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={{ marginBottom: spacing[4] }}
+      contentContainerStyle={{
+        gap: spacing[2],
+        paddingRight: spacing[2],
       }}
     >
       {SEGMENTS.map((s) => {
-        const active = value === s.id;
+        const selected = value === s.id;
         return (
           <Pressable
             key={s.id}
             onPress={() => onChange(s.id)}
             accessibilityRole="button"
-            accessibilityState={{ selected: active }}
+            accessibilityState={{ selected }}
             style={{
-              flex: 1,
               paddingVertical: spacing[2],
-              paddingHorizontal: spacing[1],
-              borderRadius: radius.sm,
-              backgroundColor: active ? theme.surface : "transparent",
-              alignItems: "center",
-              justifyContent: "center",
-              ...(active
-                ? {
-                    shadowColor: "#1B2C3B",
-                    shadowOpacity: 0.08,
-                    shadowRadius: 4,
-                    shadowOffset: { width: 0, height: 1 },
-                    elevation: 2,
-                  }
-                : null),
+              paddingHorizontal: spacing[3],
+              borderRadius: radius.full,
+              backgroundColor: selected ? "transparent" : theme.section,
+              borderWidth: 1.5,
+              borderColor: selected ? theme.primary : "transparent",
             }}
           >
             <Text
               style={{
-                fontSize: 11,
-                lineHeight: 14,
-                fontWeight: active ? "700" : "500",
-                color: active ? theme.text : theme.textMuted,
-                textAlign: "center",
+                ...typography.caption,
+                fontWeight: selected ? "600" : "500",
+                color: selected ? theme.primary : theme.text,
               }}
-              numberOfLines={2}
             >
               {t(s.labelKey)}
             </Text>
           </Pressable>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -464,6 +457,11 @@ export function HistoryScreen() {
     visible: boolean;
     variant: PreferredForAiSheetVariant;
   }>({ visible: false, variant: "added" });
+  const [feedback, setFeedback] = useState<
+    | { kind: "limit" }
+    | { kind: "restored" }
+    | null
+  >(null);
   const { showError } = useAppResult();
 
   const workspacesQuery = useWorkspaces();
@@ -721,6 +719,11 @@ export function HistoryScreen() {
     (historyQuery.isRefetching && !historyQuery.isLoading) ||
     (sessionsQuery.isRefetching && !sessionsQuery.isLoading);
 
+  /** Background refetch with cache — badge in header, not RefreshControl spinner. */
+  const backgroundSyncing = refreshing && !loading;
+
+  const [pullRefreshing, setPullRefreshing] = useState(false);
+
   const actionsBusy =
     (repeatMutation.isPending &&
       menuList != null &&
@@ -741,6 +744,15 @@ export function HistoryScreen() {
     ]);
   }, [queryClient, workspaceId]);
 
+  const onPullRefresh = useCallback(async () => {
+    setPullRefreshing(true);
+    try {
+      await refreshAll();
+    } finally {
+      setPullRefreshing(false);
+    }
+  }, [refreshAll]);
+
   // Apply deep-link segment from Home "see all" once per param change.
   useFocusEffect(
     useCallback(() => {
@@ -757,13 +769,13 @@ export function HistoryScreen() {
   useFocusEffect(
     useCallback(() => {
       historyOpened();
-      void refreshAll();
-    }, [refreshAll]),
+      // Heavy list/history queries: no forced focus refetch (pull-to-refresh + invalidation).
+    }, []),
   );
 
   const handleLimitError = (err: unknown) => {
     if (err instanceof ApiClientError && err.code === "HISTORY_LIMIT_EXCEEDED") {
-      Alert.alert(t("history.limitTitle"), t("history.limitBody"));
+      setFeedback({ kind: "limit" });
       return;
     }
     Alert.alert(
@@ -792,7 +804,7 @@ export function HistoryScreen() {
     restoreMutation.mutate(list.id, {
       onSuccess: () => {
         historyRestore(list.id);
-        Alert.alert(t("history.restoredTitle"), t("history.restoredBody"));
+        setFeedback({ kind: "restored" });
       },
       onError: handleLimitError,
     });
@@ -915,7 +927,7 @@ export function HistoryScreen() {
   };
 
   const goHome = () => {
-    router.navigate("/(tabs)" as never);
+    goRoot();
   };
 
   return (
@@ -952,12 +964,53 @@ export function HistoryScreen() {
           </Pressable>
 
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text
-              numberOfLines={1}
-              style={{ ...typography.headline, color: theme.text }}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing[2],
+                minHeight: typography.headline.lineHeight,
+              }}
             >
-              {t("history.title")}
-            </Text>
+              <Text
+                numberOfLines={1}
+                style={{
+                  ...typography.headline,
+                  color: theme.text,
+                  flexShrink: 1,
+                  includeFontPadding: false,
+                }}
+              >
+                {t("history.title")}
+              </Text>
+              {backgroundSyncing ? (
+                <View
+                  accessibilityRole="text"
+                  accessibilityLabel={t("offline.syncing")}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    flexShrink: 0,
+                    height: typography.headline.lineHeight,
+                  }}
+                >
+                  <ActivityIndicator size="small" color={theme.primary} />
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      ...typography.caption,
+                      color: theme.textMuted,
+                      lineHeight: typography.headline.lineHeight,
+                      includeFontPadding: false,
+                      textAlignVertical: "center",
+                    }}
+                  >
+                    {t("offline.syncing")}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
             <Text
               style={{
                 ...typography.caption,
@@ -982,8 +1035,8 @@ export function HistoryScreen() {
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => void refreshAll()}
+            refreshing={pullRefreshing}
+            onRefresh={() => void onPullRefresh()}
             tintColor={theme.primary}
           />
         }
@@ -1011,15 +1064,19 @@ export function HistoryScreen() {
           }}
         />
 
-        {loading ? <ListsSkeleton multiSection={segment === "all"} /> : null}
-
+        <LoadingTransition
+          variant="inline"
+          loading={loading}
+          skeleton={<ListsSkeleton multiSection={segment === "all"} />}
+        >
         {loadError ? (
           <Text style={{ ...typography.body, color: theme.danger }}>
             {t("history.loadFailed")}
           </Text>
         ) : null}
 
-        {!loading && !loadError && isEmpty ? (
+        {!loadError && isEmpty ? (
+          <FadeInContent visible={!loading && isEmpty}>
           <View style={{ alignItems: "center", paddingTop: spacing[8] }}>
             <KangurMascot variant="icon" width={88} height={88} />
             <Text
@@ -1043,6 +1100,7 @@ export function HistoryScreen() {
               {t(emptyBodyKey)}
             </Text>
           </View>
+          </FadeInContent>
         ) : null}
 
         {noSearchResults ? (
@@ -1058,7 +1116,7 @@ export function HistoryScreen() {
           </Text>
         ) : null}
 
-        {!loading && !loadError && segment === "all" && !isEmpty
+        {!loadError && segment === "all" && !isEmpty
           ? (
               <>
                 {renderSection(
@@ -1083,7 +1141,7 @@ export function HistoryScreen() {
             )
           : null}
 
-        {!loading && !loadError && segment !== "all" ? (
+        {!loadError && segment !== "all" ? (
           <>
             {singlePage.visibleItems.map((list) =>
               renderCard(list, segment === "shopping"),
@@ -1096,6 +1154,19 @@ export function HistoryScreen() {
             />
           </>
         ) : null}
+
+        {!loadError &&
+        activeWorkspace?.plan !== "premium" ? (
+          <View style={{ marginTop: spacing[4], marginBottom: spacing[2] }}>
+            <PremiumHintRow
+              title={t("billing.hintHistoryDepthLine1")}
+              subtitle={t("billing.hintHistoryDepthLine2")}
+              onPress={() => router.push("/premium")}
+              accessibilityLabel={t("billing.upgradeCta")}
+            />
+          </View>
+        ) : null}
+        </LoadingTransition>
       </ScrollView>
 
       <HistoryActionsSheet
@@ -1116,6 +1187,12 @@ export function HistoryScreen() {
           const list = menuList;
           setMenuList(null);
           setPreviewList(list);
+        }}
+        onEdit={() => {
+          if (!menuList) return;
+          const listId = menuList.id;
+          setMenuList(null);
+          router.push(`/list/${listId}` as never);
         }}
         onShop={() => {
           if (!menuList) return;
@@ -1179,6 +1256,43 @@ export function HistoryScreen() {
           if (!archiveMutation.isPending) setDeleteList(null);
         }}
         onConfirm={onConfirmDelete}
+      />
+
+      <FeedbackSheet
+        visible={feedback != null}
+        image={
+          feedback?.kind === "restored"
+            ? brandAssets.listCreated
+            : brandAssets.listBag
+        }
+        title={
+          feedback?.kind === "restored"
+            ? t("history.restoredTitle")
+            : t("history.limitTitle")
+        }
+        body={
+          feedback?.kind === "restored"
+            ? t("history.restoredBody")
+            : t("history.limitBody")
+        }
+        primaryLabel={
+          feedback?.kind === "limit"
+            ? t("billing.upgradeCta")
+            : t("common.return")
+        }
+        onPrimary={() => {
+          const kind = feedback?.kind;
+          setFeedback(null);
+          if (kind === "limit") {
+            router.push("/premium");
+          }
+        }}
+        secondaryLabel={
+          feedback?.kind === "limit" ? t("common.return") : undefined
+        }
+        onSecondary={
+          feedback?.kind === "limit" ? () => setFeedback(null) : undefined
+        }
       />
     </Screen>
   );

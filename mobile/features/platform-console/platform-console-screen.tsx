@@ -26,6 +26,7 @@ import {
   recordRealtimeSample,
   type MetricHistoryKey,
 } from "./metric-history";
+import { AiInsightsPanel } from "./ai-insights-panel";
 import { RealtimePanel, type RealtimeData } from "./realtime-panel";
 import { Sparkline } from "./sparkline";
 
@@ -93,7 +94,7 @@ const RealtimeSchema = z.object({
 
 type Overview = z.infer<typeof OverviewSchema>;
 
-type ConsoleSection = "overview" | "realtime";
+type ConsoleSection = "overview" | "realtime" | "aiInsights";
 
 type HealthLevel = "healthy" | "warning" | "critical";
 
@@ -106,9 +107,15 @@ type DisplayAlert = {
   severity: "warning" | "critical";
 };
 
-const SECTIONS: { id: ConsoleSection; labelKey: string }[] = [
+const SECTIONS: {
+  id: ConsoleSection;
+  labelKey?: string;
+  label?: string;
+}[] = [
   { id: "overview", labelKey: "platformConsole.sectionOverview" },
   { id: "realtime", labelKey: "platformConsole.sectionRealtime" },
+  // Admin-only ops panel — English only (not product i18n).
+  { id: "aiInsights", label: "AI Insights" },
 ];
 
 const LATENCY_ACCENT = "#7C6CF0";
@@ -505,7 +512,7 @@ function SegmentedControl({
               }}
               numberOfLines={1}
             >
-              {t(s.labelKey)}
+              {s.label ?? (s.labelKey ? t(s.labelKey) : s.id)}
             </Text>
           </Pressable>
         );
@@ -1120,11 +1127,13 @@ export function PlatformConsoleScreen() {
             overview={overviewQuery.data}
             loading={overviewQuery.isLoading}
           />
-        ) : (
+        ) : section === "realtime" ? (
           <RealtimePanel
             data={realtimeQuery.data}
             loading={realtimeQuery.isLoading}
           />
+        ) : (
+          <AiInsightsPanel enabled={isAdmin && section === "aiInsights"} />
         )}
       </ScrollView>
     </Screen>

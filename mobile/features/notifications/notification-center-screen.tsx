@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   Pressable,
   RefreshControl,
@@ -13,9 +13,11 @@ import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Screen } from "@/components/Screen";
+import { NotificationsSkeleton } from "@/components/skeleton";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
+import { FadeInContent } from "@/lib/motion";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { FallbackSymbol } from "@/components/FallbackSymbol";
 
@@ -29,6 +31,7 @@ import {
   NotificationTypeIcon,
   visualForNotification,
 } from "./notification-visuals";
+import { refreshNotifications } from "./refreshNotifications";
 import type { AppNotification } from "./schemas";
 import {
   useMarkAllNotificationsRead,
@@ -49,11 +52,16 @@ export function NotificationCenterScreen() {
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+  const queryClient = useQueryClient();
   const query = useNotifications();
   const prefsQuery = useNotificationPreferences();
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
   const [tab, setTab] = useState<FilterTab>("all");
+
+  const onPullRefresh = () => {
+    void refreshNotifications(queryClient);
+  };
 
   const silentMode = prefsQuery.data?.silentMode === true;
   const unreadCount = silentMode ? 0 : (query.data?.unreadCount ?? 0);
@@ -143,10 +151,8 @@ export function NotificationCenterScreen() {
       </View>
 
       {query.isPending ? (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        >
-          <ActivityIndicator color={theme.primary} />
+        <View style={{ flex: 1, paddingHorizontal: spacing[4], paddingTop: spacing[2] }}>
+          <NotificationsSkeleton />
         </View>
       ) : isEmpty ? (
         <ScrollView
@@ -160,11 +166,12 @@ export function NotificationCenterScreen() {
           refreshControl={
             <RefreshControl
               refreshing={query.isRefetching && !query.isPending}
-              onRefresh={() => void query.refetch()}
+              onRefresh={onPullRefresh}
               tintColor={theme.primary}
             />
           }
         >
+          <FadeInContent visible>
           <View
             style={{
               alignItems: "center",
@@ -202,6 +209,7 @@ export function NotificationCenterScreen() {
               {t("notifications.empty")}
             </Text>
           </View>
+          </FadeInContent>
         </ScrollView>
       ) : (
         <View style={{ flex: 1 }}>
@@ -242,7 +250,7 @@ export function NotificationCenterScreen() {
             refreshControl={
               <RefreshControl
                 refreshing={query.isRefetching && !query.isPending}
-                onRefresh={() => void query.refetch()}
+                onRefresh={onPullRefresh}
                 tintColor={theme.primary}
               />
             }

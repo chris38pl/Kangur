@@ -16,6 +16,12 @@
     "return": "Назад",
     "tryAgain": "Паспрабаваць зноў"
   },
+  "appUpdate": {
+    "title": "Даступная новая версія Kangur",
+    "body": "Вы карыстаецеся старэйшай версіяй праграмы. Абнавіце, каб карыстацца найноўшымі функцыямі і выпраўленнямі.",
+    "update": "Абнавіць",
+    "later": "Пазней"
+  },
   "home": {
     "title": "Kangur",
     "subtitle": "ШІ-памочнік для пакупак",
@@ -156,6 +162,7 @@
     "productsProgress": "{{bought}} з {{total}} тавараў",
     "boughtOfTotal": "{{bought}} з {{total}} тавараў",
     "categoriesSection": "Катэгорыі",
+    "tapCategoryHint": "Націсніце катэгорыю, каб рабіць пакупкі ў гэтым радзе.",
     "alreadyBoughtSection": "Ужо куплена",
     "backToEditList": "Вярнуцца да рэдагавання спісу",
     "purchased": "Куплена",
@@ -284,6 +291,9 @@
     "suggestAlreadyApplied": "Гэтая прапанова ўжо выкарыстана.",
     "suggestLoadingSubtitle": "Ствараем спіс з вашых папярэдніх пакупак…",
     "suggestLoadingCta": "Generating…",
+    "phaseUploading": "Загрузка…",
+    "phaseAnalyzing": "Аналіз…",
+    "phaseApplying": "Даданне тавараў…",
     "suggestAcceptedEmpty": "Правядзіце ўправа, каб дадаць прапанову.",
     "suggestProposals_one": "Прапановы ({{count}})",
     "suggestProposals_other": "Прапановы ({{count}})",
@@ -329,7 +339,8 @@
     "suggestTimesSeen_few": "Куплялі {{count}} разы",
     "suggestTimesSeen_many": "Куплялі {{count}} разоў",
     "suggestLastSeenDays_few": "апошні раз {{count}} дні таму",
-    "suggestLastSeenDays_many": "апошні раз {{count}} дзён таму"
+    "suggestLastSeenDays_many": "апошні раз {{count}} дзён таму",
+    "mealProposalUncheckHint": "Зніміце адзнаку са складальнікаў, якія ўжо ёсць дома."
   },
   "categories": {
     "fruit": "Садавіна",
@@ -377,6 +388,8 @@
     "preview": "Прагляд",
     "previewHint": "Праглядзець тавары ў спісе (толькі для чытання)",
     "previewFailed": "Не атрымалася загрузіць прагляд.",
+    "editList": "Рэдагаваць спіс",
+    "editListHint": "Адкрыць спіс, каб дадаць або змяніць тавары",
     "deleteHint": "Беззваротна выдаліць гэты спіс з прасторы",
     "actionsMenu": "Дзеянні са спісам",
     "actionsSubtitle": "Абяры, што зрабіць з гэтым спісам",
@@ -456,9 +469,9 @@
     "inviteEmailPlaceholder": "Email",
     "inviteSend": "Адправіць запрашэнне",
     "inviteInvalidEmail": "Увядзі карэктны адрас email.",
-    "inviteSentTitle": "Запрашэнне",
-    "inviteSentBody": "Мы адправім запрашэнне на {{email}}.",
-    "inviteResentBody": "Запрашэнне паўторна адправлена на {{email}}.",
+    "inviteSentTitle": "Запрашэнне адпраўлена!",
+    "inviteSentBody": "Мы адправілі запрашэнне на {{email}}. Карыстальнік зможа далучыцца пасля адкрыцця спасылкі з паведамлення.",
+    "inviteResentBody": "Мы паўторна адправілі запрашэнне на {{email}}. Карыстальнік зможа далучыцца пасля адкрыцця спасылкі з паведамлення.",
     "inviteAlreadyMember": "Гэты чалавек ужо ўдзельнік.",
     "inviteForbidden": "У цябе няма правоў для запрашэння.",
     "inviteFailed": "Не атрымалася адправіць запрашэнне.",
@@ -466,12 +479,7 @@
     "revokeInviteTitle": "Скасаваць запрашэнне?",
     "revokeInviteBody": "Скасаваць запрашэнне для {{email}}?",
     "revokeInviteConfirm": "Скасаваць",
-    "revokeInviteFailed": "Не атрымалася скасаваць запрашэнне.",
-    "shareLinkTitle": "Падзяліцца спасылкай",
-    "shareLinkBody": "Скапіруй спасылку з апошняга адправленага запрашэння.",
-    "copyLink": "Капіяваць спасылку",
-    "copyLinkNeedInvite": "Спачатку адправі запрашэнне, каб атрымаць спасылку.",
-    "linkCopied": "Скапіравана"
+    "revokeInviteFailed": "Не атрымалася скасаваць запрашэнне."
   },
   "notifications": {
     "centerTitle": "Апавяшчэнні",
@@ -509,7 +517,7 @@
     "needAuthBody": "Увайдзі з запрошаным email, каб прыняць запрашэнне ў прастору.",
     "signIn": "Увайсці",
     "mismatchTitle": "Няправільны ўліковы запіс",
-    "mismatchBelongsTo": "Запрашэнне для {{email}}",
+    "mismatchBelongsTo": "Гэта запрашэнне адпраўлена на іншы адрас электроннай пошты, чым той, пад якім вы ўвайшлі.",
     "mismatchLoggedIn": "Ты ўвайш(оў/ла) як {{email}} ({{provider}})",
     "providerGoogle": "Google",
     "providerApple": "Apple",
@@ -602,7 +610,15 @@
     "cancelledBadge": "План скасаваны",
     "cancelledBadgeUntil": "План скасаваны - скончыцца {{date}}",
     "cancelledRemainingLabel": "Скасаваны - скончыцца праз",
-    "cancelledEndsOn": "да {{date}}"
+    "cancelledEndsOn": "да {{date}}",
+    "hintCreditsLow": "Засталося {{count}} крэдытаў · Premium без ліміту",
+    "hintCreditsFootnote": "AI-крэдыты: засталося {{remaining}}",
+    "hintGenerateFromHistoryTitle": "Стварыць з гісторыі",
+    "hintGenerateFromHistoryBody": "Kangur можа сабраць спіс па мінулых пакупках. Даступна ў Premium.",
+    "premiumBadge": "Premium",
+    "hintHistoryDepthLine1": "Free захоўвае апошнія 20 спісаў",
+    "hintHistoryDepthLine2": "Premium да 200 спісаў пакупак!",
+    "creditsRemainingBadge": "Засталося {{remaining}}"
   },
   "profile": {
     "title": "Профіль",
@@ -652,6 +668,7 @@
     "switchToEn": "Пераключыць на англійскую",
     "switchToDe": "Пераключыць на нямецкую",
     "comingSoon": "Хутка",
+    "comingSoonBody": "Гэта функцыя пакуль недаступная. Вярніцеся пазней.",
     "accountScreenTitle": "Дадзеныя ўліковага запісу",
     "fullName": "Поўнае імя",
     "emailLabel": "Email",
@@ -843,7 +860,8 @@
     "privacy": "Палітыка прыватнасці",
     "terms": "Умовы выкарыстання",
     "about": "Пра прыкладненне",
-    "platformConsole": "Консоль платформы"
+    "platformConsole": "Консоль платформы",
+    "workspaceBrowser": "Агляд прастораў"
   },
   "about": {
     "title": "Пра прыкладненне",
@@ -879,6 +897,34 @@
     "reportBugSubtitle": "Дапамажыце палепшыць праграму",
     "sendFeedback": "Адправіць водгук",
     "sendFeedbackSubtitle": "Ваша думка для нас важная"
+  },
+  "workspaceBrowser": {
+    "title": "Агляд прастораў",
+    "forbidden": "Агляд прастораў даступны толькі адміністратарам платформы.",
+    "searchPlaceholder": "Пошук па назве або email удзельніка",
+    "filterAll": "Усе",
+    "filterFree": "Free",
+    "filterPremium": "Premium",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "members_one": "{{count}} удзельнік",
+    "members_few": "{{count}} удзельнікі",
+    "members_many": "{{count}} удзельнікаў",
+    "members_other": "{{count}} удзельнікаў",
+    "total": "{{count}} прастораў",
+    "empty": "Няма прастораў па абраных фільтрах.",
+    "actionsA11y": "Дзеянні з прасторай",
+    "enter": "Перайсці",
+    "edit": "Рэдагаваць",
+    "delete": "Выдаліць",
+    "close": "Закрыць",
+    "cancel": "Скасаваць",
+    "deleteTitle": "Выдаліць прастору?",
+    "deleteBody": "Назаўжды выдаліць «{{name}}» з усімі спісамі, удзельнікамі і данымі.",
+    "deleteConfirm": "Выдаліць",
+    "enterFailed": "Не ўдалося адкрыць гэтую прастору.",
+    "editFailed": "Не ўдалося змяніць гэтую прастору.",
+    "deleteFailed": "Не ўдалося выдаліць гэтую прастору."
   },
   "platformConsole": {
     "title": "Консоль платформы",
@@ -970,5 +1016,8 @@
     "rtSystemHealthy": "Усе realtime-сістэмы працуюць нармальна",
     "rtSystemWarning": "Realtime soft signals павышаны - сачы за затрымкай polling",
     "rtSystemDegraded": "Realtime пагоршаны - правер памылкі і затрымку"
+  },
+  "navigation": {
+    "pressAgainToExit": "Націсніце яшчэ раз, каб выйсці"
   }
 }

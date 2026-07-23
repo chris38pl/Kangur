@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { shoppingDensity } from "@/design-system/shopping-density";
+import { motionSpring } from "@/design-system/motion";
 import { colors, typography } from "@/design-system/tokens";
 
 type Props = {
@@ -28,13 +29,13 @@ export function ShoppingFab({ visible, expanded, onPress }: Props) {
   const opacity = useSharedValue(1);
 
   useEffect(() => {
-    opacity.value = withSpring(visible ? 1 : 0);
+    opacity.value = withSpring(visible ? 1 : 0, motionSpring.soft);
   }, [visible, opacity]);
 
   useEffect(() => {
     width.value = withSpring(
       expanded ? 140 : shoppingDensity.fabSize,
-      { damping: 16 },
+      motionSpring.soft,
     );
   }, [expanded, width]);
 

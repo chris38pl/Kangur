@@ -1,9 +1,12 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { intlLocaleTag } from "@/lib/i18n/locales";
+import { isCreditsLow } from "@/features/billing/credits-low";
+import { PremiumHintRow } from "@/features/billing/premium-hint-row";
 import { useAiCredits } from "@/features/billing/useAiCredits";
 import type { Workspace } from "@/features/workspace/schemas";
 
@@ -26,6 +29,7 @@ function formatRefreshDate(iso: string, locale: string): string {
 
 export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
   const { t, i18n } = useTranslation();
+  const router = useRouter();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const creditsQuery = useAiCredits(workspace.id);
@@ -38,6 +42,8 @@ export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
   const limit = credits?.limit ?? 0;
   const remaining = credits?.remaining ?? 0;
   const unlimited = credits?.unlimited ?? false;
+  const creditsLow = isCreditsLow(credits);
+  const openPremium = () => router.push("/premium");
   const progress =
     unlimited || limit <= 0 ? 1 : Math.min(1, Math.max(0, remaining / limit));
 
@@ -133,7 +139,14 @@ export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
         ) : null}
       </View>
 
-      <View>
+      <Pressable
+        onPress={unlimited ? undefined : openPremium}
+        disabled={unlimited}
+        accessibilityRole={unlimited ? undefined : "button"}
+        accessibilityLabel={
+          unlimited ? undefined : t("billing.upgradeCta")
+        }
+      >
         <Text style={{ ...typography.caption, color: theme.textMuted }}>
           {t("billing.aiCredits")}
         </Text>
@@ -254,7 +267,15 @@ export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
             </View>
           </>
         )}
-      </View>
+      </Pressable>
+
+      {creditsLow ? (
+        <PremiumHintRow
+          label={t("billing.hintCreditsLow", { count: remaining })}
+          onPress={openPremium}
+          accessibilityLabel={t("billing.upgradeCta")}
+        />
+      ) : null}
     </View>
   );
 }

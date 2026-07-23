@@ -32,13 +32,17 @@ import type { InvitationPreview } from "@/features/workspace/schemas";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { ApiClientError } from "@/lib/api/client";
+import { isValidInviteRawToken } from "@/lib/invite/token";
+import {
+  completeInviteTask,
+  dismissInviteTask,
+} from "@/features/workspace/invite-task-intent";
 
 type ViewState =
   | { kind: "loading" }
   | { kind: "need_auth" }
   | {
       kind: "mismatch";
-      invitationEmail: string;
       currentEmail: string;
       provider: string;
     }
@@ -88,6 +92,7 @@ export function InviteAcceptScreen() {
   const theme = colors[scheme];
   const params = useLocalSearchParams<{
     token?: string | string[];
+    invitationId?: string | string[];
     notificationId?: string | string[];
   }>();
   const rawToken = Array.isArray(params.token)
@@ -95,6 +100,22 @@ export function InviteAcceptScreen() {
     : typeof params.token === "string"
       ? params.token
       : "";
+  const invitationIdParam = Array.isArray(params.invitationId)
+    ? (params.invitationId[0] ?? "")
+    : typeof params.invitationId === "string"
+      ? params.invitationId
+      : "";
+  const inviteToken =
+    rawToken.trim().length > 0 && isValidInviteRawToken(rawToken.trim())
+      ? rawToken.trim()
+      : "";
+  const invitationId = invitationIdParam.trim();
+  const inviteCapability =
+    invitationId.length > 0
+      ? ({ invitationId } as const)
+      : inviteToken.length > 0
+        ? ({ inviteToken } as const)
+        : null;
   const notificationIdParam = Array.isArray(params.notificationId)
     ? (params.notificationId[0] ?? "")
     : typeof params.notificationId === "string"
@@ -112,7 +133,7 @@ export function InviteAcceptScreen() {
     let cancelled = false;
 
     const run = async () => {
-      if (!rawToken.trim()) {
+      if (!inviteCapability) {
         if (!cancelled) setState({ kind: "expired" });
         return;
       }
@@ -130,7 +151,7 @@ export function InviteAcceptScreen() {
           setState({ kind: "need_auth" });
           return;
         }
-        const preview = await previewInvitation(token, rawToken);
+        const preview = await previewInvitation(token, inviteCapability);
         if (cancelled) return;
         if (preview.alreadyMember) {
           setState({ kind: "already", workspace: preview.workspace });
@@ -144,7 +165,6 @@ export function InviteAcceptScreen() {
           if (reason === "email_mismatch") {
             setState({
               kind: "mismatch",
-              invitationEmail: String(err.details?.invitationEmail ?? ""),
               currentEmail: String(err.details?.currentEmail ?? ""),
               provider: String(err.details?.provider ?? "email"),
             });
@@ -171,12 +191,12 @@ export function InviteAcceptScreen() {
     };
     // getToken / t are unstable on web - do not depend on them or we loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
-  }, [rawToken, isLoaded, isSignedIn]);
+  }, [inviteToken, invitationId, isLoaded, isSignedIn]);
 
   const reloadPreview = useCallback(() => {
     setState({ kind: "loading" });
     void (async () => {
-      if (!rawToken.trim()) {
+      if (!inviteCapability) {
         setState({ kind: "expired" });
         return;
       }
@@ -190,7 +210,7 @@ export function InviteAcceptScreen() {
           setState({ kind: "need_auth" });
           return;
         }
-        const preview = await previewInvitation(token, rawToken);
+        const preview = await previewInvitation(token, inviteCapability);
         if (preview.alreadyMember) {
           setState({ kind: "already", workspace: preview.workspace });
           return;
@@ -204,19 +224,26 @@ export function InviteAcceptScreen() {
         setState({ kind: "error", message: t("invite.unknownError") });
       }
     })();
-  }, [rawToken, isSignedIn, getToken, t]);
+  }, [inviteCapability, inviteToken, invitationId, isSignedIn, getToken, t]);
 
   const openWorkspace = async (workspaceId: string) => {
     if (workspaceId) {
       await setActiveId(workspaceId);
     }
-    router.replace("/(tabs)" as never);
+    completeInviteTask();
   };
+
+  const authRedirectPath =
+    inviteCapability && "invitationId" in inviteCapability
+      ? `/invite/id/${inviteCapability.invitationId}`
+      : inviteCapability && "inviteToken" in inviteCapability
+        ? `/invite/${inviteCapability.inviteToken}`
+        : "/(tabs)";
 
   const goAuth = () => {
     router.replace({
       pathname: "/(auth)/sign-in",
-      params: { redirect: `/invite/${rawToken}` },
+      params: { redirect: authRedirectPath },
     } as never);
   };
 
@@ -236,7 +263,21 @@ export function InviteAcceptScreen() {
         const match = list.notifications.find((n) => {
           if (n.type !== "WORKSPACE_INVITATION") return false;
           const payload = (n.payload ?? {}) as Record<string, unknown>;
-          return payload.token === rawToken;
+          if (
+            inviteCapability &&
+            "invitationId" in inviteCapability &&
+            payload.invitationId === inviteCapability.invitationId
+          ) {
+            return true;
+          }
+          if (
+            inviteCapability &&
+            "inviteToken" in inviteCapability &&
+            payload.token === inviteCapability.inviteToken
+          ) {
+            return true;
+          }
+          return false;
         });
         notificationId = match?.id ?? "";
       }
@@ -247,13 +288,13 @@ export function InviteAcceptScreen() {
     } catch {
       // Best-effort: leaving without accept must not block Home navigation.
     }
-  }, [getToken, notificationIdParam, rawToken, queryClient]);
+  }, [getToken, notificationIdParam, inviteToken, invitationId, queryClient]);
 
   /** Leave without accepting: Home + mark notification read. */
   const dismissWithoutAccept = useCallback(() => {
     void markInviteNotificationRead();
-    router.replace("/(tabs)" as never);
-  }, [markInviteNotificationRead, router]);
+    dismissInviteTask();
+  }, [markInviteNotificationRead]);
 
   const onJoin = async (preview: InvitationPreview) => {
     setState({ kind: "joining", preview });
@@ -263,7 +304,11 @@ export function InviteAcceptScreen() {
         setState({ kind: "need_auth" });
         return;
       }
-      const result = await acceptInvitation(token, rawToken);
+      if (!inviteCapability) {
+        setState({ kind: "expired" });
+        return;
+      }
+      const result = await acceptInvitation(token, inviteCapability);
       void queryClient.invalidateQueries({ queryKey: ["workspaces"] });
       void queryClient.invalidateQueries({ queryKey: ["workspace-members"] });
       void queryClient.invalidateQueries({ queryKey: ["notifications"] });
@@ -278,7 +323,6 @@ export function InviteAcceptScreen() {
         if (reason === "email_mismatch") {
           setState({
             kind: "mismatch",
-            invitationEmail: String(err.details?.invitationEmail ?? ""),
             currentEmail: String(err.details?.currentEmail ?? ""),
             provider: String(err.details?.provider ?? "email"),
           });
@@ -428,9 +472,7 @@ export function InviteAcceptScreen() {
               marginTop: spacing[4],
             }}
           >
-            {t("invite.mismatchBelongsTo", {
-              email: state.invitationEmail,
-            })}
+            {t("invite.mismatchBelongsTo")}
           </Text>
           <Text
             style={{

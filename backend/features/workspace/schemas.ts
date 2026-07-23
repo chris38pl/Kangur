@@ -128,17 +128,20 @@ export const InviteMemberResultSchema = z
       role: WorkspaceRoleSchema,
       expiresAt: z.string().datetime(),
     }),
-    token: z.string(),
-    acceptUrl: z.string(),
     emailDelivered: z.boolean(),
   })
   .openapi("InviteMemberResult");
 
 export type InviteMemberResult = z.infer<typeof InviteMemberResultSchema>;
 
+/** Deep-link token XOR invitationId (in-app notification for existing users). */
 export const AcceptInvitationBodySchema = z
   .object({
-    token: z.string().min(1),
+    token: z.string().min(1).optional(),
+    invitationId: z.string().min(1).optional(),
+  })
+  .refine((v) => Boolean(v.token) !== Boolean(v.invitationId), {
+    message: "Provide exactly one of token or invitationId.",
   })
   .openapi("AcceptInvitationBody");
 
@@ -156,11 +159,15 @@ export const AcceptInvitationResponseSchema = z
   })
   .openapi("AcceptInvitationResponse");
 
-export const InvitationPreviewQuerySchema = z
+export const InvitationPreviewBodySchema = z
   .object({
-    token: z.string().min(1),
+    token: z.string().min(1).optional(),
+    invitationId: z.string().min(1).optional(),
   })
-  .openapi("InvitationPreviewQuery");
+  .refine((v) => Boolean(v.token) !== Boolean(v.invitationId), {
+    message: "Provide exactly one of token or invitationId.",
+  })
+  .openapi("InvitationPreviewBody");
 
 export const InvitationPreviewResponseSchema = z
   .object({

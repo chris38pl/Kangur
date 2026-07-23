@@ -8,6 +8,7 @@ type ImageAsset = {
 
 /**
  * Build multipart body for AI screenshot ingest.
+ * Prefer smaller JPEG uploads (picker quality ~0.55) for faster vision ingest.
  * Do not append RN `{ uri, name, type }` - newer fetch throws
  * "Unsupported FormDataPart implementation".
  */

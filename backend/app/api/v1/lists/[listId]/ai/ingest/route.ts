@@ -7,18 +7,22 @@ import { assertCanIngest } from "@/lib/aiCredits";
 import { authorizeList } from "@/lib/authorize";
 import { ApiError, validationError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
+import { assertRateLimit } from "@/lib/rateLimit";
 
 type RouteContext = {
   params: Promise<{ listId: string }>;
 };
 
 const MAX_SCREENSHOT_BYTES = 8 * 1024 * 1024;
+const MAX_INGEST_TEXT_CHARS = 8_000;
 
 export async function POST(request: Request, context: RouteContext) {
   try {
     const { listId } = await context.params;
     const { user } = await requireUser(request);
     const { list } = await authorizeList(listId, user.id);
+
+    assertRateLimit("ai", `${user.id}:${list.workspaceId}`);
 
     const formData = await request.formData();
     const source = formData.get("source");
@@ -33,6 +37,11 @@ export async function POST(request: Request, context: RouteContext) {
       const text = formData.get("text");
       if (typeof text !== "string" || !text.trim()) {
         throw validationError("Text input is required.");
+      }
+      if (text.trim().length > MAX_INGEST_TEXT_CHARS) {
+        throw validationError(
+          `Text input must be at most ${MAX_INGEST_TEXT_CHARS} characters.`,
+        );
       }
 
       const result = await ingestText({
@@ -60,6 +69,27 @@ export async function POST(request: Request, context: RouteContext) {
       throw validationError("Screenshot must be an image.");
     }
 
+    const buffer = Buffer.from(await file.arrayBuffer());
+    // Light magic-byte sniff — reject obvious non-images even if MIME claims image/*.
+    const isJpeg = buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+    const isPng =
+      buffer.length >= 8 &&
+      buffer[0] === 0x89 &&
+      buffer[1] === 0x50 &&
+      buffer[2] === 0x4e &&
+      buffer[3] === 0x47;
+    const isWebp =
+      buffer.length >= 12 &&
+      buffer.toString("ascii", 0, 4) === "RIFF" &&
+      buffer.toString("ascii", 8, 12) === "WEBP";
+    const isGif =
+      buffer.length >= 6 &&
+      (buffer.toString("ascii", 0, 6) === "GIF87a" ||
+        buffer.toString("ascii", 0, 6) === "GIF89a");
+    if (!isJpeg && !isPng && !isWebp && !isGif) {
+      throw validationError("Screenshot file content is not a supported image.");
+    }
+
     if (file.size > MAX_SCREENSHOT_BYTES) {
       throw validationError("Screenshot is too large.");
     }
@@ -70,7 +100,6 @@ export async function POST(request: Request, context: RouteContext) {
       (typeof fileNameField === "string" && fileNameField) ||
       "screenshot.jpg";
 
-    const buffer = Buffer.from(await file.arrayBuffer());
     const result = await ingestScreenshot({
       listId,
       userId: user.id,

@@ -16,6 +16,12 @@
     "return": "Zurück",
     "tryAgain": "Erneut versuchen"
   },
+  "appUpdate": {
+    "title": "Eine neue Version von Kangur ist verfügbar",
+    "body": "Du verwendest eine ältere Version der App. Aktualisiere, um die neuesten Funktionen und Verbesserungen zu nutzen.",
+    "update": "Aktualisieren",
+    "later": "Später"
+  },
   "home": {
     "title": "Kangur",
     "subtitle": "KI-Einkaufsassistent",
@@ -148,6 +154,7 @@
     "productsProgress": "{{bought}} von {{total}} Produkten",
     "boughtOfTotal": "{{bought}} von {{total}} Produkten",
     "categoriesSection": "Kategorien",
+    "tapCategoryHint": "Tippe auf eine Kategorie, um in diesem Gang einzukaufen.",
     "alreadyBoughtSection": "Bereits gekauft",
     "backToEditList": "Zurück zur Listenbearbeitung",
     "purchased": "Gekauft",
@@ -270,6 +277,9 @@
     "suggestAlreadyApplied": "Dieser Vorschlag wurde bereits verwendet.",
     "suggestLoadingSubtitle": "Wir erstellen eine Liste aus deinen früheren Einkäufen…",
     "suggestLoadingCta": "Generating…",
+    "phaseUploading": "Wird hochgeladen…",
+    "phaseAnalyzing": "Wird analysiert…",
+    "phaseApplying": "Produkte werden hinzugefügt…",
     "suggestAcceptedEmpty": "Nach rechts wischen, um einen Vorschlag hinzuzufügen.",
     "suggestProposals_one": "Vorschläge ({{count}})",
     "suggestProposals_other": "Vorschläge ({{count}})",
@@ -301,7 +311,8 @@
     "mealProposalGenerateError": "Vorschlag konnte nicht erstellt werden. Bitte erneut versuchen.",
     "mealProposalCreditsError": "Du hast nicht genug Credits, um eine Gerichtsliste zu erstellen.",
     "mealProposalGenerating": "Generieren…",
-    "mealProposalSectionTitle": "Liste aus Rezept mit KI erstellen ✨"
+    "mealProposalSectionTitle": "Liste aus Rezept mit KI erstellen ✨",
+    "mealProposalUncheckHint": "Entferne die Markierung bei Zutaten, die du schon hast."
   },
   "categories": {
     "fruit": "Obst",
@@ -349,6 +360,8 @@
     "preview": "Vorschau",
     "previewHint": "Produkte dieser Liste ansehen (nur lesen)",
     "previewFailed": "Vorschau konnte nicht geladen werden.",
+    "editList": "Liste bearbeiten",
+    "editListHint": "Liste öffnen, um Produkte hinzuzufügen oder zu ändern",
     "deleteHint": "Diese Liste dauerhaft aus dem Bereich entfernen",
     "actionsMenu": "Listenoptionen",
     "actionsSubtitle": "Wähle, was du mit dieser Liste machen möchtest",
@@ -424,9 +437,9 @@
     "inviteEmailPlaceholder": "E-Mail",
     "inviteSend": "Einladung senden",
     "inviteInvalidEmail": "Gib eine gültige E-Mail-Adresse ein.",
-    "inviteSentTitle": "Einladung",
-    "inviteSentBody": "Wir senden eine Einladung an {{email}}.",
-    "inviteResentBody": "Einladung erneut gesendet an {{email}}.",
+    "inviteSentTitle": "Einladung gesendet!",
+    "inviteSentBody": "Wir haben eine Einladung an {{email}} gesendet. Die Person kann beitreten, nachdem sie den Link in der Nachricht geöffnet hat.",
+    "inviteResentBody": "Wir haben die Einladung an {{email}} erneut gesendet. Die Person kann beitreten, nachdem sie den Link in der Nachricht geöffnet hat.",
     "inviteAlreadyMember": "Diese Person ist bereits Mitglied.",
     "inviteForbidden": "Du hast keine Berechtigung zum Einladen.",
     "inviteFailed": "Einladung konnte nicht gesendet werden.",
@@ -434,12 +447,7 @@
     "revokeInviteTitle": "Einladung widerrufen?",
     "revokeInviteBody": "Einladung für {{email}} widerrufen?",
     "revokeInviteConfirm": "Widerrufen",
-    "revokeInviteFailed": "Einladung konnte nicht widerrufen werden.",
-    "shareLinkTitle": "Link teilen",
-    "shareLinkBody": "Kopiere den Link der zuletzt gesendeten Einladung.",
-    "copyLink": "Link kopieren",
-    "copyLinkNeedInvite": "Sende zuerst eine Einladung, um einen Link zu erhalten.",
-    "linkCopied": "Kopiert"
+    "revokeInviteFailed": "Einladung konnte nicht widerrufen werden."
   },
   "notifications": {
     "centerTitle": "Benachrichtigungen",
@@ -473,7 +481,7 @@
     "needAuthBody": "Melde dich mit der eingeladenen E-Mail an, um diese Bereichseinladung anzunehmen.",
     "signIn": "Anmelden",
     "mismatchTitle": "Falsches Konto",
-    "mismatchBelongsTo": "Einladung gehört zu {{email}}",
+    "mismatchBelongsTo": "Diese Einladung wurde an eine andere E-Mail-Adresse gesendet als die, mit der du angemeldet bist.",
     "mismatchLoggedIn": "Du bist angemeldet als {{email}} ({{provider}})",
     "providerGoogle": "Google",
     "providerApple": "Apple",
@@ -562,7 +570,15 @@
     "cancelledBadge": "Abo gekündigt",
     "cancelledBadgeUntil": "Abo gekündigt - endet am {{date}}",
     "cancelledRemainingLabel": "Gekündigt - endet in",
-    "cancelledEndsOn": "bis {{date}}"
+    "cancelledEndsOn": "bis {{date}}",
+    "hintCreditsLow": "Noch {{count}} Credits · Upgrade für unbegrenzt",
+    "hintCreditsFootnote": "AI-Credits: noch {{remaining}}",
+    "hintGenerateFromHistoryTitle": "Aus der Historie erzeugen",
+    "hintGenerateFromHistoryBody": "Kangur kann eine Einkaufsliste aus früheren Einkäufen erstellen. Mit Premium verfügbar.",
+    "premiumBadge": "Premium",
+    "hintHistoryDepthLine1": "Free behält die letzten 20 Listen",
+    "hintHistoryDepthLine2": "Premium bis 200 Einkaufslisten!",
+    "creditsRemainingBadge": "Noch {{remaining}}"
   },
   "profile": {
     "title": "Profil",
@@ -612,6 +628,7 @@
     "switchToEn": "Zu Englisch wechseln",
     "switchToDe": "Zu Deutsch wechseln",
     "comingSoon": "Demnächst",
+    "comingSoonBody": "Diese Funktion ist noch nicht verfügbar. Schau bald wieder vorbei.",
     "accountScreenTitle": "Kontodetails",
     "fullName": "Vollständiger Name",
     "emailLabel": "E-Mail",
@@ -803,7 +820,8 @@
     "privacy": "Datenschutzerklärung",
     "terms": "Nutzungsbedingungen",
     "about": "Über",
-    "platformConsole": "Platform Console"
+    "platformConsole": "Platform Console",
+    "workspaceBrowser": "Workspace-Übersicht"
   },
   "about": {
     "title": "Über",
@@ -839,6 +857,32 @@
     "reportBugSubtitle": "Hilf uns, die App zu verbessern",
     "sendFeedback": "Feedback senden",
     "sendFeedbackSubtitle": "Deine Meinung ist uns wichtig"
+  },
+  "workspaceBrowser": {
+    "title": "Workspace-Übersicht",
+    "forbidden": "Die Workspace-Übersicht ist nur für Plattform-Admins verfügbar.",
+    "searchPlaceholder": "Nach Name oder Mitglieds-E-Mail suchen",
+    "filterAll": "Alle",
+    "filterFree": "Free",
+    "filterPremium": "Premium",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "members_one": "{{count}} Mitglied",
+    "members_other": "{{count}} Mitglieder",
+    "total": "{{count}} Räume",
+    "empty": "Keine Workspaces passen zu den Filtern.",
+    "actionsA11y": "Workspace-Aktionen",
+    "enter": "Öffnen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "close": "Schließen",
+    "cancel": "Abbrechen",
+    "deleteTitle": "Workspace löschen?",
+    "deleteBody": "„{{name}}“ und alle Listen, Mitglieder und Daten dauerhaft löschen. Das kann nicht rückgängig gemacht werden.",
+    "deleteConfirm": "Löschen",
+    "enterFailed": "Workspace konnte nicht geöffnet werden.",
+    "editFailed": "Workspace konnte nicht bearbeitet werden.",
+    "deleteFailed": "Workspace konnte nicht gelöscht werden."
   },
   "platformConsole": {
     "title": "Platform Console",
@@ -930,5 +974,8 @@
     "rtSystemHealthy": "Alle Echtzeit-Systeme funktionieren normal",
     "rtSystemWarning": "Echtzeit-Soft-Signale erhöht - Polling-Latenz beobachten",
     "rtSystemDegraded": "Echtzeit verschlechtert - Fehler und Latenz prüfen"
+  },
+  "navigation": {
+    "pressAgainToExit": "Nochmal tippen zum Beenden"
   }
 }

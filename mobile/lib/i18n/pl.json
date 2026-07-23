@@ -16,6 +16,12 @@
     "return": "Powrót",
     "tryAgain": "Spróbuj ponownie"
   },
+  "appUpdate": {
+    "title": "Nowa wersja Kangura jest dostępna",
+    "body": "Korzystasz ze starszej wersji aplikacji. Zaktualizuj, aby korzystać z najnowszych funkcji i poprawek.",
+    "update": "Aktualizuj",
+    "later": "Później"
+  },
   "home": {
     "title": "Kangur",
     "subtitle": "Asystent zakupów AI",
@@ -156,6 +162,7 @@
     "productsProgress": "{{bought}} z {{total}} produktów",
     "boughtOfTotal": "{{bought}} z {{total}} produktów",
     "categoriesSection": "Kategorie",
+    "tapCategoryHint": "Dotknij kategorii, żeby robić zakupy w tej alejce.",
     "alreadyBoughtSection": "Już kupione",
     "backToEditList": "Powrót do edycji listy",
     "purchased": "Kupione",
@@ -265,6 +272,9 @@
     "suggestLoadingSubtitle": "Budujemy listę z poprzednich zakupów…",
     "suggestSwipeTip": "Przesuń w prawo, żeby dodać propozycję. Przesuń w lewo, aby odrzucić!",
     "suggestLoadingCta": "Tworzenie propozycji…",
+    "phaseUploading": "Wysyłanie…",
+    "phaseAnalyzing": "Analizowanie…",
+    "phaseApplying": "Dodawanie produktów…",
     "suggestAccepted_one": "✓ Dodane do listy ({{count}})",
     "suggestAccepted_few": "✓ Dodane do listy ({{count}})",
     "suggestAccepted_many": "✓ Dodane do listy ({{count}})",
@@ -320,7 +330,7 @@
     "mealProposalAdd": "Dodaj",
     "mealProposalMaxDishes": "Możesz dodać maksymalnie 5 dań.",
     "mealProposalGenerate": "Generuj",
-    "mealProposalGenerating": "Generuj…",
+    "mealProposalGenerating": "Generowanie…",
     "mealProposalGenerateError": "Nie udało się wygenerować propozycji. Spróbuj ponownie.",
     "mealProposalCreditsError": "Nie masz wystarczających kredytów, aby wygenerować listę z posiłków.",
     "mealProposalErrors": "Nie udało się wygenerować propozycji dań. Spróbuj ponownie.",
@@ -329,7 +339,8 @@
     "mealProposalReject": "Odrzuć całe danie",
     "mealProposalMissing": "Nie znaleziono propozycji dania.",
     "mealProposalBackToList": "Wróć do listy",
-    "mealProposalSectionTitle": "Utwórz listę z przepisu z AI ✨"
+    "mealProposalSectionTitle": "Utwórz listę z przepisu z AI ✨",
+    "mealProposalUncheckHint": "Odznacz składniki, które już masz w domu."
   },
   "categories": {
     "fruit": "Owoce",
@@ -377,6 +388,8 @@
     "preview": "Podgląd",
     "previewHint": "Zobacz produkty na liście (tylko odczyt)",
     "previewFailed": "Nie udało się wczytać podglądu.",
+    "editList": "Edytuj listę",
+    "editListHint": "Otwórz listę, żeby dodać lub zmienić produkty",
     "deleteHint": "Usuń listę trwale z przestrzeni",
     "actionsMenu": "Opcje listy",
     "actionsSubtitle": "Wybierz, co chcesz zrobić z tą listą",
@@ -456,9 +469,9 @@
     "inviteEmailPlaceholder": "E-mail",
     "inviteSend": "Wyślij zaproszenie",
     "inviteInvalidEmail": "Podaj poprawny adres e-mail.",
-    "inviteSentTitle": "Zaproszenie",
-    "inviteSentBody": "Wyślemy zaproszenie na {{email}}.",
-    "inviteResentBody": "Ponownie wysłano zaproszenie na {{email}}.",
+    "inviteSentTitle": "Zaproszenie wysłane!",
+    "inviteSentBody": "Wysłaliśmy zaproszenie na {{email}}. Osoba może dołączyć po otwarciu linku z wiadomości.",
+    "inviteResentBody": "Ponownie wysłaliśmy zaproszenie na {{email}}. Osoba może dołączyć po otwarciu linku z wiadomości.",
     "inviteAlreadyMember": "Ta osoba jest już członkiem.",
     "inviteForbidden": "Nie masz uprawnień do zapraszania.",
     "inviteFailed": "Nie udało się wysłać zaproszenia.",
@@ -466,12 +479,7 @@
     "revokeInviteTitle": "Cofnąć zaproszenie?",
     "revokeInviteBody": "Cofnąć zaproszenie dla {{email}}?",
     "revokeInviteConfirm": "Cofnij",
-    "revokeInviteFailed": "Nie udało się cofnąć zaproszenia.",
-    "shareLinkTitle": "Udostępnij link",
-    "shareLinkBody": "Skopiuj link z ostatniego wysłanego zaproszenia.",
-    "copyLink": "Kopiuj link",
-    "copyLinkNeedInvite": "Najpierw wyślij zaproszenie, aby dostać link.",
-    "linkCopied": "Skopiowano"
+    "revokeInviteFailed": "Nie udało się cofnąć zaproszenia."
   },
   "notifications": {
     "centerTitle": "Powiadomienia",
@@ -509,7 +517,7 @@
     "needAuthBody": "Zaloguj się na zaproszony e-mail, aby zaakceptować zaproszenie do przestrzeni.",
     "signIn": "Zaloguj się",
     "mismatchTitle": "To zaproszenie zostało wysłane na inny adres e-mail",
-    "mismatchBelongsTo": "Zaproszenie należy do {{email}}",
+    "mismatchBelongsTo": "To zaproszenie zostało wysłane na inny adres e-mail niż ten, na który jesteś zalogowany.",
     "mismatchLoggedIn": "Jesteś zalogowany jako {{email}} ({{provider}})",
     "providerGoogle": "Google",
     "providerApple": "Apple",
@@ -602,7 +610,15 @@
     "cancelledBadge": "Plan anulowany",
     "cancelledBadgeUntil": "Plan anulowany - zakończy się {{date}}",
     "cancelledRemainingLabel": "Plan anulowany - wygaśnie za",
-    "cancelledEndsOn": "do {{date}}"
+    "cancelledEndsOn": "do {{date}}",
+    "hintCreditsLow": "Zostało {{count}} kredytów · Premium = bez limitu",
+    "hintCreditsFootnote": "Kredyty AI: pozostało {{remaining}}",
+    "hintGenerateFromHistoryTitle": "Wygeneruj z historii",
+    "hintGenerateFromHistoryBody": "Kangur może odtworzyć listę zakupów na podstawie Twoich wcześniejszych zakupów. Dostępne w Premium.",
+    "premiumBadge": "Premium",
+    "hintHistoryDepthLine1": "Free zachowuje ostatnie 20 list",
+    "hintHistoryDepthLine2": "Premium do 200 list zakupów!",
+    "creditsRemainingBadge": "Pozostało {{remaining}}"
   },
   "profile": {
     "title": "Profil",
@@ -652,6 +668,7 @@
     "switchToEn": "Przełącz na angielski",
     "switchToDe": "Przełącz na niemiecki",
     "comingSoon": "Wkrótce",
+    "comingSoonBody": "Ta funkcja nie jest jeszcze dostępna. Wróć tu wkrótce.",
     "accountScreenTitle": "Dane konta",
     "fullName": "Imię i nazwisko",
     "emailLabel": "E-mail",
@@ -839,7 +856,8 @@
     "privacy": "Polityka prywatności",
     "terms": "Regulamin",
     "about": "O aplikacji",
-    "platformConsole": "Platform Console"
+    "platformConsole": "Platform Console",
+    "workspaceBrowser": "Przegląd przestrzeni"
   },
   "about": {
     "title": "O aplikacji",
@@ -875,6 +893,34 @@
     "reportBugSubtitle": "Pomóż nam ulepszać aplikację",
     "sendFeedback": "Wyślij opinię",
     "sendFeedbackSubtitle": "Twoje zdanie jest dla nas ważne"
+  },
+  "workspaceBrowser": {
+    "title": "Przegląd przestrzeni",
+    "forbidden": "Przegląd przestrzeni jest dostępny tylko dla administratorów platformy.",
+    "searchPlaceholder": "Szukaj po nazwie lub e-mailu członka",
+    "filterAll": "Wszystkie",
+    "filterFree": "Free",
+    "filterPremium": "Premium",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "members_one": "{{count}} członek",
+    "members_few": "{{count}} członków",
+    "members_many": "{{count}} członków",
+    "members_other": "{{count}} członków",
+    "total": "{{count}} przestrzeni",
+    "empty": "Brak przestrzeni pasujących do filtrów.",
+    "actionsA11y": "Akcje przestrzeni",
+    "enter": "Przejdź",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "close": "Zamknij",
+    "cancel": "Anuluj",
+    "deleteTitle": "Usunąć przestrzeń?",
+    "deleteBody": "Trwale usuń „{{name}}” wraz z listami, członkami i danymi. Tej operacji nie można cofnąć.",
+    "deleteConfirm": "Usuń",
+    "enterFailed": "Nie udało się otworzyć tej przestrzeni.",
+    "editFailed": "Nie udało się edytować tej przestrzeni.",
+    "deleteFailed": "Nie udało się usunąć tej przestrzeni."
   },
   "platformConsole": {
     "title": "Platform Console",
@@ -966,5 +1012,8 @@
     "rtSystemHealthy": "Wszystkie systemy realtime działają poprawnie",
     "rtSystemWarning": "Miękkie sygnały realtime podwyższone - obserwuj latency pollingu",
     "rtSystemDegraded": "Realtime zdegradowany - sprawdź failures i latency"
+  },
+  "navigation": {
+    "pressAgainToExit": "Naciśnij ponownie, aby zamknąć"
   }
 }

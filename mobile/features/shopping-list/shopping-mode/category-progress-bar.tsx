@@ -8,7 +8,9 @@ import Animated, {
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { shoppingDensity } from "@/design-system/shopping-density";
+import { motionDuration, motionEasing } from "@/design-system/motion";
 import { colors } from "@/design-system/tokens";
+import { useReducedMotion } from "@/lib/motion";
 
 type Props = {
   progress: number;
@@ -18,13 +20,15 @@ type Props = {
 export function CategoryProgressBar({ progress, style }: Props) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+  const reduceMotion = useReducedMotion();
   const width = useSharedValue(Math.max(0, Math.min(1, progress)));
 
   useEffect(() => {
     width.value = withTiming(Math.max(0, Math.min(1, progress)), {
-      duration: 280,
+      duration: reduceMotion ? 0 : motionDuration.emphasis,
+      easing: motionEasing.outCubic,
     });
-  }, [progress, width]);
+  }, [progress, width, reduceMotion]);
 
   const fillStyle = useAnimatedStyle(() => ({
     width: `${width.value * 100}%`,

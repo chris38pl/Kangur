@@ -1,4 +1,4 @@
-import { authorize } from "@/lib/authorize";
+import { authorize, requireRole } from "@/lib/authorize";
 import { validationError } from "@/lib/auth/errors";
 import { prisma } from "@/lib/prisma";
 import { isWorkspaceIconId } from "@shared/workspace-icons";
@@ -18,6 +18,11 @@ export async function updateWorkspace(
   input: UpdateWorkspaceInput,
 ): Promise<WorkspaceDTO> {
   const { membership } = await authorize(input.workspaceId, input.userId);
+  requireRole(
+    membership,
+    ["owner", "admin"],
+    "Only owners and admins can update this workspace.",
+  );
 
   const data: { name?: string; icon?: string } = {};
 

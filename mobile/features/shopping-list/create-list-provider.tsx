@@ -12,10 +12,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Alert } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useAppResult } from "@/components/AppResultProvider";
+import { FeedbackSheet } from "@/components/feedback-sheet";
+import { brandAssets } from "@/design-system/brand-assets";
 import {
   abandonSuggestFromHistory,
   applySuggestFromHistory,
@@ -38,6 +39,7 @@ import {
   isInsufficientCreditsError,
 } from "@/lib/ai/insufficientCredits";
 import { ApiClientError } from "@/lib/api/client";
+import { finishTaskAndOpen } from "@/lib/navigation";
 import {
   isHistorySuggestionsEnabled,
   isMealProposalEnabled,
@@ -72,6 +74,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
   const createList = useCreateShoppingList(activeWorkspace?.id ?? null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [preparing, setPreparing] = useState(false);
+  const [clipboardEmptyOpen, setClipboardEmptyOpen] = useState(false);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [applyBusy, setApplyBusy] = useState(false);
   const [suggestRun, setSuggestRun] =
@@ -226,7 +229,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
           }),
         ]);
 
-        router.replace(`/list/${result.list.id}` as never);
+        finishTaskAndOpen(`/list/${result.list.id}` as never);
       } catch (error) {
         if (error instanceof ApiClientError) {
           if (error.code === "CONFLICT" || error.status === 409) {
@@ -272,6 +275,16 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
       if (path === "voice") return;
 
       if (path === "fromHistory") {
+        if (activeWorkspace.plan !== "premium") {
+          setSheetOpen(false);
+          showError({
+            title: t("billing.hintGenerateFromHistoryTitle"),
+            description: t("billing.hintGenerateFromHistoryBody"),
+            primaryLabel: t("billing.upgradeCta"),
+            onPrimary: () => router.push("/premium"),
+          });
+          return;
+        }
         await runFromHistory();
         return;
       }
@@ -283,10 +296,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
           const text = (await Clipboard.getStringAsync()).trim();
           setPreparing(false);
           if (!text) {
-            Alert.alert(
-              t("home.createClipboard"),
-              t("home.createClipboardEmpty"),
-            );
+            setClipboardEmptyOpen(true);
             return;
           }
           setPendingListImport({ kind: "clipboard", text });
@@ -294,7 +304,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
           setPreparing(true);
           const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ["images"],
-            quality: 0.8,
+            quality: 0.55,
           });
           setPreparing(false);
           if (result.canceled) return;
@@ -328,7 +338,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         }
         setSheetOpen(false);
 
-        router.replace(`/list/${list.id}` as never);
+        finishTaskAndOpen(`/list/${list.id}` as never);
       } catch {
         setPreparing(false);
         // keep sheet open; drop any staged import so we do not attach it later
@@ -358,6 +368,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         busy={createList.isPending || preparing}
         showFromHistory={isHistorySuggestionsEnabled()}
         showFromRecipe={isMealProposalEnabled()}
+        fromHistoryLocked={activeWorkspace?.plan !== "premium"}
         onClose={() => setSheetOpen(false)}
         onSelect={(path) => void createAndOpen(path)}
       />
@@ -370,6 +381,14 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         items={suggestRun?.proposal.items ?? []}
         onClose={() => void closeSuggest()}
         onConfirm={(ids) => void confirmSuggest(ids)}
+      />
+      <FeedbackSheet
+        visible={clipboardEmptyOpen}
+        image={brandAssets.listEmpty}
+        title={t("home.createClipboard")}
+        body={t("home.createClipboardEmpty")}
+        primaryLabel={t("common.return")}
+        onPrimary={() => setClipboardEmptyOpen(false)}
       />
     </CreateListContext.Provider>
   );

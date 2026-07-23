@@ -2,27 +2,28 @@ import { NextResponse } from "next/server";
 
 import { previewInvitation } from "@/features/workspace/previewInvitation";
 import {
-  InvitationPreviewQuerySchema,
+  InvitationPreviewBodySchema,
   InvitationPreviewResponseSchema,
 } from "@/features/workspace/schemas";
 import { ApiError, validationError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
+import { assertRateLimit } from "@/lib/rateLimit";
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   try {
     const { user } = await requireUser(request);
-    const url = new URL(request.url);
-    const parsed = InvitationPreviewQuerySchema.safeParse({
-      token: url.searchParams.get("token") ?? "",
-    });
+    assertRateLimit("invitations", user.id);
+    const json: unknown = await request.json();
+    const parsed = InvitationPreviewBodySchema.safeParse(json);
     if (!parsed.success) {
       throw validationError(
-        parsed.error.issues[0]?.message ?? "Invalid invitation token.",
+        parsed.error.issues[0]?.message ?? "Invalid invitation preview.",
       );
     }
 
     const result = await previewInvitation({
       rawToken: parsed.data.token,
+      invitationId: parsed.data.invitationId,
       userId: user.id,
       userEmail: user.email,
       clerkId: user.clerkId,

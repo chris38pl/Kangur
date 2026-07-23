@@ -1,5 +1,4 @@
 import { useAuth } from "@clerk/clerk-expo";
-import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
@@ -24,8 +23,10 @@ import {
 import type { MealProposalOperation } from "@/features/ai/schemas";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { getCategoryBadgeColors } from "@/features/shopping-item/category-badge-colors";
+import { setPendingScrollToItems } from "@/features/shopping-list/pending-scroll-to-items";
 import { Analytics } from "@/lib/analytics";
 import { ApiClientError } from "@/lib/api/client";
+import { navigateBack, replaceDetails } from "@/lib/navigation";
 
 type Props = { listId: string };
 
@@ -139,7 +140,6 @@ export function MealProposalReviewScreen({ listId }: Props) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const queryClient = useQueryClient();
 
   const stored = getPendingMealProposal();
@@ -182,19 +182,11 @@ export function MealProposalReviewScreen({ listId }: Props) {
               op: "merge" as const,
               proposalRowId: op.proposalRowId,
               targetItemId: op.targetItemId,
-              name: op.name,
-              amount: op.amount ?? null,
-              note: op.note ?? null,
-              category: op.category,
             };
           }
           return {
             op: "create" as const,
             proposalRowId: op.proposalRowId,
-            name: op.name,
-            amount: op.amount ?? null,
-            note: op.note ?? null,
-            category: op.category,
           };
         });
       const ignored = allOps
@@ -225,7 +217,10 @@ export function MealProposalReviewScreen({ listId }: Props) {
       void queryClient.invalidateQueries({
         queryKey: ["shopping-list", listId],
       });
-      router.replace(`/list/${listId}` as never);
+      if (result.applied > 0) {
+        setPendingScrollToItems(listId);
+      }
+      replaceDetails(`/list/${listId}` as never);
     },
     onError: (error) => {
       const workspaceId = pending?.workspaceId;
@@ -285,7 +280,7 @@ export function MealProposalReviewScreen({ listId }: Props) {
             {t("ai.mealProposalMissing")}
           </Text>
           <Pressable
-            onPress={() => router.replace(`/list/${listId}` as never)}
+            onPress={() => replaceDetails(`/list/${listId}` as never)}
             style={{ marginTop: spacing[4] }}
           >
             <Text style={{ ...typography.label, color: theme.primary }}>
@@ -313,7 +308,7 @@ export function MealProposalReviewScreen({ listId }: Props) {
           <Pressable
             onPress={() => {
               clearPendingMealProposal();
-              router.back();
+              navigateBack();
             }}
             hitSlop={10}
             style={{
@@ -396,10 +391,19 @@ export function MealProposalReviewScreen({ listId }: Props) {
             fontWeight: "700",
             letterSpacing: 0.4,
             color: theme.textMuted,
-            marginBottom: spacing[2],
+            marginBottom: spacing[1],
           }}
         >
           {t("ai.mealProposalIngredients").toUpperCase()}
+        </Text>
+        <Text
+          style={{
+            ...typography.caption,
+            color: theme.textMuted,
+            marginBottom: spacing[3],
+          }}
+        >
+          {t("ai.mealProposalUncheckHint")}
         </Text>
 
         <View

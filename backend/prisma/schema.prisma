@@ -153,6 +153,7 @@ model Workspace {
   subscription Subscription?
   lists            ShoppingList[]
   aiUsage          AIUsage[]
+  aiCreditHolds    AiCreditHold[]
   aiProposalRuns   AiProposalRun[]
   notifications    Notification[]
   shoppingSessions ShoppingSession[]
@@ -226,6 +227,21 @@ model AIUsage {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@unique([workspaceId, periodStart])
+}
+
+/** In-flight AI credit reservation (refund on failure / TTL expiry). */
+model AiCreditHold {
+  id          String           @id @default(cuid())
+  workspaceId String
+  amount      Int
+  source      AiProposalSource
+  createdAt   DateTime         @default(now())
+  expiresAt   DateTime
+  releasedAt  DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, releasedAt, expiresAt])
 }
 
 model ShoppingList {
@@ -360,18 +376,21 @@ model UserNotificationPreferences {
 }
 
 model PushDevice {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   userId     String
-  expoToken  String   @unique
+  expoToken  String    @unique
   platform   String?
   appVersion String?
-  lastSeenAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  lastSeenAt DateTime  @default(now())
+  /** Soft-deactivate when Expo returns DeviceNotRegistered (keep history). */
+  disabledAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([userId, disabledAt])
 }
 
 model ShoppingSession {

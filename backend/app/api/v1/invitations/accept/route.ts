@@ -7,10 +7,12 @@ import {
 } from "@/features/workspace/schemas";
 import { ApiError, validationError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
+import { assertRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
   try {
     const { user, clerkId } = await requireUser(request);
+    assertRateLimit("invitations", user.id);
     const json: unknown = await request.json();
     const parsed = AcceptInvitationBodySchema.safeParse(json);
     if (!parsed.success) {
@@ -21,6 +23,7 @@ export async function POST(request: Request) {
 
     const result = await acceptInvitation({
       rawToken: parsed.data.token,
+      invitationId: parsed.data.invitationId,
       userId: user.id,
       userEmail: user.email,
       clerkId,

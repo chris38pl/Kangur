@@ -6,6 +6,7 @@ import { z } from "zod";
 import { apiFetch } from "@/lib/api/client";
 import i18n from "@/lib/i18n";
 import { resolveAppLocale } from "@/lib/i18n/locales";
+import { persistMeCache } from "@/lib/query/persist-bootstrap";
 import { createEnumSchema } from "@/lib/zod-enum";
 import { APP_LOCALE_IDS } from "@shared/locales";
 
@@ -42,7 +43,9 @@ export function useMe(enabled = true) {
         token,
         deviceLocale: preferredLocale(),
       });
-      return MeSchema.parse(data);
+      const parsed = MeSchema.parse(data);
+      void persistMeCache(parsed);
+      return parsed;
     },
   });
 

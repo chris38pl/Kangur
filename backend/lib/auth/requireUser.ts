@@ -13,10 +13,10 @@ export type UserContext = {
   clerkId: string;
 };
 
-async function resolveEmail(
+async function resolvePrimaryEmail(
   clerkId: string,
   secretKey: string,
-): Promise<string> {
+): Promise<{ email: string; emailVerified: boolean }> {
   const clerk = createClerkClient({ secretKey });
   const clerkUser = await clerk.users.getUser(clerkId);
   const primary =
@@ -28,7 +28,10 @@ async function resolveEmail(
     throw invalidToken();
   }
 
-  return primary.emailAddress;
+  return {
+    email: primary.emailAddress,
+    emailVerified: primary.verification?.status === "verified",
+  };
 }
 
 export async function requireUser(
@@ -43,7 +46,10 @@ export async function requireUser(
   const identity = await verifyClerkBearer(
     request.headers.get("authorization"),
   );
-  const email = await resolveEmail(identity.clerkId, secretKey);
+  const { email, emailVerified } = await resolvePrimaryEmail(
+    identity.clerkId,
+    secretKey,
+  );
   const deviceLocale: AppLocale | null = options?.deviceLocale
     ? resolveAppLocale(options.deviceLocale)
     : null;
@@ -51,6 +57,7 @@ export async function requireUser(
   const user = await upsertUser({
     clerkId: identity.clerkId,
     email,
+    emailVerified,
     deviceLocale,
   });
 

@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useQueryClient } from "@tanstack/react-query";
+import { useIsFocused } from "expo-router";
 import type { TFunction } from "i18next";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -53,7 +54,9 @@ function toastMessageForBatch(
 }
 
 /**
- * Subscribe to adaptive event polling while this screen is mounted.
+ * Subscribe to adaptive event polling while this screen is focused.
+ * Blur (e.g. Home under a retained stack) unsubscribes; RN Modal sheets do not
+ * blur the route, so they do not churn subscribe/unsubscribe.
  * Mount {@link RemoteChangeToast} on the same screen for presentation.
  */
 export function useListRealtime(
@@ -61,6 +64,7 @@ export function useListRealtime(
   options: Options = {},
 ): void {
   const { workspaceId = null, enabled = true } = options;
+  const isFocused = useIsFocused();
   const { getToken, isSignedIn } = useAuth();
   const me = useMe(Boolean(isSignedIn));
   const queryClient = useQueryClient();
@@ -73,7 +77,7 @@ export function useListRealtime(
   tRef.current = t;
 
   useEffect(() => {
-    if (!enabled || !listId || !isSignedIn) return;
+    if (!enabled || !listId || !isSignedIn || !isFocused) return;
 
     return subscribeListEvents({
       listId,
@@ -102,5 +106,5 @@ export function useListRealtime(
         }
       },
     });
-  }, [enabled, listId, isSignedIn, getToken, queryClient]);
+  }, [enabled, listId, isSignedIn, isFocused, getToken, queryClient]);
 }

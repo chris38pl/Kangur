@@ -10,14 +10,17 @@ export async function handleNotificationCreated(
   event: Extract<DomainEvent, { type: "NotificationCreated" }>,
 ): Promise<void> {
   const devices = await prisma.pushDevice.findMany({
-    where: { userId: event.recipientUserId },
+    where: {
+      userId: event.recipientUserId,
+      disabledAt: null,
+    },
     select: { expoToken: true },
   });
 
   const tokens = devices.map((d) => d.expoToken).filter(Boolean);
   if (tokens.length === 0) return;
 
-  await pushProvider.send({
+  const result = await pushProvider.send({
     tokens,
     title: event.title,
     body: event.body,
@@ -28,6 +31,16 @@ export async function handleNotificationCreated(
       payload: event.payload,
     },
   });
+
+  if (result.notRegisteredTokens.length > 0) {
+    await prisma.pushDevice.updateMany({
+      where: {
+        expoToken: { in: result.notRegisteredTokens },
+        disabledAt: null,
+      },
+      data: { disabledAt: new Date() },
+    });
+  }
 }
 
 export function registerPushHandler(): void {

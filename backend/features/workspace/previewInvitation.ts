@@ -1,8 +1,11 @@
-import { notFound, forbidden } from "@/lib/auth/errors";
+import { notFound, forbidden, validationError } from "@/lib/auth/errors";
 import { resolveAuthProvider } from "@/lib/auth/resolveAuthProvider";
 import { displayNameFromEmail } from "@/lib/displayName";
 import { normalizeEmail } from "@/lib/email/normalizeEmail";
-import { hashInviteToken } from "@/lib/invite/token";
+import {
+  hashInviteToken,
+  isValidInviteRawToken,
+} from "@/lib/invite/token";
 import { prisma } from "@/lib/prisma";
 
 export type InvitationPreview = {
@@ -22,32 +25,59 @@ export type InvitationPreview = {
   alreadyMember: boolean;
 };
 
+const invitationInclude = {
+  workspace: true,
+  invitedBy: true,
+} as const;
+
+async function loadInvitation(input: {
+  rawToken?: string;
+  invitationId?: string;
+}) {
+  if (input.rawToken) {
+    const token = input.rawToken.trim();
+    if (!isValidInviteRawToken(token)) {
+      throw notFound("Invitation expired.", { reason: "expired" });
+    }
+    const invitation = await prisma.invitation.findUnique({
+      where: { tokenHash: hashInviteToken(token) },
+      include: invitationInclude,
+    });
+    if (!invitation) {
+      throw notFound("Invitation expired.", { reason: "expired" });
+    }
+    return invitation;
+  }
+
+  if (input.invitationId) {
+    const invitation = await prisma.invitation.findUnique({
+      where: { id: input.invitationId.trim() },
+      include: invitationInclude,
+    });
+    if (!invitation) {
+      throw notFound("Invitation expired.", { reason: "expired" });
+    }
+    return invitation;
+  }
+
+  throw validationError("Provide exactly one of token or invitationId.");
+}
+
 /**
- * Preview for invitees (by token). Does not require workspace membership.
+ * Preview for invitees (by deep-link token or invitationId from in-app notification).
+ * Does not require workspace membership.
  */
 export async function previewInvitation(input: {
-  rawToken: string;
+  rawToken?: string;
+  invitationId?: string;
   userId: string;
   userEmail: string;
   clerkId: string;
 }): Promise<InvitationPreview> {
-  const token = input.rawToken?.trim();
-  if (!token) {
-    throw notFound("Invitation expired.", { reason: "expired" });
-  }
-
-  const tokenHash = hashInviteToken(token);
-  const invitation = await prisma.invitation.findUnique({
-    where: { tokenHash },
-    include: {
-      workspace: true,
-      invitedBy: true,
-    },
+  const invitation = await loadInvitation({
+    rawToken: input.rawToken,
+    invitationId: input.invitationId,
   });
-
-  if (!invitation) {
-    throw notFound("Invitation expired.", { reason: "expired" });
-  }
 
   if (invitation.status === "revoked") {
     throw notFound("Invitation expired.", { reason: "revoked" });
@@ -61,7 +91,6 @@ export async function previewInvitation(input: {
     const provider = await resolveAuthProvider(input.clerkId);
     throw forbidden("Invitation belongs to a different email.", {
       reason: "email_mismatch",
-      invitationEmail: invitation.email,
       currentEmail: input.userEmail,
       provider,
     });

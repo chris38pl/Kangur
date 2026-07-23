@@ -4,6 +4,7 @@ import { SuggestFromHistoryResponseSchema } from "@/features/ai/schemas";
 import { suggestFromHistory } from "@/features/ai/suggestFromHistory";
 import { ApiError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
+import { assertRateLimit } from "@/lib/rateLimit";
 
 type RouteContext = {
   params: Promise<{ workspaceId: string }>;
@@ -13,6 +14,8 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const { workspaceId } = await context.params;
     const { user } = await requireUser(request);
+
+    assertRateLimit("ai", `${user.id}:${workspaceId}`);
 
     const result = await suggestFromHistory({
       workspaceId,

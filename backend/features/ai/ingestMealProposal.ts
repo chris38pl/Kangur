@@ -10,6 +10,7 @@ import {
   estimateOpenAiCostUsd,
   usageFromCompletion,
 } from "@/lib/analytics/aiCost";
+import { withReservedAiCredits } from "@/lib/aiCredits";
 import { conflict, notFound } from "@/lib/auth/errors";
 import { prisma } from "@/lib/prisma";
 
@@ -59,110 +60,112 @@ async function ingestMealProposalOnce(input: {
     input.dishes.join(" "),
   );
 
-  let built: Awaited<ReturnType<typeof buildMealProposal>>;
-  try {
-    built = await buildMealProposal({
-      dishes: input.dishes,
-      existingItems,
-      outputLanguage,
-    });
-  } catch (error) {
+  return withReservedAiCredits(list.workspaceId, "meal", async () => {
+    let built: Awaited<ReturnType<typeof buildMealProposal>>;
+    try {
+      built = await buildMealProposal({
+        dishes: input.dishes,
+        existingItems,
+        outputLanguage,
+      });
+    } catch (error) {
+      const durationMs = Date.now() - startedAt;
+      Analytics.track(
+        "ai_model_completed",
+        {
+          workspace_id: list.workspaceId,
+          provider: AI_PROVIDER,
+          model: "unknown",
+          latency_ms: durationMs,
+          ok: false,
+        },
+        input.userId,
+      );
+      Analytics.track(
+        "meal_proposal_failed",
+        {
+          workspace_id: list.workspaceId,
+          list_id: input.listId,
+          code: "model_error",
+        },
+        input.userId,
+      );
+      throw error;
+    }
+
     const durationMs = Date.now() - startedAt;
+    const usage = usageFromCompletion(
+      built.rawResponse as {
+        usage?: {
+          prompt_tokens?: number;
+          completion_tokens?: number;
+          total_tokens?: number;
+        };
+      },
+    );
     Analytics.track(
       "ai_model_completed",
       {
         workspace_id: list.workspaceId,
         provider: AI_PROVIDER,
-        model: "unknown",
+        model: built.model,
         latency_ms: durationMs,
-        ok: false,
+        tokens: usage.tokens,
+        estimated_cost_usd: estimateOpenAiCostUsd({
+          model: built.model,
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+        }),
+        ok: true,
       },
       input.userId,
     );
+
+    const proposal = dedupeMealIngredients(built.ai, existingItems);
+    const mealCount = Math.min(5, Math.max(1, proposal.meals.length));
+
+    const run = await prisma.aiProposalRun.create({
+      data: {
+        workspaceId: list.workspaceId,
+        listId: input.listId,
+        userId: input.userId,
+        source: "meal",
+        proposalType: MEAL_PROPOSAL_TYPE,
+        proposalVersion: MEAL_PROPOSAL_VERSION,
+        provider: AI_PROVIDER,
+        status: "proposed",
+        model: built.model,
+        durationMs,
+        rawResponse: built.rawResponse as Prisma.InputJsonValue,
+        proposal: proposal as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    await applyUntitledListTitleFromProposal({
+      listId: input.listId,
+      proposal,
+    });
+
     Analytics.track(
-      "meal_proposal_failed",
+      "meal_proposal_generated",
       {
         workspace_id: list.workspaceId,
         list_id: input.listId,
-        code: "model_error",
+        meal_count: mealCount,
       },
       input.userId,
     );
-    throw error;
-  }
 
-  const durationMs = Date.now() - startedAt;
-  const usage = usageFromCompletion(
-    built.rawResponse as {
-      usage?: {
-        prompt_tokens?: number;
-        completion_tokens?: number;
-        total_tokens?: number;
-      };
-    },
-  );
-  Analytics.track(
-    "ai_model_completed",
-    {
-      workspace_id: list.workspaceId,
-      provider: AI_PROVIDER,
+    return {
+      runId: run.id,
       model: built.model,
-      latency_ms: durationMs,
-      tokens: usage.tokens,
-      estimated_cost_usd: estimateOpenAiCostUsd({
-        model: built.model,
-        promptTokens: usage.promptTokens,
-        completionTokens: usage.completionTokens,
-      }),
-      ok: true,
-    },
-    input.userId,
-  );
-
-  const proposal = dedupeMealIngredients(built.ai, existingItems);
-  const mealCount = Math.min(5, Math.max(1, proposal.meals.length));
-
-  const run = await prisma.aiProposalRun.create({
-    data: {
-      workspaceId: list.workspaceId,
-      listId: input.listId,
-      userId: input.userId,
-      source: "meal",
+      provider: AI_PROVIDER,
       proposalType: MEAL_PROPOSAL_TYPE,
       proposalVersion: MEAL_PROPOSAL_VERSION,
-      provider: AI_PROVIDER,
-      status: "proposed",
-      model: built.model,
       durationMs,
-      rawResponse: built.rawResponse as Prisma.InputJsonValue,
-      proposal: proposal as unknown as Prisma.InputJsonValue,
-    },
+      proposal,
+    };
   });
-
-  await applyUntitledListTitleFromProposal({
-    listId: input.listId,
-    proposal,
-  });
-
-  Analytics.track(
-    "meal_proposal_generated",
-    {
-      workspace_id: list.workspaceId,
-      list_id: input.listId,
-      meal_count: mealCount,
-    },
-    input.userId,
-  );
-
-  return {
-    runId: run.id,
-    model: built.model,
-    provider: AI_PROVIDER,
-    proposalType: MEAL_PROPOSAL_TYPE,
-    proposalVersion: MEAL_PROPOSAL_VERSION,
-    durationMs,
-    proposal,
-  };
 }
 
 export function ingestMealProposal(input: {

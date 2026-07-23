@@ -1,5 +1,7 @@
 import { useRouter } from "expo-router";
 
+import { goRoot } from "@/lib/navigation";
+
 import type { AppNotification } from "./schemas";
 
 type AppRouter = ReturnType<typeof useRouter>;
@@ -17,10 +19,13 @@ export function navigateFromNotification(
 
   switch (notification.payloadType) {
     case "INVITE": {
-      const token = typeof payload.token === "string" ? payload.token : null;
-      if (token) {
+      const invitationId =
+        typeof payload.invitationId === "string" ? payload.invitationId : null;
+      if (invitationId) {
         const q = new URLSearchParams({ notificationId: notification.id });
-        router.replace(`/invite/${token}?${q.toString()}` as never);
+        router.replace(
+          `/invite/id/${invitationId}?${q.toString()}` as never,
+        );
       } else {
         router.replace("/(tabs)/workspace" as never);
       }
@@ -29,7 +34,7 @@ export function navigateFromNotification(
     case "SHOPPING": {
       const listId = typeof payload.listId === "string" ? payload.listId : null;
       if (!listId) {
-        router.replace("/(tabs)" as never);
+        goRoot();
         return;
       }
       if (payload.screen === "finish") {
@@ -54,7 +59,7 @@ export function navigateFromNotification(
       // List deleted (and similar) - no detail screen.
       return;
     default:
-      router.replace("/(tabs)" as never);
+      goRoot();
   }
 }
 

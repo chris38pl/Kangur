@@ -9,6 +9,7 @@ import {
 } from "@/features/workspace/schemas";
 import { ApiError, validationError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
+import { assertRateLimit } from "@/lib/rateLimit";
 
 type RouteContext = {
   params: Promise<{ workspaceId: string }>;
@@ -37,6 +38,7 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const { workspaceId } = await context.params;
     const { user } = await requireUser(request);
+    assertRateLimit("invitations", user.id);
     const json: unknown = await request.json();
     const parsed = CreateInvitationBodySchema.safeParse(json);
     if (!parsed.success) {

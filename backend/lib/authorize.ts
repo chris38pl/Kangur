@@ -35,6 +35,41 @@ export type AuthorizeListResult = {
   membership: WorkspaceMember;
 };
 
+/** In-memory owner membership — never persisted; for platform ADMIN bypass only. */
+function syntheticOwnerMembership(
+  workspaceId: string,
+  userId: string,
+): WorkspaceMember {
+  return {
+    id: `platform-admin:${workspaceId}:${userId}`,
+    workspaceId,
+    userId,
+    role: "owner",
+    joinedAt: new Date(0),
+  };
+}
+
+async function platformAdminAuthorize(
+  workspaceId: string,
+  userId: string,
+): Promise<AuthorizeResult | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { platformRole: true },
+  });
+  if (!user || !isPlatformAdmin(user)) return null;
+
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: workspaceId },
+  });
+  if (!workspace) return null;
+
+  return {
+    workspace,
+    membership: syntheticOwnerMembership(workspaceId, userId),
+  };
+}
+
 export async function authorize(
   workspaceId: string,
   userId: string,
@@ -46,14 +81,17 @@ export async function authorize(
     include: { workspace: true },
   });
 
-  if (!membership) {
-    throw notFound("Workspace not found.");
+  if (membership) {
+    return {
+      workspace: membership.workspace,
+      membership,
+    };
   }
 
-  return {
-    workspace: membership.workspace,
-    membership,
-  };
+  const asAdmin = await platformAdminAuthorize(workspaceId, userId);
+  if (asAdmin) return asAdmin;
+
+  throw notFound("Workspace not found.");
 }
 
 export function requireRole(
@@ -95,15 +133,24 @@ export async function authorizeList(
     include: { workspace: true },
   });
 
-  if (!membership) {
-    throw notFound("List not found.");
+  if (membership) {
+    return {
+      list,
+      workspace: membership.workspace,
+      membership,
+    };
   }
 
-  return {
-    list,
-    workspace: membership.workspace,
-    membership,
-  };
+  const asAdmin = await platformAdminAuthorize(list.workspaceId, userId);
+  if (asAdmin) {
+    return {
+      list,
+      workspace: asAdmin.workspace,
+      membership: asAdmin.membership,
+    };
+  }
+
+  throw notFound("List not found.");
 }
 
 export type { PlatformRole, WorkspaceRole };

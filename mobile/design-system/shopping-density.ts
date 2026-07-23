@@ -1,6 +1,7 @@
 /** Soft shopping density + shared chrome for Design System v2. */
 
 import { brand, colors, radius, shadows, spacing, typography } from "./tokens";
+import { motionDuration } from "./motion";
 
 export const shoppingDensity = {
   rowMinHeight: 68,
@@ -12,7 +13,8 @@ export const shoppingDensity = {
   unavailableColor: brand.unavailable,
   progressBarHeight: 6,
   searchSlotHeight: 48,
-  collapseDurationMs: 220,
+  /** Aligns with motion `layout` / `emphasis` tokens */
+  collapseDurationMs: motionDuration.layout,
 } as const;
 
 type Theme = (typeof colors)["light"] | (typeof colors)["dark"];

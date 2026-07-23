@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, shadows, spacing, typography } from "@/design-system/tokens";
+import { ToastMotion } from "@/lib/motion";
 
 import {
   clearRemoteChangeToast,
@@ -23,8 +24,16 @@ export function RemoteChangeToast() {
   const [toast, setToast] = useState<{ message: string; nonce: number } | null>(
     null,
   );
+  const [rendered, setRendered] = useState<{
+    message: string;
+    nonce: number;
+  } | null>(null);
 
   useEffect(() => subscribeRemoteChangeToast(setToast), []);
+
+  useEffect(() => {
+    if (toast) setRendered(toast);
+  }, [toast]);
 
   useEffect(() => {
     if (!toast) return;
@@ -34,7 +43,7 @@ export function RemoteChangeToast() {
     return () => clearTimeout(handle);
   }, [toast?.nonce, toast]);
 
-  if (!toast) return null;
+  if (!rendered) return null;
 
   return (
     <View
@@ -47,29 +56,36 @@ export function RemoteChangeToast() {
         zIndex: 40,
       }}
     >
-      <Pressable
-        onPress={() => clearRemoteChangeToast()}
-        style={{
-          backgroundColor: theme.surface,
-          borderRadius: radius.lg,
-          borderWidth: 1,
-          borderColor: theme.border,
-          paddingVertical: spacing[3],
-          paddingHorizontal: spacing[4],
-          ...shadows.soft,
+      <ToastMotion
+        visible={toast != null}
+        onExited={() => {
+          if (!toast) setRendered(null);
         }}
       >
-        <Text
+        <Pressable
+          onPress={() => clearRemoteChangeToast()}
           style={{
-            ...typography.label,
-            color: theme.text,
-            textAlign: "center",
+            backgroundColor: theme.surface,
+            borderRadius: radius.lg,
+            borderWidth: 1,
+            borderColor: theme.border,
+            paddingVertical: spacing[3],
+            paddingHorizontal: spacing[4],
+            ...shadows.soft,
           }}
-          numberOfLines={2}
         >
-          {toast.message}
-        </Text>
-      </Pressable>
+          <Text
+            style={{
+              ...typography.label,
+              color: theme.text,
+              textAlign: "center",
+            }}
+            numberOfLines={2}
+          >
+            {rendered.message}
+          </Text>
+        </Pressable>
+      </ToastMotion>
     </View>
   );
 }

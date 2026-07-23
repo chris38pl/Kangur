@@ -14,7 +14,9 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppResultProvider } from "@/components/AppResultProvider";
 import { colors } from "@/design-system/tokens";
+import { AppUpdateGate } from "@/features/app-update/AppUpdateGate";
 import { useDataSyncEngineBootstrap } from "@/features/data-sync-engine/useBootstrap";
+import { NotificationSyncTrigger } from "@/features/notifications/NotificationSyncTrigger";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { AppStartupController } from "@/features/startup/AppStartupController";
 import { AppQueryProvider } from "@/lib/query/client";
@@ -60,7 +62,12 @@ function ClerkEffects({ children }: { children: ReactNode }) {
   const { isSignedIn } = useAuth();
   useDataSyncEngineBootstrap();
   usePushRegistration(Boolean(isSignedIn));
-  return <>{children}</>;
+  return (
+    <>
+      <NotificationSyncTrigger enabled={Boolean(isSignedIn)} />
+      {children}
+    </>
+  );
 }
 
 export default function RootLayout() {
@@ -77,50 +84,60 @@ export default function RootLayout() {
               <AppResultProvider>
                 <ClerkEffects>
                   <AppStartupController>
-                    <Stack>
-                      <Stack.Screen name="index" options={{ headerShown: false }} />
-                      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                      <Stack.Screen name="account" options={{ headerShown: false }} />
-                      <Stack.Screen
-                        name="change-password"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="notifications"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="notification-center"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen name="about" options={{ headerShown: false }} />
-                      <Stack.Screen name="help" options={{ headerShown: false }} />
-                      <Stack.Screen name="privacy" options={{ headerShown: false }} />
-                      <Stack.Screen name="language" options={{ headerShown: false }} />
-                      <Stack.Screen name="premium" options={{ headerShown: false }} />
-                      <Stack.Screen
-                        name="platform-console"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="invite/[token]"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="notification/shopping-started"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="notification/shopping-finished"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="notification/list-created"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen name="list/[listId]" />
-                    </Stack>
+                    <AppUpdateGate>
+                      <Stack>
+                        <Stack.Screen name="index" options={{ headerShown: false }} />
+                        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                        <Stack.Screen name="account" options={{ headerShown: false }} />
+                        <Stack.Screen
+                          name="change-password"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="notifications"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="notification-center"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen name="about" options={{ headerShown: false }} />
+                        <Stack.Screen name="help" options={{ headerShown: false }} />
+                        <Stack.Screen name="privacy" options={{ headerShown: false }} />
+                        <Stack.Screen name="language" options={{ headerShown: false }} />
+                        <Stack.Screen name="premium" options={{ headerShown: false }} />
+                        <Stack.Screen
+                          name="platform-console"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="workspace-browser"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="invite/[token]"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="invite/id/[invitationId]"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="notification/shopping-started"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="notification/shopping-finished"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="notification/list-created"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen name="list/[listId]" />
+                      </Stack>
+                    </AppUpdateGate>
                   </AppStartupController>
                 </ClerkEffects>
               </AppResultProvider>

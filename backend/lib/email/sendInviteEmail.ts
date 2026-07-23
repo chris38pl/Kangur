@@ -67,11 +67,11 @@ function escapeHtml(value: string): string {
 
 /**
  * Sends invite email via Resend when RESEND_API_KEY is set.
- * Otherwise logs the accept URL (dev) and returns { delivered: false }.
+ * Never logs acceptUrl / raw token (invite hygiene).
  */
 export async function sendInviteEmail(
   input: Omit<SendInviteEmailInput, "acceptUrl"> & { rawToken: string },
-): Promise<{ delivered: boolean; acceptUrl: string }> {
+): Promise<{ delivered: boolean }> {
   const acceptUrl = buildInviteAcceptUrl(input.rawToken);
   const payload: SendInviteEmailInput = { ...input, acceptUrl };
 
@@ -81,10 +81,9 @@ export async function sendInviteEmail(
   if (!apiKey || !from) {
     console.info("[invite]", "InviteEmailSkipped", {
       to: input.to,
-      acceptUrl,
       variant: input.variant,
     });
-    return { delivered: false, acceptUrl };
+    return { delivered: false };
   }
 
   const resend = new Resend(apiKey);
@@ -100,5 +99,5 @@ export async function sendInviteEmail(
     variant: input.variant,
   });
 
-  return { delivered: true, acceptUrl };
+  return { delivered: true };
 }

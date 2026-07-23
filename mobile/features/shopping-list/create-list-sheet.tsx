@@ -36,6 +36,8 @@ type Props = {
   busy?: boolean;
   showFromHistory?: boolean;
   showFromRecipe?: boolean;
+  /** Show Premium badge on From history (Free plan teaser). */
+  fromHistoryLocked?: boolean;
   onClose: () => void;
   onSelect: (path: CreateListPath) => void;
 };
@@ -45,6 +47,7 @@ export function CreateListSheet({
   busy,
   showFromHistory = false,
   showFromRecipe = false,
+  fromHistoryLocked = false,
   onClose,
   onSelect,
 }: Props) {
@@ -199,6 +202,9 @@ export function CreateListSheet({
                     icon="✨"
                     title={t("home.createFromHistory")}
                     subtitle={t("home.createFromHistoryHint")}
+                    badge={
+                      fromHistoryLocked ? t("billing.premiumBadge") : undefined
+                    }
                     onPress={() => onSelect("fromHistory")}
                   />
                 ) : null}

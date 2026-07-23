@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Screen } from "@/components/Screen";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
-import { colors, radius, spacing, typography } from "@/design-system/tokens";
+import { brand, colors, radius, spacing, typography } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
 import {
   listNotifications,
@@ -25,6 +25,10 @@ import {
 import { formatNotificationTime } from "@/features/notifications/format-time";
 import type { AppNotification } from "@/features/notifications/schemas";
 import { NOTIFICATIONS_QUERY_KEY } from "@/features/notifications/useNotifications";
+import {
+  completeNotificationTaskAndOpen,
+  dismissNotificationTask,
+} from "@/features/notifications/notification-task-intent";
 
 type ShoppingFinishedPayload = {
   listId?: string;
@@ -46,55 +50,27 @@ function paramString(value: string | string[] | undefined): string {
   return typeof value === "string" ? value : "";
 }
 
-function CartIcon({ color, size = 22 }: { color: string; size?: number }) {
-  const stroke = Math.max(1.6, size * 0.09);
+function ListBagIcon({ size = 44 }: { size?: number }) {
   return (
-    <View style={{ width: size, height: size, alignItems: "center" }}>
-      <View
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius.lg,
+        backgroundColor: brand.accent,
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+      }}
+    >
+      <Image
+        source={brandAssets.listBag}
         style={{
-          width: size * 0.62,
-          height: size * 0.42,
-          borderWidth: stroke,
-          borderColor: color,
-          borderRadius: 3,
-          marginTop: size * 0.22,
+          width: size * 0.82,
+          height: size * 0.82,
+          resizeMode: "contain",
         }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          top: size * 0.08,
-          left: size * 0.12,
-          width: size * 0.28,
-          height: size * 0.22,
-          borderLeftWidth: stroke,
-          borderTopWidth: stroke,
-          borderColor: color,
-          borderTopLeftRadius: 4,
-          transform: [{ rotate: "-18deg" }],
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: size * 0.22,
-          width: size * 0.14,
-          height: size * 0.14,
-          borderRadius: size * 0.07,
-          backgroundColor: color,
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          right: size * 0.18,
-          width: size * 0.14,
-          height: size * 0.14,
-          borderRadius: size * 0.07,
-          backgroundColor: color,
-        }}
+        accessibilityLabel=""
       />
     </View>
   );
@@ -102,7 +78,6 @@ function CartIcon({ color, size = 22 }: { color: string; size?: number }) {
 
 export function ShoppingFinishedNotificationScreen() {
   const { t, i18n } = useTranslation();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
@@ -207,8 +182,8 @@ export function ShoppingFinishedNotificationScreen() {
   }, [getToken, notificationId, queryClient]);
 
   const goHome = useCallback(() => {
-    router.replace("/(tabs)" as never);
-  }, [router]);
+    dismissNotificationTask();
+  }, []);
 
   const onBack = () => {
     void markRead();
@@ -232,7 +207,7 @@ export function ShoppingFinishedNotificationScreen() {
     if (payload.actorDisplayName) {
       q.set("actor", payload.actorDisplayName);
     }
-    router.replace(
+    completeNotificationTaskAndOpen(
       `/list/${listId}/shop/finish?${q.toString()}` as never,
     );
   };
@@ -374,18 +349,7 @@ export function ShoppingFinishedNotificationScreen() {
                 gap: spacing[3],
               }}
             >
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: radius.sm,
-                  backgroundColor: "#E4F0FB",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <CartIcon color="#4A7FB5" size={22} />
-              </View>
+              <ListBagIcon size={44} />
               <View style={{ flex: 1, minWidth: 0 }}>
                 <View
                   style={{

@@ -10,6 +10,7 @@ import { authorizeList } from "@/lib/authorize";
 import { ApiError, forbidden, validationError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
 import { isMealProposalEnabled } from "@/lib/featureGates";
+import { assertRateLimit } from "@/lib/rateLimit";
 
 type RouteContext = { params: Promise<{ listId: string }> };
 
@@ -18,6 +19,8 @@ export async function POST(request: Request, context: RouteContext) {
     const { listId } = await context.params;
     const { user } = await requireUser(request);
     const { list } = await authorizeList(listId, user.id);
+
+    assertRateLimit("ai", `${user.id}:${list.workspaceId}`);
 
     if (!isMealProposalEnabled(list)) {
       throw forbidden("Meal proposal is disabled.");

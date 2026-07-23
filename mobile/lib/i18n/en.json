@@ -16,6 +16,12 @@
     "return": "Go back",
     "tryAgain": "Try again"
   },
+  "appUpdate": {
+    "title": "A new version of Kangur is available",
+    "body": "You're using an older version of the app. Update to get the latest features and fixes.",
+    "update": "Update",
+    "later": "Later"
+  },
   "home": {
     "title": "Kangur",
     "subtitle": "AI Shopping Assistant",
@@ -148,6 +154,7 @@
     "productsProgress": "{{bought}} of {{total}} products",
     "boughtOfTotal": "{{bought}} of {{total}} products",
     "categoriesSection": "Categories",
+    "tapCategoryHint": "Tap a category to shop that aisle.",
     "alreadyBoughtSection": "Already bought",
     "backToEditList": "Back to list editing",
     "purchased": "Purchased",
@@ -251,6 +258,9 @@
     "suggestLoadingSubtitle": "Building a list from your past shopping…",
     "suggestSwipeTip": "Swipe right to add a proposal. Swipe left to reject!",
     "suggestLoadingCta": "Creating proposal…",
+    "phaseUploading": "Uploading…",
+    "phaseAnalyzing": "Analyzing…",
+    "phaseApplying": "Adding products…",
     "suggestAccepted_one": "✓ Added to list ({{count}})",
     "suggestAccepted_other": "✓ Added to list ({{count}})",
     "suggestAcceptedEmpty": "Swipe right to add a proposal.",
@@ -301,7 +311,8 @@
     "mealProposalMissing": "Meal proposal not found.",
     "mealProposalBackToList": "Back to list",
     "mealProposalGenerating": "Generating…",
-    "mealProposalSectionTitle": "Create list from a recipe with AI ✨"
+    "mealProposalSectionTitle": "Create list from a recipe with AI ✨",
+    "mealProposalUncheckHint": "Uncheck ingredients you already have at home."
   },
   "categories": {
     "fruit": "Fruit",
@@ -349,6 +360,8 @@
     "preview": "Preview",
     "previewHint": "View products on this list (read-only)",
     "previewFailed": "Could not load preview.",
+    "editList": "Edit list",
+    "editListHint": "Open the list to add or change products",
     "deleteHint": "Permanently remove this list from the space",
     "actionsMenu": "List options",
     "actionsSubtitle": "Choose what you want to do with this list",
@@ -424,9 +437,9 @@
     "inviteEmailPlaceholder": "Email",
     "inviteSend": "Send invitation",
     "inviteInvalidEmail": "Enter a valid email address.",
-    "inviteSentTitle": "Invitation",
-    "inviteSentBody": "We'll send an invite to {{email}}.",
-    "inviteResentBody": "Invitation resent to {{email}}.",
+    "inviteSentTitle": "Invitation sent!",
+    "inviteSentBody": "We sent an invite to {{email}}. They can join after opening the link from the message.",
+    "inviteResentBody": "We resent the invite to {{email}}. They can join after opening the link from the message.",
     "inviteAlreadyMember": "This person is already a member.",
     "inviteForbidden": "You don't have permission to invite.",
     "inviteFailed": "Could not send invitation.",
@@ -434,12 +447,7 @@
     "revokeInviteTitle": "Revoke invitation?",
     "revokeInviteBody": "Revoke the invite for {{email}}?",
     "revokeInviteConfirm": "Revoke",
-    "revokeInviteFailed": "Could not revoke the invitation.",
-    "shareLinkTitle": "Share link",
-    "shareLinkBody": "Copy the link from the last invitation you sent.",
-    "copyLink": "Copy link",
-    "copyLinkNeedInvite": "Send an invitation first to get a link.",
-    "linkCopied": "Copied"
+    "revokeInviteFailed": "Could not revoke the invitation."
   },
   "notifications": {
     "centerTitle": "Notifications",
@@ -473,7 +481,7 @@
     "needAuthBody": "Sign in with the invited email to accept this workspace invitation.",
     "signIn": "Sign in",
     "mismatchTitle": "This invitation was sent to a different email address",
-    "mismatchBelongsTo": "Invitation belongs to {{email}}",
+    "mismatchBelongsTo": "This invitation was sent to a different email address than the one you are signed in with.",
     "mismatchLoggedIn": "You are logged in as {{email}} ({{provider}})",
     "providerGoogle": "Google",
     "providerApple": "Apple",
@@ -562,7 +570,15 @@
     "cancelledBadge": "Plan cancelled",
     "cancelledBadgeUntil": "Plan cancelled - ends {{date}}",
     "cancelledRemainingLabel": "Cancelled - expires in",
-    "cancelledEndsOn": "until {{date}}"
+    "cancelledEndsOn": "until {{date}}",
+    "hintCreditsLow": "{{count}} credits left · Upgrade for unlimited",
+    "hintCreditsFootnote": "AI Credits: {{remaining}} left",
+    "hintGenerateFromHistoryTitle": "Generate from your history",
+    "hintGenerateFromHistoryBody": "Kangur can rebuild a shopping list from your past trips. Available with Premium.",
+    "premiumBadge": "Premium",
+    "hintHistoryDepthLine1": "Free keeps the last 20 lists",
+    "hintHistoryDepthLine2": "Premium up to 200 shopping lists!",
+    "creditsRemainingBadge": "Remaining {{remaining}}"
   },
   "profile": {
     "title": "Profile",
@@ -612,6 +628,7 @@
     "switchToEn": "Switch to English",
     "switchToDe": "Switch to German",
     "comingSoon": "Coming soon",
+    "comingSoonBody": "This feature isn’t available yet. Check back soon.",
     "accountScreenTitle": "Account details",
     "fullName": "Full name",
     "emailLabel": "Email",
@@ -799,7 +816,8 @@
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "about": "About",
-    "platformConsole": "Platform Console"
+    "platformConsole": "Platform Console",
+    "workspaceBrowser": "Workspace browser"
   },
   "about": {
     "title": "About",
@@ -835,6 +853,32 @@
     "reportBugSubtitle": "Help us improve the app",
     "sendFeedback": "Send feedback",
     "sendFeedbackSubtitle": "Your opinion matters to us"
+  },
+  "workspaceBrowser": {
+    "title": "Workspace browser",
+    "forbidden": "Workspace browser is only available to platform admins.",
+    "searchPlaceholder": "Search by name or member email",
+    "filterAll": "All",
+    "filterFree": "Free",
+    "filterPremium": "Premium",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "members_one": "{{count}} member",
+    "members_other": "{{count}} members",
+    "total": "{{count}} spaces",
+    "empty": "No workspaces match your filters.",
+    "actionsA11y": "Workspace actions",
+    "enter": "Enter",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "cancel": "Cancel",
+    "deleteTitle": "Delete workspace?",
+    "deleteBody": "Permanently delete “{{name}}” and all of its lists, members, and data. This cannot be undone.",
+    "deleteConfirm": "Delete",
+    "enterFailed": "Could not open this workspace.",
+    "editFailed": "Could not edit this workspace.",
+    "deleteFailed": "Could not delete this workspace."
   },
   "platformConsole": {
     "title": "Platform Console",
@@ -926,5 +970,8 @@
     "rtSystemHealthy": "All realtime systems operating normally",
     "rtSystemWarning": "Realtime soft signals elevated - monitor polling latency",
     "rtSystemDegraded": "Realtime degraded - check failures and latency"
+  },
+  "navigation": {
+    "pressAgainToExit": "Press again to exit"
   }
 }

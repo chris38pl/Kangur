@@ -10,6 +10,8 @@ type Props = {
   disabled?: boolean;
   soon?: boolean;
   soonLabel?: string;
+  /** Compact trailing badge (e.g. Premium) — takes precedence over chevron when set. */
+  badge?: string;
   onPress: () => void;
 };
 
@@ -20,6 +22,7 @@ export function CreateListOptionRow({
   disabled,
   soon,
   soonLabel,
+  badge,
   onPress,
 }: Props) {
   const scheme = useColorScheme() ?? "light";
@@ -100,6 +103,30 @@ export function CreateListOptionRow({
             }}
           >
             {soonLabel}
+          </Text>
+        </View>
+      ) : badge ? (
+        <View
+          style={{
+            paddingHorizontal: spacing[3],
+            paddingVertical: spacing[1],
+            borderRadius: radius.full,
+            backgroundColor: "#FFF9F2",
+            borderWidth: 1,
+            borderColor: "#F0E0D0",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 10,
+              lineHeight: 14,
+              fontWeight: "700",
+              letterSpacing: 0.4,
+              color: "#C47A3A",
+              textTransform: "uppercase",
+            }}
+          >
+            {badge}
           </Text>
         </View>
       ) : (

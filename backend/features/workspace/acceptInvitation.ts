@@ -12,7 +12,10 @@ import {
   type AuthProvider,
 } from "@/lib/auth/resolveAuthProvider";
 import { normalizeEmail } from "@/lib/email/normalizeEmail";
-import { hashInviteToken } from "@/lib/invite/token";
+import {
+  hashInviteToken,
+  isValidInviteRawToken,
+} from "@/lib/invite/token";
 import { prisma } from "@/lib/prisma";
 
 export type AcceptInvitationResult = {
@@ -26,7 +29,8 @@ export type AcceptInvitationResult = {
 };
 
 export type AcceptInvitationInput = {
-  rawToken: string;
+  rawToken?: string;
+  invitationId?: string;
   userId: string;
   userEmail: string;
   clerkId: string;
@@ -34,24 +38,47 @@ export type AcceptInvitationInput = {
 
 export type { AuthProvider };
 
+async function findInvitationByCapability(
+  tx: Prisma.TransactionClient,
+  input: { rawToken?: string; invitationId?: string },
+) {
+  if (input.rawToken) {
+    const token = input.rawToken.trim();
+    if (!isValidInviteRawToken(token)) {
+      throw notFound("Invitation expired.", { reason: "expired" });
+    }
+    return tx.invitation.findUnique({
+      where: { tokenHash: hashInviteToken(token) },
+      include: { workspace: true },
+    });
+  }
+
+  if (input.invitationId) {
+    return tx.invitation.findUnique({
+      where: { id: input.invitationId.trim() },
+      include: { workspace: true },
+    });
+  }
+
+  throw validationError("Provide exactly one of token or invitationId.");
+}
+
 export async function acceptInvitation(
   input: AcceptInvitationInput,
 ): Promise<AcceptInvitationResult> {
-  const token = input.rawToken?.trim();
-  if (!token) {
+  if (!input.rawToken?.trim() && !input.invitationId?.trim()) {
     throw notFound("Invitation expired.", { reason: "expired" });
   }
 
-  const tokenHash = hashInviteToken(token);
   const userEmail = normalizeEmail(input.userEmail);
   const provider = await resolveAuthProvider(input.clerkId);
 
   try {
     const result = await prisma.$transaction(
       async (tx) => {
-        const invitation = await tx.invitation.findUnique({
-          where: { tokenHash },
-          include: { workspace: true },
+        const invitation = await findInvitationByCapability(tx, {
+          rawToken: input.rawToken,
+          invitationId: input.invitationId,
         });
 
         if (!invitation) {
@@ -102,7 +129,6 @@ export async function acceptInvitation(
         if (normalizeEmail(invitation.email) !== userEmail) {
           throw forbidden("Invitation belongs to a different email.", {
             reason: "email_mismatch",
-            invitationEmail: invitation.email,
             currentEmail: userEmail,
             provider,
           });
@@ -193,9 +219,9 @@ export async function acceptInvitation(
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
-      const invitation = await prisma.invitation.findUnique({
-        where: { tokenHash },
-        include: { workspace: true },
+      const invitation = await findInvitationByCapability(prisma, {
+        rawToken: input.rawToken,
+        invitationId: input.invitationId,
       });
       throw conflict("You already belong to this workspace.", {
         reason: "already_member",

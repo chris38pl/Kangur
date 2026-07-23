@@ -16,7 +16,6 @@ export type DomainEvent =
       inviteeEmail: string;
       actorUserId: string;
       actorDisplayName: string;
-      rawToken: string;
     }
   | {
       type: "ShoppingListCreated";

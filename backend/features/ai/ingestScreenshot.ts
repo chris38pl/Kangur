@@ -10,6 +10,7 @@ import {
   estimateOpenAiCostUsd,
   usageFromCompletion,
 } from "@/lib/analytics/aiCost";
+import { withReservedAiCredits } from "@/lib/aiCredits";
 import { prisma } from "@/lib/prisma";
 
 import { applyUntitledListTitleFromProposal } from "./applyUntitledListTitle";
@@ -48,101 +49,103 @@ export async function ingestScreenshot(input: {
 
   const outputLanguage = await resolveListOutputLanguage(input.listId);
 
-  let proposalResult: Awaited<ReturnType<typeof buildProposalFromScreenshot>>;
-  try {
-    proposalResult = await buildProposalFromScreenshot({
-      rawHint: input.fileName ?? "shopping-list-screenshot",
-      mimeType: input.mimeType,
-      base64: input.fileBuffer.toString("base64"),
-      existingItems,
-      outputLanguage,
-    });
-  } catch (error) {
+  return withReservedAiCredits(list.workspaceId, "screenshot", async () => {
+    let proposalResult: Awaited<ReturnType<typeof buildProposalFromScreenshot>>;
+    try {
+      proposalResult = await buildProposalFromScreenshot({
+        rawHint: input.fileName ?? "shopping-list-screenshot",
+        mimeType: input.mimeType,
+        base64: input.fileBuffer.toString("base64"),
+        existingItems,
+        outputLanguage,
+      });
+    } catch (error) {
+      const durationMs = Date.now() - startedAt;
+      Analytics.track(
+        "ai_model_completed",
+        {
+          workspace_id: list.workspaceId,
+          provider: AI_PROVIDER,
+          model: "unknown",
+          latency_ms: durationMs,
+          ok: false,
+        },
+        input.userId,
+      );
+      Analytics.track(
+        "ai_import_failed",
+        {
+          workspace_id: list.workspaceId,
+          list_id: input.listId,
+          source: "screenshot",
+          code: "model_error",
+        },
+        input.userId,
+      );
+      throw error;
+    }
+
     const durationMs = Date.now() - startedAt;
+    const usage = usageFromCompletion(
+      proposalResult.rawResponse as {
+        usage?: {
+          prompt_tokens?: number;
+          completion_tokens?: number;
+          total_tokens?: number;
+        };
+      },
+    );
     Analytics.track(
       "ai_model_completed",
       {
         workspace_id: list.workspaceId,
         provider: AI_PROVIDER,
-        model: "unknown",
-        latency_ms: durationMs,
-        ok: false,
-      },
-      input.userId,
-    );
-    Analytics.track(
-      "ai_import_failed",
-      {
-        workspace_id: list.workspaceId,
-        list_id: input.listId,
-        source: "screenshot",
-        code: "model_error",
-      },
-      input.userId,
-    );
-    throw error;
-  }
-
-  const durationMs = Date.now() - startedAt;
-  const usage = usageFromCompletion(
-    proposalResult.rawResponse as {
-      usage?: {
-        prompt_tokens?: number;
-        completion_tokens?: number;
-        total_tokens?: number;
-      };
-    },
-  );
-  Analytics.track(
-    "ai_model_completed",
-    {
-      workspace_id: list.workspaceId,
-      provider: AI_PROVIDER,
-      model: proposalResult.model,
-      latency_ms: durationMs,
-      tokens: usage.tokens,
-      estimated_cost_usd: estimateOpenAiCostUsd({
         model: proposalResult.model,
-        promptTokens: usage.promptTokens,
-        completionTokens: usage.completionTokens,
-      }),
-      ok: true,
-    },
-    input.userId,
-  );
+        latency_ms: durationMs,
+        tokens: usage.tokens,
+        estimated_cost_usd: estimateOpenAiCostUsd({
+          model: proposalResult.model,
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+        }),
+        ok: true,
+      },
+      input.userId,
+    );
 
-  const run = await prisma.aiProposalRun.create({
-    data: {
-      workspaceId: list.workspaceId,
+    const run = await prisma.aiProposalRun.create({
+      data: {
+        workspaceId: list.workspaceId,
+        listId: input.listId,
+        userId: input.userId,
+        source: "screenshot",
+        proposalType: IMPORT_PROPOSAL_TYPE,
+        proposalVersion: IMPORT_PROPOSAL_VERSION,
+        provider: AI_PROVIDER,
+        status: "proposed",
+        model: proposalResult.model,
+        durationMs,
+        rawResponse: proposalResult.rawResponse as Prisma.InputJsonValue,
+        proposal: proposalResult.proposal as Prisma.InputJsonValue,
+      },
+    });
+
+    await applyUntitledListTitleFromProposal({
       listId: input.listId,
-      userId: input.userId,
-      source: "screenshot",
+      proposal: proposalResult.proposal,
+    });
+
+    return {
+      runId: run.id,
+      model: proposalResult.model,
+      provider: AI_PROVIDER,
       proposalType: IMPORT_PROPOSAL_TYPE,
       proposalVersion: IMPORT_PROPOSAL_VERSION,
-      provider: AI_PROVIDER,
-      status: "proposed",
-      model: proposalResult.model,
       durationMs,
-      rawResponse: proposalResult.rawResponse as Prisma.InputJsonValue,
-      proposal: proposalResult.proposal as Prisma.InputJsonValue,
-    },
+      proposal: proposalResult.proposal,
+      fastPath: proposalResult.proposal.operations.every(
+        (operation) => operation.op === "merge" && operation.confidence >= 0.85,
+      ),
+    };
   });
-
-  await applyUntitledListTitleFromProposal({
-    listId: input.listId,
-    proposal: proposalResult.proposal,
-  });
-
-  return {
-    runId: run.id,
-    model: proposalResult.model,
-    provider: AI_PROVIDER,
-    proposalType: IMPORT_PROPOSAL_TYPE,
-    proposalVersion: IMPORT_PROPOSAL_VERSION,
-    durationMs,
-    proposal: proposalResult.proposal,
-    fastPath: proposalResult.proposal.operations.every(
-      (operation) => operation.op === "merge" && operation.confidence >= 0.85,
-    ),
-  };
 }
