@@ -134,24 +134,32 @@ export async function revokeInvitation(
 
 export async function acceptInvitation(
   token: string,
-  inviteToken: string,
+  capability: { inviteToken: string } | { invitationId: string },
 ): Promise<AcceptInvitationResult> {
+  const body =
+    "inviteToken" in capability
+      ? { token: capability.inviteToken }
+      : { invitationId: capability.invitationId };
   const data = await apiFetch<unknown>("/api/v1/invitations/accept", {
     token,
     method: "POST",
-    body: { token: inviteToken },
+    body,
   });
   return AcceptInvitationResultSchema.parse(data);
 }
 
 export async function previewInvitation(
   token: string,
-  inviteToken: string,
+  capability: { inviteToken: string } | { invitationId: string },
 ): Promise<InvitationPreview> {
-  const q = encodeURIComponent(inviteToken);
-  const data = await apiFetch<unknown>(
-    `/api/v1/invitations/preview?token=${q}`,
-    { token },
-  );
+  const body =
+    "inviteToken" in capability
+      ? { token: capability.inviteToken }
+      : { invitationId: capability.invitationId };
+  const data = await apiFetch<unknown>("/api/v1/invitations/preview", {
+    token,
+    method: "POST",
+    body,
+  });
   return InvitationPreviewSchema.parse(data);
 }

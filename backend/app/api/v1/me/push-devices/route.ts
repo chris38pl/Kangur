@@ -7,10 +7,12 @@ import {
 import { ApiError, validationError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
 import { prisma } from "@/lib/prisma";
+import { assertRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
   try {
     const { user } = await requireUser(request);
+    assertRateLimit("auth", user.id);
     const json: unknown = await request.json();
     const parsed = RegisterPushDeviceBodySchema.safeParse(json);
     if (!parsed.success) {
@@ -20,6 +22,15 @@ export async function POST(request: Request) {
     }
 
     const now = new Date();
+    const existing = await prisma.pushDevice.findUnique({
+      where: { expoToken: parsed.data.expoToken },
+    });
+
+    // Do not reassign a token that already belongs to another user.
+    if (existing && existing.userId !== user.id) {
+      throw validationError("Push token is already registered to another account.");
+    }
+
     await prisma.pushDevice.upsert({
       where: { expoToken: parsed.data.expoToken },
       create: {
@@ -28,12 +39,13 @@ export async function POST(request: Request) {
         platform: parsed.data.platform ?? null,
         appVersion: parsed.data.appVersion ?? null,
         lastSeenAt: now,
+        disabledAt: null,
       },
       update: {
-        userId: user.id,
         platform: parsed.data.platform ?? null,
         appVersion: parsed.data.appVersion ?? null,
         lastSeenAt: now,
+        disabledAt: null,
       },
     });
 

@@ -134,7 +134,7 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 - `backend/package.json`, `backend/tsconfig.json`, `backend/next.config.ts`, `backend/app/layout.tsx`, `backend/app/api/health/route.ts`
 - `backend/prisma/schema.prisma` (minimal stub + `DIRECT_URL` support if using Neon pooler), `backend/lib/prisma.ts`
 - `backend/openapi/registry.ts`, `backend/scripts/generate-openapi.ts` (or npm script), generated `backend/openapi/openapi.json` (**gitignored or marked GENERATED - never hand-edited**)
-- **`backend/.env.example`** - full variable set from day one (Neon `DATABASE_URL` / `DIRECT_URL`, Clerk, OpenAI, Stripe, `AI_FREE_MONTHLY_CREDITS=30`, `APP_URL`, …)
+- **`backend/.env.example`** - full variable set from day one (Neon `DATABASE_URL` / `DIRECT_URL`, Clerk, OpenAI, Stripe, `AI_FREE_MONTHLY_CREDITS=15`, `APP_URL`, …)
 - **`mobile/.env.example`** - `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`, `EXPO_PUBLIC_API_URL`
 - `mobile/package.json`, Expo Router `mobile/app/_layout.tsx`, `mobile/app/(tabs)/_layout.tsx` + placeholder tab screens
 - `mobile/design-system/tokens.ts`, `mobile/design-system/theme.ts`
@@ -357,7 +357,7 @@ Import (Screenshot | Text | Clipboard)
 - Wire debit into successful **apply** (not failed validation / abandoned review)
 - `GET .../ai-credits`
 - `mobile/features/billing/ai-credits-badge.tsx` on Workspace tab
-- Env `AI_FREE_MONTHLY_CREDITS=30`
+- Env `AI_FREE_MONTHLY_CREDITS=15`
 
 **Depends on:** M06  
 **Complexity:** S–M  

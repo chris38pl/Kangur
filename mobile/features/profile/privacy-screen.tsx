@@ -12,9 +12,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import { FeedbackSheet } from "@/components/feedback-sheet";
 import { Screen } from "@/components/Screen";
 import { SkeletonBone } from "@/components/skeleton";
 import { useColorScheme } from "@/components/useColorScheme";
+import { brandAssets } from "@/design-system/brand-assets";
 import {
   colors,
   radius,
@@ -168,6 +170,15 @@ export function PrivacyScreen() {
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [revokeOneTarget, setRevokeOneTarget] =
+    useState<ClerkSessionRow | null>(null);
+  const [revokeOthersConfirmOpen, setRevokeOthersConfirmOpen] = useState(false);
+  const [sessionFeedback, setSessionFeedback] = useState<
+    | { kind: "empty" }
+    | { kind: "done"; count: number }
+    | { kind: "partial"; ok: number; total: number }
+    | null
+  >(null);
 
   const relativeLabels = {
     justNow: t("home.updatedJustNow"),
@@ -182,70 +193,46 @@ export function PrivacyScreen() {
   };
 
   const onRevokeOne = (row: ClerkSessionRow) => {
-    Alert.alert(
-      t("privacy.sessions.revokeTitle"),
-      t("privacy.sessions.revokeBody", { device: sessionTitle(row, t) }),
-      [
-        { text: t("privacy.common.cancel"), style: "cancel" },
-        {
-          text: t("privacy.sessions.revokeConfirm"),
-          style: "destructive",
-          onPress: () => {
-            revokeOne.mutate(row.id, {
-              onError: () => {
-                Alert.alert(t("privacy.sessions.revokeFailed"));
-              },
-            });
-          },
-        },
-      ],
-    );
+    setRevokeOneTarget(row);
+  };
+
+  const confirmRevokeOne = () => {
+    if (!revokeOneTarget) return;
+    const id = revokeOneTarget.id;
+    setRevokeOneTarget(null);
+    revokeOne.mutate(id, {
+      onError: () => {
+        Alert.alert(t("privacy.sessions.revokeFailed"));
+      },
+    });
   };
 
   const onRevokeOthers = () => {
     const others = sessions.filter((s) => !s.isCurrent);
     if (others.length === 0) {
-      Alert.alert(
-        t("privacy.sessions.revokeOthersTitle"),
-        t("privacy.sessions.revokeOthersEmpty"),
-      );
+      setSessionFeedback({ kind: "empty" });
       return;
     }
-    Alert.alert(
-      t("privacy.sessions.revokeOthersTitle"),
-      t("privacy.sessions.revokeOthersBody"),
-      [
-        { text: t("privacy.common.cancel"), style: "cancel" },
-        {
-          text: t("privacy.sessions.revokeOthersConfirm"),
-          style: "destructive",
-          onPress: () => {
-            revokeOthers.mutate(undefined, {
-              onSuccess: ({ ok, total }) => {
-                if (total === 0) return;
-                if (ok === total) {
-                  Alert.alert(
-                    t("privacy.sessions.revokeOthersDone", { count: ok }),
-                  );
-                } else if (ok === 0) {
-                  Alert.alert(t("privacy.sessions.revokeOthersFailed"));
-                } else {
-                  Alert.alert(
-                    t("privacy.sessions.revokeOthersPartial", {
-                      ok,
-                      total,
-                    }),
-                  );
-                }
-              },
-              onError: () => {
-                Alert.alert(t("privacy.sessions.revokeOthersFailed"));
-              },
-            });
-          },
-        },
-      ],
-    );
+    setRevokeOthersConfirmOpen(true);
+  };
+
+  const confirmRevokeOthers = () => {
+    setRevokeOthersConfirmOpen(false);
+    revokeOthers.mutate(undefined, {
+      onSuccess: ({ ok, total }) => {
+        if (total === 0) return;
+        if (ok === total) {
+          setSessionFeedback({ kind: "done", count: ok });
+        } else if (ok === 0) {
+          Alert.alert(t("privacy.sessions.revokeOthersFailed"));
+        } else {
+          setSessionFeedback({ kind: "partial", ok, total });
+        }
+      },
+      onError: () => {
+        Alert.alert(t("privacy.sessions.revokeOthersFailed"));
+      },
+    });
   };
 
   const onDeleteAccount = async () => {
@@ -515,6 +502,64 @@ export function PrivacyScreen() {
           if (!deleting) setDeleteOpen(false);
         }}
         onConfirm={() => void onDeleteAccount()}
+      />
+
+      <FeedbackSheet
+        visible={revokeOneTarget != null}
+        image={brandAssets.silentMode}
+        title={t("privacy.sessions.revokeTitle")}
+        body={
+          revokeOneTarget
+            ? t("privacy.sessions.revokeBody", {
+                device: sessionTitle(revokeOneTarget, t),
+              })
+            : undefined
+        }
+        primaryLabel={t("privacy.sessions.revokeConfirm")}
+        onPrimary={confirmRevokeOne}
+        secondaryLabel={t("privacy.common.cancel")}
+        onSecondary={() => setRevokeOneTarget(null)}
+        primaryDestructive
+        busy={revokeOne.isPending}
+      />
+
+      <FeedbackSheet
+        visible={revokeOthersConfirmOpen}
+        image={brandAssets.silentMode}
+        title={t("privacy.sessions.revokeOthersTitle")}
+        body={t("privacy.sessions.revokeOthersBody")}
+        primaryLabel={t("privacy.sessions.revokeOthersConfirm")}
+        onPrimary={confirmRevokeOthers}
+        secondaryLabel={t("privacy.common.cancel")}
+        onSecondary={() => setRevokeOthersConfirmOpen(false)}
+        primaryDestructive
+        busy={revokeOthers.isPending}
+      />
+
+      <FeedbackSheet
+        visible={sessionFeedback != null}
+        image={brandAssets.silentMode}
+        title={
+          sessionFeedback?.kind === "empty"
+            ? t("privacy.sessions.revokeOthersTitle")
+            : sessionFeedback?.kind === "done"
+              ? t("privacy.sessions.revokeOthersDone", {
+                  count: sessionFeedback.count,
+                })
+              : sessionFeedback?.kind === "partial"
+                ? t("privacy.sessions.revokeOthersPartial", {
+                    ok: sessionFeedback.ok,
+                    total: sessionFeedback.total,
+                  })
+                : ""
+        }
+        body={
+          sessionFeedback?.kind === "empty"
+            ? t("privacy.sessions.revokeOthersEmpty")
+            : undefined
+        }
+        primaryLabel={t("common.return")}
+        onPrimary={() => setSessionFeedback(null)}
       />
     </Screen>
   );

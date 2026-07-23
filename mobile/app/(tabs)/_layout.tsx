@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Redirect, Tabs } from "expo-router";
-import { useEffect } from "react";
-import { Pressable, Text } from "react-native";
+import { useEffect, useRef } from "react";
+import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { Screen } from "@/components/Screen";
@@ -19,50 +19,57 @@ import { ApiClientError } from "@/lib/api/client";
 import { Analytics } from "@/lib/analytics";
 import { getAppBuildInfo } from "@/lib/app-build-info";
 import { bootLog } from "@/lib/boot-diagnostics";
+import { perfEnd, perfStart } from "@/lib/performance";
 import {
   primaryButtonStyle,
   secondaryButtonStyle,
 } from "@/design-system/shopping-density";
+import { RootBackToast, useRootBackHandler } from "@/lib/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 function TabsWithBar() {
   const colorScheme = useColorScheme() ?? "light";
   const theme = colors[colorScheme];
   const { t } = useTranslation();
   const { openCreateList } = useCreateList();
+  useRootBackHandler(true);
 
   useEffect(() => {
     bootLog("first_screen", "TabsWithBar (tab navigator) mounted");
   }, []);
 
   return (
-    <Tabs
-      tabBar={(props) => (
-        <KangurTabBar {...props} onCreatePress={openCreateList} />
-      )}
-      screenOptions={{
-        tabBarActiveTintColor: theme.primary,
-        tabBarInactiveTintColor: theme.textMuted,
-        headerShown: false,
-      }}
-    >
-      {/* Order: Home | Spaces | [FAB] | Lists | Profile */}
-      <Tabs.Screen
-        name="index"
-        options={{ title: t("tabs.home") }}
-      />
-      <Tabs.Screen
-        name="workspace"
-        options={{ title: t("tabs.workspace") }}
-      />
-      <Tabs.Screen
-        name="history"
-        options={{ title: t("tabs.history") }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{ title: t("tabs.profile") }}
-      />
-    </Tabs>
+    <View style={{ flex: 1 }}>
+      <Tabs
+        tabBar={(props) => (
+          <KangurTabBar {...props} onCreatePress={openCreateList} />
+        )}
+        screenOptions={{
+          tabBarActiveTintColor: theme.primary,
+          tabBarInactiveTintColor: theme.textMuted,
+          headerShown: false,
+        }}
+      >
+        {/* Order: Home | Spaces | [FAB] | Lists | Profile */}
+        <Tabs.Screen
+          name="index"
+          options={{ title: t("tabs.home") }}
+        />
+        <Tabs.Screen
+          name="workspace"
+          options={{ title: t("tabs.workspace") }}
+        />
+        <Tabs.Screen
+          name="history"
+          options={{ title: t("tabs.history") }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{ title: t("tabs.profile") }}
+        />
+      </Tabs>
+      <RootBackToast />
+    </View>
   );
 }
 
@@ -72,6 +79,7 @@ export default function TabLayout() {
   const { t } = useTranslation();
   const { isSignedIn, isLoaded, signOut } = useAuth();
   const { notifyBootReady } = useAppStartup();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     bootLog(
@@ -81,23 +89,46 @@ export default function TabLayout() {
   }, [isLoaded, isSignedIn]);
 
   const me = useMe(Boolean(isSignedIn));
-  const workspacesQuery = useWorkspaces(Boolean(isSignedIn) && Boolean(me.data));
-  const { activeWorkspace, hydrated } = useActiveWorkspace(workspacesQuery.data);
-  const listsQuery = useShoppingLists(
-    activeWorkspace?.id ?? null,
-    Boolean(isSignedIn) && hydrated,
+  // Parallel with /me — do not wait for me.data before workspaces (eliminates boot waterfall).
+  const workspacesQuery = useWorkspaces(Boolean(isSignedIn));
+  const { activeWorkspace, hydrated, storedId } = useActiveWorkspace(
+    workspacesQuery.data,
   );
+  const listsWorkspaceId = activeWorkspace?.id ?? storedId ?? null;
+  const listsQuery = useShoppingLists(
+    listsWorkspaceId,
+    Boolean(isSignedIn) && (hydrated || Boolean(storedId)),
+  );
+
+  const bootPerfEndedRef = useRef(false);
+  const bootHadPersistedCacheRef = useRef(false);
+
+  useEffect(() => {
+    if (!isSignedIn || !isLoaded) return;
+    const listsId =
+      (queryClient.getQueryData<string | null>(["active-workspace-id"]) as
+        | string
+        | null) ?? null;
+    bootHadPersistedCacheRef.current =
+      queryClient.getQueryData(["me"]) != null ||
+      queryClient.getQueryData(["workspaces"]) != null ||
+      (listsId != null &&
+        queryClient.getQueryData(["shopping-lists", listsId]) != null);
+    perfStart("boot.cold", { id: "app-boot" });
+  }, [isSignedIn, isLoaded, queryClient]);
 
   // Keep full HomeSkeleton until Home data is ready - avoids skeleton → tab bar → spinner.
   const homeBootPending =
-    workspacesQuery.isPending ||
+    (workspacesQuery.isPending && !workspacesQuery.data) ||
     !hydrated ||
-    (Boolean(activeWorkspace?.id) && listsQuery.isPending);
+    (Boolean(listsWorkspaceId) &&
+      listsQuery.isPending &&
+      !listsQuery.data);
 
   const homeReady =
     isLoaded &&
     isSignedIn &&
-    !me.isPending &&
+    !(me.isPending && !me.data) &&
     !me.isError &&
     !homeBootPending;
 
@@ -106,6 +137,20 @@ export default function TabLayout() {
       notifyBootReady();
     }
   }, [homeReady, me.isError, notifyBootReady]);
+
+  useEffect(() => {
+    if (!homeReady || bootPerfEndedRef.current) return;
+    bootPerfEndedRef.current = true;
+    const as = bootHadPersistedCacheRef.current ? "boot.warm" : "boot.cold";
+    perfEnd("boot.cold", {
+      id: "app-boot",
+      as,
+      labels: {
+        listsCached: Boolean(listsQuery.data),
+        meCached: Boolean(me.data),
+      },
+    });
+  }, [homeReady, listsQuery.data, me.data]);
 
   useEffect(() => {
     if (!homeReady || !me.data || !activeWorkspace) return;

@@ -2,7 +2,7 @@
 
 **Companion to:** [architecture.md](./architecture.md) · [prd.md](./prd.md) · [roadmap.md](./roadmap.md) · [cursor-rules.md](./cursor-rules.md)  
 **Status:** Ops runbook (3 environments)  
-**Last updated:** 2026-07-21
+**Last updated:** 2026-07-23
 
 Canonical env templates: [backend/.env.example](../backend/.env.example) · [mobile/.env.example](../mobile/.env.example)
 
@@ -246,7 +246,7 @@ One OpenAI account, **two projects**:
 | **Kangur Development** | Local + Staging |
 | **Kangur Production** | Production |
 
-Separate API keys, usage, limits, and billing dashboards. Set `OPENAI_API_KEY` per env. Optional: `OPENAI_MODEL_TEXT`, `OPENAI_MODEL_VISION`, `AI_FREE_MONTHLY_CREDITS` (default `30`).
+Separate API keys, usage, limits, and billing dashboards. Set `OPENAI_API_KEY` per env. Optional: `OPENAI_MODEL_TEXT`, `OPENAI_MODEL_VISION`, `AI_FREE_MONTHLY_CREDITS` (default `15`).
 
 ### 6.6 Resend (optional)
 
@@ -269,6 +269,12 @@ Profiles live in [mobile/eas.json](../mobile/eas.json). They set `EXPO_PUBLIC_AP
 - `EXPO_PUBLIC_APP_ENV` (`development` \| `preview` \| `production`)
 
 Push uses Expo Push API (`exp.host/.../push/send`); keep EAS `projectId` in `app.config.ts` consistent.
+
+**Push delivery vs badge (two systems):**
+- Badge / unread dot always comes from `GET /api/v1/notifications` (backend state). App refreshes that data on AppState active, pull-to-refresh, and when a push is received — never treats push delivery as the badge source of truth.
+- OS push requires FCM (Android) + APNs (iOS) credentials configured in EAS for this Expo project, a physical device, notification permission granted, and an active `PushDevice` row (`disabledAt` null). Stale Expo tokens are soft-deactivated (`disabledAt`) when Expo returns `DeviceNotRegistered`.
+- Prefs: some types (e.g. list created) default **OFF** — enable in Settings → Notifications for those events to create rows + pushes.
+- **Smoke test should verify both notification delivery and badge refresh independently.**
 
 **Sign in with Apple (native):** `app.config.ts` sets `ios.usesAppleSignIn` and the `expo-apple-authentication` plugin. After those native changes, run `expo prebuild` (local iOS) **and** ship a new EAS **Development / Preview iOS** build before device QA. Enable Apple in Clerk Dashboard + Apple Developer (Services ID / key) — credentials are not stored in the repo. OAuth redirects: store `kangur://`, DEV `kangur-dev://`.
 
@@ -339,7 +345,7 @@ Source of truth: [backend/.env.example](../backend/.env.example).
 | `CLERK_SECRET_KEY` | Dev | Dev | Prod | JWT verify |
 | `CLERK_PUBLISHABLE_KEY` / `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Dev | Dev | Prod | Match mobile |
 | `OPENAI_API_KEY` | Kangur Development | Kangur Development | Kangur Production | Separate projects |
-| `AI_FREE_MONTHLY_CREDITS` | `30` | `30` | `30` | Or override |
+| `AI_FREE_MONTHLY_CREDITS` | `15` | `15` | `15` | Or override |
 | `HISTORY_SUGGESTIONS_ENABLED` | optional | optional | optional | Kill switch |
 | `STRIPE_SECRET_KEY` | Test | Test | Live | Never mix |
 | `STRIPE_WEBHOOK_SECRET` | from `stripe listen` | staging endpoint | prod endpoint | Per URL |
@@ -381,7 +387,7 @@ Canonical config: [`mobile/app.config.ts`](../mobile/app.config.ts) (not `app.js
 
 | Field | When it changes | Example | Source |
 |-------|-----------------|---------|--------|
-| **Version** (semver) | Milestone / product release only | M13 → `0.9.0`, M14 → `0.10.0`, MVP → `1.0.0` | `version` in `app.config.ts` |
+| **Version** (semver) | Milestone / product release only | M13 → `0.9.0`, …, MVP → `1.0.0`, patch → `1.0.1` | `version` in `app.config.ts` |
 | **Build** | Every EAS **preview** and **production** APK | `121`, `122`, `123` | Native `versionCode` / `buildNumber` via EAS `autoIncrement` + `appVersionSource: "remote"` |
 | **Environment** | Per EAS profile | `development` / `preview` / `production` | `EXPO_PUBLIC_APP_ENV` in [`eas.json`](../mobile/eas.json) → `extra.appEnv` |
 | **Commit** | Every EAS build | `95d8561` | `EAS_BUILD_GIT_COMMIT_HASH` → `extra.gitCommit` |

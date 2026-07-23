@@ -24,4 +24,6 @@ export const brandAssets = {
   listCreated: require("@/assets/brand/list-created.webp"),
   silentMode: require("@/assets/brand/silent-mode.webp"),
   noCredits: require("@/assets/brand/no-credits.webp"),
+  /** Soft / future force app update sheet. */
+  appUpdate: require("@/assets/brand/app-update.webp"),
 } as const;

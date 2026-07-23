@@ -16,6 +16,12 @@
     "return": "Назад",
     "tryAgain": "Попробовать снова"
   },
+  "appUpdate": {
+    "title": "Доступна новая версия Kangur",
+    "body": "Вы используете более старую версию приложения. Обновите, чтобы пользоваться новыми функциями и исправлениями.",
+    "update": "Обновить",
+    "later": "Позже"
+  },
   "home": {
     "title": "Kangur",
     "subtitle": "ИИ-помощник для покупок",
@@ -156,6 +162,7 @@
     "productsProgress": "{{bought}} из {{total}} товаров",
     "boughtOfTotal": "{{bought}} из {{total}} товаров",
     "categoriesSection": "Категории",
+    "tapCategoryHint": "Нажмите на категорию, чтобы купить в этом ряду.",
     "alreadyBoughtSection": "Уже куплено",
     "backToEditList": "Вернуться к редактированию списка",
     "purchased": "Куплено",
@@ -284,6 +291,9 @@
     "suggestAlreadyApplied": "Это предложение уже использовано.",
     "suggestLoadingSubtitle": "Создаём список из ваших прошлых покупок…",
     "suggestLoadingCta": "Generating…",
+    "phaseUploading": "Загрузка…",
+    "phaseAnalyzing": "Анализ…",
+    "phaseApplying": "Добавление товаров…",
     "suggestAcceptedEmpty": "Смахните вправо, чтобы добавить предложение.",
     "suggestProposals_one": "Предложения ({{count}})",
     "suggestProposals_other": "Предложения ({{count}})",
@@ -329,7 +339,8 @@
     "suggestTimesSeen_few": "Покупали {{count}} раза",
     "suggestTimesSeen_many": "Покупали {{count}} раз",
     "suggestLastSeenDays_few": "последний раз {{count}} дня назад",
-    "suggestLastSeenDays_many": "последний раз {{count}} дней назад"
+    "suggestLastSeenDays_many": "последний раз {{count}} дней назад",
+    "mealProposalUncheckHint": "Снимите отметку с ингредиентов, которые уже есть дома."
   },
   "categories": {
     "fruit": "Фрукты",
@@ -377,6 +388,8 @@
     "preview": "Просмотр",
     "previewHint": "Посмотреть товары в списке (только чтение)",
     "previewFailed": "Не удалось загрузить просмотр.",
+    "editList": "Редактировать список",
+    "editListHint": "Открыть список, чтобы добавить или изменить товары",
     "deleteHint": "Безвозвратно удалить этот список из пространства",
     "actionsMenu": "Действия со списком",
     "actionsSubtitle": "Выберите, что сделать с этим списком",
@@ -456,9 +469,9 @@
     "inviteEmailPlaceholder": "Email",
     "inviteSend": "Отправить приглашение",
     "inviteInvalidEmail": "Введите корректный адрес email.",
-    "inviteSentTitle": "Приглашение",
-    "inviteSentBody": "Мы отправим приглашение на {{email}}.",
-    "inviteResentBody": "Приглашение повторно отправлено на {{email}}.",
+    "inviteSentTitle": "Приглашение отправлено!",
+    "inviteSentBody": "Мы отправили приглашение на {{email}}. Пользователь сможет присоединиться после открытия ссылки из сообщения.",
+    "inviteResentBody": "Мы повторно отправили приглашение на {{email}}. Пользователь сможет присоединиться после открытия ссылки из сообщения.",
     "inviteAlreadyMember": "Этот человек уже участник.",
     "inviteForbidden": "У вас нет прав для приглашения.",
     "inviteFailed": "Не удалось отправить приглашение.",
@@ -466,12 +479,7 @@
     "revokeInviteTitle": "Отозвать приглашение?",
     "revokeInviteBody": "Отозвать приглашение для {{email}}?",
     "revokeInviteConfirm": "Отозвать",
-    "revokeInviteFailed": "Не удалось отозвать приглашение.",
-    "shareLinkTitle": "Поделиться ссылкой",
-    "shareLinkBody": "Скопируйте ссылку из последнего отправленного приглашения.",
-    "copyLink": "Копировать ссылку",
-    "copyLinkNeedInvite": "Сначала отправьте приглашение, чтобы получить ссылку.",
-    "linkCopied": "Скопировано"
+    "revokeInviteFailed": "Не удалось отозвать приглашение."
   },
   "notifications": {
     "centerTitle": "Уведомления",
@@ -509,7 +517,7 @@
     "needAuthBody": "Войдите с приглашённым email, чтобы принять приглашение в пространство.",
     "signIn": "Войти",
     "mismatchTitle": "Неверный аккаунт",
-    "mismatchBelongsTo": "Приглашение для {{email}}",
+    "mismatchBelongsTo": "Это приглашение отправлено на другой адрес электронной почты, чем тот, под которым вы вошли.",
     "mismatchLoggedIn": "Вы вошли как {{email}} ({{provider}})",
     "providerGoogle": "Google",
     "providerApple": "Apple",
@@ -602,7 +610,15 @@
     "cancelledBadge": "План отменён",
     "cancelledBadgeUntil": "План отменён - закончится {{date}}",
     "cancelledRemainingLabel": "Отменён - истечёт через",
-    "cancelledEndsOn": "до {{date}}"
+    "cancelledEndsOn": "до {{date}}",
+    "hintCreditsLow": "Осталось {{count}} кредитов · Premium без лимита",
+    "hintCreditsFootnote": "AI-кредиты: осталось {{remaining}}",
+    "hintGenerateFromHistoryTitle": "Создать из истории",
+    "hintGenerateFromHistoryBody": "Kangur может собрать список по прошлым покупкам. Доступно в Premium.",
+    "premiumBadge": "Premium",
+    "hintHistoryDepthLine1": "Free хранит последние 20 списков",
+    "hintHistoryDepthLine2": "Premium до 200 списков покупок!",
+    "creditsRemainingBadge": "Осталось {{remaining}}"
   },
   "profile": {
     "title": "Профиль",
@@ -652,6 +668,7 @@
     "switchToEn": "Переключить на английский",
     "switchToDe": "Переключить на немецкий",
     "comingSoon": "Скоро",
+    "comingSoonBody": "Эта функция пока недоступна. Загляните позже.",
     "accountScreenTitle": "Данные аккаунта",
     "fullName": "Полное имя",
     "emailLabel": "Email",
@@ -738,8 +755,6 @@
       "confirmPhrase": "УДАЛИТЬ",
       "confirm": "Удалить аккаунт",
       "back": "Назад",
-      "return": "Назад",
-      "tryAgain": "Попробовать снова",
       "failed": "Не удалось удалить аккаунт. Попробуйте снова.",
       "clerkFailed": "Clerk не смог удалить аккаунт. Вы всё ещё в системе - попробуйте снова."
     }
@@ -768,8 +783,6 @@
     "needAccountPrompt": "Нет аккаунта?",
     "logIn": "Войти",
     "back": "Назад",
-    "return": "Назад",
-    "tryAgain": "Попробовать снова",
     "verifyTitle": "Подтвердите email",
     "verifySubtitle": "Введите код, который мы отправили на {{email}}.",
     "verificationCode": "Код подтверждения",
@@ -843,7 +856,8 @@
     "privacy": "Политика конфиденциальности",
     "terms": "Условия использования",
     "about": "О приложении",
-    "platformConsole": "Консоль платформы"
+    "platformConsole": "Консоль платформы",
+    "workspaceBrowser": "Обзор пространств"
   },
   "about": {
     "title": "О приложении",
@@ -879,6 +893,34 @@
     "reportBugSubtitle": "Помогите улучшить приложение",
     "sendFeedback": "Отправить отзыв",
     "sendFeedbackSubtitle": "Ваше мнение важно для нас"
+  },
+  "workspaceBrowser": {
+    "title": "Обзор пространств",
+    "forbidden": "Обзор пространств доступен только администраторам платформы.",
+    "searchPlaceholder": "Поиск по названию или email участника",
+    "filterAll": "Все",
+    "filterFree": "Free",
+    "filterPremium": "Premium",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "members_one": "{{count}} участник",
+    "members_few": "{{count}} участника",
+    "members_many": "{{count}} участников",
+    "members_other": "{{count}} участников",
+    "total": "{{count}} пространств",
+    "empty": "Нет пространств по выбранным фильтрам.",
+    "actionsA11y": "Действия с пространством",
+    "enter": "Перейти",
+    "edit": "Изменить",
+    "delete": "Удалить",
+    "close": "Закрыть",
+    "cancel": "Отмена",
+    "deleteTitle": "Удалить пространство?",
+    "deleteBody": "Безвозвратно удалить «{{name}}» со всеми списками, участниками и данными.",
+    "deleteConfirm": "Удалить",
+    "enterFailed": "Не удалось открыть это пространство.",
+    "editFailed": "Не удалось изменить это пространство.",
+    "deleteFailed": "Не удалось удалить это пространство."
   },
   "platformConsole": {
     "title": "Консоль платформы",
@@ -970,5 +1012,8 @@
     "rtSystemHealthy": "Все realtime-системы работают нормально",
     "rtSystemWarning": "Realtime soft signals повышены - следите за задержкой polling",
     "rtSystemDegraded": "Realtime ухудшен - проверьте ошибки и задержку"
+  },
+  "navigation": {
+    "pressAgainToExit": "Нажмите ещё раз, чтобы выйти"
   }
 }

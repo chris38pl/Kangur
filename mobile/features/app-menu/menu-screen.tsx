@@ -1,8 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter, type Href } from "expo-router";
-import { type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -11,6 +10,7 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { FeedbackSheet } from "@/components/feedback-sheet";
 import { Screen } from "@/components/Screen";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
@@ -167,6 +167,7 @@ export function MenuScreen() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
   const { data: me } = useMe();
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
   const platformRole: PlatformRole = me?.platformRole ?? "USER";
   const sections = visibleMenuSections({
@@ -176,7 +177,7 @@ export function MenuScreen() {
 
   const navigate = (item: AppMenuItem) => {
     if (item.stub) {
-      Alert.alert(t("profile.comingSoon"));
+      setComingSoonOpen(true);
       return;
     }
     if (item.href) {
@@ -264,6 +265,15 @@ export function MenuScreen() {
           </MenuSection>
         ))}
       </ScrollView>
+
+      <FeedbackSheet
+        visible={comingSoonOpen}
+        image={brandAssets.createListMascot}
+        title={t("profile.comingSoon")}
+        body={t("profile.comingSoonBody")}
+        primaryLabel={t("common.return")}
+        onPrimary={() => setComingSoonOpen(false)}
+      />
     </Screen>
   );
 }

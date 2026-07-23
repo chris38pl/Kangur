@@ -15,22 +15,22 @@ type Props = {
   onMenuPress?: () => void;
 };
 
-function CheckMark({ color, size = 10 }: { color: string; size?: number }) {
+function CheckMark({ color, size = 7 }: { color: string; size?: number }) {
   return (
     <View
       style={{
         width: size * 0.7,
         height: size * 0.4,
-        borderLeftWidth: 2,
-        borderBottomWidth: 2,
+        borderLeftWidth: 1.5,
+        borderBottomWidth: 1.5,
         borderColor: color,
-        transform: [{ rotate: "-45deg" }, { translateY: -1 }],
+        transform: [{ rotate: "-45deg" }, { translateY: -0.5 }],
       }}
     />
   );
 }
 
-function CrossMark({ color, size = 8 }: { color: string; size?: number }) {
+function CrossMark({ color, size = 6 }: { color: string; size?: number }) {
   return (
     <View
       style={{
@@ -44,7 +44,7 @@ function CrossMark({ color, size = 8 }: { color: string; size?: number }) {
         style={{
           position: "absolute",
           width: size,
-          height: 2,
+          height: 1.5,
           borderRadius: 1,
           backgroundColor: color,
           transform: [{ rotate: "45deg" }],
@@ -54,7 +54,7 @@ function CrossMark({ color, size = 8 }: { color: string; size?: number }) {
         style={{
           position: "absolute",
           width: size,
-          height: 2,
+          height: 1.5,
           borderRadius: 1,
           backgroundColor: color,
           transform: [{ rotate: "-45deg" }],
@@ -64,94 +64,16 @@ function CrossMark({ color, size = 8 }: { color: string; size?: number }) {
   );
 }
 
-function PendingCartMark({ color, size = 12 }: { color: string; size?: number }) {
-  const stroke = Math.max(1.4, size * 0.12);
-  return (
-    <View style={{ width: size, height: size, alignItems: "center" }}>
-      <View
-        style={{
-          width: size * 0.62,
-          height: size * 0.42,
-          borderWidth: stroke,
-          borderColor: color,
-          borderRadius: 2,
-          marginTop: size * 0.22,
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          top: size * 0.08,
-          left: size * 0.12,
-          width: size * 0.28,
-          height: size * 0.22,
-          borderLeftWidth: stroke,
-          borderTopWidth: stroke,
-          borderColor: color,
-          borderTopLeftRadius: 3,
-          transform: [{ rotate: "-18deg" }],
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: size * 0.22,
-          width: size * 0.14,
-          height: size * 0.14,
-          borderRadius: size * 0.07,
-          backgroundColor: color,
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          right: size * 0.16,
-          width: size * 0.14,
-          height: size * 0.14,
-          borderRadius: size * 0.07,
-          backgroundColor: color,
-        }}
-      />
-    </View>
-  );
-}
-
-/** Small status glyph for edit-mode rows: bought / unavailable / pending. */
-function ItemStatusGlyph({
+/** Status badge overlaid on the category glyph (bought / unavailable only). */
+function CategoryStatusBadge({
   status,
 }: {
-  status: "bought" | "unavailable" | "pending";
+  status: "bought" | "unavailable";
 }) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
-  const size = 22;
-
-  if (status === "pending") {
-    return (
-      <View
-        accessibilityRole="image"
-        accessibilityLabel={t("itemStatus.pending")}
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: theme.section,
-          borderWidth: 1,
-          borderColor: theme.border,
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <PendingCartMark color={theme.textMuted} size={12} />
-      </View>
-    );
-  }
-
-  const background = status === "bought" ? theme.success : theme.danger;
+  const size = 14;
 
   return (
     <View
@@ -162,19 +84,23 @@ function ItemStatusGlyph({
           : t("shoppingMode.unavailable")
       }
       style={{
+        position: "absolute",
+        right: -3,
+        bottom: -3,
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: background,
+        backgroundColor: status === "bought" ? theme.success : theme.danger,
         alignItems: "center",
         justifyContent: "center",
-        flexShrink: 0,
+        borderWidth: 1.5,
+        borderColor: theme.bg,
       }}
     >
       {status === "bought" ? (
-        <CheckMark color="#fff" size={10} />
+        <CheckMark color="#fff" size={7} />
       ) : (
-        <CrossMark color="#fff" size={8} />
+        <CrossMark color="#fff" size={6} />
       )}
     </View>
   );
@@ -199,9 +125,23 @@ export function ListItemRow({ item, showDivider = true, onMenuPress }: Props) {
           paddingVertical: spacing[3],
         }}
       >
-        <Text style={{ fontSize: 22, opacity: dimmed ? 0.45 : 1 }}>
-          {getShoppingCategoryIcon(item.category)}
-        </Text>
+        <View
+          style={{
+            width: 28,
+            height: 28,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ fontSize: 22, opacity: dimmed ? 0.45 : 1 }}>
+            {getShoppingCategoryIcon(item.category)}
+          </Text>
+          {bought || unavailable ? (
+            <CategoryStatusBadge
+              status={bought ? "bought" : "unavailable"}
+            />
+          ) : null}
+        </View>
 
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text
@@ -260,12 +200,6 @@ export function ListItemRow({ item, showDivider = true, onMenuPress }: Props) {
             {t(`categories.${item.category}`)}
           </Text>
         </View>
-
-        <ItemStatusGlyph
-          status={
-            bought ? "bought" : unavailable ? "unavailable" : "pending"
-          }
-        />
 
         {onMenuPress ? (
           <Pressable

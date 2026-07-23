@@ -30,6 +30,7 @@ import { WorkspaceSummaryCard } from "@/features/workspace/workspace-summary-car
 import { WorkspaceSwitcher } from "@/features/workspace/workspace-switcher";
 import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
+import { goRoot } from "@/lib/navigation";
 
 export default function WorkspaceScreen() {
   const { t } = useTranslation();
@@ -56,7 +57,7 @@ export default function WorkspaceScreen() {
   const [editOpen, setEditOpen] = useState(false);
 
   const goHome = () => {
-    router.navigate("/(tabs)" as never);
+    goRoot();
   };
 
   if (workspacesQuery.isPending || !hydrated) {

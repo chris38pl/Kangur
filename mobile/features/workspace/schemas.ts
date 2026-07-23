@@ -60,8 +60,6 @@ export const InviteMemberResultSchema = z.object({
     role: z.enum(["owner", "admin", "member"]),
     expiresAt: z.string(),
   }),
-  token: z.string(),
-  acceptUrl: z.string(),
   emailDelivered: z.boolean(),
 });
 

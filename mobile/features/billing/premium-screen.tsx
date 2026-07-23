@@ -30,6 +30,7 @@ import {
   createBillingPortal,
   syncBillingEntitlement,
 } from "@/features/billing/api";
+import { StripeTestCardHelper } from "@/features/billing/stripe-test-card-helper";
 import { usePremiumPrice } from "@/features/billing/usePremiumPrice";
 import {
   ProfileIconList,
@@ -757,69 +758,76 @@ function PremiumPurchaseView({
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView
-        contentContainerStyle={{
-          paddingHorizontal: spacing[5],
-          paddingTop: spacing[2],
-          paddingBottom: spacing[6],
-          alignItems: "center",
-        }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Image
-          source={brandAssets.homeHero}
-          style={{
-            width: 220,
-            height: 220,
-            resizeMode: "contain",
-            marginBottom: spacing[2],
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={{
+            paddingHorizontal: spacing[5],
+            paddingTop: spacing[2],
+            paddingBottom: spacing[6],
+            alignItems: "center",
           }}
-          accessibilityLabel=""
-        />
-
-        <Text
-          style={{
-            ...typography.title,
-            fontSize: 28,
-            lineHeight: 34,
-            color: theme.text,
-            textAlign: "center",
-          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {t("billing.purchaseTitle")}
-        </Text>
-        <Text
-          style={{
-            ...typography.body,
-            color: theme.textBody,
-            textAlign: "center",
-            marginTop: spacing[2],
-            marginBottom: spacing[6],
-            paddingHorizontal: spacing[2],
-          }}
-        >
-          {t("billing.purchaseSubtitle")}
-        </Text>
+          <Image
+            source={brandAssets.homeHero}
+            style={{
+              width: 220,
+              height: 220,
+              resizeMode: "contain",
+              marginBottom: spacing[2],
+            }}
+            accessibilityLabel=""
+          />
 
-        <View style={{ width: "100%", gap: spacing[4], marginBottom: spacing[4] }}>
-          <FeatureRow
-            icon={<ProfileIconShield color={brand.primary} size={18} />}
-            label={t("billing.featureUnlimitedCredits")}
-            textColor={theme.text}
-          />
-          <FeatureRow
-            icon={<ProfileIconList color={brand.primary} size={18} />}
-            label={t("billing.featureHistoryDepth")}
-            textColor={theme.text}
-          />
-          <FeatureRow
-            icon={<ProfileIconStar color={brand.primary} size={18} />}
-            label={t("billing.featureGenerateFromHistory")}
-            textColor={theme.text}
-          />
-        </View>
-      </ScrollView>
+          <Text
+            style={{
+              ...typography.title,
+              fontSize: 28,
+              lineHeight: 34,
+              color: theme.text,
+              textAlign: "center",
+            }}
+          >
+            {t("billing.purchaseTitle")}
+          </Text>
+          <Text
+            style={{
+              ...typography.body,
+              color: theme.textBody,
+              textAlign: "center",
+              marginTop: spacing[2],
+              marginBottom: spacing[6],
+              paddingHorizontal: spacing[2],
+            }}
+          >
+            {t("billing.purchaseSubtitle")}
+          </Text>
+
+          <View
+            style={{ width: "100%", gap: spacing[4], marginBottom: spacing[4] }}
+          >
+            <FeatureRow
+              icon={<ProfileIconShield color={brand.primary} size={18} />}
+              label={t("billing.featureUnlimitedCredits")}
+              textColor={theme.text}
+            />
+            <FeatureRow
+              icon={<ProfileIconList color={brand.primary} size={18} />}
+              label={t("billing.featureHistoryDepth")}
+              textColor={theme.text}
+            />
+            <FeatureRow
+              icon={<ProfileIconStar color={brand.primary} size={18} />}
+              label={t("billing.featureGenerateFromHistory")}
+              textColor={theme.text}
+            />
+          </View>
+        </ScrollView>
+
+        {/* Non-production only: Stripe test Visa for staging / local checkout. */}
+        <StripeTestCardHelper />
+      </View>
 
       <View
         style={{

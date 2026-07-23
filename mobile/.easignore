@@ -1,0 +1,18 @@
+# Keep EAS upload small — these are local/tooling only.
+node_modules/
+.expo/
+dist/
+web-build/
+.tmp-*/
+.tmp-aab-inspect/
+.tmp-platform-tools/
+ios/
+android/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.env
+.env.*
+!.env.example

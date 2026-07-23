@@ -43,6 +43,7 @@ export async function listHistoryLists(
       items: {
         where: { status: { not: "removed" } },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        take: PREVIEW_TAKE,
         select: { name: true, category: true },
       },
     },
@@ -54,8 +55,9 @@ export async function listHistoryLists(
     toHistoryListDto({
       ...list,
       itemCount: list._count.items,
+      // Preview-only names (UI cards + light search). Full-text item search → server ?q= later.
       itemNames: list.items.map((item) => item.name),
-      previewItems: list.items.slice(0, PREVIEW_TAKE).map((item) => ({
+      previewItems: list.items.map((item) => ({
         name: item.name,
         category: item.category,
       })),

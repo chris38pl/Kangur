@@ -1,6 +1,6 @@
 # Kangur - Architecture
 
-**Companion to:** [prd.md](./prd.md) · [cursor-rules.md](./cursor-rules.md) · [roadmap.md](./roadmap.md) · [deploy.md](./deploy.md)  
+**Companion to:** [prd.md](./prd.md) · [cursor-rules.md](./cursor-rules.md) · [roadmap.md](./roadmap.md) · [deploy.md](./deploy.md) · [security.md](./security.md)  
 **Status:** Greenfield MVP architecture  
 **Last updated:** 2026-07-21
 
@@ -35,7 +35,7 @@ Kangur Platform (Next.js REST + OpenAPI)
 | Storage | No permanent screenshots; no UploadThing unless justified later |
 | Observability | PostHog + Sentry from Closed Testing (**M13.11** in [roadmap.md](./roadmap.md)); internal Metrics = M13.5 |
 
-**Docs:** `prd.md`, `architecture.md`, `cursor-rules.md`, `roadmap.md`, `deploy.md`.
+**Docs:** `prd.md`, `architecture.md`, `cursor-rules.md`, `roadmap.md`, `deploy.md`, [security.md](./security.md), [navigation-principles.md](./navigation-principles.md) (mobile Root / Task / Details).
 
 ---
 
@@ -62,7 +62,10 @@ kangur/
     ├── architecture.md
     ├── cursor-rules.md
     ├── roadmap.md
-    └── deploy.md
+    ├── deploy.md
+    └── navigation-principles.md   # mobile Root / Task / Details
+    └── security.md                # threat model + authZ checklist
+    └── releases/                  # per-version ship checklists (e.g. 1.0.1.md)
 ```
 
 Alternative: `apps/mobile` + `apps/backend` - still **without** `packages/`.
@@ -136,15 +139,22 @@ Driven by **declarative menu config → visibility predicate → route**.
 | **Account** | Account details, Subscription, Notifications |
 | **Workspace** | Single shortcut to Workspace tab |
 | **Application** | Help, Feedback, Privacy, Terms, About |
-| **Platform** | Platform Console - only when `platformRole = ADMIN` |
+| **Platform** | Platform Console + Workspace browser — only when `platformRole = ADMIN` |
 
 Tabs stay focused on workflows; the Menu scales for secondary / ops destinations without adding tabs. Do not duplicate tab destinations as menu rows (except the single Workspace shortcut).
 
 ### Platform Console
 
-Read-only operational dashboard (`/platform-console`) for product owners / operators - **not** an admin panel (no mutations, flags UI, or user management in M13.4).
+Operational dashboard (`/platform-console`) for product owners / operators (Overview + Realtime KPIs).
 
-**Phased tabs (ship when data is valuable - do not build empty shells):**
+### Workspace browser (platform admin)
+
+Admin-only screen (`/workspace-browser`) to list **all** workspaces (search by name / member email, filter Free / Premium), **enter** any space with full product access, or **hard-delete** a space.
+
+- **Enter** does **not** create a `WorkspaceMember` row. `authorize` / `authorizeList` grant platform `ADMIN` a synthetic in-memory `owner` membership for API calls. Mobile keeps an AsyncStorage overlay (`adminBrowsingWorkspaceId`) merged into the workspaces list so `useActiveWorkspace` does not wipe the selection.
+- **Delete** is permanent (`DELETE /api/v1/platform/workspaces/:id`, Prisma cascade).
+
+**Phased console tabs (ship when data is valuable - do not build empty shells):**
 
 1. **Overview** (M13.5) - Platform Health + key KPIs  
 2. **Realtime** (M13.6) - polling / events / refresh / sync diagnostics (server/proxy metrics for MVP; client ingest = M13.7 post-release)  
@@ -159,7 +169,7 @@ UI currently exposes **Overview** and **Realtime** only. Full IA order for later
 - Shopping List → **Shopping Mode**  
 - AI Import chooser → Screenshot | Text | Clipboard → Processing → **AI Review**  
 - Finish Shopping → Summary → Archive  
-- Invite Members · Workspace Settings · Premium · Manual Add · List Settings · **Menu** (Home stack) · About · Platform Console  
+- Invite Members · Workspace Settings · Premium · Manual Add · List Settings · **Menu** (Home stack) · About · Platform Console · Workspace browser  
 
 Screens live in `features/`; `app/` only wires routes.
 
@@ -318,7 +328,7 @@ Scenario YAML → thin Adapter (prod generator) → Evaluator (timing/seed/repea
 
 - Transport-agnostic. MVP transport: **`EventPollingProvider`** (adaptive polling).  
 - **Public API:** `start` / `stop` / `pollNow` / `isRunning` / `getCurrentListId` (+ optional `destroy`).  
-- **Lifecycle:** mount→start; unmount→stop; background→pause; foreground→pollNow+resume; offline→pause; online→pollNow+resume; listId change→stop old+start new.  
+- **Lifecycle:** focus→start; blur/unmount→stop; background→pause; foreground→pollNow+resume; offline→pause; online→pollNow+resume; listId change→stop old+start new. (RN Modal sheets do not blur the route.)  
 - **Adaptive intervals:** 3s → 5s (30s idle) → 10s (2min idle); backoff only on successful empty polls; reset to 3s on events.  
 - Fetch `ShoppingEvent`s after last known event id; **events are a refresh signal only** - never rebuild list state from payloads.  
 - **Inbound SSoT:** Realtime → `DataSyncEngine.requestItemsRefresh` → (wait while outbound busy) → invalidate → `useShoppingItems` GET → `reconcileServerSnapshot` (merge + **last local operation wins** overlay) → React Query. Realtime **never** calls `queryClient` directly. Soft toast is presentation-only (never triggers refresh).  
@@ -467,7 +477,7 @@ Apple Private Relay (`@privaterelay.appleid.com`) is a normal primary email. The
 
 Roles: workspace `owner` / `admin` / `member` - invites & billing: owner + admin.
 
-Platform: `User.platformRole` (`USER` | `ADMIN`). Platform Console and `/api/v1/platform/*` require `ADMIN` via `requirePlatformAdmin` - hiding menu items is not authorization.
+Platform: `User.platformRole` (`USER` | `ADMIN`). Platform Console, Workspace browser, and `/api/v1/platform/*` require `ADMIN` via `requirePlatformAdmin` - hiding menu items is not authorization. Platform admins may also pass `authorize` / `authorizeList` for any workspace via a synthetic owner membership (not stored in `WorkspaceMember`).
 
 ### Platform Admin Bootstrap
 

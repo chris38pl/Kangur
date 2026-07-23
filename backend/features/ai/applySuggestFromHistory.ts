@@ -1,6 +1,5 @@
 import { Prisma } from "@prisma/client";
 
-import { debitAiCredits } from "@/lib/aiCredits";
 import { authorize } from "@/lib/authorize";
 import {
   conflict,
@@ -147,8 +146,6 @@ export async function applySuggestFromHistory(input: {
           proposalType: HISTORY_PROPOSAL_TYPE,
         },
       });
-
-      await debitAiCredits(input.workspaceId, "history", tx);
 
       const items = await tx.shoppingItem.findMany({
         where: { listId: list.id, status: { not: "removed" } },

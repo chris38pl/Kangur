@@ -16,6 +16,12 @@
     "return": "Назад",
     "tryAgain": "Спробувати знову"
   },
+  "appUpdate": {
+    "title": "Доступна нова версія Kangur",
+    "body": "Ви користуєтеся старішою версією застосунку. Оновіть, щоб отримати найновіші функції та виправлення.",
+    "update": "Оновити",
+    "later": "Пізніше"
+  },
   "home": {
     "title": "Kangur",
     "subtitle": "ШІ-помічник для покупок",
@@ -156,6 +162,7 @@
     "productsProgress": "{{bought}} з {{total}} товарів",
     "boughtOfTotal": "{{bought}} з {{total}} товарів",
     "categoriesSection": "Категорії",
+    "tapCategoryHint": "Натисніть категорію, щоб купувати в цьому проході.",
     "alreadyBoughtSection": "Уже куплено",
     "backToEditList": "Повернутися до редагування списку",
     "purchased": "Куплено",
@@ -284,6 +291,9 @@
     "suggestAlreadyApplied": "Цю пропозицію вже використано.",
     "suggestLoadingSubtitle": "Створюємо список із ваших попередніх покупок…",
     "suggestLoadingCta": "Generating…",
+    "phaseUploading": "Завантаження…",
+    "phaseAnalyzing": "Аналіз…",
+    "phaseApplying": "Додавання товарів…",
     "suggestAcceptedEmpty": "Проведіть праворуч, щоб додати пропозицію.",
     "suggestProposals_one": "Пропозиції ({{count}})",
     "suggestProposals_other": "Пропозиції ({{count}})",
@@ -329,7 +339,8 @@
     "suggestTimesSeen_few": "Купували {{count}} рази",
     "suggestTimesSeen_many": "Купували {{count}} разів",
     "suggestLastSeenDays_few": "востаннє {{count}} дні тому",
-    "suggestLastSeenDays_many": "востаннє {{count}} днів тому"
+    "suggestLastSeenDays_many": "востаннє {{count}} днів тому",
+    "mealProposalUncheckHint": "Зніміть позначку зі складових, які вже є вдома."
   },
   "categories": {
     "fruit": "Фрукти",
@@ -377,6 +388,8 @@
     "preview": "Перегляд",
     "previewHint": "Переглянути товари в списку (лише для читання)",
     "previewFailed": "Не вдалося завантажити перегляд.",
+    "editList": "Редагувати список",
+    "editListHint": "Відкрити список, щоб додати або змінити товари",
     "deleteHint": "Безповоротно видалити цей список із простору",
     "actionsMenu": "Дії зі списком",
     "actionsSubtitle": "Оберіть, що зробити з цим списком",
@@ -456,9 +469,9 @@
     "inviteEmailPlaceholder": "Email",
     "inviteSend": "Надіслати запрошення",
     "inviteInvalidEmail": "Введіть коректну адресу email.",
-    "inviteSentTitle": "Запрошення",
-    "inviteSentBody": "Ми надішлемо запрошення на {{email}}.",
-    "inviteResentBody": "Запрошення повторно надіслано на {{email}}.",
+    "inviteSentTitle": "Запрошення надіслано!",
+    "inviteSentBody": "Ми надіслали запрошення на {{email}}. Користувач зможе приєднатися після відкриття посилання з повідомлення.",
+    "inviteResentBody": "Ми повторно надіслали запрошення на {{email}}. Користувач зможе приєднатися після відкриття посилання з повідомлення.",
     "inviteAlreadyMember": "Ця людина вже учасник.",
     "inviteForbidden": "У вас немає прав для запрошення.",
     "inviteFailed": "Не вдалося надіслати запрошення.",
@@ -466,12 +479,7 @@
     "revokeInviteTitle": "Скасувати запрошення?",
     "revokeInviteBody": "Скасувати запрошення для {{email}}?",
     "revokeInviteConfirm": "Скасувати",
-    "revokeInviteFailed": "Не вдалося скасувати запрошення.",
-    "shareLinkTitle": "Поділитись посиланням",
-    "shareLinkBody": "Скопіюйте посилання з останнього надісланого запрошення.",
-    "copyLink": "Копіювати посилання",
-    "copyLinkNeedInvite": "Спочатку надішліть запрошення, щоб отримати посилання.",
-    "linkCopied": "Скопійовано"
+    "revokeInviteFailed": "Не вдалося скасувати запрошення."
   },
   "notifications": {
     "centerTitle": "Сповіщення",
@@ -509,7 +517,7 @@
     "needAuthBody": "Увійдіть із запрошеним email, щоб прийняти запрошення до простору.",
     "signIn": "Увійти",
     "mismatchTitle": "Невірний обліковий запис",
-    "mismatchBelongsTo": "Запрошення для {{email}}",
+    "mismatchBelongsTo": "Це запрошення надіслано на іншу електронну адресу, ніж та, під якою ви увійшли.",
     "mismatchLoggedIn": "Ви увійшли як {{email}} ({{provider}})",
     "providerGoogle": "Google",
     "providerApple": "Apple",
@@ -602,7 +610,15 @@
     "cancelledBadge": "План скасовано",
     "cancelledBadgeUntil": "План скасовано - закінчиться {{date}}",
     "cancelledRemainingLabel": "Скасовано - закінчиться через",
-    "cancelledEndsOn": "до {{date}}"
+    "cancelledEndsOn": "до {{date}}",
+    "hintCreditsLow": "Залишилось {{count}} кредитів · Premium без ліміту",
+    "hintCreditsFootnote": "AI-кредити: залишилось {{remaining}}",
+    "hintGenerateFromHistoryTitle": "Згенерувати з історії",
+    "hintGenerateFromHistoryBody": "Kangur може зібрати список за минулими покупками. Доступно в Premium.",
+    "premiumBadge": "Premium",
+    "hintHistoryDepthLine1": "Free зберігає останні 20 списків",
+    "hintHistoryDepthLine2": "Premium до 200 списків покупок!",
+    "creditsRemainingBadge": "Залишилось {{remaining}}"
   },
   "profile": {
     "title": "Профіль",
@@ -652,6 +668,7 @@
     "switchToEn": "Перемкнути на англійську",
     "switchToDe": "Перемкнути на німецьку",
     "comingSoon": "Незабаром",
+    "comingSoonBody": "Ця функція ще недоступна. Завітайте згодом.",
     "accountScreenTitle": "Дані облікового запису",
     "fullName": "Повне ім’я",
     "emailLabel": "Email",
@@ -738,8 +755,6 @@
       "confirmPhrase": "ВИДАЛИТИ",
       "confirm": "Видалити обліковий запис",
       "back": "Назад",
-      "return": "Назад",
-      "tryAgain": "Спробувати знову",
       "failed": "Не вдалося видалити обліковий запис. Спробуйте знову.",
       "clerkFailed": "Clerk не зміг видалити обліковий запис. Ви все ще в системі - спробуйте знову."
     }
@@ -768,8 +783,6 @@
     "needAccountPrompt": "Немає облікового запису?",
     "logIn": "Увійти",
     "back": "Назад",
-    "return": "Назад",
-    "tryAgain": "Спробувати знову",
     "verifyTitle": "Підтвердіть email",
     "verifySubtitle": "Введіть код, який ми надіслали на {{email}}.",
     "verificationCode": "Код підтвердження",
@@ -843,7 +856,8 @@
     "privacy": "Політика конфіденційності",
     "terms": "Умови використання",
     "about": "Про застосунок",
-    "platformConsole": "Консоль платформи"
+    "platformConsole": "Консоль платформи",
+    "workspaceBrowser": "Огляд просторів"
   },
   "about": {
     "title": "Про застосунок",
@@ -879,6 +893,34 @@
     "reportBugSubtitle": "Допоможіть покращити застосунок",
     "sendFeedback": "Надіслати відгук",
     "sendFeedbackSubtitle": "Ваша думка важлива для нас"
+  },
+  "workspaceBrowser": {
+    "title": "Огляд просторів",
+    "forbidden": "Огляд просторів доступний лише адміністраторам платформи.",
+    "searchPlaceholder": "Пошук за назвою або email учасника",
+    "filterAll": "Усі",
+    "filterFree": "Free",
+    "filterPremium": "Premium",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "members_one": "{{count}} учасник",
+    "members_few": "{{count}} учасники",
+    "members_many": "{{count}} учасників",
+    "members_other": "{{count}} учасників",
+    "total": "{{count}} просторів",
+    "empty": "Немає просторів за обраними фільтрами.",
+    "actionsA11y": "Дії з простором",
+    "enter": "Перейти",
+    "edit": "Редагувати",
+    "delete": "Видалити",
+    "close": "Закрити",
+    "cancel": "Скасувати",
+    "deleteTitle": "Видалити простір?",
+    "deleteBody": "Назавжди видалити «{{name}}» з усіма списками, учасниками та даними.",
+    "deleteConfirm": "Видалити",
+    "enterFailed": "Не вдалося відкрити цей простір.",
+    "editFailed": "Не вдалося змінити цей простір.",
+    "deleteFailed": "Не вдалося видалити цей простір."
   },
   "platformConsole": {
     "title": "Консоль платформи",
@@ -970,5 +1012,8 @@
     "rtSystemHealthy": "Усі realtime-системи працюють нормально",
     "rtSystemWarning": "Realtime soft signals підвищені - стежте за затримкою polling",
     "rtSystemDegraded": "Realtime погіршено - перевірте помилки та затримку"
+  },
+  "navigation": {
+    "pressAgainToExit": "Натисніть ще раз, щоб вийти"
   }
 }

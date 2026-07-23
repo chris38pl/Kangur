@@ -1,4 +1,3 @@
-import * as Clipboard from "expo-clipboard";
 import { useState, type RefObject } from "react";
 import {
   ActivityIndicator,
@@ -16,6 +15,7 @@ import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { ApiClientError } from "@/lib/api/client";
 
 import { RevokeInviteSheet } from "./revoke-invite-sheet";
+import { InviteSentSheet } from "./invite-sent-sheet";
 import type { Invitation } from "./schemas";
 import {
   useCreateInvitation,
@@ -50,9 +50,11 @@ export function WorkspaceInviteSection({
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const [email, setEmail] = useState("");
-  const [lastAcceptUrl, setLastAcceptUrl] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<Invitation | null>(null);
+  const [sentSheet, setSentSheet] = useState<{
+    email: string;
+    resent: boolean;
+  } | null>(null);
 
   const invitationsQuery = useWorkspaceInvitations(workspaceId, canManage);
   const createMutation = useCreateInvitation(workspaceId);
@@ -71,14 +73,11 @@ export function WorkspaceInviteSection({
 
     createMutation.mutate(trimmed, {
       onSuccess: (result) => {
-        setLastAcceptUrl(result.acceptUrl);
         setEmail("");
-        Alert.alert(
-          t("workspace.inviteSentTitle"),
-          result.status === "resent"
-            ? t("workspace.inviteResentBody", { email: trimmed })
-            : t("workspace.inviteSentBody", { email: trimmed }),
-        );
+        setSentSheet({
+          email: trimmed,
+          resent: result.status === "resent",
+        });
       },
       onError: (err) => {
         if (err instanceof ApiClientError) {
@@ -98,16 +97,6 @@ export function WorkspaceInviteSection({
         Alert.alert(t("workspace.inviteFailed"));
       },
     });
-  };
-
-  const copyLink = async () => {
-    if (!lastAcceptUrl) {
-      Alert.alert(t("workspace.copyLinkNeedInvite"));
-      return;
-    }
-    await Clipboard.setStringAsync(lastAcceptUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const confirmRevoke = () => {
@@ -191,53 +180,6 @@ export function WorkspaceInviteSection({
         </Pressable>
       </View>
 
-      <View
-        style={{
-          marginTop: spacing[4],
-          backgroundColor: theme.section,
-          borderRadius: radius.xl,
-          padding: spacing[4],
-        }}
-      >
-        <Text style={{ ...typography.headline, color: theme.text }}>
-          {t("workspace.shareLinkTitle")}
-        </Text>
-        <Text
-          style={{
-            ...typography.caption,
-            color: theme.textBody,
-            marginTop: spacing[1],
-            lineHeight: 18,
-          }}
-        >
-          {t("workspace.shareLinkBody")}
-        </Text>
-        <Pressable
-          onPress={() => void copyLink()}
-          accessibilityRole="button"
-          style={{
-            marginTop: spacing[4],
-            alignSelf: "center",
-            backgroundColor: theme.surface,
-            borderWidth: 1,
-            borderColor: theme.border,
-            borderRadius: radius.md,
-            paddingVertical: spacing[3],
-            paddingHorizontal: spacing[5],
-            flexDirection: "row",
-            alignItems: "center",
-            gap: spacing[2],
-            minWidth: 160,
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ fontSize: 15 }}>🔗</Text>
-          <Text style={{ ...typography.label, color: theme.text }}>
-            {copied ? t("workspace.linkCopied") : t("workspace.copyLink")}
-          </Text>
-        </Pressable>
-      </View>
-
       {pending.length > 0 ? (
         <View style={{ marginTop: spacing[5] }}>
           <Text style={{ ...typography.headline, color: theme.text }}>
@@ -300,6 +242,13 @@ export function WorkspaceInviteSection({
           if (!revokeMutation.isPending) setRevokeTarget(null);
         }}
         onConfirm={confirmRevoke}
+      />
+
+      <InviteSentSheet
+        visible={sentSheet != null}
+        email={sentSheet?.email ?? ""}
+        resent={sentSheet?.resent ?? false}
+        onClose={() => setSentSheet(null)}
       />
     </View>
   );

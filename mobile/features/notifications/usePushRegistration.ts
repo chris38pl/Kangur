@@ -8,6 +8,10 @@ import { Platform } from "react-native";
 
 import { registerPushDevice } from "./api";
 import { navigateFromNotification } from "./navigate";
+import {
+  normalizePermissionStatus,
+  setStoredPushPermissionStatus,
+} from "./push-permission";
 import type { AppNotification } from "./schemas";
 
 Notifications.setNotificationHandler({
@@ -24,8 +28,45 @@ function platform(): "ios" | "android" {
   return Platform.OS === "ios" ? "ios" : "android";
 }
 
+async function ensureAndroidChannel(): Promise<void> {
+  if (Platform.OS !== "android") return;
+  await Notifications.setNotificationChannelAsync("default", {
+    name: "default",
+    importance: Notifications.AndroidImportance.DEFAULT,
+  });
+}
+
+function notificationFromPushData(
+  id: string,
+  data: Record<string, unknown>,
+): AppNotification | null {
+  const payloadType = data.payloadType;
+  if (typeof payloadType !== "string") return null;
+
+  return {
+    id:
+      typeof data.notificationId === "string" ? data.notificationId : id,
+    type: "SHOPPING_STARTED",
+    status: "READ",
+    title: "",
+    body: "",
+    actorUserId: null,
+    workspaceId: null,
+    sourceId: null,
+    payloadType: payloadType as AppNotification["payloadType"],
+    payloadSchemaVersion:
+      typeof data.payloadSchemaVersion === "number"
+        ? data.payloadSchemaVersion
+        : 1,
+    payload: data.payload,
+    createdAt: new Date().toISOString(),
+    readAt: new Date().toISOString(),
+  };
+}
+
 /**
- * Registers Expo push token after sign-in and handles notification taps idempotently.
+ * Registers Expo push token after sign-in and handles notification taps.
+ * OS permission denied is persisted — we do not re-prompt every cold start.
  */
 export function usePushRegistration(enabled: boolean) {
   const { getToken, isSignedIn } = useAuth();
@@ -39,16 +80,42 @@ export function usePushRegistration(enabled: boolean) {
 
     const run = async () => {
       try {
-        if (!Device.isDevice) return;
+        if (!Device.isDevice) {
+          console.info("[notifications]", "PushRegisterSkipped", {
+            reason: "no-device",
+          });
+          return;
+        }
+
+        await ensureAndroidChannel();
 
         const { status: existing } =
           await Notifications.getPermissionsAsync();
-        let finalStatus = existing;
-        if (existing !== "granted") {
-          const { status } = await Notifications.requestPermissionsAsync();
-          finalStatus = status;
+        let finalStatus = normalizePermissionStatus(existing);
+        await setStoredPushPermissionStatus(finalStatus);
+
+        if (finalStatus === "denied") {
+          console.info("[notifications]", "PushRegisterSkipped", {
+            reason: "permission-denied",
+          });
+          return;
         }
-        if (finalStatus !== "granted" || cancelled) return;
+
+        if (finalStatus === "undetermined") {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = normalizePermissionStatus(status);
+          await setStoredPushPermissionStatus(finalStatus);
+        }
+
+        if (finalStatus !== "granted" || cancelled) {
+          console.info("[notifications]", "PushRegisterSkipped", {
+            reason:
+              finalStatus === "denied"
+                ? "permission-denied"
+                : "permission-undetermined",
+          });
+          return;
+        }
 
         const projectId =
           Constants.expoConfig?.extra?.eas?.projectId ??
@@ -66,7 +133,10 @@ export function usePushRegistration(enabled: boolean) {
           appVersion: Constants.expoConfig?.version,
         });
       } catch (error) {
-        console.info("[notifications]", "PushRegisterSkipped", error);
+        console.info("[notifications]", "PushRegisterSkipped", {
+          reason: "error",
+          error,
+        });
       }
     };
 
@@ -77,42 +147,30 @@ export function usePushRegistration(enabled: boolean) {
   }, [enabled, isSignedIn, getToken]);
 
   useEffect(() => {
+    const handleResponse = (
+      response: Notifications.NotificationResponse,
+    ) => {
+      const id = response.notification.request.identifier;
+      if (lastResponseId.current === id) return;
+      lastResponseId.current = id;
+
+      const data = response.notification.request.content.data as Record<
+        string,
+        unknown
+      >;
+      const synthetic = notificationFromPushData(id, data ?? {});
+      if (!synthetic) return;
+      navigateFromNotification(router, synthetic);
+    };
+
     const sub = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        const id = response.notification.request.identifier;
-        if (lastResponseId.current === id) return;
-        lastResponseId.current = id;
-
-        const data = response.notification.request.content.data as {
-          notificationId?: string;
-          payloadType?: string;
-          payloadSchemaVersion?: number;
-          payload?: unknown;
-        };
-
-        if (!data?.payloadType) return;
-
-        const synthetic: AppNotification = {
-          id:
-            typeof data.notificationId === "string"
-              ? data.notificationId
-              : id,
-          type: "SHOPPING_STARTED",
-          status: "READ",
-          title: "",
-          body: "",
-          actorUserId: null,
-          workspaceId: null,
-          sourceId: null,
-          payloadType: data.payloadType as AppNotification["payloadType"],
-          payloadSchemaVersion: data.payloadSchemaVersion ?? 1,
-          payload: data.payload,
-          createdAt: new Date().toISOString(),
-          readAt: new Date().toISOString(),
-        };
-        navigateFromNotification(router, synthetic);
-      },
+      handleResponse,
     );
+
+    void Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) handleResponse(response);
+    });
+
     return () => sub.remove();
   }, [router]);
 }

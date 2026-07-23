@@ -1,7 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { type StyleProp, type ViewStyle, View } from "react-native";
 import Animated, {
-  Easing,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -9,7 +8,9 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
+import { motionEasing } from "@/design-system/motion";
 import { colors, radius } from "@/design-system/tokens";
+import { useReducedMotion } from "@/lib/motion";
 
 type BoneProps = {
   width?: number | `${number}%`;
@@ -31,17 +32,22 @@ export function SkeletonBone({
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const pulse = useSharedValue(0.55);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
+    if (reduceMotion) {
+      pulse.value = 0.75;
+      return;
+    }
     pulse.value = withRepeat(
       withTiming(1, {
         duration: 1100,
-        easing: Easing.inOut(Easing.ease),
+        easing: motionEasing.inOutEase,
       }),
       -1,
       true,
     );
-  }, [pulse]);
+  }, [pulse, reduceMotion]);
 
   const animStyle = useAnimatedStyle(() => ({
     opacity: pulse.value,

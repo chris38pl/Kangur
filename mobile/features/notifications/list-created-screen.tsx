@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -25,6 +25,10 @@ import {
 import { formatNotificationTime } from "@/features/notifications/format-time";
 import type { AppNotification } from "@/features/notifications/schemas";
 import { NOTIFICATIONS_QUERY_KEY } from "@/features/notifications/useNotifications";
+import {
+  completeNotificationTaskAndOpen,
+  dismissNotificationTask,
+} from "@/features/notifications/notification-task-intent";
 
 type ListCreatedPayload = {
   listId?: string;
@@ -90,7 +94,6 @@ function ListGlyph({ color, size }: { color: string; size: number }) {
 
 export function ListCreatedNotificationScreen() {
   const { t, i18n } = useTranslation();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
@@ -188,8 +191,8 @@ export function ListCreatedNotificationScreen() {
   }, [getToken, notificationId, queryClient]);
 
   const goHome = useCallback(() => {
-    router.replace("/(tabs)" as never);
-  }, [router]);
+    dismissNotificationTask();
+  }, []);
 
   const onBack = () => {
     void markRead();
@@ -206,7 +209,7 @@ export function ListCreatedNotificationScreen() {
   const onOpenList = async () => {
     await markRead();
     if (listId) {
-      router.replace(`/list/${listId}` as never);
+      completeNotificationTaskAndOpen(`/list/${listId}` as never);
     } else {
       goHome();
     }

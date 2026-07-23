@@ -2,12 +2,13 @@ import {
   getShoppingCategoryIcon,
   type ShoppingCategory,
 } from "@shared/shopping-categories";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { shoppingDensity } from "@/design-system/shopping-density";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
+import { PressableScale } from "@/lib/motion";
 import { getCategoryBadgeColors } from "@/features/shopping-item/category-badge-colors";
 import {
   CategoryDragHandle,
@@ -69,7 +70,7 @@ export function ShoppingCategoryCard({
         gap: 12,
       }}
     >
-      <Pressable
+      <PressableScale
         onPress={() => onPress(cat.category)}
         accessibilityRole="button"
         accessibilityLabel={t(`categories.${cat.category}`)}
@@ -107,7 +108,7 @@ export function ShoppingCategoryCard({
           </Text>
           <CategoryProgressBar progress={cat.progress} />
         </View>
-      </Pressable>
+      </PressableScale>
       {webControls ? (
         <CategoryReorderWebControls moveUp={moveUp} moveDown={moveDown} />
       ) : onDrag ? (

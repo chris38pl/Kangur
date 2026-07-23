@@ -9,3 +9,5 @@ export {
   ShoppingCategorySkeleton,
   ShoppingModeSkeleton,
 } from "./ShoppingModeSkeleton";
+export { WorkspaceSkeleton } from "./WorkspaceSkeleton";
+export { NotificationsSkeleton } from "./NotificationsSkeleton";

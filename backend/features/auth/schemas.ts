@@ -19,6 +19,7 @@ export const ApiErrorSchema = z
       "HISTORY_LIMIT_EXCEEDED",
       "PREMIUM_REQUIRED",
       "AI_UNAVAILABLE",
+      "RATE_LIMITED",
     ]),
     message: z.string(),
     details: z.record(z.string(), z.unknown()).optional(),

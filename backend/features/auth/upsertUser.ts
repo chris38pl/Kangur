@@ -7,25 +7,30 @@ import { Analytics } from "@/lib/analytics";
 export type UpsertUserInput = {
   clerkId: string;
   email: string;
+  /** Only promote PLATFORM_ADMIN_EMAILS when Clerk primary email is verified. */
+  emailVerified: boolean;
   deviceLocale: AppLocale | null;
 };
 
 /**
  * Upsert Clerk identity into User.
- * One-way Platform Admin bootstrap: if email is on PLATFORM_ADMIN_EMAILS
- * and role is not already ADMIN, promote to ADMIN. Never auto-demotes.
+ * One-way Platform Admin bootstrap: if email is on PLATFORM_ADMIN_EMAILS,
+ * email is verified, and role is not already ADMIN, promote to ADMIN.
+ * Never auto-demotes.
  */
 export async function upsertUser({
   clerkId,
   email,
+  emailVerified,
   deviceLocale,
 }: UpsertUserInput) {
   const normalizedEmail = normalizeEmail(email);
   const existing = await prisma.user.findUnique({ where: { clerkId } });
   const isNew = !existing;
+  const allowPromote =
+    emailVerified && isPlatformAdminEmail(normalizedEmail);
   const shouldPromote =
-    existing?.platformRole !== "ADMIN" &&
-    isPlatformAdminEmail(normalizedEmail);
+    existing?.platformRole !== "ADMIN" && allowPromote;
 
   const user = await prisma.user.upsert({
     where: { clerkId },
@@ -33,9 +38,7 @@ export async function upsertUser({
       clerkId,
       email: normalizedEmail,
       locale: deviceLocale,
-      ...(isPlatformAdminEmail(normalizedEmail)
-        ? { platformRole: "ADMIN" as const }
-        : {}),
+      ...(allowPromote ? { platformRole: "ADMIN" as const } : {}),
     },
     update: {
       email: normalizedEmail,

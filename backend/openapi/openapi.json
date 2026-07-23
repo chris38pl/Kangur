@@ -38,6 +38,28 @@
           "timestamp"
         ]
       },
+      "AppVersionResponse": {
+        "type": "object",
+        "properties": {
+          "latestVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minSupportedVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "latestVersion",
+          "minSupportedVersion",
+          "publishedAt"
+        ]
+      },
       "MeResponse": {
         "type": "object",
         "properties": {
@@ -115,7 +137,8 @@
               "INSUFFICIENT_CREDITS",
               "HISTORY_LIMIT_EXCEEDED",
               "PREMIUM_REQUIRED",
-              "AI_UNAVAILABLE"
+              "AI_UNAVAILABLE",
+              "RATE_LIMITED"
             ]
           },
           "message": {
@@ -129,6 +152,29 @@
         "required": [
           "code",
           "message"
+        ]
+      },
+      "UpdateMeBody": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "enum": [
+              "pl",
+              "en",
+              "de",
+              "ru",
+              "uk",
+              "fr",
+              "es",
+              "it",
+              "cs",
+              "be"
+            ]
+          }
+        },
+        "required": [
+          "locale"
         ]
       },
       "WorkspaceListResponse": {
@@ -412,12 +458,6 @@
               "expiresAt"
             ]
           },
-          "token": {
-            "type": "string"
-          },
-          "acceptUrl": {
-            "type": "string"
-          },
           "emailDelivered": {
             "type": "boolean"
           }
@@ -425,8 +465,6 @@
         "required": [
           "status",
           "invitation",
-          "token",
-          "acceptUrl",
           "emailDelivered"
         ]
       },
@@ -486,11 +524,12 @@
           "token": {
             "type": "string",
             "minLength": 1
+          },
+          "invitationId": {
+            "type": "string",
+            "minLength": 1
           }
-        },
-        "required": [
-          "token"
-        ]
+        }
       },
       "InvitationPreviewResponse": {
         "type": "object",
@@ -558,6 +597,19 @@
           "members",
           "alreadyMember"
         ]
+      },
+      "InvitationPreviewBody": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "invitationId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       },
       "NotificationListResponse": {
         "type": "object",
@@ -1845,56 +1897,11 @@
               },
               "clientId": {
                 "type": "string"
-              },
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 120
-              },
-              "amount": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "note": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "category": {
-                "type": "string",
-                "enum": [
-                  "fruit",
-                  "vegetables",
-                  "dairy",
-                  "meat",
-                  "fish",
-                  "bakery",
-                  "frozen",
-                  "drinks",
-                  "alcohol",
-                  "snacks",
-                  "household",
-                  "cleaning",
-                  "baby",
-                  "pets",
-                  "pharmacy",
-                  "cosmetics",
-                  "electronics",
-                  "office",
-                  "garden",
-                  "diy",
-                  "other"
-                ]
               }
             },
             "required": [
               "op",
-              "proposalRowId",
-              "name",
-              "category"
+              "proposalRowId"
             ]
           },
           {
@@ -1911,49 +1918,6 @@
               },
               "targetItemId": {
                 "type": "string"
-              },
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 120
-              },
-              "amount": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "note": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "category": {
-                "type": "string",
-                "enum": [
-                  "fruit",
-                  "vegetables",
-                  "dairy",
-                  "meat",
-                  "fish",
-                  "bakery",
-                  "frozen",
-                  "drinks",
-                  "alcohol",
-                  "snacks",
-                  "household",
-                  "cleaning",
-                  "baby",
-                  "pets",
-                  "pharmacy",
-                  "cosmetics",
-                  "electronics",
-                  "office",
-                  "garden",
-                  "diy",
-                  "other"
-                ]
               }
             },
             "required": [
@@ -1976,49 +1940,6 @@
               },
               "targetItemId": {
                 "type": "string"
-              },
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 120
-              },
-              "amount": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "note": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "category": {
-                "type": "string",
-                "enum": [
-                  "fruit",
-                  "vegetables",
-                  "dairy",
-                  "meat",
-                  "fish",
-                  "bakery",
-                  "frozen",
-                  "drinks",
-                  "alcohol",
-                  "snacks",
-                  "household",
-                  "cleaning",
-                  "baby",
-                  "pets",
-                  "pharmacy",
-                  "cosmetics",
-                  "electronics",
-                  "office",
-                  "garden",
-                  "diy",
-                  "other"
-                ]
               },
               "status": {
                 "type": "string",
@@ -2664,6 +2585,320 @@
           "refresh",
           "sync"
         ]
+      },
+      "PlatformAiInsightsResponse": {
+        "type": "object",
+        "properties": {
+          "periodStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "freeCreditLimit": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformAiInsightsRow"
+            }
+          }
+        },
+        "required": [
+          "periodStart",
+          "freeCreditLimit",
+          "rows"
+        ]
+      },
+      "PlatformAiInsightsRow": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "accountAgeDays": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ownedWorkspaceCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "workspacesCreatedLast30Days": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "aiCreditsUsedThisMonth": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "aiRequestsThisMonth": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "aiRequestsLastMonth": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "aiRequestsLifetime": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "quickAiAfterCreateCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "attentionLevel": {
+            "$ref": "#/components/schemas/AttentionLevel"
+          },
+          "workspaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformAiInsightsWorkspace"
+            }
+          }
+        },
+        "required": [
+          "userId",
+          "email",
+          "accountAgeDays",
+          "lastSeenAt",
+          "ownedWorkspaceCount",
+          "workspacesCreatedLast30Days",
+          "aiCreditsUsedThisMonth",
+          "aiRequestsThisMonth",
+          "aiRequestsLastMonth",
+          "aiRequestsLifetime",
+          "quickAiAfterCreateCount",
+          "attentionLevel",
+          "workspaces"
+        ]
+      },
+      "AttentionLevel": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "PlatformAiInsightsWorkspace": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isPremium": {
+            "type": "boolean"
+          },
+          "creditsUsed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "creditLimit": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "exclusiveMinimum": 0
+          },
+          "requestsThisMonth": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "listCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "isPremium",
+          "creditsUsed",
+          "creditLimit",
+          "requestsThisMonth",
+          "listCount"
+        ]
+      },
+      "PlatformWorkspaceListResponse": {
+        "type": "object",
+        "properties": {
+          "workspaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformWorkspaceListItem"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "workspaces",
+          "nextCursor",
+          "total"
+        ]
+      },
+      "PlatformWorkspaceListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string",
+            "enum": [
+              "free",
+              "premium"
+            ]
+          },
+          "memberCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ownerEmail": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "icon",
+          "plan",
+          "memberCount",
+          "ownerEmail",
+          "createdAt",
+          "lastUsedAt"
+        ]
+      },
+      "PlatformWorkspacePlanFilter": {
+        "type": "string",
+        "enum": [
+          "all",
+          "free",
+          "premium"
+        ]
+      },
+      "PlatformWorkspaceDetailResponse": {
+        "type": "object",
+        "properties": {
+          "workspace": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "owner"
+                ]
+              },
+              "isOwner": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              },
+              "memberCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "plan": {
+                "type": "string",
+                "enum": [
+                  "free",
+                  "premium"
+                ]
+              },
+              "billingStatus": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "active",
+                  "trialing",
+                  "past_due",
+                  "cancelled",
+                  "expired"
+                ]
+              },
+              "currentPeriodEnd": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "icon",
+              "role",
+              "isOwner",
+              "memberCount",
+              "plan",
+              "billingStatus",
+              "currentPeriodEnd",
+              "createdAt",
+              "updatedAt"
+            ]
+          }
+        },
+        "required": [
+          "workspace"
+        ]
       }
     },
     "parameters": {}
@@ -2689,6 +2924,27 @@
         }
       }
     },
+    "/api/v1/app/version": {
+      "get": {
+        "summary": "Mobile app version policy",
+        "description": "Public soft-update (and future force-update) policy. No auth. Store URLs live on the client.",
+        "tags": [
+          "System"
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest and minimum supported marketing versions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppVersionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/me": {
       "get": {
         "summary": "Current authenticated user",
@@ -2707,6 +2963,60 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update current user profile",
+        "description": "Currently supports updating app language (locale).",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -3447,8 +3757,8 @@
       }
     },
     "/api/v1/invitations/preview": {
-      "get": {
-        "summary": "Preview a workspace invitation by token (no accept)",
+      "post": {
+        "summary": "Preview a workspace invitation by token or invitationId (no accept)",
         "tags": [
           "Workspaces"
         ],
@@ -3457,17 +3767,15 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1
-            },
-            "required": true,
-            "name": "token",
-            "in": "query"
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationPreviewBody"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "Invitation preview",
@@ -5427,6 +5735,243 @@
           },
           "403": {
             "description": "Not a platform admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/ai-insights": {
+      "get": {
+        "summary": "Platform Console AI Insights (PlatformAdmin only)",
+        "tags": [
+          "Platform"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Read-only AI usage insights with attentionLevel for review prioritization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAiInsightsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a platform admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/workspaces": {
+      "get": {
+        "summary": "List all workspaces (PlatformAdmin only)",
+        "tags": [
+          "Platform"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "$ref": "#/components/schemas/PlatformWorkspacePlanFilter"
+            },
+            "required": false,
+            "name": "plan",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated workspace browser list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformWorkspaceListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a platform admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/workspaces/{workspaceId}": {
+      "get": {
+        "summary": "Get workspace detail for admin enter (PlatformAdmin only)",
+        "tags": [
+          "Platform"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace DTO with synthetic owner role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformWorkspaceDetailResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a platform admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workspace not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Hard-delete a workspace (PlatformAdmin only)",
+        "tags": [
+          "Platform"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Workspace deleted"
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a platform admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workspace not found",
             "content": {
               "application/json": {
                 "schema": {

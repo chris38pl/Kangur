@@ -1,8 +1,7 @@
 import * as WebBrowser from "expo-web-browser";
 import { useRouter } from "expo-router";
-import { type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
-  Alert,
   Linking,
   Pressable,
   ScrollView,
@@ -12,8 +11,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import { FeedbackSheet } from "@/components/feedback-sheet";
 import { Screen } from "@/components/Screen";
 import { useColorScheme } from "@/components/useColorScheme";
+import { brandAssets } from "@/design-system/brand-assets";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
 import {
@@ -156,9 +157,10 @@ export function HelpSupportScreen() {
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
   const openDiscord = () => {
-    Alert.alert(t("profile.comingSoon"));
+    setComingSoonOpen(true);
   };
 
   return (
@@ -259,6 +261,15 @@ export function HelpSupportScreen() {
           />
         </View>
       </ScrollView>
+
+      <FeedbackSheet
+        visible={comingSoonOpen}
+        image={brandAssets.createListMascot}
+        title={t("profile.comingSoon")}
+        body={t("profile.comingSoonBody")}
+        primaryLabel={t("common.return")}
+        onPrimary={() => setComingSoonOpen(false)}
+      />
     </Screen>
   );
 }

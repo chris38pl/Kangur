@@ -3,6 +3,7 @@ import { BackHandler } from "react-native";
 import { useFocusEffect, useNavigation } from "expo-router";
 
 import { LeaveShoppingDialog } from "./leave-shopping-dialog";
+import { leaveShoppingTask } from "./shopping-task-intent";
 
 /**
  * Intercept hardware / gesture back while Shopping Mode is focused.
@@ -11,15 +12,16 @@ import { LeaveShoppingDialog } from "./leave-shopping-dialog";
  */
 export function useShoppingModeExitGuard(
   enabled: boolean,
-  options?: { onCancelled?: () => void },
+  listId: string,
+  options?: { onLeave?: () => void },
 ): {
   allowLeave: () => void;
   exitDialog: ReactNode;
 } {
   const navigation = useNavigation();
   const allowLeaveRef = useRef(false);
-  const onCancelledRef = useRef(options?.onCancelled);
-  onCancelledRef.current = options?.onCancelled;
+  const onLeaveSideEffectRef = useRef(options?.onLeave);
+  onLeaveSideEffectRef.current = options?.onLeave;
   const [visible, setVisible] = useState(false);
 
   const allowLeave = useCallback(() => {
@@ -33,11 +35,9 @@ export function useShoppingModeExitGuard(
   const onLeave = useCallback(() => {
     allowLeaveRef.current = true;
     setVisible(false);
-    onCancelledRef.current?.();
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  }, [navigation]);
+    onLeaveSideEffectRef.current?.();
+    leaveShoppingTask(listId);
+  }, [listId]);
 
   useFocusEffect(
     useCallback(() => {

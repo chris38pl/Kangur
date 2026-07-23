@@ -19,6 +19,7 @@ import {
   typography,
 } from "@/design-system/tokens";
 import { SuggestFromHistorySkeleton } from "@/features/ai/suggest-from-history-skeleton";
+import { LoadingTransition } from "@/lib/motion";
 import {
   SuggestSwipeRow,
   type SuggestBucket,
@@ -292,9 +293,12 @@ export function SuggestFromHistorySheet({
                 color={theme.text}
               />
 
-              {loading ? (
-                <SuggestFromHistorySkeleton />
-              ) : proposals.length === 0 ? (
+              <LoadingTransition
+                variant="inline"
+                loading={loading}
+                skeleton={<SuggestFromHistorySkeleton />}
+              >
+              {proposals.length === 0 ? (
                 <Text
                   style={{
                     ...typography.caption,
@@ -307,6 +311,7 @@ export function SuggestFromHistorySheet({
               ) : (
                 proposals.map((item) => renderRow(item, "proposals"))
               )}
+              </LoadingTransition>
 
               <View style={{ marginTop: spacing[5] }}>
                 <SectionTitle

@@ -1,4 +1,5 @@
 import { router, useFocusEffect } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import {
   Image,
@@ -26,13 +27,17 @@ import { useCreateList } from "@/features/shopping-list/create-list-provider";
 import type { CreateListPath } from "@/features/shopping-list/create-list-sheet";
 import type { ShoppingList } from "@/features/shopping-list/schemas";
 import { useNotifications, useNotificationPreferences } from "@/features/notifications/useNotifications";
+import { refreshNotifications } from "@/features/notifications/refreshNotifications";
+import { perfEnd, perfStart } from "@/lib/performance";
 import { useResumableSessions } from "@/features/shopping-list/session/useResumableSessions";
 import { useShoppingLists } from "@/features/shopping-list/useShoppingLists";
+import { useAiCredits } from "@/features/billing/useAiCredits";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaceMembers } from "@/features/workspace/useWorkspaceMembers";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { HomeWorkspaceBanner } from "@/features/workspace/home-workspace-banner";
 import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
+import { intlLocaleTag } from "@/lib/i18n/locales";
 import {
   isHistorySuggestionsEnabled,
   isMealProposalEnabled,
@@ -41,6 +46,17 @@ import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
 
 const QUICK_ACTION_GAP = spacing[2];
 const QUICK_ACTIONS_VISIBLE = 4;
+
+function formatCreditsRefreshDate(iso: string, locale: string): string {
+  try {
+    return new Intl.DateTimeFormat(intlLocaleTag(locale), {
+      day: "numeric",
+      month: "long",
+    }).format(new Date(iso));
+  } catch {
+    return iso.slice(0, 10);
+  }
+}
 
 function SectionHeader({
   title,
@@ -282,9 +298,10 @@ function RecentListRow({
 }
 
 export default function HomeScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+  const queryClient = useQueryClient();
   const workspacesQuery = useWorkspaces();
   const notificationsQuery = useNotifications();
   const prefsQuery = useNotificationPreferences();
@@ -292,10 +309,20 @@ export default function HomeScreen() {
   const membersQuery = useWorkspaceMembers(activeWorkspace?.id ?? null, hydrated);
   const listsQuery = useShoppingLists(activeWorkspace?.id ?? null, hydrated);
   const sessionsQuery = useResumableSessions(hydrated);
+  const creditsQuery = useAiCredits(activeWorkspace?.id ?? null);
   const { createAndOpen } = useCreateList();
   const tabClearance = useTabBarClearance();
   const [refreshing, setRefreshing] = useState(false);
   const [quickActionsWidth, setQuickActionsWidth] = useState(0);
+
+  const workspaceId = activeWorkspace?.id ?? null;
+  const credits = creditsQuery.data;
+  const creditsLimit = credits?.limit ?? 0;
+  const creditsRemaining = credits?.remaining ?? 0;
+  const creditsProgress =
+    !credits || credits.unlimited || creditsLimit <= 0
+      ? 1
+      : Math.min(1, Math.max(0, creditsRemaining / creditsLimit));
 
   const lists = useMemo(
     () => (listsQuery.data ?? []).filter((list) => (list.itemCount ?? 0) > 0),
@@ -328,29 +355,50 @@ export default function HomeScreen() {
   // Cleanup of abandoned empties happens on leave via list screen beforeRemove.
 
   const refreshHome = useCallback(async () => {
+    // Stable deps only — never put query result objects in this callback
+    // (they change every refetch and would re-fire useFocusEffect in a loop).
     await Promise.all([
-      workspacesQuery.refetch(),
-      listsQuery.refetch(),
-      sessionsQuery.refetch(),
-      membersQuery.refetch(),
+      queryClient.refetchQueries({ queryKey: ["workspaces"] }),
+      workspaceId
+        ? queryClient.refetchQueries({
+            queryKey: ["shopping-lists", workspaceId],
+          })
+        : Promise.resolve(),
+      queryClient.refetchQueries({
+        queryKey: ["shopping-sessions", "resumable"],
+      }),
+      workspaceId
+        ? queryClient.refetchQueries({
+            queryKey: ["workspace-members", workspaceId],
+          })
+        : Promise.resolve(),
     ]);
-  }, [workspacesQuery, listsQuery, sessionsQuery, membersQuery]);
+  }, [queryClient, workspaceId]);
 
-  // Tabs keep Home mounted - refresh whenever this screen is focused.
+  // Heavy queries: no forced focus refetch (staleTime + pull-to-refresh + mutation invalidation).
+  // Light paths may still refresh on focus elsewhere; do not set refetchOnWindowFocus globally.
+
   useFocusEffect(
     useCallback(() => {
-      void refreshHome();
-    }, [refreshHome]),
+      perfStart("home.data", { id: "home-focus" });
+      // End when lists are already available from cache or after a short tick.
+      requestAnimationFrame(() => {
+        perfEnd("home.data", { id: "home-focus" });
+      });
+    }, []),
   );
 
   const onPullRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refreshHome();
+      await Promise.all([
+        refreshHome(),
+        refreshNotifications(queryClient),
+      ]);
     } finally {
       setRefreshing(false);
     }
-  }, [refreshHome]);
+  }, [queryClient, refreshHome]);
 
   const relativeLabels = useMemo(
     () => ({
@@ -586,6 +634,100 @@ export default function HomeScreen() {
               members={membersQuery.data ?? []}
               onPress={() => router.push("/(tabs)/workspace" as never)}
             />
+            {credits && !credits.unlimited ? (
+              <Pressable
+                onPress={() => router.push("/premium")}
+                accessibilityRole="button"
+                accessibilityLabel={t("billing.upgradeCta")}
+                style={{
+                  marginTop: spacing[3],
+                  alignSelf: "stretch",
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "baseline",
+                    justifyContent: "space-between",
+                    gap: spacing[2],
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "baseline",
+                      gap: spacing[2],
+                      flexShrink: 1,
+                    }}
+                  >
+                    <Text
+                      style={{ ...typography.caption, color: theme.textMuted }}
+                    >
+                      {t("billing.aiCredits")}
+                    </Text>
+                    <Text>
+                      <Text
+                        style={{
+                          ...typography.headline,
+                          color: theme.primary,
+                          fontSize: 16,
+                          lineHeight: 20,
+                        }}
+                      >
+                        {creditsRemaining}
+                      </Text>
+                      <Text
+                        style={{
+                          ...typography.headline,
+                          color: theme.primaryLight,
+                          fontSize: 14,
+                          lineHeight: 20,
+                        }}
+                      >
+                        {" / "}
+                        {creditsLimit}
+                      </Text>
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      ...typography.caption,
+                      color: theme.textMuted,
+                      fontSize: 11,
+                      lineHeight: 14,
+                      flexShrink: 1,
+                      textAlign: "right",
+                    }}
+                  >
+                    {t("billing.creditsRefreshed", {
+                      date: formatCreditsRefreshDate(
+                        credits.periodStart,
+                        i18n.language,
+                      ),
+                    })}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    marginTop: spacing[2],
+                    width: "100%",
+                    height: 6,
+                    borderRadius: radius.full,
+                    backgroundColor: `${theme.primary}22`,
+                    overflow: "hidden",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: `${Math.round(creditsProgress * 100)}%`,
+                      height: "100%",
+                      backgroundColor: theme.primary,
+                      borderRadius: radius.full,
+                    }}
+                  />
+                </View>
+              </Pressable>
+            ) : null}
           </View>
         ) : null}
 

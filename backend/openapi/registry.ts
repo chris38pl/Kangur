@@ -5,8 +5,16 @@ import {
   extendZodWithOpenApi,
 } from "@asteasolutions/zod-to-openapi";
 
+import { AppVersionResponseSchema } from "@/features/app/schemas";
 import { ApiErrorSchema, MeResponseSchema, UpdateMeBodySchema } from "@/features/auth/schemas";
-import { PlatformOverviewResponseSchema, PlatformRealtimeResponseSchema } from "@/features/platform/schemas";
+import {
+  PlatformAiInsightsResponseSchema,
+  PlatformOverviewResponseSchema,
+  PlatformRealtimeResponseSchema,
+  PlatformWorkspaceDetailResponseSchema,
+  PlatformWorkspaceListResponseSchema,
+  PlatformWorkspacePlanFilterSchema,
+} from "@/features/platform/schemas";
 import {
   AbandonSuggestFromHistoryBodySchema,
   AiIngestResponseSchema,
@@ -37,7 +45,7 @@ import {
   CreateInvitationBodySchema,
   CreateWorkspaceBodySchema,
   InvitationListResponseSchema,
-  InvitationPreviewQuerySchema,
+  InvitationPreviewBodySchema,
   InvitationPreviewResponseSchema,
   InviteMemberResultSchema,
   UpdateMemberRoleBodySchema,
@@ -87,6 +95,25 @@ registry.registerPath({
       content: {
         "application/json": {
           schema: HealthResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/app/version",
+  summary: "Mobile app version policy",
+  description:
+    "Public soft-update (and future force-update) policy. No auth. Store URLs live on the client.",
+  tags: ["System"],
+  responses: {
+    200: {
+      description: "Latest and minimum supported marketing versions",
+      content: {
+        "application/json": {
+          schema: AppVersionResponseSchema,
         },
       },
     },
@@ -649,13 +676,19 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: "get",
+  method: "post",
   path: "/api/v1/invitations/preview",
-  summary: "Preview a workspace invitation by token (no accept)",
+  summary: "Preview a workspace invitation by token or invitationId (no accept)",
   tags: ["Workspaces"],
   security: [{ bearerAuth: [] }],
   request: {
-    query: InvitationPreviewQuerySchema,
+    body: {
+      content: {
+        "application/json": {
+          schema: InvitationPreviewBodySchema,
+        },
+      },
+    },
   },
   responses: {
     200: {
@@ -2015,6 +2048,167 @@ registry.registerPath({
     },
     403: {
       description: "Not a platform admin",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/platform/ai-insights",
+  summary: "Platform Console AI Insights (PlatformAdmin only)",
+  tags: ["Platform"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description:
+        "Read-only AI usage insights with attentionLevel for review prioritization",
+      content: {
+        "application/json": {
+          schema: PlatformAiInsightsResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "Not a platform admin",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/platform/workspaces",
+  summary: "List all workspaces (PlatformAdmin only)",
+  tags: ["Platform"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z.object({
+      q: z.string().optional(),
+      plan: PlatformWorkspacePlanFilterSchema.optional(),
+      cursor: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Paginated workspace browser list",
+      content: {
+        "application/json": {
+          schema: PlatformWorkspaceListResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "Not a platform admin",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/platform/workspaces/{workspaceId}",
+  summary: "Get workspace detail for admin enter (PlatformAdmin only)",
+  tags: ["Platform"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ workspaceId: z.string() }),
+  },
+  responses: {
+    200: {
+      description: "Workspace DTO with synthetic owner role",
+      content: {
+        "application/json": {
+          schema: PlatformWorkspaceDetailResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "Not a platform admin",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: "Workspace not found",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/api/v1/platform/workspaces/{workspaceId}",
+  summary: "Hard-delete a workspace (PlatformAdmin only)",
+  tags: ["Platform"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ workspaceId: z.string() }),
+  },
+  responses: {
+    204: {
+      description: "Workspace deleted",
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "Not a platform admin",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: "Workspace not found",
       content: {
         "application/json": {
           schema: ApiErrorSchema,

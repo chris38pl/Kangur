@@ -6,7 +6,7 @@
  * DataSyncEngine + SyncCacheAdapter + React Query (realtime never writes RQ).
  *
  * Future: WebSocketTransport without changing useListRealtime();
- * server push for the active list only; ETag / 304 on events.
+ * server push for the focused/active list only; ETag / 304 on events.
  */
 
 export type { EventPollingProvider, EventCursor, EventPage } from "./types";

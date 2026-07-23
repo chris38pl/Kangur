@@ -46,6 +46,7 @@ import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
 import { getAppBuildInfo } from "@/lib/app-build-info";
 import i18n, { localeMeta, resolveAppLocale } from "@/lib/i18n";
+import { goRoot } from "@/lib/navigation";
 
 function displayNameFromEmail(email: string | undefined): string {
   if (!email) return "Kangur";
@@ -287,7 +288,7 @@ export default function ProfileScreen() {
   };
 
   const goHome = () => {
-    router.push("/(tabs)" as never);
+    goRoot();
   };
 
   return (

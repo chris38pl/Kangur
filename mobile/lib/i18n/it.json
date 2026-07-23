@@ -16,6 +16,12 @@
     "return": "Torna indietro",
     "tryAgain": "Riprova"
   },
+  "appUpdate": {
+    "title": "È disponibile una nuova versione di Kangur",
+    "body": "Stai usando una versione precedente dell’app. Aggiorna per le ultime funzioni e correzioni.",
+    "update": "Aggiorna",
+    "later": "Più tardi"
+  },
   "home": {
     "title": "Kangur",
     "subtitle": "Assistente AI per la spesa",
@@ -148,6 +154,7 @@
     "productsProgress": "{{bought}} di {{total}} prodotti",
     "boughtOfTotal": "{{bought}} di {{total}} prodotti",
     "categoriesSection": "Categorie",
+    "tapCategoryHint": "Tocca una categoria per fare la spesa in quel corridoio.",
     "alreadyBoughtSection": "Già acquistati",
     "backToEditList": "Torna alla modifica della lista",
     "purchased": "Acquistato",
@@ -270,6 +277,9 @@
     "suggestAlreadyApplied": "Questo suggerimento è già stato usato.",
     "suggestLoadingSubtitle": "Stiamo creando una lista dalle tue spese passate…",
     "suggestLoadingCta": "Generating…",
+    "phaseUploading": "Caricamento…",
+    "phaseAnalyzing": "Analisi…",
+    "phaseApplying": "Aggiunta prodotti…",
     "suggestAcceptedEmpty": "Scorri a destra per aggiungere una proposta.",
     "suggestProposals_one": "Proposte ({{count}})",
     "suggestProposals_other": "Proposte ({{count}})",
@@ -301,7 +311,8 @@
     "mealProposalGenerateError": "Impossibile generare la proposta. Riprova.",
     "mealProposalCreditsError": "Non hai crediti sufficienti per generare una lista di piatti.",
     "mealProposalGenerating": "Generazione…",
-    "mealProposalSectionTitle": "Crea lista da una ricetta con AI ✨"
+    "mealProposalSectionTitle": "Crea lista da una ricetta con AI ✨",
+    "mealProposalUncheckHint": "Deseleziona gli ingredienti che hai già a casa."
   },
   "categories": {
     "fruit": "Frutta",
@@ -349,6 +360,8 @@
     "preview": "Anteprima",
     "previewHint": "Visualizza i prodotti di questa lista (sola lettura)",
     "previewFailed": "Impossibile caricare l'anteprima.",
+    "editList": "Modifica lista",
+    "editListHint": "Apri la lista per aggiungere o modificare i prodotti",
     "deleteHint": "Rimuovi definitivamente questa lista dallo spazio",
     "actionsMenu": "Opzioni lista",
     "actionsSubtitle": "Scegli cosa fare con questa lista",
@@ -424,9 +437,9 @@
     "inviteEmailPlaceholder": "Email",
     "inviteSend": "Invia invito",
     "inviteInvalidEmail": "Inserisci un indirizzo email valido.",
-    "inviteSentTitle": "Invito",
-    "inviteSentBody": "Invieremo un invito a {{email}}.",
-    "inviteResentBody": "Invito reinviato a {{email}}.",
+    "inviteSentTitle": "Invito inviato!",
+    "inviteSentBody": "Abbiamo inviato un invito a {{email}}. Potrà unirsi dopo aver aperto il link nel messaggio.",
+    "inviteResentBody": "Abbiamo reinviato l’invito a {{email}}. Potrà unirsi dopo aver aperto il link nel messaggio.",
     "inviteAlreadyMember": "Questa persona è già membro.",
     "inviteForbidden": "Non hai i permessi per invitare.",
     "inviteFailed": "Impossibile inviare l'invito.",
@@ -434,12 +447,7 @@
     "revokeInviteTitle": "Revocare l'invito?",
     "revokeInviteBody": "Revocare l'invito per {{email}}?",
     "revokeInviteConfirm": "Revoca",
-    "revokeInviteFailed": "Impossibile revocare l'invito.",
-    "shareLinkTitle": "Condividi link",
-    "shareLinkBody": "Copia il link dell'ultimo invito inviato.",
-    "copyLink": "Copia link",
-    "copyLinkNeedInvite": "Invia prima un invito per ottenere un link.",
-    "linkCopied": "Copiato"
+    "revokeInviteFailed": "Impossibile revocare l'invito."
   },
   "notifications": {
     "centerTitle": "Notifiche",
@@ -473,7 +481,7 @@
     "needAuthBody": "Accedi con l'email invitata per accettare questo invito allo spazio.",
     "signIn": "Accedi",
     "mismatchTitle": "Account sbagliato",
-    "mismatchBelongsTo": "L'invito appartiene a {{email}}",
+    "mismatchBelongsTo": "Questo invito è stato inviato a un indirizzo email diverso da quello con cui hai effettuato l'accesso.",
     "mismatchLoggedIn": "Hai effettuato l'accesso come {{email}} ({{provider}})",
     "providerGoogle": "Google",
     "providerApple": "Apple",
@@ -562,7 +570,15 @@
     "cancelledBadge": "Piano annullato",
     "cancelledBadgeUntil": "Piano annullato - termina il {{date}}",
     "cancelledRemainingLabel": "Annullato - scade tra",
-    "cancelledEndsOn": "fino al {{date}}"
+    "cancelledEndsOn": "fino al {{date}}",
+    "hintCreditsLow": "{{count}} crediti rimasti · Premium per illimitati",
+    "hintCreditsFootnote": "Crediti AI: {{remaining}} rimasti",
+    "hintGenerateFromHistoryTitle": "Genera dalla cronologia",
+    "hintGenerateFromHistoryBody": "Kangur può ricostruire una lista dalle tue spese passate. Disponibile con Premium.",
+    "premiumBadge": "Premium",
+    "hintHistoryDepthLine1": "Free conserva le ultime 20 liste",
+    "hintHistoryDepthLine2": "Premium fino a 200 liste della spesa!",
+    "creditsRemainingBadge": "Rimasti {{remaining}}"
   },
   "profile": {
     "title": "Profilo",
@@ -612,6 +628,7 @@
     "switchToEn": "Passa all'inglese",
     "switchToDe": "Passa al tedesco",
     "comingSoon": "In arrivo",
+    "comingSoonBody": "Questa funzione non è ancora disponibile. Torna presto.",
     "accountScreenTitle": "Dettagli account",
     "fullName": "Nome completo",
     "emailLabel": "Email",
@@ -698,8 +715,6 @@
       "confirmPhrase": "ELIMINA",
       "confirm": "Elimina account",
       "back": "Indietro",
-      "return": "Torna indietro",
-      "tryAgain": "Riprova",
       "failed": "Impossibile eliminare l'account. Riprova.",
       "clerkFailed": "Clerk non ha potuto eliminare l'account. Sei ancora connesso - riprova."
     }
@@ -728,8 +743,6 @@
     "needAccountPrompt": "Non hai un account?",
     "logIn": "Accedi",
     "back": "Indietro",
-    "return": "Torna indietro",
-    "tryAgain": "Riprova",
     "verifyTitle": "Verifica email",
     "verifySubtitle": "Inserisci il codice che abbiamo inviato a {{email}}.",
     "verificationCode": "Codice di verifica",
@@ -803,7 +816,8 @@
     "privacy": "Informativa sulla privacy",
     "terms": "Termini di servizio",
     "about": "Informazioni",
-    "platformConsole": "Console piattaforma"
+    "platformConsole": "Console piattaforma",
+    "workspaceBrowser": "Panoramica spazi"
   },
   "about": {
     "title": "Informazioni",
@@ -839,6 +853,32 @@
     "reportBugSubtitle": "Aiutaci a migliorare l’app",
     "sendFeedback": "Invia feedback",
     "sendFeedbackSubtitle": "La tua opinione è importante"
+  },
+  "workspaceBrowser": {
+    "title": "Panoramica spazi",
+    "forbidden": "La panoramica spazi è disponibile solo per gli admin di piattaforma.",
+    "searchPlaceholder": "Cerca per nome o email del membro",
+    "filterAll": "Tutti",
+    "filterFree": "Free",
+    "filterPremium": "Premium",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "members_one": "{{count}} membro",
+    "members_other": "{{count}} membri",
+    "total": "{{count}} spazi",
+    "empty": "Nessuno spazio corrisponde ai filtri.",
+    "actionsA11y": "Azioni spazio",
+    "enter": "Entra",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "close": "Chiudi",
+    "cancel": "Annulla",
+    "deleteTitle": "Eliminare lo spazio?",
+    "deleteBody": "Elimina definitivamente “{{name}}” con liste, membri e dati. Irreversibile.",
+    "deleteConfirm": "Elimina",
+    "enterFailed": "Impossibile aprire questo spazio.",
+    "editFailed": "Impossibile modificare questo spazio.",
+    "deleteFailed": "Impossibile eliminare questo spazio."
   },
   "platformConsole": {
     "title": "Console piattaforma",
@@ -930,5 +970,8 @@
     "rtSystemHealthy": "Tutti i sistemi realtime operano normalmente",
     "rtSystemWarning": "Segnali soft realtime elevati - monitora la latenza del polling",
     "rtSystemDegraded": "Realtime degradato - controlla errori e latenza"
+  },
+  "navigation": {
+    "pressAgainToExit": "Tocca di nuovo per uscire"
   }
 }

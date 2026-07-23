@@ -16,6 +16,12 @@
     "return": "Retour",
     "tryAgain": "Réessayer"
   },
+  "appUpdate": {
+    "title": "Une nouvelle version de Kangur est disponible",
+    "body": "Vous utilisez une ancienne version de l’application. Mettez à jour pour profiter des dernières fonctionnalités et corrections.",
+    "update": "Mettre à jour",
+    "later": "Plus tard"
+  },
   "home": {
     "title": "Kangur",
     "subtitle": "Assistant courses IA",
@@ -148,6 +154,7 @@
     "productsProgress": "{{bought}} sur {{total}} produits",
     "boughtOfTotal": "{{bought}} sur {{total}} produits",
     "categoriesSection": "Catégories",
+    "tapCategoryHint": "Touchez une catégorie pour faire vos courses dans ce rayon.",
     "alreadyBoughtSection": "Déjà acheté",
     "backToEditList": "Retour à l'édition de la liste",
     "purchased": "Acheté",
@@ -270,6 +277,9 @@
     "suggestAlreadyApplied": "Cette suggestion a déjà été utilisée.",
     "suggestLoadingSubtitle": "Nous construisons une liste à partir de vos courses passées…",
     "suggestLoadingCta": "Generating…",
+    "phaseUploading": "Envoi…",
+    "phaseAnalyzing": "Analyse…",
+    "phaseApplying": "Ajout des produits…",
     "suggestAcceptedEmpty": "Glissez vers la droite pour ajouter une proposition.",
     "suggestProposals_one": "Propositions ({{count}})",
     "suggestProposals_other": "Propositions ({{count}})",
@@ -301,7 +311,8 @@
     "mealProposalGenerateError": "Impossible de générer une proposition. Réessayez.",
     "mealProposalCreditsError": "Vous n'avez pas assez de crédits pour générer une liste de repas.",
     "mealProposalGenerating": "Génération…",
-    "mealProposalSectionTitle": "Créer une liste à partir d’une recette avec l’IA ✨"
+    "mealProposalSectionTitle": "Créer une liste à partir d’une recette avec l’IA ✨",
+    "mealProposalUncheckHint": "Décochez les ingrédients que vous avez déjà chez vous."
   },
   "categories": {
     "fruit": "Fruits",
@@ -349,6 +360,8 @@
     "preview": "Aperçu",
     "previewHint": "Voir les produits de cette liste (lecture seule)",
     "previewFailed": "Impossible de charger l'aperçu.",
+    "editList": "Modifier la liste",
+    "editListHint": "Ouvrir la liste pour ajouter ou modifier des produits",
     "deleteHint": "Supprimer définitivement cette liste de l'espace",
     "actionsMenu": "Options de la liste",
     "actionsSubtitle": "Choisissez ce que vous voulez faire avec cette liste",
@@ -424,9 +437,9 @@
     "inviteEmailPlaceholder": "E-mail",
     "inviteSend": "Envoyer l'invitation",
     "inviteInvalidEmail": "Saisissez une adresse e-mail valide.",
-    "inviteSentTitle": "Invitation",
-    "inviteSentBody": "Nous enverrons une invitation à {{email}}.",
-    "inviteResentBody": "Invitation renvoyée à {{email}}.",
+    "inviteSentTitle": "Invitation envoyée !",
+    "inviteSentBody": "Nous avons envoyé une invitation à {{email}}. La personne pourra rejoindre après avoir ouvert le lien du message.",
+    "inviteResentBody": "Nous avons renvoyé l’invitation à {{email}}. La personne pourra rejoindre après avoir ouvert le lien du message.",
     "inviteAlreadyMember": "Cette personne est déjà membre.",
     "inviteForbidden": "Vous n'avez pas la permission d'inviter.",
     "inviteFailed": "Impossible d'envoyer l'invitation.",
@@ -434,12 +447,7 @@
     "revokeInviteTitle": "Révoquer l'invitation ?",
     "revokeInviteBody": "Révoquer l'invitation pour {{email}} ?",
     "revokeInviteConfirm": "Révoquer",
-    "revokeInviteFailed": "Impossible de révoquer l'invitation.",
-    "shareLinkTitle": "Lien de partage",
-    "shareLinkBody": "Copiez le lien de la dernière invitation envoyée.",
-    "copyLink": "Copier le lien",
-    "copyLinkNeedInvite": "Envoyez d'abord une invitation pour obtenir un lien.",
-    "linkCopied": "Copié"
+    "revokeInviteFailed": "Impossible de révoquer l'invitation."
   },
   "notifications": {
     "centerTitle": "Notifications",
@@ -473,7 +481,7 @@
     "needAuthBody": "Connectez-vous avec l'e-mail invité pour accepter cette invitation à l'espace.",
     "signIn": "Se connecter",
     "mismatchTitle": "Mauvais compte",
-    "mismatchBelongsTo": "L'invitation appartient à {{email}}",
+    "mismatchBelongsTo": "Cette invitation a été envoyée à une adresse e-mail différente de celle avec laquelle vous êtes connecté.",
     "mismatchLoggedIn": "Vous êtes connecté en tant que {{email}} ({{provider}})",
     "providerGoogle": "Google",
     "providerApple": "Apple",
@@ -562,7 +570,15 @@
     "cancelledBadge": "Abonnement annulé",
     "cancelledBadgeUntil": "Abonnement annulé - se termine le {{date}}",
     "cancelledRemainingLabel": "Annulé - expire dans",
-    "cancelledEndsOn": "jusqu’au {{date}}"
+    "cancelledEndsOn": "jusqu’au {{date}}",
+    "hintCreditsLow": "{{count}} crédits restants · Premium pour illimité",
+    "hintCreditsFootnote": "Crédits IA : {{remaining}} restants",
+    "hintGenerateFromHistoryTitle": "Générer depuis l’historique",
+    "hintGenerateFromHistoryBody": "Kangur peut reconstruire une liste à partir de vos courses passées. Disponible avec Premium.",
+    "premiumBadge": "Premium",
+    "hintHistoryDepthLine1": "Free conserve les 20 dernières listes",
+    "hintHistoryDepthLine2": "Premium jusqu’à 200 listes de courses !",
+    "creditsRemainingBadge": "Restant {{remaining}}"
   },
   "profile": {
     "title": "Profil",
@@ -612,6 +628,7 @@
     "switchToEn": "Passer à l'anglais",
     "switchToDe": "Passer à l'allemand",
     "comingSoon": "Bientôt disponible",
+    "comingSoonBody": "Cette fonctionnalité n’est pas encore disponible. Revenez bientôt.",
     "accountScreenTitle": "Détails du compte",
     "fullName": "Nom complet",
     "emailLabel": "E-mail",
@@ -698,8 +715,6 @@
       "confirmPhrase": "SUPPRIMER",
       "confirm": "Supprimer le compte",
       "back": "Retour",
-      "return": "Retour",
-      "tryAgain": "Réessayer",
       "failed": "Impossible de supprimer le compte. Veuillez réessayer.",
       "clerkFailed": "Clerk n'a pas pu supprimer le compte. Vous êtes toujours connecté - veuillez réessayer."
     }
@@ -728,8 +743,6 @@
     "needAccountPrompt": "Vous n'avez pas de compte ?",
     "logIn": "Se connecter",
     "back": "Retour",
-    "return": "Retour",
-    "tryAgain": "Réessayer",
     "verifyTitle": "Vérifier l'e-mail",
     "verifySubtitle": "Saisissez le code que nous avons envoyé à {{email}}.",
     "verificationCode": "Code de vérification",
@@ -803,7 +816,8 @@
     "privacy": "Politique de confidentialité",
     "terms": "Conditions d'utilisation",
     "about": "À propos",
-    "platformConsole": "Console plateforme"
+    "platformConsole": "Console plateforme",
+    "workspaceBrowser": "Aperçu des espaces"
   },
   "about": {
     "title": "À propos",
@@ -839,6 +853,32 @@
     "reportBugSubtitle": "Aidez-nous à améliorer l’app",
     "sendFeedback": "Envoyer un avis",
     "sendFeedbackSubtitle": "Votre avis compte pour nous"
+  },
+  "workspaceBrowser": {
+    "title": "Aperçu des espaces",
+    "forbidden": "L’aperçu des espaces est réservé aux administrateurs de la plateforme.",
+    "searchPlaceholder": "Rechercher par nom ou e-mail de membre",
+    "filterAll": "Tous",
+    "filterFree": "Free",
+    "filterPremium": "Premium",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "members_one": "{{count}} membre",
+    "members_other": "{{count}} membres",
+    "total": "{{count}} espaces",
+    "empty": "Aucun espace ne correspond aux filtres.",
+    "actionsA11y": "Actions de l’espace",
+    "enter": "Entrer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "deleteTitle": "Supprimer l’espace ?",
+    "deleteBody": "Supprimer définitivement « {{name}} » avec ses listes, membres et données. Irréversible.",
+    "deleteConfirm": "Supprimer",
+    "enterFailed": "Impossible d’ouvrir cet espace.",
+    "editFailed": "Impossible de modifier cet espace.",
+    "deleteFailed": "Impossible de supprimer cet espace."
   },
   "platformConsole": {
     "title": "Console plateforme",
@@ -930,5 +970,8 @@
     "rtSystemHealthy": "Tous les systèmes temps réel fonctionnent normalement",
     "rtSystemWarning": "Signaux temps réel souples élevés - surveillez la latence de polling",
     "rtSystemDegraded": "Temps réel dégradé - vérifiez les échecs et la latence"
+  },
+  "navigation": {
+    "pressAgainToExit": "Appuyez encore pour quitter"
   }
 }

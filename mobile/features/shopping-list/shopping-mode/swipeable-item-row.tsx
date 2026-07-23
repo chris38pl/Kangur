@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { shoppingDensity } from "@/design-system/shopping-density";
+import { motionDuration, motionSpring } from "@/design-system/motion";
 import {
   colors,
   radius,
@@ -24,6 +25,7 @@ import {
 } from "@/design-system/tokens";
 import { getCategoryBadgeColors } from "@/features/shopping-item/category-badge-colors";
 import type { ShoppingItem } from "@/features/shopping-item/schemas";
+import { listItemEntering } from "@/lib/motion";
 
 type Props = {
   item: ShoppingItem;
@@ -116,9 +118,9 @@ export function SwipeableItemRow({
             const startH = Math.max(measuredHeight.value, 1);
             collapseHeight.value = startH;
             translateX.value = withTiming(commitRight ? w : -w, {
-              duration: 160,
+              duration: motionDuration.fade,
             });
-            opacity.value = withTiming(0, { duration: 180 });
+            opacity.value = withTiming(0, { duration: motionDuration.enter });
             collapseHeight.value = withTiming(0, { duration: COLLAPSE_MS });
             if (commitRight) runOnJS(runPurchase)();
             else runOnJS(runUnavailable)();
@@ -127,7 +129,7 @@ export function SwipeableItemRow({
 
           if (abs < 1) return;
 
-          translateX.value = withSpring(0, { damping: 20, stiffness: 220 });
+          translateX.value = withSpring(0, motionSpring.settle);
           scale.value = withSpring(1);
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Reanimated gesture
@@ -163,6 +165,7 @@ export function SwipeableItemRow({
   });
 
   return (
+    <Animated.View entering={listItemEntering}>
     <View
       onLayout={(e) => {
         rowWidth.value = e.nativeEvent.layout.width;
@@ -287,5 +290,6 @@ export function SwipeableItemRow({
         </Animated.View>
       </GestureDetector>
     </View>
+    </Animated.View>
   );
 }

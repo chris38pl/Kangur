@@ -16,6 +16,12 @@
     "return": "Zpět",
     "tryAgain": "Zkusit znovu"
   },
+  "appUpdate": {
+    "title": "Je k dispozici nová verze Kangura",
+    "body": "Používáte starší verzi aplikace. Aktualizujte, abyste získali nejnovější funkce a opravy.",
+    "update": "Aktualizovat",
+    "later": "Později"
+  },
   "home": {
     "title": "Kangur",
     "subtitle": "Nákupní asistent s AI",
@@ -156,6 +162,7 @@
     "productsProgress": "{{bought}} z {{total}} produktů",
     "boughtOfTotal": "{{bought}} z {{total}} produktů",
     "categoriesSection": "Kategorie",
+    "tapCategoryHint": "Klepni na kategorii a nakupuj v této uličce.",
     "alreadyBoughtSection": "Už koupeno",
     "backToEditList": "Zpět k úpravě seznamu",
     "purchased": "Koupeno",
@@ -284,6 +291,9 @@
     "suggestAlreadyApplied": "Tento návrh už byl použit.",
     "suggestLoadingSubtitle": "Sestavujeme seznam z tvých předchozích nákupů…",
     "suggestLoadingCta": "Generating…",
+    "phaseUploading": "Nahrávání…",
+    "phaseAnalyzing": "Analýza…",
+    "phaseApplying": "Přidávání produktů…",
     "suggestAcceptedEmpty": "Přejeď doprava pro přidání návrhu.",
     "suggestProposals_one": "Návrhy ({{count}})",
     "suggestProposals_other": "Návrhy ({{count}})",
@@ -329,7 +339,8 @@
     "suggestTimesSeen_few": "Koupeno {{count}}×",
     "suggestTimesSeen_many": "Koupeno {{count}}×",
     "suggestLastSeenDays_few": "naposledy před {{count}} dny",
-    "suggestLastSeenDays_many": "naposledy před {{count}} dny"
+    "suggestLastSeenDays_many": "naposledy před {{count}} dny",
+    "mealProposalUncheckHint": "Odznač suroviny, které už doma máš."
   },
   "categories": {
     "fruit": "Ovoce",
@@ -377,6 +388,8 @@
     "preview": "Náhled",
     "previewHint": "Zobrazit produkty v seznamu (jen pro čtení)",
     "previewFailed": "Nepodařilo se načíst náhled.",
+    "editList": "Upravit seznam",
+    "editListHint": "Otevři seznam a přidej nebo změň produkty",
     "deleteHint": "Trvale odstranit tento seznam z prostoru",
     "actionsMenu": "Možnosti seznamu",
     "actionsSubtitle": "Vyber, co chceš se seznamem udělat",
@@ -456,9 +469,9 @@
     "inviteEmailPlaceholder": "E-mail",
     "inviteSend": "Odeslat pozvánku",
     "inviteInvalidEmail": "Zadej platnou e-mailovou adresu.",
-    "inviteSentTitle": "Pozvánka",
-    "inviteSentBody": "Pozvánku pošleme na {{email}}.",
-    "inviteResentBody": "Pozvánka znovu odeslána na {{email}}.",
+    "inviteSentTitle": "Pozvánka odeslána!",
+    "inviteSentBody": "Poslali jsme pozvánku na {{email}}. Osoba se může připojit po otevření odkazu ze zprávy.",
+    "inviteResentBody": "Znovu jsme odeslali pozvánku na {{email}}. Osoba se může připojit po otevření odkazu ze zprávy.",
     "inviteAlreadyMember": "Tato osoba už je členem.",
     "inviteForbidden": "Nemáš oprávnění zvát ostatní.",
     "inviteFailed": "Nepodařilo se odeslat pozvánku.",
@@ -466,12 +479,7 @@
     "revokeInviteTitle": "Zrušit pozvánku?",
     "revokeInviteBody": "Zrušit pozvánku pro {{email}}?",
     "revokeInviteConfirm": "Zrušit",
-    "revokeInviteFailed": "Nepodařilo se zrušit pozvánku.",
-    "shareLinkTitle": "Sdílet odkaz",
-    "shareLinkBody": "Zkopíruj odkaz z poslední odeslané pozvánky.",
-    "copyLink": "Kopírovat odkaz",
-    "copyLinkNeedInvite": "Nejdřív pošli pozvánku, abys získal odkaz.",
-    "linkCopied": "Zkopírováno"
+    "revokeInviteFailed": "Nepodařilo se zrušit pozvánku."
   },
   "notifications": {
     "centerTitle": "Oznámení",
@@ -509,7 +517,7 @@
     "needAuthBody": "Přihlas se e-mailem z pozvánky, abys ji mohl přijmout.",
     "signIn": "Přihlásit se",
     "mismatchTitle": "Špatný účet",
-    "mismatchBelongsTo": "Pozvánka patří {{email}}",
+    "mismatchBelongsTo": "Toto pozvání bylo odesláno na jinou e-mailovou adresu, než se kterou jste přihlášeni.",
     "mismatchLoggedIn": "Jsi přihlášen(a) jako {{email}} ({{provider}})",
     "providerGoogle": "Google",
     "providerApple": "Apple",
@@ -602,7 +610,15 @@
     "cancelledBadge": "Plán zrušen",
     "cancelledBadgeUntil": "Plán zrušen - skončí {{date}}",
     "cancelledRemainingLabel": "Zrušeno - vyprší za",
-    "cancelledEndsOn": "do {{date}}"
+    "cancelledEndsOn": "do {{date}}",
+    "hintCreditsLow": "Zbývá {{count}} kreditů · Premium = bez limitu",
+    "hintCreditsFootnote": "AI kredity: zbývá {{remaining}}",
+    "hintGenerateFromHistoryTitle": "Vygenerovat z historie",
+    "hintGenerateFromHistoryBody": "Kangur dokáže sestavit seznam z dřívějších nákupů. Dostupné v Premium.",
+    "premiumBadge": "Premium",
+    "hintHistoryDepthLine1": "Free uchová posledních 20 seznamů",
+    "hintHistoryDepthLine2": "Premium až 200 nákupních seznamů!",
+    "creditsRemainingBadge": "Zbývá {{remaining}}"
   },
   "profile": {
     "title": "Profil",
@@ -652,6 +668,7 @@
     "switchToEn": "Přepnout na angličtinu",
     "switchToDe": "Přepnout na němčinu",
     "comingSoon": "Již brzy",
+    "comingSoonBody": "Tato funkce zatím není dostupná. Vrať se brzy.",
     "accountScreenTitle": "Údaje o účtu",
     "fullName": "Celé jméno",
     "emailLabel": "E-mail",
@@ -738,8 +755,6 @@
       "confirmPhrase": "SMAZAT",
       "confirm": "Smazat účet",
       "back": "Zpět",
-      "return": "Zpět",
-      "tryAgain": "Zkusit znovu",
       "failed": "Nepodařilo se smazat účet. Zkus to znovu.",
       "clerkFailed": "Clerk nemohl účet smazat. Stále jsi přihlášen(a) - zkus to znovu."
     }
@@ -768,8 +783,6 @@
     "needAccountPrompt": "Nemáš účet?",
     "logIn": "Přihlásit se",
     "back": "Zpět",
-    "return": "Zpět",
-    "tryAgain": "Zkusit znovu",
     "verifyTitle": "Ověř e-mail",
     "verifySubtitle": "Zadej kód, který jsme poslali na {{email}}.",
     "verificationCode": "Ověřovací kód",
@@ -843,7 +856,8 @@
     "privacy": "Zásady ochrany soukromí",
     "terms": "Podmínky služby",
     "about": "O aplikaci",
-    "platformConsole": "Platform Console"
+    "platformConsole": "Platform Console",
+    "workspaceBrowser": "Přehled prostorů"
   },
   "about": {
     "title": "O aplikaci",
@@ -879,6 +893,34 @@
     "reportBugSubtitle": "Pomozte nám vylepšit aplikaci",
     "sendFeedback": "Poslat názor",
     "sendFeedbackSubtitle": "Váš názor je pro nás důležitý"
+  },
+  "workspaceBrowser": {
+    "title": "Přehled prostorů",
+    "forbidden": "Přehled prostorů je dostupný jen pro administrátory platformy.",
+    "searchPlaceholder": "Hledej podle názvu nebo e-mailu člena",
+    "filterAll": "Vše",
+    "filterFree": "Free",
+    "filterPremium": "Premium",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "members_one": "{{count}} člen",
+    "members_few": "{{count}} členové",
+    "members_many": "{{count}} členů",
+    "members_other": "{{count}} členů",
+    "total": "{{count}} prostorů",
+    "empty": "Žádný prostor neodpovídá filtrům.",
+    "actionsA11y": "Akce prostoru",
+    "enter": "Vstoupit",
+    "edit": "Upravit",
+    "delete": "Smazat",
+    "close": "Zavřít",
+    "cancel": "Zrušit",
+    "deleteTitle": "Smazat prostor?",
+    "deleteBody": "Trvale smazat „{{name}}“ včetně seznamů, členů a dat. Nelze vrátit zpět.",
+    "deleteConfirm": "Smazat",
+    "enterFailed": "Prostor se nepodařilo otevřít.",
+    "editFailed": "Prostor se nepodařilo upravit.",
+    "deleteFailed": "Prostor se nepodařilo smazat."
   },
   "platformConsole": {
     "title": "Platform Console",
@@ -970,5 +1012,8 @@
     "rtSystemHealthy": "Všechny realtime systémy fungují normálně",
     "rtSystemWarning": "Měkké realtime signály zvýšené - sleduj latenci pollingu",
     "rtSystemDegraded": "Realtime zhoršen - zkontroluj chyby a latenci"
+  },
+  "navigation": {
+    "pressAgainToExit": "Stiskněte znovu pro ukončení"
   }
 }

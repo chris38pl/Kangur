@@ -17,7 +17,8 @@ export type AppMenuItemId =
   | "privacy"
   | "terms"
   | "about"
-  | "platform-console";
+  | "platform-console"
+  | "workspace-browser";
 
 export type AppMenuItem = {
   id: AppMenuItemId;
@@ -129,6 +130,12 @@ export const APP_MENU_SECTIONS: AppMenuSection[] = [
         id: "platform-console",
         labelKey: "appMenu.platformConsole",
         href: "/platform-console",
+        visible: platformAdmin,
+      },
+      {
+        id: "workspace-browser",
+        labelKey: "appMenu.workspaceBrowser",
+        href: "/workspace-browser",
         visible: platformAdmin,
       },
     ],

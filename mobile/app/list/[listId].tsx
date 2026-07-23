@@ -16,8 +16,11 @@ import {
   Alert,
   Image,
   Keyboard,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Platform,
   Pressable,
+  type ScrollView,
   Text,
   TextInput,
   View,
@@ -30,15 +33,20 @@ import {
   ListHeaderTitleSkeleton,
 } from "@/components/skeleton";
 import { useAppResult } from "@/components/AppResultProvider";
+import { FeedbackSheet } from "@/components/feedback-sheet";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
 import { primaryButtonStyle } from "@/design-system/shopping-density";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
+import { AiPhaseCrossfade, LoadingTransition } from "@/lib/motion";
 import { applyAi, ingestAi } from "@/features/ai/api";
 import { buildScreenshotIngestFormData } from "@/features/ai/buildScreenshotIngestFormData";
 import { MealProposalComposer } from "@/features/ai/meal-proposal-composer";
 import type { ProposalOperation } from "@/features/ai/schemas";
 import { BackIcon } from "@/features/auth/auth-icons";
+import { perfEnd, perfStart } from "@/lib/performance";
+import { useAiCredits } from "@/features/billing/useAiCredits";
+import { PremiumHintRow } from "@/features/billing/premium-hint-row";
 import { CategoryChips } from "@/features/shopping-item/category-chips";
 import {
   ListStatusFilterChips,
@@ -61,6 +69,9 @@ import { CreateListOptionRow } from "@/features/shopping-list/create-list-option
 import { DeleteListDialog } from "@/features/shopping-list/delete-list-dialog";
 import { takePendingListImport } from "@/features/shopping-list/pending-list-import";
 import { takePendingListFocus } from "@/features/shopping-list/pending-list-focus";
+import {
+  takePendingScrollToItems,
+} from "@/features/shopping-list/pending-scroll-to-items";
 import {
   clearListProvisional,
   isListProvisional,
@@ -86,6 +97,7 @@ import { Analytics } from "@/lib/analytics";
 import { oncePerUser } from "@/lib/analytics/once";
 import { createRequestId } from "@/lib/analytics/requestId";
 import { ApiClientError } from "@/lib/api/client";
+import { goRoot, navigateBack, openTask } from "@/lib/navigation";
 import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
 import { setSentryRequestId } from "@/lib/sentry/init";
 import type { AiImportSource } from "@shared/analytics/events";
@@ -105,10 +117,6 @@ function buildApplyOperations(operations: ProposalOperation[]) {
         op: "create" as const,
         proposalRowId: operation.proposalRowId,
         clientId: operation.clientId ?? createClientId(),
-        name: operation.name,
-        amount: operation.amount ?? null,
-        note: operation.note ?? null,
-        category: operation.category,
       };
     }
 
@@ -117,10 +125,6 @@ function buildApplyOperations(operations: ProposalOperation[]) {
         op: "merge" as const,
         proposalRowId: operation.proposalRowId,
         targetItemId: operation.targetItemId ?? "",
-        name: operation.name,
-        amount: operation.amount ?? null,
-        note: operation.note ?? null,
-        category: operation.category,
       };
     }
 
@@ -128,10 +132,6 @@ function buildApplyOperations(operations: ProposalOperation[]) {
       op: "update" as const,
       proposalRowId: operation.proposalRowId,
       targetItemId: operation.targetItemId ?? "",
-      name: operation.name,
-      amount: operation.amount ?? null,
-      note: operation.note ?? null,
-      category: operation.category,
     };
   });
 }
@@ -168,12 +168,96 @@ export default function ShoppingListScreen() {
   const [aiSectionOpen, setAiSectionOpen] = useState(false);
   const [mealSectionOpen, setMealSectionOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [removeItemTarget, setRemoveItemTarget] = useState<ShoppingItem | null>(
+    null,
+  );
   const [mealGenerating, setMealGenerating] = useState(false);
+  const [aiPhase, setAiPhase] = useState<
+    "idle" | "uploading" | "analyzing" | "applying"
+  >("idle");
   const [statusFilter, setStatusFilter] = useState<ListStatusFilter>("all");
   const entryFocusApplied = useRef(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollYRef = useRef(0);
+  const itemsSectionRef = useRef<View>(null);
+  /** Set after AI apply; scroll runs only once items are on screen (not empty state). */
+  const pendingScrollToItemsRef = useRef(false);
+  const scrollAnimFrameRef = useRef<number | null>(null);
   const onMealGeneratingChange = useCallback((generating: boolean) => {
     setMealGenerating(generating);
   }, []);
+
+  const cancelSmoothScroll = useCallback(() => {
+    if (scrollAnimFrameRef.current != null) {
+      cancelAnimationFrame(scrollAnimFrameRef.current);
+      scrollAnimFrameRef.current = null;
+    }
+  }, []);
+
+  const smoothScrollToY = useCallback(
+    (targetY: number, durationMs: number) => {
+      const scroll = scrollRef.current;
+      if (!scroll) return;
+      cancelSmoothScroll();
+      const startY = scrollYRef.current;
+      const delta = targetY - startY;
+      if (Math.abs(delta) < 2) return;
+
+      const startTime = Date.now();
+      const step = () => {
+        const t = Math.min(1, (Date.now() - startTime) / durationMs);
+        const eased = 1 - (1 - t) ** 3;
+        const y = startY + delta * eased;
+        scroll.scrollTo({ y, animated: false });
+        scrollYRef.current = y;
+        if (t < 1) {
+          scrollAnimFrameRef.current = requestAnimationFrame(step);
+        } else {
+          scrollAnimFrameRef.current = null;
+        }
+      };
+      scrollAnimFrameRef.current = requestAnimationFrame(step);
+    },
+    [cancelSmoothScroll],
+  );
+
+  const scrollItemsSectionToTop = useCallback(() => {
+    const scroll = scrollRef.current;
+    const section = itemsSectionRef.current;
+    if (!scroll || !section) return;
+
+    const measureY = (target: View | ScrollView): Promise<number> =>
+      new Promise((resolve) => {
+        (
+          target as unknown as {
+            measureInWindow: (
+              cb: (x: number, y: number, w: number, h: number) => void,
+            ) => void;
+          }
+        ).measureInWindow((_x, y) => resolve(y));
+      });
+
+    void (async () => {
+      const scrollTop = await measureY(scroll);
+      const sectionTop = await measureY(section);
+      const delta = sectionTop - scrollTop;
+      smoothScrollToY(Math.max(0, scrollYRef.current + delta), 700);
+    })();
+  }, [smoothScrollToY]);
+
+  /** Queue scroll; actual scroll waits until products are rendered. */
+  const requestScrollToItems = useCallback(() => {
+    pendingScrollToItemsRef.current = true;
+  }, []);
+
+  const onListScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollYRef.current = event.nativeEvent.contentOffset.y;
+    },
+    [],
+  );
+
+  useEffect(() => () => cancelSmoothScroll(), [cancelSmoothScroll]);
 
   const listQuery = useQuery({
     queryKey: ["shopping-list", listId],
@@ -192,6 +276,8 @@ export default function ShoppingListScreen() {
       return getShoppingList(token, listId);
     },
   });
+
+  const creditsQuery = useAiCredits(listQuery.data?.workspaceId ?? null);
 
   useListRealtime(typeof listId === "string" ? listId : null, {
     workspaceId: listQuery.data?.workspaceId ?? null,
@@ -222,6 +308,11 @@ export default function ShoppingListScreen() {
         throw new Error("Missing auth token or list id");
       }
 
+      setAiPhase("applying");
+      perfStart("ai.apply", {
+        id: listId,
+        labels: { ops: input.operations.length },
+      });
       const result = await applyAi(token, listId, {
         runId: input.runId,
         operations: buildApplyOperations(input.operations),
@@ -231,6 +322,11 @@ export default function ShoppingListScreen() {
       return result;
     },
     onError: (error) => {
+      perfEnd("ai.apply", {
+        id: typeof listId === "string" ? listId : undefined,
+        labels: { ok: false },
+      });
+      setAiPhase("idle");
       const workspaceId = listQuery.data?.workspaceId;
       if (workspaceId && typeof listId === "string") {
         Analytics.track("ai_import_failed", {
@@ -246,6 +342,14 @@ export default function ShoppingListScreen() {
       aiRequestIdRef.current = null;
     },
     onSuccess: (_result, variables) => {
+      perfEnd("ai.apply", {
+        id: typeof listId === "string" ? listId : undefined,
+        labels: {
+          ok: true,
+          ops: variables.operations.length,
+        },
+      });
+      setAiPhase("idle");
       const workspaceId = listQuery.data?.workspaceId;
       const acceptedCount = variables.operations.filter(
         (op) => op.op !== "ignore",
@@ -311,7 +415,12 @@ export default function ShoppingListScreen() {
         void queryClient.invalidateQueries({
           queryKey: ["shopping-items", listId],
         });
-        void queryClient.invalidateQueries({ queryKey: ["shopping-lists"] });
+        void queryClient.invalidateQueries({
+          queryKey: ["shopping-lists", workspaceId],
+        });
+      }
+      if (acceptedCount >= 1) {
+        requestScrollToItems();
       }
     },
   });
@@ -338,6 +447,11 @@ export default function ShoppingListScreen() {
       }
       setSentryRequestId(null);
       aiRequestIdRef.current = null;
+      perfEnd("ai.ingest", {
+        id: typeof listId === "string" ? listId : undefined,
+        labels: { ok: false },
+      });
+      setAiPhase("idle");
       if (isInsufficientCreditsError(error)) {
         const shortage = getCreditShortage(error) ?? {
           needed: 1,
@@ -353,7 +467,7 @@ export default function ShoppingListScreen() {
         Alert.alert(t("list.missingTitle"), t("list.missingBody"), [
           {
             text: t("invite.goHome"),
-            onPress: () => router.replace("/(tabs)" as never),
+            onPress: () => goRoot(),
           },
         ]);
         return;
@@ -366,6 +480,7 @@ export default function ShoppingListScreen() {
 
       // Backend renames untitled lists on ingest - refresh header immediately.
       if (typeof listId === "string" && title) {
+        const workspaceIdForLists = listQuery.data?.workspaceId;
         queryClient.setQueryData(
           ["shopping-list", listId],
           (prev: { name?: string; isUntitled?: boolean } | undefined) =>
@@ -376,7 +491,11 @@ export default function ShoppingListScreen() {
         void queryClient.invalidateQueries({
           queryKey: ["shopping-list", listId],
         });
-        void queryClient.invalidateQueries({ queryKey: ["shopping-lists"] });
+        if (workspaceIdForLists) {
+          void queryClient.invalidateQueries({
+            queryKey: ["shopping-lists", workspaceIdForLists],
+          });
+        }
       }
 
       aiOriginalOpsRef.current = result.proposal.operations.map((op) => ({
@@ -384,11 +503,20 @@ export default function ShoppingListScreen() {
       }));
 
       if (isAiReviewEnabled()) {
+        perfEnd("ai.ingest", {
+          id: typeof listId === "string" ? listId : undefined,
+          labels: { ok: true, review: true },
+        });
+        setAiPhase("idle");
         setReviewRunId(result.runId);
         setReviewOperations(result.proposal.operations);
         return;
       }
 
+      perfEnd("ai.ingest", {
+        id: typeof listId === "string" ? listId : undefined,
+        labels: { ok: true },
+      });
       // Default: auto-apply proposal (no review UI).
       applyMutation.mutate({
         runId: result.runId,
@@ -444,8 +572,22 @@ export default function ShoppingListScreen() {
     listQuery.error instanceof ApiClientError &&
     listQuery.error.code === "NOT_FOUND";
 
+  useEffect(() => {
+    if (typeof listId !== "string") return;
+    perfStart("list.open", { id: listId });
+  }, [listId]);
+
+  useEffect(() => {
+    if (typeof listId !== "string") return;
+    if (isPending) return;
+    perfEnd("list.open", {
+      id: listId,
+      warm: Boolean(itemsQuery.dataUpdatedAt && !itemsQuery.isFetching),
+    });
+  }, [listId, isPending, itemsQuery.dataUpdatedAt, itemsQuery.isFetching]);
+
   const goHome = () => {
-    router.replace("/(tabs)" as never);
+    goRoot();
   };
 
   const startAiIngest = (source: AiImportSource, formData: FormData) => {
@@ -455,6 +597,14 @@ export default function ShoppingListScreen() {
     aiRequestIdRef.current = requestId;
     aiSourceRef.current = source;
     setSentryRequestId(requestId);
+    setAiPhase(source === "screenshot" ? "uploading" : "analyzing");
+    perfStart("ai.ingest", { id: listId, labels: { source } });
+    // After request leaves the client, treat as analyzing until apply.
+    if (source === "screenshot") {
+      setTimeout(() => {
+        setAiPhase((phase) => (phase === "uploading" ? "analyzing" : phase));
+      }, 400);
+    }
     Analytics.track("ai_import_started", {
       workspace_id: workspaceId,
       list_id: listId,
@@ -493,12 +643,14 @@ export default function ShoppingListScreen() {
     if (!picked) {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
-        quality: 0.8,
+        // Smaller uploads → faster ingest + lower vision cost (perf audit Fala 2).
+        quality: 0.55,
       });
       if (result.canceled) return;
       picked = result.assets[0];
     }
     try {
+      setAiPhase("uploading");
       const formData = await buildScreenshotIngestFormData(picked);
       startAiIngest("screenshot", formData);
     } catch (error) {
@@ -559,6 +711,13 @@ export default function ShoppingListScreen() {
     });
   }, [listQuery.isSuccess, listId]);
 
+  // Meal proposal (and other off-screen AI apply) → scroll to items on return.
+  useEffect(() => {
+    if (!listQuery.isSuccess || typeof listId !== "string") return;
+    if (!takePendingScrollToItems(listId)) return;
+    requestScrollToItems();
+  }, [listQuery.isSuccess, listId, itemsQuery.isSuccess, requestScrollToItems]);
+
   const fastPathReady =
     reviewOperations.length > 0 &&
     reviewOperations.every((operation) => operation.op === "merge") &&
@@ -580,6 +739,25 @@ export default function ShoppingListScreen() {
       return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
     });
   const itemCount = activeItems.length;
+
+  // Scroll only after products replaced the empty state (avoids scroll→empty→jump).
+  useEffect(() => {
+    if (!pendingScrollToItemsRef.current) return;
+    if (itemCount <= 0) return;
+
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      if (cancelled || !pendingScrollToItemsRef.current) return;
+      pendingScrollToItemsRef.current = false;
+      scrollItemsSectionToTop();
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [itemCount, itemsQuery.dataUpdatedAt, scrollItemsSectionToTop]);
+
   const statusFilterCounts = useMemo(
     () => ({
       pending: activeItems.filter((item) => item.status === "pending").length,
@@ -625,7 +803,7 @@ export default function ShoppingListScreen() {
     void archiveList.mutateAsync(listId).then(() => {
       console.info("[shopping-list]", "ListDeleted", { listId });
       setDeleteOpen(false);
-      router.replace("/(tabs)" as never);
+      goRoot();
     });
   };
 
@@ -660,8 +838,8 @@ export default function ShoppingListScreen() {
           >
             <Pressable
               onPress={() => {
-                if (router.canGoBack()) router.back();
-                else router.replace("/(tabs)" as never);
+                if (router.canGoBack()) navigateBack();
+                else goRoot();
               }}
               hitSlop={10}
               accessibilityRole="button"
@@ -707,6 +885,7 @@ export default function ShoppingListScreen() {
         </View>
 
         <NestableScreenScroll
+          ref={scrollRef}
           style={{ flex: 1 }}
           contentContainerStyle={{
             paddingHorizontal: spacing[6],
@@ -714,10 +893,15 @@ export default function ShoppingListScreen() {
             paddingBottom: footerPad + spacing[4],
           }}
           keyboardShouldPersistTaps="handled"
+          onScroll={onListScroll}
+          scrollEventThrottle={16}
         >
-        {isPending ? (
-          <ListDetailSkeleton />
-        ) : listMissing || listQuery.isError ? (
+        <LoadingTransition
+          variant="inline"
+          loading={isPending}
+          skeleton={<ListDetailSkeleton />}
+        >
+        {listMissing || listQuery.isError ? (
           <View
             style={{
               flex: 1,
@@ -928,6 +1112,19 @@ export default function ShoppingListScreen() {
                     }
                     onPress={() => void startClipboardIngest()}
                   />
+
+                  {creditsQuery.data && !creditsQuery.data.unlimited ? (
+                    <View style={{ marginTop: spacing[2] }}>
+                      <PremiumHintRow
+                        label={t("billing.aiCredits")}
+                        badge={t("billing.creditsRemainingBadge", {
+                          remaining: creditsQuery.data.remaining ?? 0,
+                        })}
+                        onPress={() => router.push("/premium")}
+                        accessibilityLabel={t("billing.upgradeCta")}
+                      />
+                    </View>
+                  ) : null}
                 </View>
               ) : null}
             </View>
@@ -1346,15 +1543,17 @@ export default function ShoppingListScreen() {
               </View>
             ) : null}
 
-            <Text
-              style={{
-                ...typography.headline,
-                color: theme.text,
-                marginTop: spacing[8],
-              }}
-            >
-              {t("list.itemsOnList")}
-            </Text>
+            <View ref={itemsSectionRef} collapsable={false}>
+              <Text
+                style={{
+                  ...typography.headline,
+                  color: theme.text,
+                  marginTop: spacing[8],
+                }}
+              >
+                {t("list.itemsOnList")}
+              </Text>
+            </View>
 
             {itemCount > 0 ? (
               <View style={{ marginTop: spacing[3] }}>
@@ -1467,6 +1666,7 @@ export default function ShoppingListScreen() {
             </Pressable>
           </>
         )}
+        </LoadingTransition>
         </NestableScreenScroll>
 
         <View
@@ -1485,7 +1685,7 @@ export default function ShoppingListScreen() {
           <Pressable
             onPress={() => {
               if (typeof listId === "string" && itemCount > 0) {
-                router.push(`/list/${listId}/shop`);
+                openTask(`/list/${listId}/shop`);
               }
             }}
             disabled={
@@ -1525,6 +1725,17 @@ export default function ShoppingListScreen() {
             {mealGenerating ||
             ingestMutation.isPending ||
             applyMutation.isPending ? (
+              <AiPhaseCrossfade
+                phase={
+                  mealGenerating
+                    ? "meal"
+                    : aiPhase === "uploading"
+                      ? "uploading"
+                      : aiPhase === "applying"
+                        ? "applying"
+                        : "analyzing"
+                }
+              >
               <View
                 style={{
                   flexDirection: "row",
@@ -1536,9 +1747,14 @@ export default function ShoppingListScreen() {
                 <Text style={{ ...typography.label, color: theme.onPrimary }}>
                   {mealGenerating
                     ? t("ai.mealProposalGenerating")
-                    : t("ai.suggestLoadingCta")}
+                    : aiPhase === "uploading"
+                      ? t("ai.phaseUploading")
+                      : aiPhase === "applying"
+                        ? t("ai.phaseApplying")
+                        : t("ai.phaseAnalyzing")}
                 </Text>
               </View>
+              </AiPhaseCrossfade>
             ) : (
               <Text style={{ ...typography.label, color: theme.onPrimary }}>
                 {t("shoppingMode.startShopping")}
@@ -1581,19 +1797,28 @@ export default function ShoppingListScreen() {
         }}
         onDelete={() => {
           if (!editingItem) return;
-          const item = editingItem;
-          Alert.alert(t("list.removeItemTitle"), t("list.removeItemBody"), [
-            { text: t("list.deleteCancel"), style: "cancel" },
-            {
-              text: t("list.removeItemConfirm"),
-              style: "destructive",
-              onPress: () => {
-                setEditingItem(null);
-                updateItem.mutate({ itemId: item.id, status: "removed" });
-              },
-            },
-          ]);
+          setRemoveItemTarget(editingItem);
         }}
+      />
+
+      <FeedbackSheet
+        visible={removeItemTarget != null}
+        image={brandAssets.deleteList}
+        title={t("list.removeItemTitle")}
+        body={t("list.removeItemBody")}
+        primaryLabel={t("list.removeItemConfirm")}
+        onPrimary={() => {
+          if (!removeItemTarget) return;
+          const itemId = removeItemTarget.id;
+          setRemoveItemTarget(null);
+          setEditingItem(null);
+          updateItem.mutate({ itemId, status: "removed" });
+        }}
+        secondaryLabel={t("list.deleteCancel")}
+        onSecondary={() => setRemoveItemTarget(null)}
+        primaryDestructive
+        imageWidth={200}
+        imageHeight={200}
       />
 
       <DeleteListDialog

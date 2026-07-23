@@ -26,6 +26,7 @@ type Props = {
   busy?: boolean;
   onClose: () => void;
   onPreview: () => void;
+  onEdit: () => void;
   onShop: () => void;
   onRepeat: () => void;
   onRestore: () => void;
@@ -148,7 +149,7 @@ function ActionRow({
 }
 
 /**
- * List overflow - Preview / Shop / Repeat / Restore / Delete.
+ * List overflow - Preview / Edit / Shop / Repeat / Restore / Delete.
  */
 export function HistoryActionsSheet({
   visible,
@@ -158,6 +159,7 @@ export function HistoryActionsSheet({
   busy = false,
   onClose,
   onPreview,
+  onEdit,
   onShop,
   onRepeat,
   onRestore,
@@ -286,6 +288,15 @@ export function HistoryActionsSheet({
                 tone="neutral"
                 fallback="◉"
               />
+              {mode === "shopping" || mode === "waiting" ? (
+                <ActionRow
+                  label={t("history.editList")}
+                  subtitle={t("history.editListHint")}
+                  onPress={onEdit}
+                  tone="neutral"
+                  fallback="✎"
+                />
+              ) : null}
               <ActionRow
                 label={
                   preferredForAi

@@ -11,6 +11,7 @@ import {
 } from "./api";
 import { markListProvisional } from "./provisional-list";
 import type { ShoppingList } from "./schemas";
+import { persistShoppingListsCache } from "@/lib/query/persist-bootstrap";
 
 export function useShoppingLists(workspaceId: string | null, enabled = true) {
   const { getToken, isSignedIn } = useAuth();
@@ -23,7 +24,9 @@ export function useShoppingLists(workspaceId: string | null, enabled = true) {
       if (!token || !workspaceId) {
         throw new Error("Missing auth token or workspace id");
       }
-      return listShoppingLists(token, workspaceId);
+      const data = await listShoppingLists(token, workspaceId);
+      void persistShoppingListsCache(workspaceId, data);
+      return data;
     },
   });
 }
@@ -101,9 +104,11 @@ export function useArchiveShoppingList(workspaceId: string | null) {
       queryClient.removeQueries({ queryKey: ["shopping-list", listId] });
       queryClient.removeQueries({ queryKey: ["shopping-items", listId] });
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["shopping-lists"] }),
         queryClient.invalidateQueries({
-          queryKey: ["shopping-lists-history"],
+          queryKey: ["shopping-lists", workspaceId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["shopping-lists-history", workspaceId],
         }),
       ]);
     },

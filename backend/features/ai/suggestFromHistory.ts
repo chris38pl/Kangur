@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 
-import { assertCanIngest } from "@/lib/aiCredits";
+import { assertCanIngest, withReservedAiCredits } from "@/lib/aiCredits";
 import { authorize } from "@/lib/authorize";
 import { forbidden, notFound, validationError } from "@/lib/auth/errors";
 import { isHistorySuggestionsEnabled } from "@/lib/featureGates";
@@ -47,53 +47,55 @@ export async function suggestFromHistory(input: {
     input.workspaceId,
   );
 
-  const generated = await buildSuggestFromHistory({
-    lists,
-    outputLanguage,
-  });
+  return withReservedAiCredits(input.workspaceId, "history", async () => {
+    const generated = await buildSuggestFromHistory({
+      lists,
+      outputLanguage,
+    });
 
-  const enriched = enrichSuggestFromHistory({
-    proposal: generated.proposal,
-    lists,
-  });
+    const enriched = enrichSuggestFromHistory({
+      proposal: generated.proposal,
+      lists,
+    });
 
-  if (enriched.items.length === 0) {
-    throw validationError("AI produced no usable suggestions from history.");
-  }
+    if (enriched.items.length === 0) {
+      throw validationError("AI produced no usable suggestions from history.");
+    }
 
-  const proposal = SuggestFromHistoryProposalSchema.parse(enriched);
-  const durationMs = Date.now() - startedAt;
+    const proposal = SuggestFromHistoryProposalSchema.parse(enriched);
+    const durationMs = Date.now() - startedAt;
 
-  const run = await prisma.aiProposalRun.create({
-    data: {
+    const run = await prisma.aiProposalRun.create({
+      data: {
+        workspaceId: input.workspaceId,
+        listId: null,
+        userId: input.userId,
+        source: "history",
+        proposalType: HISTORY_PROPOSAL_TYPE,
+        proposalVersion: HISTORY_PROPOSAL_VERSION,
+        provider: generated.provider,
+        model: generated.model,
+        status: "proposed",
+        durationMs,
+        rawResponse: generated.rawResponse as Prisma.InputJsonValue,
+        proposal: proposal as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    historyAiGenerateReviewed({
       workspaceId: input.workspaceId,
-      listId: null,
-      userId: input.userId,
-      source: "history",
+      runId: run.id,
+    });
+
+    return {
+      runId: run.id,
+      model: generated.model,
+      provider: generated.provider,
       proposalType: HISTORY_PROPOSAL_TYPE,
       proposalVersion: HISTORY_PROPOSAL_VERSION,
-      provider: generated.provider,
-      model: generated.model,
-      status: "proposed",
       durationMs,
-      rawResponse: generated.rawResponse as Prisma.InputJsonValue,
-      proposal: proposal as unknown as Prisma.InputJsonValue,
-    },
+      sourceListsCount: lists.length,
+      proposal,
+    };
   });
-
-  historyAiGenerateReviewed({
-    workspaceId: input.workspaceId,
-    runId: run.id,
-  });
-
-  return {
-    runId: run.id,
-    model: generated.model,
-    provider: generated.provider,
-    proposalType: HISTORY_PROPOSAL_TYPE,
-    proposalVersion: HISTORY_PROPOSAL_VERSION,
-    durationMs,
-    sourceListsCount: lists.length,
-    proposal,
-  };
 }

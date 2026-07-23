@@ -16,6 +16,12 @@
     "return": "Volver",
     "tryAgain": "Intentar de nuevo"
   },
+  "appUpdate": {
+    "title": "Hay una nueva versión de Kangur disponible",
+    "body": "Estás usando una versión anterior de la app. Actualiza para disfrutar de las últimas funciones y correcciones.",
+    "update": "Actualizar",
+    "later": "Más tarde"
+  },
   "home": {
     "title": "Kangur",
     "subtitle": "Asistente de compras con IA",
@@ -148,6 +154,7 @@
     "productsProgress": "{{bought}} de {{total}} productos",
     "boughtOfTotal": "{{bought}} de {{total}} productos",
     "categoriesSection": "Categorías",
+    "tapCategoryHint": "Toca una categoría para comprar en ese pasillo.",
     "alreadyBoughtSection": "Ya comprados",
     "backToEditList": "Volver a editar la lista",
     "purchased": "Comprado",
@@ -270,6 +277,9 @@
     "suggestAlreadyApplied": "Esta sugerencia ya se usó.",
     "suggestLoadingSubtitle": "Estamos creando una lista a partir de tus compras anteriores…",
     "suggestLoadingCta": "Generating…",
+    "phaseUploading": "Subiendo…",
+    "phaseAnalyzing": "Analizando…",
+    "phaseApplying": "Añadiendo productos…",
     "suggestAcceptedEmpty": "Desliza a la derecha para añadir una propuesta.",
     "suggestProposals_one": "Propuestas ({{count}})",
     "suggestProposals_other": "Propuestas ({{count}})",
@@ -301,7 +311,8 @@
     "mealProposalGenerateError": "No se pudo generar la propuesta. Inténtalo de nuevo.",
     "mealProposalCreditsError": "No tienes suficientes créditos para generar una lista de comidas.",
     "mealProposalGenerating": "Generando…",
-    "mealProposalSectionTitle": "Crear lista desde una receta con IA ✨"
+    "mealProposalSectionTitle": "Crear lista desde una receta con IA ✨",
+    "mealProposalUncheckHint": "Desmarca los ingredientes que ya tienes en casa."
   },
   "categories": {
     "fruit": "Fruta",
@@ -349,6 +360,8 @@
     "preview": "Vista previa",
     "previewHint": "Ver productos de esta lista (solo lectura)",
     "previewFailed": "No se pudo cargar la vista previa.",
+    "editList": "Editar lista",
+    "editListHint": "Abrir la lista para añadir o cambiar productos",
     "deleteHint": "Eliminar permanentemente esta lista del espacio",
     "actionsMenu": "Opciones de la lista",
     "actionsSubtitle": "Elige qué quieres hacer con esta lista",
@@ -424,9 +437,9 @@
     "inviteEmailPlaceholder": "Correo electrónico",
     "inviteSend": "Enviar invitación",
     "inviteInvalidEmail": "Introduce una dirección de correo válida.",
-    "inviteSentTitle": "Invitación",
-    "inviteSentBody": "Enviaremos una invitación a {{email}}.",
-    "inviteResentBody": "Invitación reenviada a {{email}}.",
+    "inviteSentTitle": "¡Invitación enviada!",
+    "inviteSentBody": "Hemos enviado una invitación a {{email}}. Podrá unirse tras abrir el enlace del mensaje.",
+    "inviteResentBody": "Hemos reenviado la invitación a {{email}}. Podrá unirse tras abrir el enlace del mensaje.",
     "inviteAlreadyMember": "Esta persona ya es miembro.",
     "inviteForbidden": "No tienes permiso para invitar.",
     "inviteFailed": "No se pudo enviar la invitación.",
@@ -434,12 +447,7 @@
     "revokeInviteTitle": "¿Revocar invitación?",
     "revokeInviteBody": "¿Revocar la invitación para {{email}}?",
     "revokeInviteConfirm": "Revocar",
-    "revokeInviteFailed": "No se pudo revocar la invitación.",
-    "shareLinkTitle": "Compartir enlace",
-    "shareLinkBody": "Copia el enlace de la última invitación que enviaste.",
-    "copyLink": "Copiar enlace",
-    "copyLinkNeedInvite": "Envía primero una invitación para obtener un enlace.",
-    "linkCopied": "Copiado"
+    "revokeInviteFailed": "No se pudo revocar la invitación."
   },
   "notifications": {
     "centerTitle": "Notificaciones",
@@ -473,7 +481,7 @@
     "needAuthBody": "Inicia sesión con el correo invitado para aceptar esta invitación al espacio.",
     "signIn": "Iniciar sesión",
     "mismatchTitle": "Cuenta incorrecta",
-    "mismatchBelongsTo": "La invitación pertenece a {{email}}",
+    "mismatchBelongsTo": "Esta invitación se envió a un correo distinto del que usas ahora.",
     "mismatchLoggedIn": "Has iniciado sesión como {{email}} ({{provider}})",
     "providerGoogle": "Google",
     "providerApple": "Apple",
@@ -562,7 +570,15 @@
     "cancelledBadge": "Plan cancelado",
     "cancelledBadgeUntil": "Plan cancelado - termina el {{date}}",
     "cancelledRemainingLabel": "Cancelado - caduca en",
-    "cancelledEndsOn": "hasta el {{date}}"
+    "cancelledEndsOn": "hasta el {{date}}",
+    "hintCreditsLow": "{{count}} créditos restantes · Premium para ilimitados",
+    "hintCreditsFootnote": "Créditos de IA: quedan {{remaining}}",
+    "hintGenerateFromHistoryTitle": "Generar desde el historial",
+    "hintGenerateFromHistoryBody": "Kangur puede recrear una lista a partir de tus compras anteriores. Disponible con Premium.",
+    "premiumBadge": "Premium",
+    "hintHistoryDepthLine1": "Free guarda las últimas 20 listas",
+    "hintHistoryDepthLine2": "Premium hasta 200 listas de compra!",
+    "creditsRemainingBadge": "Quedan {{remaining}}"
   },
   "profile": {
     "title": "Perfil",
@@ -612,6 +628,7 @@
     "switchToEn": "Cambiar a inglés",
     "switchToDe": "Cambiar a alemán",
     "comingSoon": "Próximamente",
+    "comingSoonBody": "Esta función aún no está disponible. Vuelve pronto.",
     "accountScreenTitle": "Detalles de la cuenta",
     "fullName": "Nombre completo",
     "emailLabel": "Correo electrónico",
@@ -799,7 +816,8 @@
     "privacy": "Política de privacidad",
     "terms": "Términos del servicio",
     "about": "Acerca de",
-    "platformConsole": "Consola de plataforma"
+    "platformConsole": "Consola de plataforma",
+    "workspaceBrowser": "Explorar espacios"
   },
   "about": {
     "title": "Acerca de",
@@ -835,6 +853,32 @@
     "reportBugSubtitle": "Ayúdanos a mejorar la app",
     "sendFeedback": "Enviar opinión",
     "sendFeedbackSubtitle": "Tu opinión es importante"
+  },
+  "workspaceBrowser": {
+    "title": "Explorar espacios",
+    "forbidden": "El explorador de espacios solo está disponible para administradores de plataforma.",
+    "searchPlaceholder": "Buscar por nombre o email de miembro",
+    "filterAll": "Todos",
+    "filterFree": "Free",
+    "filterPremium": "Premium",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "members_one": "{{count}} miembro",
+    "members_other": "{{count}} miembros",
+    "total": "{{count}} espacios",
+    "empty": "Ningún espacio coincide con los filtros.",
+    "actionsA11y": "Acciones del espacio",
+    "enter": "Entrar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "deleteTitle": "¿Eliminar espacio?",
+    "deleteBody": "Eliminar permanentemente “{{name}}” con sus listas, miembros y datos. No se puede deshacer.",
+    "deleteConfirm": "Eliminar",
+    "enterFailed": "No se pudo abrir este espacio.",
+    "editFailed": "No se pudo editar este espacio.",
+    "deleteFailed": "No se pudo eliminar este espacio."
   },
   "platformConsole": {
     "title": "Consola de plataforma",
@@ -926,5 +970,8 @@
     "rtSystemHealthy": "Todos los sistemas en tiempo real operan con normalidad",
     "rtSystemWarning": "Señales suaves de tiempo real elevadas - vigila la latencia del polling",
     "rtSystemDegraded": "Tiempo real degradado - comprueba fallos y latencia"
+  },
+  "navigation": {
+    "pressAgainToExit": "Pulsa de nuevo para salir"
   }
 }

@@ -57,7 +57,7 @@ type Props = { children: ReactNode };
 
 /**
  * Orchestrates cold-start brand boot. Covers loading - never invents waiting
- * beyond the min aesthetic window. Future: onboarding / maintenance / force-update.
+ * beyond the min aesthetic window. Soft update lives in AppUpdateGate (sibling).
  */
 export function AppStartupController({ children }: Props) {
   const { isLoaded, isSignedIn } = useAuth();

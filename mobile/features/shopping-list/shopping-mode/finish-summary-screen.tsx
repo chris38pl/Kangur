@@ -1,6 +1,5 @@
 import { getShoppingCategoryIcon } from "@shared/shopping-categories";
 import { useAuth } from "@clerk/clerk-expo";
-import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type ReactNode } from "react";
 import {
@@ -32,13 +31,16 @@ import { BackIcon } from "@/features/auth/auth-icons";
 import { useMe } from "@/features/auth/useMe";
 import { OfflineStatusBanner } from "@/features/offline/OfflineStatusBanner";
 import { DataSyncEngine } from "@/features/data-sync-engine";
-import { finishShoppingSession } from "@/features/notifications/api";
 import type { ShoppingItem } from "@/features/shopping-item/schemas";
 import { intlLocaleTag } from "@/lib/i18n/locales";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
 import { useShoppingSession } from "@/features/shopping-list/session/useShoppingSession";
 import { useShoppingList } from "@/features/shopping-list/useShoppingLists";
-import { Analytics } from "@/lib/analytics";
+import { navigateBack } from "@/lib/navigation";
+import {
+  completeShoppingTask,
+  dismissShoppingTask,
+} from "./shopping-task-intent";
 
 type Props = {
   listId: string;
@@ -306,7 +308,6 @@ export function FinishSummaryScreen({
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const listQuery = useShoppingList(listId);
   const itemsQuery = useShoppingItems(listId);
@@ -348,53 +349,25 @@ export function FinishSummaryScreen({
 
   const finish = useMutation({
     mutationFn: async () => {
-      const serverSessionId = session.snapshot?.serverSessionId;
-      let archivedOnServer = false;
-      if (serverSessionId) {
-        try {
-          const token = await getToken();
-          if (token) {
-            await finishShoppingSession(
-              token,
-              listId,
-              serverSessionId,
-              unavailableItems.length,
-            );
-            archivedOnServer = true;
-          }
-        } catch (error) {
-          console.info("[shopping]", "ServerSessionFinishFailed", error);
-        }
-      }
-      await session.finish({ skipArchive: archivedOnServer });
-    },
-    onSuccess: async () => {
       const workspaceId = listQuery.data?.workspaceId;
-      if (workspaceId) {
-        const itemCount =
-          boughtItems.length + unavailableItems.length + remaining;
-        const startedMs = sessionSnapshot?.startedAt
-          ? new Date(sessionSnapshot.startedAt).getTime()
-          : finishedAt.getTime();
-        const durationSec = Math.max(
-          0,
-          Math.round((finishedAt.getTime() - startedMs) / 1000),
-        );
-        Analytics.track("shopping_finished", {
-          workspace_id: workspaceId,
-          list_id: listId,
-          item_count: itemCount,
-          duration_sec: durationSec,
-        });
-        queryClient.setQueryData(
-          ["shopping-lists", workspaceId],
-          (prev: { id: string }[] | undefined) =>
-            prev?.filter((l) => l.id !== listId) ?? prev,
-        );
-      }
-      await queryClient.invalidateQueries({ queryKey: ["shopping-lists"] });
-      await session.clearEnded();
-      router.replace("/(tabs)" as never);
+      const itemCount =
+        boughtItems.length + unavailableItems.length + remaining;
+      const startedMs = sessionSnapshot?.startedAt
+        ? new Date(sessionSnapshot.startedAt).getTime()
+        : finishedAt.getTime();
+      const durationSec = Math.max(
+        0,
+        Math.round((finishedAt.getTime() - startedMs) / 1000),
+      );
+      await completeShoppingTask({
+        listId,
+        workspaceId,
+        itemCount,
+        durationSec,
+        unavailableCount: unavailableItems.length,
+        getToken,
+        queryClient,
+      });
     },
   });
 
@@ -414,8 +387,12 @@ export function FinishSummaryScreen({
     }
   };
 
-  const goHome = () => {
-    router.replace("/(tabs)" as never);
+  const onHeaderBack = () => {
+    if (viewer) {
+      dismissShoppingTask();
+      return;
+    }
+    navigateBack();
   };
 
   if (
@@ -453,7 +430,7 @@ export function FinishSummaryScreen({
         }}
       >
         <Pressable
-          onPress={() => (viewer ? goHome() : router.back())}
+          onPress={onHeaderBack}
           hitSlop={10}
           accessibilityRole="button"
           style={{
@@ -802,7 +779,7 @@ export function FinishSummaryScreen({
       >
         {viewer ? (
           <Pressable
-            onPress={goHome}
+            onPress={() => dismissShoppingTask()}
             style={{
               backgroundColor: theme.primary,
               borderRadius: radius.full,
@@ -843,7 +820,7 @@ export function FinishSummaryScreen({
             </Pressable>
 
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => navigateBack()}
               style={{
                 marginTop: spacing[3],
                 alignItems: "center",

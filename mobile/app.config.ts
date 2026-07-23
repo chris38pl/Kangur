@@ -26,7 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: isDevApp ? "Kangur DEV" : "Kangur",
     slug: "kangur",
     owner: "chris38pl",
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     icon: isDevApp
       ? "./assets/images/icon-dev.png"
@@ -61,7 +61,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       "expo-router",
-      "expo-dev-client",
+      [
+        "expo-dev-client",
+        {
+          // Only DEV registers exp+kangur:// so Metro QR does not open Play build.
+          addGeneratedScheme: isDevApp,
+        },
+      ],
       "expo-apple-authentication",
       [
         "expo-splash-screen",

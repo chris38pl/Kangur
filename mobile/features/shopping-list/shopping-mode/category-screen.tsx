@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,6 +25,7 @@ import {
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
 import { shoppingDensity } from "@/design-system/shopping-density";
+import { LoadingTransition, layoutTransition } from "@/lib/motion";
 import {
   colors,
   radius,
@@ -38,6 +40,11 @@ import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
 import { notifyFinishedForActiveSession } from "@/features/shopping-list/session/notify-finished";
 import { useShoppingSession } from "@/features/shopping-list/session/useShoppingSession";
 import { useShoppingList } from "@/features/shopping-list/useShoppingLists";
+import {
+  navigateBack,
+  openTask,
+  replaceDetails,
+} from "@/lib/navigation";
 import { RemoteChangeToast, useListRealtime } from "@/lib/realtime";
 
 import {
@@ -59,23 +66,6 @@ type Props = {
   listId: string;
   category: string;
 };
-
-function SectionTitle({ children }: { children: string }) {
-  const scheme = useColorScheme() ?? "light";
-  const theme = colors[scheme];
-
-  return (
-    <Text
-      style={{
-        ...typography.headline,
-        color: theme.text,
-        marginBottom: spacing[3],
-      }}
-    >
-      {children}
-    </Text>
-  );
-}
 
 function DoneItemCard({
   item,
@@ -329,8 +319,8 @@ export function ShoppingCategoryScreen({
           >
             <Pressable
               onPress={() => {
-                if (router.canGoBack()) router.back();
-                else router.replace(`/list/${listId}/shop`);
+                if (router.canGoBack()) navigateBack();
+                else replaceDetails(`/list/${listId}/shop`);
               }}
               hitSlop={10}
               accessibilityRole="button"
@@ -391,10 +381,11 @@ export function ShoppingCategoryScreen({
             paddingBottom: 100 + insets.bottom,
           }}
         >
-        {isPending ? (
-          <ShoppingCategorySkeleton />
-        ) : (
-          <>
+        <LoadingTransition
+          variant="inline"
+          loading={isPending}
+          skeleton={<ShoppingCategorySkeleton />}
+        >
         {categoryDone ? (
           <View
             style={{
@@ -437,7 +428,19 @@ export function ShoppingCategoryScreen({
 
         {active.length > 0 ? (
           <View style={{ marginBottom: spacing[4] }}>
-            <SectionTitle>{t("itemStatus.pending")}</SectionTitle>
+            <Text style={{ ...typography.headline, color: theme.text }}>
+              {t("itemStatus.pending")}
+            </Text>
+            <Text
+              style={{
+                ...typography.caption,
+                color: theme.textMuted,
+                marginTop: spacing[1],
+                marginBottom: spacing[3],
+              }}
+            >
+              {t("shoppingMode.itemSwipeHint")}
+            </Text>
             {active.map((item, index) => (
               <SwipeableItemRow
                 key={item.id}
@@ -486,8 +489,9 @@ export function ShoppingCategoryScreen({
                 {t("shoppingMode.purchasedRestoreHint")}
               </Text>
             </Pressable>
-            {purchasedExpanded
-              ? doneItems.map((item) => (
+            {purchasedExpanded ? (
+              <Animated.View layout={layoutTransition}>
+                {doneItems.map((item) => (
                   <DoneItemCard
                     key={item.id}
                     item={item}
@@ -503,8 +507,9 @@ export function ShoppingCategoryScreen({
                       })
                     }
                   />
-                ))
-              : null}
+                ))}
+              </Animated.View>
+            ) : null}
           </View>
         ) : null}
 
@@ -572,7 +577,7 @@ export function ShoppingCategoryScreen({
             <Pressable
               onPress={() => {
                 if (next) {
-                  router.replace(`/list/${listId}/shop/${next.category}`);
+                  replaceDetails(`/list/${listId}/shop/${next.category}`);
                 } else {
                   const unavailable = (itemsQuery.data ?? []).filter(
                     (i) => i.status === "unavailable",
@@ -582,7 +587,7 @@ export function ShoppingCategoryScreen({
                     getToken,
                     unavailable,
                   );
-                  router.push(`/list/${listId}/shop/finish`);
+                  openTask(`/list/${listId}/shop/finish`);
                 }
               }}
               style={{
@@ -608,7 +613,7 @@ export function ShoppingCategoryScreen({
 
         <Pressable
           onPress={() => {
-            router.replace(`/list/${listId}/shop`);
+            replaceDetails(`/list/${listId}/shop`);
           }}
           accessibilityRole="button"
           accessibilityLabel={t("shoppingMode.backToCategories")}
@@ -628,8 +633,7 @@ export function ShoppingCategoryScreen({
             {t("shoppingMode.backToCategories")}
           </Text>
         </Pressable>
-          </>
-        )}
+        </LoadingTransition>
       </ScrollView>
       </View>
 

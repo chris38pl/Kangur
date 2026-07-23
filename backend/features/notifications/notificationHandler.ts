@@ -169,7 +169,6 @@ async function handleInvitationCreated(
       workspaceName: event.workspaceName,
       workspaceIcon: event.workspaceIcon,
       actorDisplayName: event.actorDisplayName,
-      token: event.rawToken,
     },
   });
 }

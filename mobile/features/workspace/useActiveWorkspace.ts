@@ -2,6 +2,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 
+import {
+  ADMIN_BROWSING_WORKSPACE_ID_QUERY_KEY,
+  readAdminBrowsingWorkspaceId,
+  writeAdminBrowsingWorkspaceId,
+} from "@/features/platform-workspaces/admin-browsing";
+
 import type { Workspace } from "./schemas";
 
 const STORAGE_KEY = "kangur.activeWorkspaceId";
@@ -38,6 +44,15 @@ export function useActiveWorkspace(workspaces: Workspace[] | undefined) {
 
   const setActiveId = useCallback(
     async (id: string) => {
+      const browsingId = await readAdminBrowsingWorkspaceId();
+      // Leaving admin-browsed space for another workspace clears the overlay.
+      if (browsingId && browsingId !== id) {
+        await writeAdminBrowsingWorkspaceId(null);
+        queryClient.setQueryData(ADMIN_BROWSING_WORKSPACE_ID_QUERY_KEY, null);
+        queryClient.removeQueries({
+          queryKey: ["admin-browsing-workspace"],
+        });
+      }
       queryClient.setQueryData(ACTIVE_WORKSPACE_ID_QUERY_KEY, id);
       await AsyncStorage.setItem(STORAGE_KEY, id);
     },
@@ -47,6 +62,8 @@ export function useActiveWorkspace(workspaces: Workspace[] | undefined) {
   return {
     activeWorkspace,
     activeId: activeWorkspace?.id ?? null,
+    /** Raw AsyncStorage id — use to prefetch lists before workspaces resolve. */
+    storedId,
     setActiveId,
     hydrated,
   };
