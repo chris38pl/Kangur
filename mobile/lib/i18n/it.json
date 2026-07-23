@@ -715,8 +715,6 @@
       "confirmPhrase": "ELIMINA",
       "confirm": "Elimina account",
       "back": "Indietro",
-      "return": "Torna indietro",
-      "tryAgain": "Riprova",
       "failed": "Impossibile eliminare l'account. Riprova.",
       "clerkFailed": "Clerk non ha potuto eliminare l'account. Sei ancora connesso - riprova."
     }
@@ -745,8 +743,6 @@
     "needAccountPrompt": "Non hai un account?",
     "logIn": "Accedi",
     "back": "Indietro",
-    "return": "Torna indietro",
-    "tryAgain": "Riprova",
     "verifyTitle": "Verifica email",
     "verifySubtitle": "Inserisci il codice che abbiamo inviato a {{email}}.",
     "verificationCode": "Codice di verifica",

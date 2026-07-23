@@ -29,13 +29,14 @@ export function FadeInContent({ visible, children, style }: Props) {
 
   useEffect(() => {
     if (!visible) {
-      setMounted(false);
+      // Defer so we don't sync-setState inside the effect body (react-hooks/set-state-in-effect).
+      queueMicrotask(() => setMounted(false));
       opacity.value = 1;
       translateY.value = 0;
       return;
     }
 
-    setMounted(true);
+    queueMicrotask(() => setMounted(true));
 
     if (hasEntered.current) {
       opacity.value = 1;

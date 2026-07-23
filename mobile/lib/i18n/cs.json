@@ -755,8 +755,6 @@
       "confirmPhrase": "SMAZAT",
       "confirm": "Smazat účet",
       "back": "Zpět",
-      "return": "Zpět",
-      "tryAgain": "Zkusit znovu",
       "failed": "Nepodařilo se smazat účet. Zkus to znovu.",
       "clerkFailed": "Clerk nemohl účet smazat. Stále jsi přihlášen(a) - zkus to znovu."
     }
@@ -785,8 +783,6 @@
     "needAccountPrompt": "Nemáš účet?",
     "logIn": "Přihlásit se",
     "back": "Zpět",
-    "return": "Zpět",
-    "tryAgain": "Zkusit znovu",
     "verifyTitle": "Ověř e-mail",
     "verifySubtitle": "Zadej kód, který jsme poslali na {{email}}.",
     "verificationCode": "Ověřovací kód",

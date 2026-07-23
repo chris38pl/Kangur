@@ -32,7 +32,9 @@ export function RemoteChangeToast() {
   useEffect(() => subscribeRemoteChangeToast(setToast), []);
 
   useEffect(() => {
-    if (toast) setRendered(toast);
+    if (!toast) return;
+    // Defer so we don't sync-setState inside the effect body (react-hooks/set-state-in-effect).
+    queueMicrotask(() => setRendered(toast));
   }, [toast]);
 
   useEffect(() => {

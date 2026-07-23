@@ -715,8 +715,6 @@
       "confirmPhrase": "SUPPRIMER",
       "confirm": "Supprimer le compte",
       "back": "Retour",
-      "return": "Retour",
-      "tryAgain": "Réessayer",
       "failed": "Impossible de supprimer le compte. Veuillez réessayer.",
       "clerkFailed": "Clerk n'a pas pu supprimer le compte. Vous êtes toujours connecté - veuillez réessayer."
     }
@@ -745,8 +743,6 @@
     "needAccountPrompt": "Vous n'avez pas de compte ?",
     "logIn": "Se connecter",
     "back": "Retour",
-    "return": "Retour",
-    "tryAgain": "Réessayer",
     "verifyTitle": "Vérifier l'e-mail",
     "verifySubtitle": "Saisissez le code que nous avons envoyé à {{email}}.",
     "verificationCode": "Code de vérification",

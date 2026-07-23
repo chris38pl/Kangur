@@ -715,8 +715,6 @@
       "confirmPhrase": "LÖSCHEN",
       "confirm": "Konto löschen",
       "back": "Zurück",
-      "return": "Zurück",
-      "tryAgain": "Erneut versuchen",
       "failed": "Konto konnte nicht gelöscht werden. Bitte versuche es erneut.",
       "clerkFailed": "Clerk konnte das Konto nicht löschen. Du bist noch angemeldet - bitte versuche es erneut."
     }
@@ -745,8 +743,6 @@
     "needAccountPrompt": "Du hast noch kein Konto?",
     "logIn": "Anmelden",
     "back": "Zurück",
-    "return": "Zurück",
-    "tryAgain": "Erneut versuchen",
     "verifyTitle": "E-Mail bestätigen",
     "verifySubtitle": "Gib den Code ein, den wir an {{email}} gesendet haben.",
     "verificationCode": "Bestätigungscode",

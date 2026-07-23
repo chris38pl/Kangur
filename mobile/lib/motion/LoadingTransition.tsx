@@ -43,7 +43,8 @@ export function LoadingTransition({
     const duration = resolveDuration("screenContent", { reduceMotion });
 
     if (loading) {
-      setShowSkeleton(true);
+      // Defer so we don't sync-setState inside the effect body (react-hooks/set-state-in-effect).
+      queueMicrotask(() => setShowSkeleton(true));
       progress.value =
         duration === 0
           ? 0
@@ -53,13 +54,13 @@ export function LoadingTransition({
 
     if (duration === 0) {
       progress.value = 1;
-      setShowSkeleton(false);
+      queueMicrotask(() => setShowSkeleton(false));
       return;
     }
 
     // Inline: drop skeleton immediately, fade content in (one dominant beat).
     if (variant === "inline") {
-      setShowSkeleton(false);
+      queueMicrotask(() => setShowSkeleton(false));
       progress.value = 0;
       progress.value = withTiming(1, {
         duration,

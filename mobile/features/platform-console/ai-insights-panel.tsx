@@ -46,7 +46,6 @@ const InsightsSchema = z.object({
   rows: z.array(RowSchema),
 });
 
-type Insights = z.infer<typeof InsightsSchema>;
 type InsightsRow = z.infer<typeof RowSchema>;
 type InsightsWorkspace = z.infer<typeof WorkspaceSchema>;
 
