@@ -205,7 +205,8 @@
     "exitLeave": "Verlassen",
     "invalidCategory": "Unbekannte Kategorie",
     "categoryOrderHint": "Griff lange drücken, um die Gänge für diesen Einkauf neu zu ordnen.",
-    "categoryOrderHintWeb": "Mit den Pfeilen die Gänge für diesen Einkauf neu ordnen."
+    "categoryOrderHintWeb": "Mit den Pfeilen die Gänge für diesen Einkauf neu ordnen.",
+    "itemSwipeHint": "Nach rechts wischen = gekauft, nach links = nicht verfügbar."
   },
   "realtime": {
     "someone": "Jemand",
@@ -578,7 +579,20 @@
     "premiumBadge": "Premium",
     "hintHistoryDepthLine1": "Free behält die letzten 20 Listen",
     "hintHistoryDepthLine2": "Premium bis 200 Einkaufslisten!",
-    "creditsRemainingBadge": "Noch {{remaining}}"
+    "creditsRemainingBadge": "Noch {{remaining}}",
+    "testCard": {
+      "title": "Stripe-Testkarte",
+      "body": "Nutze diese Visa für Checkout im Testmodus. Jedes zukünftige Ablaufdatum und jede CVC funktionieren.",
+      "hint": "Tippe auf ein Feld zum Kopieren. Nur in DEV-/Preview-Builds sichtbar.",
+      "fabA11y": "Stripe-Testkarten-Hilfe öffnen",
+      "close": "Schließen",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "numberLabel": "Kartennummer",
+      "expLabel": "Ablauf",
+      "cvcLabel": "CVC",
+      "nameLabel": "Name auf der Karte"
+    }
   },
   "profile": {
     "title": "Profil",

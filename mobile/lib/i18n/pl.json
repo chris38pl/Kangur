@@ -213,7 +213,8 @@
     "exitLeave": "Wyjdź",
     "invalidCategory": "Nieznana kategoria",
     "categoryOrderHint": "Przytrzymaj uchwyt, żeby zmienić kolejność alejek w trakcie zakupów.",
-    "categoryOrderHintWeb": "Użyj strzałek, żeby zmienić kolejność alejek w trakcie zakupów."
+    "categoryOrderHintWeb": "Użyj strzałek, żeby zmienić kolejność alejek w trakcie zakupów.",
+    "itemSwipeHint": "Przesuń w prawo = kupione, w lewo = nie było."
   },
   "realtime": {
     "someone": "Ktoś",
@@ -618,7 +619,20 @@
     "premiumBadge": "Premium",
     "hintHistoryDepthLine1": "Free zachowuje ostatnie 20 list",
     "hintHistoryDepthLine2": "Premium do 200 list zakupów!",
-    "creditsRemainingBadge": "Pozostało {{remaining}}"
+    "creditsRemainingBadge": "Pozostało {{remaining}}",
+    "testCard": {
+      "title": "Testowa karta Stripe",
+      "body": "Użyj tej Visy w Checkout w trybie testowym. Działa dowolna przyszła data i dowolny CVC.",
+      "hint": "Dotknij pola, aby skopiować. Widoczne tylko w buildach DEV / preview.",
+      "fabA11y": "Otwórz pomocnik testowej karty Stripe",
+      "close": "Zamknij",
+      "copy": "Kopiuj",
+      "copied": "Skopiowano",
+      "numberLabel": "Numer karty",
+      "expLabel": "Ważność",
+      "cvcLabel": "CVC",
+      "nameLabel": "Imię i nazwisko na karcie"
+    }
   },
   "profile": {
     "title": "Profil",

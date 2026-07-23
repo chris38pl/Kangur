@@ -213,7 +213,8 @@
     "exitLeave": "Выйсці",
     "invalidCategory": "Невядомая катэгорыя",
     "categoryOrderHint": "Утрымлівайце ручку, каб змяніць парадак радоў падчас пакупак.",
-    "categoryOrderHintWeb": "Выкарыстоўвайце стрэлкі, каб змяніць парадак радоў падчас пакупак."
+    "categoryOrderHintWeb": "Выкарыстоўвайце стрэлкі, каб змяніць парадак радоў падчас пакупак.",
+    "itemSwipeHint": "Свайп управа = куплена, улева = не было."
   },
   "realtime": {
     "someone": "Нехта",
@@ -618,7 +619,20 @@
     "premiumBadge": "Premium",
     "hintHistoryDepthLine1": "Free захоўвае апошнія 20 спісаў",
     "hintHistoryDepthLine2": "Premium да 200 спісаў пакупак!",
-    "creditsRemainingBadge": "Засталося {{remaining}}"
+    "creditsRemainingBadge": "Засталося {{remaining}}",
+    "testCard": {
+      "title": "Тэставая картка Stripe",
+      "body": "Выкарыстоўвайце гэтую Visa ў Checkout у тэставым рэжыме. Падыдзе любая будучая дата і любы CVC.",
+      "hint": "Націсніце поле, каб скапіяваць. Толькі ў DEV / preview зборках.",
+      "fabA11y": "Адкрыць падказку тэставай карткі Stripe",
+      "close": "Закрыць",
+      "copy": "Капіяваць",
+      "copied": "Скапіявана",
+      "numberLabel": "Нумар карткі",
+      "expLabel": "Тэрмін",
+      "cvcLabel": "CVC",
+      "nameLabel": "Імя на картцы"
+    }
   },
   "profile": {
     "title": "Профіль",

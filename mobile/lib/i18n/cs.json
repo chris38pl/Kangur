@@ -213,7 +213,8 @@
     "exitLeave": "Opustit",
     "invalidCategory": "Neznámá kategorie",
     "categoryOrderHint": "Podrž úchyt, abys změnil pořadí uliček během nákupu.",
-    "categoryOrderHintWeb": "Použij šipky ke změně pořadí uliček během nákupu."
+    "categoryOrderHintWeb": "Použij šipky ke změně pořadí uliček během nákupu.",
+    "itemSwipeHint": "Potáhni doprava = koupeno, doleva = nedostupné."
   },
   "realtime": {
     "someone": "Někdo",
@@ -618,7 +619,20 @@
     "premiumBadge": "Premium",
     "hintHistoryDepthLine1": "Free uchová posledních 20 seznamů",
     "hintHistoryDepthLine2": "Premium až 200 nákupních seznamů!",
-    "creditsRemainingBadge": "Zbývá {{remaining}}"
+    "creditsRemainingBadge": "Zbývá {{remaining}}",
+    "testCard": {
+      "title": "Stripe testovací karta",
+      "body": "Použij tuto Visu v Checkoutu v testovacím režimu. Funguje jakékoli budoucí datum a jakýkoli CVC.",
+      "hint": "Klepni na pole pro zkopírování. Jen ve buildech DEV / preview.",
+      "fabA11y": "Otevřít pomocníka testovací karty Stripe",
+      "close": "Zavřít",
+      "copy": "Kopírovat",
+      "copied": "Zkopírováno",
+      "numberLabel": "Číslo karty",
+      "expLabel": "Platnost",
+      "cvcLabel": "CVC",
+      "nameLabel": "Jméno na kartě"
+    }
   },
   "profile": {
     "title": "Profil",

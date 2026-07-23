@@ -205,7 +205,8 @@
     "exitLeave": "Leave",
     "invalidCategory": "Unknown category",
     "categoryOrderHint": "Long-press the handle to reorder aisles for this trip.",
-    "categoryOrderHintWeb": "Use the arrows to reorder aisles for this trip."
+    "categoryOrderHintWeb": "Use the arrows to reorder aisles for this trip.",
+    "itemSwipeHint": "Swipe right = bought, left = unavailable."
   },
   "realtime": {
     "someone": "Someone",
@@ -578,7 +579,20 @@
     "premiumBadge": "Premium",
     "hintHistoryDepthLine1": "Free keeps the last 20 lists",
     "hintHistoryDepthLine2": "Premium up to 200 shopping lists!",
-    "creditsRemainingBadge": "Remaining {{remaining}}"
+    "creditsRemainingBadge": "Remaining {{remaining}}",
+    "testCard": {
+      "title": "Stripe test card",
+      "body": "Use this Visa for Checkout in test mode. Any future expiry and any CVC work.",
+      "hint": "Tap a field to copy. Only shown in DEV / preview builds.",
+      "fabA11y": "Open Stripe test card helper",
+      "close": "Close",
+      "copy": "Copy",
+      "copied": "Copied",
+      "numberLabel": "Card number",
+      "expLabel": "Expiry",
+      "cvcLabel": "CVC",
+      "nameLabel": "Name on card"
+    }
   },
   "profile": {
     "title": "Profile",

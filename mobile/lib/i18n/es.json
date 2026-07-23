@@ -205,7 +205,8 @@
     "exitLeave": "Salir",
     "invalidCategory": "Categoría desconocida",
     "categoryOrderHint": "Mantén pulsado el asa para reordenar los pasillos en esta compra.",
-    "categoryOrderHintWeb": "Usa las flechas para reordenar los pasillos en esta compra."
+    "categoryOrderHintWeb": "Usa las flechas para reordenar los pasillos en esta compra.",
+    "itemSwipeHint": "Desliza a la derecha = comprado, a la izquierda = no disponible."
   },
   "realtime": {
     "someone": "Alguien",
@@ -578,7 +579,20 @@
     "premiumBadge": "Premium",
     "hintHistoryDepthLine1": "Free guarda las últimas 20 listas",
     "hintHistoryDepthLine2": "Premium hasta 200 listas de compra!",
-    "creditsRemainingBadge": "Quedan {{remaining}}"
+    "creditsRemainingBadge": "Quedan {{remaining}}",
+    "testCard": {
+      "title": "Tarjeta de prueba Stripe",
+      "body": "Usa esta Visa en Checkout en modo test. Cualquier caducidad futura y cualquier CVC valen.",
+      "hint": "Toca un campo para copiar. Solo visible en builds DEV / preview.",
+      "fabA11y": "Abrir ayuda de tarjeta de prueba Stripe",
+      "close": "Cerrar",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "numberLabel": "Número de tarjeta",
+      "expLabel": "Caducidad",
+      "cvcLabel": "CVC",
+      "nameLabel": "Nombre en la tarjeta"
+    }
   },
   "profile": {
     "title": "Perfil",
