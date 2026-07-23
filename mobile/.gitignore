@@ -45,3 +45,8 @@ yarn-error.*
 
 # local inspect / tooling scratch
 .tmp-*/
+
+# Firebase / FCM secrets (do not commit)
+fcm-service-account*.json
+*-firebase-adminsdk-*.json
+

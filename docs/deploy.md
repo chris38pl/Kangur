@@ -273,6 +273,7 @@ Push uses Expo Push API (`exp.host/.../push/send`); keep EAS `projectId` in `app
 **Push delivery vs badge (two systems):**
 - Badge / unread dot always comes from `GET /api/v1/notifications` (backend state). App refreshes that data on AppState active, pull-to-refresh, and when a push is received — never treats push delivery as the badge source of truth.
 - OS push requires FCM (Android) + APNs (iOS) credentials configured in EAS for this Expo project, a physical device, notification permission granted, and an active `PushDevice` row (`disabledAt` null). Stale Expo tokens are soft-deactivated (`disabledAt`) when Expo returns `DeviceNotRegistered`.
+- Android FCM: Firebase project `getkangur`, `mobile/google-services.json` (packages `app.kangur` + `app.kangur.dev`) wired via `android.googleServicesFile`, FCM V1 service account uploaded to EAS credentials for both application IDs. Native change → new EAS Android build required before OS push works.
 - Prefs: some types (e.g. list created) default **OFF** — enable in Settings → Notifications for those events to create rows + pushes.
 - **Smoke test should verify both notification delivery and badge refresh independently.**
 

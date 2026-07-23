@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "710503036077",
+    "project_id": "getkangur",
+    "storage_bucket": "getkangur.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:710503036077:android:b7ac5a5e70546cd0030224",
+        "android_client_info": {
+          "package_name": "app.kangur"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBZV7FdzM7SOoBWx2HeO3Y_wiFGCzxFA8"
+        },
+        {
+          "current_key": "AIzaSyAVo1l34Odg3fXy7CaRdz9mw9lTMM29S2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:710503036077:android:4f35ea5e3b1d3a3e030224",
+        "android_client_info": {
+          "package_name": "app.kangur.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBZV7FdzM7SOoBWx2HeO3Y_wiFGCzxFA8"
+        },
+        {
+          "current_key": "AIzaSyAVo1l34Odg3fXy7CaRdz9mw9lTMM29S2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -40,6 +40,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: isDevApp ? "app.kangur.dev" : "app.kangur",
+      googleServicesFile: "./google-services.json",
       // Expo Config types lag behind; required for LAN HTTP in development APKs.
       // @ts-expect-error Android.usesCleartextTraffic not in ExpoConfig typings yet
       usesCleartextTraffic: isDevApp,
