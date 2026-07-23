@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 
 import { defaultHomeName, settingsLanguageFromUserLocale } from "./locale";
@@ -16,7 +18,11 @@ export async function ensureDefaultWorkspace(user: {
   const name = defaultHomeName(language);
 
   await prisma.$transaction(async (tx) => {
-    // Re-check inside transaction to reduce double-Home races
+    // Serialize concurrent first-login /me calls for this user (READ COMMITTED).
+    await tx.$queryRaw(
+      Prisma.sql`SELECT id FROM "User" WHERE id = ${user.id} FOR UPDATE`,
+    );
+
     const again = await tx.workspaceMember.count({
       where: { userId: user.id },
     });
