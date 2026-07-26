@@ -1,0 +1,31 @@
+id: theme-only-grill-and-pizza
+scenarioVersion: 1
+name: Grill / pizza purpose phrases invent nothing
+adapter: text-ingest
+description: >
+  Meal/purpose grammar without listed products — empty item set.
+input:
+  locale: pl
+  sourceLabel: text
+  rawInput: Składniki do pizzy. Na grilla.
+expectations:
+  mustExclude:
+    - Mąka
+    - Drożdże
+    - Ser
+    - Ketchup
+    - Kiełbasa
+    - Węgiel
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H006
+    type: product_cap
+    max: 0
+  - id: H014
+    type: unique_item_names
+infoRules:
+  - id: I004
+    type: item_count

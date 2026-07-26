@@ -2,7 +2,7 @@
 
 **Companion to:** [prd.md](./prd.md) · [cursor-rules.md](./cursor-rules.md) · [roadmap.md](./roadmap.md) · [deploy.md](./deploy.md) · [security.md](./security.md)  
 **Status:** Greenfield MVP architecture  
-**Last updated:** 2026-07-21
+**Last updated:** 2026-07-26
 
 ---
 
@@ -32,7 +32,7 @@ Kangur Platform (Next.js REST + OpenAPI)
 | AI | OpenAI (official SDK) - vision + structured outputs + Zod |
 | Sync (MVP) | Smart polling behind `RealtimeProvider` |
 | Sync (later) | Ably / Supabase Realtime / SSE - undecided; cost-driven |
-| Storage | No permanent screenshots; no UploadThing unless justified later |
+| Storage | UploadThing **only** for In-App Feedback attachments (one image); no other durable product media |
 | Observability | PostHog + Sentry from Closed Testing (**M13.11** in [roadmap.md](./roadmap.md)); internal Metrics = M13.5 |
 
 **Docs:** `prd.md`, `architecture.md`, `cursor-rules.md`, `roadmap.md`, `deploy.md`, [security.md](./security.md), [navigation-principles.md](./navigation-principles.md) (mobile Root / Task / Details).
@@ -145,7 +145,7 @@ Tabs stay focused on workflows; the Menu scales for secondary / ops destinations
 
 ### Platform Console
 
-Operational dashboard (`/platform-console`) for product owners / operators (Overview + Realtime KPIs).
+Operational dashboard (`/platform-console`) for product owners / operators (Overview + Realtime KPIs). Workspace browser + Feedback inbox live under the Platform menu for `platformRole === ADMIN`.
 
 ### Workspace browser (platform admin)
 
@@ -320,18 +320,25 @@ Scenario YAML → thin Adapter (prod generator) → Evaluator (timing/seed/repea
 
 - Entering “shop” sets UI density + optional `keepAwake`.  
 - Finish Shopping computes counts from item statuses → Summary → Archive API.  
-- Sync polling remains active in Shopping Mode under the same visibility rules.
+- **Local-first Shopping Sync** (see §10): during an active shopping session the local cache is authoritative for the UI **unless** a remote change targets an entity with no pending local mutation. Own swipes never wait on the network; polling delivers others’ changes and settled reconcile.
 
 ---
 
 ## 10. Synchronization (EventPollingProvider)
 
 - Transport-agnostic. MVP transport: **`EventPollingProvider`** (adaptive polling).  
-- **Public API:** `start` / `stop` / `pollNow` / `isRunning` / `getCurrentListId` (+ optional `destroy`).  
-- **Lifecycle:** focus→start; blur/unmount→stop; background→pause; foreground→pollNow+resume; offline→pause; online→pollNow+resume; listId change→stop old+start new. (RN Modal sheets do not blur the route.)  
-- **Adaptive intervals:** 3s → 5s (30s idle) → 10s (2min idle); backoff only on successful empty polls; reset to 3s on events.  
+- **Public API:** `start` / `stop` / `pollNow` / `isRunning` / `getCurrentListId` (+ optional `destroy` / `setCadence`).  
+- **Lifecycle:** focus→start; blur/unmount→stop; background→pause; foreground→pollNow+resume+`reconcileIfSettled`; offline→pause; online→pollNow+resume; listId change→stop old+start new. (RN Modal sheets do not blur the route.)  
+- **Cadence:** default list detail **3s → 5s (30s idle) → 10s (2min idle)**; shopping session **~12s → 15s → 20s** (asymmetric remote edits still discoverable without competing with own flushes). Backoff only on successful empty polls; reset to profile hot on events.  
 - Fetch `ShoppingEvent`s after last known event id; **events are a refresh signal only** - never rebuild list state from payloads.  
-- **Inbound SSoT:** Realtime → `DataSyncEngine.requestItemsRefresh` → (wait while outbound busy) → invalidate → `useShoppingItems` GET → `reconcileServerSnapshot` (merge + **last local operation wins** overlay) → React Query. Realtime **never** calls `queryClient` directly. Soft toast is presentation-only (never triggers refresh).  
+- **Mutation ownership:**
+  - Own events (`actorUserId === me`): advance cursor only — **no** `requestItemsRefresh` / GET.
+  - Remote events: `requestItemsRefresh` + soft toast when applicable.
+  - Settled reconcile: after outbound queue empties for a list (flush success, leave shopping, foreground) → **one** invalidate/GET — not poll-as-confirmation of own swipes.
+- **Local authority:** for entities with pending outbound ops, local overlay wins; for all other entities, remote state is accepted. Not “local always wins.”
+- **Inbound SSoT:** Realtime (remote only) → `DataSyncEngine.requestItemsRefresh` → (wait while outbound busy) → invalidate → `useShoppingItems` GET → `reconcileServerSnapshot` (merge + **last local operation wins per pending itemId**) → React Query. Realtime **never** calls `queryClient` directly. Soft toast is presentation-only.  
+- **Cache keys:** active items live at `["shopping-items", listId, "active"]`; writers (`setQueryData`, SyncCacheAdapter) must use the same key (prefix invalidate is fine).  
+- Shopping UI: do not show “Synchronizacja…” solely for own `SET_STATUS` pending/syncing; still show offline / failed / non-status pending.  
 - Future: `WebSocketTransport` without changing `useListRealtime()`; server push for **active list only**; ETag / 304 on events.
 
 ---

@@ -1,5 +1,6 @@
 import * as WebBrowser from "expo-web-browser";
 import { useRouter } from "expo-router";
+import type { Href } from "expo-router";
 import { useState, type ReactNode } from "react";
 import {
   Linking,
@@ -29,8 +30,6 @@ import {
 const LANDING_BASE = "https://getkangur.com";
 const CONTACT_EMAIL =
   process.env.EXPO_PUBLIC_CONTACT_EMAIL?.trim() || "contact@getkangur.com";
-const SUPPORT_EMAIL =
-  process.env.EXPO_PUBLIC_SUPPORT_EMAIL?.trim() || "support@getkangur.com";
 
 const HELP_URLS = {
   faq: `${LANDING_BASE}/faq`,
@@ -244,19 +243,25 @@ export function HelpSupportScreen() {
           />
           <HelpRow
             icon={<ProfileIconBell color={theme.primary} />}
-            title={t("helpSupport.reportBug")}
-            subtitle={SUPPORT_EMAIL}
+            title={t("feedback.reportProblem")}
+            subtitle={t("feedback.reportProblemSubtitle")}
             showDivider
             onPress={() =>
-              void openMailto(SUPPORT_EMAIL, t("helpSupport.reportBug"))
+              router.push({
+                pathname: "/feedback",
+                params: { type: "BUG" },
+              } as unknown as Href)
             }
           />
           <HelpRow
             icon={<ProfileIconFeedback color={theme.primary} />}
-            title={t("helpSupport.sendFeedback")}
-            subtitle={SUPPORT_EMAIL}
+            title={t("feedback.haveIdea")}
+            subtitle={t("feedback.haveIdeaSubtitle")}
             onPress={() =>
-              void openMailto(SUPPORT_EMAIL, t("helpSupport.sendFeedback"))
+              router.push({
+                pathname: "/feedback",
+                params: { type: "FEATURE_REQUEST" },
+              } as unknown as Href)
             }
           />
         </View>

@@ -45,6 +45,7 @@ export async function suggestFromHistory(input: {
   const startedAt = Date.now();
   const outputLanguage = await resolveWorkspaceOutputLanguage(
     input.workspaceId,
+    input.userId,
   );
 
   return withReservedAiCredits(input.workspaceId, "history", async () => {

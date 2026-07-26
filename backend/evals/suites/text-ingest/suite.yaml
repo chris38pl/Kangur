@@ -1,0 +1,8 @@
+name: text-ingest
+suiteVersion: 1
+adapter: text-ingest
+defaultModel: gpt-4.1-mini
+defaultPrompt: production
+description: >
+  Text/clipboard ingest — lossless candidate shopping item identification
+  before shoppingContext; longer weekly-style lists mixed with theme grammar.

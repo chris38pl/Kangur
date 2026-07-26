@@ -71,6 +71,9 @@ enum ShoppingCategory {
   drinks
   alcohol
   snacks
+  pantry
+  spices
+  sauces
   household
   cleaning
   baby
@@ -118,6 +121,19 @@ enum NotificationPayloadType {
   SHOPPING
 }
 
+enum FeedbackType {
+  BUG
+  FEATURE_REQUEST
+}
+
+enum FeedbackStatus {
+  NEW
+  TRIAGED
+  IN_PROGRESS
+  DONE
+  RELEASED
+}
+
 model User {
   id           String       @id @default(cuid())
   clerkId      String       @unique
@@ -136,6 +152,7 @@ model User {
   notificationPrefs    UserNotificationPreferences?
   pushDevices          PushDevice[]
   shoppingSessions     ShoppingSession[]
+  feedback             Feedback[]
 }
 
 model Workspace {
@@ -409,4 +426,44 @@ model ShoppingSession {
 
   @@index([listId, actorUserId])
   @@index([workspaceId])
+}
+
+/**
+ * In-app feedback (bugs + ideas). Content fields are immutable after create.
+ * Admin may only mutate status + adminNote via platform API.
+ */
+model Feedback {
+  id                String         @id @default(cuid())
+  type              FeedbackType
+  title             String
+  description       String
+  language          String
+  attachmentKey     String?
+  attachmentUrl     String?
+  status            FeedbackStatus @default(NEW)
+  adminNote         String?
+  userId            String
+  metadataVersion   Int            @default(1)
+  appVersion        String?
+  buildNumber       String?
+  platform          String?
+  deviceModel       String?
+  osVersion         String?
+  environment       String?
+  apiBaseUrl        String?
+  workspaceId       String?
+  listId            String?
+  shoppingSessionId String?
+  route             String?
+  resolvedInVersion String?
+  closedAt          DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([type, createdAt])
+  @@index([userId])
+  @@index([language])
 }

@@ -48,8 +48,11 @@ export async function POST(request: Request, context: RouteContext) {
     }
     console.error("[ai]", "MealProposalFailed", error);
     return NextResponse.json(
-      { code: "VALIDATION_ERROR", message: "Meal proposal failed." },
-      { status: 400 },
+      {
+        code: "AI_UNAVAILABLE",
+        message: "AI is temporarily unavailable. Please try again.",
+      },
+      { status: 502 },
     );
   }
 }

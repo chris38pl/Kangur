@@ -20,6 +20,24 @@ export function findName(haystack: string[], needle: string): string | undefined
   return haystack.find((h) => normalizeNameKey(h) === key);
 }
 
+/**
+ * Exact match, or containment when needle is long enough
+ * (e.g. "Makaron" ↔ "Makaron spaghetti", "Pizza mrożona" ↔ "Pizza mrozona").
+ */
+export function findNameLoose(
+  haystack: string[],
+  needle: string,
+): string | undefined {
+  const exact = findName(haystack, needle);
+  if (exact) return exact;
+  const key = normalizeNameKey(needle);
+  if (key.length < 3) return undefined;
+  return haystack.find((h) => {
+    const hk = normalizeNameKey(h);
+    return hk.includes(key) || key.includes(hk);
+  });
+}
+
 export function sha256(text: string): string {
   return createHash("sha256").update(text, "utf8").digest("hex").slice(0, 16);
 }

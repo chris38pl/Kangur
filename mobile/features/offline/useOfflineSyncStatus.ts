@@ -13,24 +13,41 @@ export type OfflineSyncStatus = {
   message: string;
 };
 
+export type OfflineSyncStatusOptions = {
+  /**
+   * Shopping mode: hide banner for own SET_STATUS pending/syncing.
+   * Still show offline, failed, and non-status pending ops (add/edit/…).
+   */
+  quietSetStatus?: boolean;
+};
+
 /** Shared offline / sync status for banners. */
-export function useOfflineSyncStatus(listId?: string): OfflineSyncStatus {
+export function useOfflineSyncStatus(
+  listId?: string,
+  options: OfflineSyncStatusOptions = {},
+): OfflineSyncStatus {
+  const { quietSetStatus = false } = options;
   const { t } = useTranslation();
   const [online, setOnline] = useState(DataSyncEngine.isOnline());
   const [pending, setPending] = useState(0);
   const [failed, setFailed] = useState(0);
+  const [pendingNonStatus, setPendingNonStatus] = useState(0);
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     const refresh = async () => {
-      const [n, f] = await Promise.all([
+      const [n, f, other] = await Promise.all([
         DataSyncEngine.pendingCount(listId),
         DataSyncEngine.failedCount(listId),
+        quietSetStatus
+          ? DataSyncEngine.pendingNonStatusCount(listId)
+          : Promise.resolve(0),
       ]);
       if (mounted) {
         setPending(n);
         setFailed(f);
+        setPendingNonStatus(other);
       }
     };
     void refresh();
@@ -56,17 +73,25 @@ export function useOfflineSyncStatus(listId?: string): OfflineSyncStatus {
       offStart();
       offEnd();
     };
-  }, [listId]);
+  }, [listId, quietSetStatus]);
 
-  const visible = !online || pending > 0 || syncing || failed > 0;
+  const visible = quietSetStatus
+    ? !online || failed > 0 || pendingNonStatus > 0
+    : !online || pending > 0 || syncing || failed > 0;
 
   let message = t("offline.allSaved");
   if (!online) {
     message = t("offline.storedOnDevice");
-  } else if (syncing) {
-    message = t("offline.syncing");
   } else if (failed > 0) {
     message = t("offline.syncFailed", { count: failed });
+  } else if (quietSetStatus) {
+    if (pendingNonStatus > 0 && syncing) {
+      message = t("offline.syncing");
+    } else if (pendingNonStatus > 0) {
+      message = t("offline.pending", { count: pendingNonStatus });
+    }
+  } else if (syncing) {
+    message = t("offline.syncing");
   } else if (pending > 0) {
     message = t("offline.pending", { count: pending });
   }

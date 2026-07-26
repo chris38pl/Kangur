@@ -15,6 +15,8 @@ type Props = {
   overlay?: boolean;
   /** Pin overlay to bottom instead of top. */
   bottom?: boolean;
+  /** Hide banner for own SET_STATUS flushes (shopping mode). */
+  quietSetStatus?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -28,11 +30,12 @@ export function OfflineStatusBanner({
   listId,
   overlay = false,
   bottom = false,
+  quietSetStatus = false,
   style,
 }: Props) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
-  const status = useOfflineSyncStatus(listId);
+  const status = useOfflineSyncStatus(listId, { quietSetStatus });
 
   if (!status.visible) {
     return null;

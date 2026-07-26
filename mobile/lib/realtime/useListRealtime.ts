@@ -11,11 +11,19 @@ import type { ShoppingEvent } from "@/features/shopping-item/schemas";
 import type { WorkspaceMember } from "@/features/workspace/schemas";
 
 import { showRemoteChangeToast } from "./remote-change-toast-store";
-import { subscribeListEvents } from "./subscription";
+import {
+  subscribeListEvents,
+  type PollCadence,
+} from "./subscription";
 
 type Options = {
   workspaceId?: string | null;
   enabled?: boolean;
+  /**
+   * `shopping` uses a quieter poll cadence (~12–15s) while keeping
+   * asymmetric remote edits discoverable. Default keeps 3/5/10s adaptive.
+   */
+  cadence?: PollCadence;
 };
 
 function resolveActorName(
@@ -58,12 +66,15 @@ function toastMessageForBatch(
  * Blur (e.g. Home under a retained stack) unsubscribes; RN Modal sheets do not
  * blur the route, so they do not churn subscribe/unsubscribe.
  * Mount {@link RemoteChangeToast} on the same screen for presentation.
+ *
+ * Local-first: own event echoes never trigger items refresh — only remote
+ * batches call {@link DataSyncEngine.requestItemsRefresh}.
  */
 export function useListRealtime(
   listId: string | null,
   options: Options = {},
 ): void {
-  const { workspaceId = null, enabled = true } = options;
+  const { workspaceId = null, enabled = true, cadence = "default" } = options;
   const isFocused = useIsFocused();
   const { getToken, isSignedIn } = useAuth();
   const me = useMe(Boolean(isSignedIn));
@@ -82,11 +93,17 @@ export function useListRealtime(
     return subscribeListEvents({
       listId,
       getToken,
+      cadence,
       onBatch: (events, meta) => {
         if (meta.bootstrap) return;
 
-        // Signal only — Sync Engine decides when/how to refresh cache.
-        DataSyncEngine.requestItemsRefresh(meta.listId);
+        const meId = meIdRef.current;
+        const hasRemote = events.some((e) => e.actorUserId !== meId);
+
+        // Own echoes: advance cursor only (already done in poller) — no GET.
+        if (hasRemote) {
+          DataSyncEngine.requestItemsRefresh(meta.listId);
+        }
 
         const members = workspaceIdRef.current
           ? queryClient.getQueryData<WorkspaceMember[]>([
@@ -97,7 +114,7 @@ export function useListRealtime(
 
         const message = toastMessageForBatch(
           events,
-          meIdRef.current,
+          meId,
           members,
           tRef.current,
         );
@@ -106,5 +123,5 @@ export function useListRealtime(
         }
       },
     });
-  }, [enabled, listId, isSignedIn, isFocused, getToken, queryClient]);
+  }, [enabled, listId, isSignedIn, isFocused, getToken, queryClient, cadence]);
 }

@@ -352,11 +352,14 @@ Manual add remains a separate, non-AI path.
 ### 9.6 Category taxonomy (closed enum)
 
 ```
-produce | fruit | vegetables | dairy | meat | fish | frozen
-drinks | bakery | snacks | household | baby | pets | pharmacy | other
+fruit | vegetables | dairy | meat | fish | bakery | frozen | drinks | alcohol | snacks
+pantry | spices | sauces | household | cleaning | baby | pets | pharmacy | cosmetics
+electronics | office | garden | diy | other
 ```
 
 AI must choose only from this set. UI translates. Unknown → `other`.
+Categories reflect supermarket aisles (fast shopping), not food taxonomy.
+See [category-classification-analysis.md](./category-classification-analysis.md).
 
 ### 9.7 Add products (MVP)
 

@@ -1,14 +1,13 @@
 import type { Prisma } from "@prisma/client";
 
 import {
-  AI_PROVIDER,
   MEAL_PROPOSAL_TYPE,
   MEAL_PROPOSAL_VERSION,
 } from "@/lib/openai";
 import { Analytics } from "@/lib/analytics";
 import {
-  estimateOpenAiCostUsd,
-  usageFromCompletion,
+  estimateAiCostUsd,
+  usageFromTokenCounts,
 } from "@/lib/analytics/aiCost";
 import { withReservedAiCredits } from "@/lib/aiCredits";
 import { conflict, notFound } from "@/lib/auth/errors";
@@ -57,7 +56,7 @@ async function ingestMealProposalOnce(input: {
 
   const outputLanguage = await resolveListOutputLanguage(
     input.listId,
-    input.dishes.join(" "),
+    input.userId,
   );
 
   return withReservedAiCredits(list.workspaceId, "meal", async () => {
@@ -74,7 +73,7 @@ async function ingestMealProposalOnce(input: {
         "ai_model_completed",
         {
           workspace_id: list.workspaceId,
-          provider: AI_PROVIDER,
+          provider: "unknown",
           model: "unknown",
           latency_ms: durationMs,
           ok: false,
@@ -94,28 +93,25 @@ async function ingestMealProposalOnce(input: {
     }
 
     const durationMs = Date.now() - startedAt;
-    const usage = usageFromCompletion(
-      built.rawResponse as {
-        usage?: {
-          prompt_tokens?: number;
-          completion_tokens?: number;
-          total_tokens?: number;
-        };
-      },
-    );
+    const usage = usageFromTokenCounts(built.usage);
+    const timing = built.timing;
     Analytics.track(
       "ai_model_completed",
       {
         workspace_id: list.workspaceId,
-        provider: AI_PROVIDER,
+        provider: built.provider,
         model: built.model,
         latency_ms: durationMs,
         tokens: usage.tokens,
-        estimated_cost_usd: estimateOpenAiCostUsd({
+        estimated_cost_usd: estimateAiCostUsd({
           model: built.model,
           promptTokens: usage.promptTokens,
           completionTokens: usage.completionTokens,
         }),
+        used_fallback: timing.usedFallback,
+        fallback_provider: timing.fallbackProvider,
+        fallback_reason: timing.fallbackReason,
+        provider_attempt_order: timing.providerAttemptOrder,
         ok: true,
       },
       input.userId,
@@ -132,7 +128,7 @@ async function ingestMealProposalOnce(input: {
         source: "meal",
         proposalType: MEAL_PROPOSAL_TYPE,
         proposalVersion: MEAL_PROPOSAL_VERSION,
-        provider: AI_PROVIDER,
+        provider: built.provider,
         status: "proposed",
         model: built.model,
         durationMs,
@@ -159,7 +155,7 @@ async function ingestMealProposalOnce(input: {
     return {
       runId: run.id,
       model: built.model,
-      provider: AI_PROVIDER,
+      provider: built.provider,
       proposalType: MEAL_PROPOSAL_TYPE,
       proposalVersion: MEAL_PROPOSAL_VERSION,
       durationMs,

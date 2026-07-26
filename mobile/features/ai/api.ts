@@ -1,6 +1,6 @@
 import { fetch as expoFetch } from "expo/fetch";
 
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch, ApiClientError, type ApiErrorCode } from "@/lib/api/client";
 import {
   httpLogNetworkError,
   httpLogRequest,
@@ -24,7 +24,10 @@ export async function ingestAi(
 ) {
   const base = process.env.EXPO_PUBLIC_API_URL?.trim()?.replace(/\/$/, "");
   if (!base) {
-    throw new Error("EXPO_PUBLIC_API_URL is not set");
+    throw new ApiClientError(
+      "NETWORK_ERROR",
+      "EXPO_PUBLIC_API_URL is not set",
+    );
   }
 
   const path = `/api/v1/lists/${listId}/ai/ingest`;
@@ -54,7 +57,10 @@ export async function ingestAi(
       durationMs: Date.now() - started,
       error: err instanceof Error ? err.message : "Network request failed",
     });
-    throw err;
+    throw new ApiClientError(
+      "NETWORK_ERROR",
+      err instanceof Error ? err.message : "Network request failed.",
+    );
   }
 
   const json: unknown = await res.json();
@@ -67,14 +73,24 @@ export async function ingestAi(
   });
 
   if (!res.ok) {
-    const message =
-      json &&
-      typeof json === "object" &&
-      "message" in json &&
-      typeof (json as { message: unknown }).message === "string"
-        ? (json as { message: string }).message
-        : "AI ingest failed";
-    throw new Error(message);
+    let code: ApiErrorCode = "UNKNOWN";
+    let message = `Request failed (${res.status})`;
+    let details: Record<string, unknown> | undefined;
+    if (json && typeof json === "object") {
+      const data = json as {
+        code?: ApiErrorCode;
+        message?: string;
+        details?: Record<string, unknown>;
+      };
+      if (data.code) code = data.code;
+      if (typeof data.message === "string" && data.message) {
+        message = data.message;
+      }
+      if (data.details && typeof data.details === "object") {
+        details = data.details;
+      }
+    }
+    throw new ApiClientError(code, message, res.status, details);
   }
 
   return AiIngestResponseSchema.parse(json);

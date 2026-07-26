@@ -1,9 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import {
-  isAppLocale,
-  resolveAppLocale,
-  type AppLocale,
-} from "@/lib/locale";
+import { isAppLocale, type AppLocale } from "@/lib/locale";
 
 /** AI may support a subset of AppLocale in the future - keep types separate. */
 export type AiOutputLanguage =
@@ -45,7 +41,19 @@ export type AiPromptConfig = {
   fallbackExamples?: string;
   /** Optional local product/unit examples for future prompt enrichment. */
   exampleShoppingTerms?: string[];
+  /** Short good list-title examples for shoppingContext.title. */
+  titleExamples: string[];
+  /** Bad list-title examples (too long / product dumps / meta). */
+  titleAntiExamples: string[];
 };
+
+/** Shared across all AI prompts — brands, regional names, natural local terms. */
+export const AI_NAMING_RULES = [
+  "NAMING RULES (mandatory):",
+  "1. Brands / proper nouns: keep as sold (Coca-Cola, Nutella, Kinder Bueno, Philadelphia). Do not translate brand names.",
+  "2. Regional specialty products: keep the culinary/shoppable name locals use (e.g. Guanciale), not descriptive paraphrases like \"Italian bacon\". Prefer a common supermarket substitute only when that specialty is not a shoppable SKU in the output market; if you keep the specialty name, do not invent English descriptive paraphrases.",
+  "3. Natural local consumer terms: use the most natural name local consumers use, not a word-for-word translation (e.g. PL \"Cukier puder\" ↔ EN \"Powdered sugar\", never \"Sugar powder\").",
+].join("\n");
 
 export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
   pl: {
@@ -68,6 +76,22 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
       "500 g",
       "Zakupy",
     ],
+    titleExamples: [
+      "Na grilla",
+      "Na weekend",
+      "Do łazienki",
+      "Dla kota",
+      "Meal prep",
+      "Warzywa",
+      "Chemia domowa",
+      "Zakupy",
+    ],
+    titleAntiExamples: [
+      "Zakupy na weekend dla rodziny",
+      "Kup rzeczy do łazienki",
+      "Produkty na grilla",
+      "Mleko jajka i chleb",
+    ],
   },
   en: {
     languageName: "English (en)",
@@ -77,9 +101,25 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
       "Use English canonical product names: Milk, Cheese, Bread, Apples, Coffee.",
       "If the source is another language, TRANSLATE product names into English.",
       "List title fallback when no clear theme: \"Shopping\".",
-      "Examples: \"Buy milk\" → Milk. \"Buy 2 lemons\" → Lemon / \"2\". \"Buy lactose free milk\" → Milk / note lactose free.",
+      "Examples: \"Buy milk\" → Milk. \"Buy 2 lemons\" → Lemon / \"2\". \"Buy lactose free milk\" → Milk / note lactose free. \"Kup mleko\" → Milk.",
     ].join("\n"),
     exampleShoppingTerms: ["Milk", "Bread", "Eggs", "2 pcs", "500 g", "Shopping"],
+    titleExamples: [
+      "BBQ",
+      "Weekend",
+      "Bathroom",
+      "For the cat",
+      "Meal prep",
+      "Vegetables",
+      "Household",
+      "Shopping",
+    ],
+    titleAntiExamples: [
+      "Shopping for the weekend for the family",
+      "Buy bathroom stuff",
+      "Products for grilling",
+      "Milk eggs and bread",
+    ],
   },
   de: {
     languageName: "German (de-DE)",
@@ -100,6 +140,22 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
       "2 Stk.",
       "500 g",
       "Einkauf",
+    ],
+    titleExamples: [
+      "Zum Grillen",
+      "Wochenende",
+      "Bad",
+      "Für die Katze",
+      "Meal prep",
+      "Gemüse",
+      "Haushalt",
+      "Einkauf",
+    ],
+    titleAntiExamples: [
+      "Einkauf fürs Wochenende für die Familie",
+      "Dinge fürs Bad kaufen",
+      "Grillprodukte",
+      "Milch Eier und Brot",
     ],
   },
   ru: {
@@ -122,6 +178,22 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
       "500 г",
       "Покупки",
     ],
+    titleExamples: [
+      "На гриль",
+      "На выходные",
+      "В ванную",
+      "Для кота",
+      "Meal prep",
+      "Овощи",
+      "Бытовая химия",
+      "Покупки",
+    ],
+    titleAntiExamples: [
+      "Покупки на выходные для семьи",
+      "Купить вещи в ванную",
+      "Продукты на гриль",
+      "Молоко яйца и хлеб",
+    ],
   },
   uk: {
     languageName: "Ukrainian (uk-UA)",
@@ -142,6 +214,22 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
       "2 шт.",
       "500 г",
       "Покупки",
+    ],
+    titleExamples: [
+      "На гриль",
+      "На вихідні",
+      "У ванну",
+      "Для кота",
+      "Meal prep",
+      "Овочі",
+      "Побутова хімія",
+      "Покупки",
+    ],
+    titleAntiExamples: [
+      "Покупки на вихідні для сім'ї",
+      "Купити речі у ванну",
+      "Продукти на гриль",
+      "Молоко яйця і хліб",
     ],
   },
   fr: {
@@ -164,6 +252,22 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
       "500 g",
       "Courses",
     ],
+    titleExamples: [
+      "Barbecue",
+      "Week-end",
+      "Salle de bain",
+      "Pour le chat",
+      "Meal prep",
+      "Légumes",
+      "Entretien",
+      "Courses",
+    ],
+    titleAntiExamples: [
+      "Courses du week-end pour la famille",
+      "Acheter des trucs pour la salle de bain",
+      "Produits pour le barbecue",
+      "Lait œufs et pain",
+    ],
   },
   es: {
     languageName: "Spanish (es-ES)",
@@ -184,6 +288,22 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
       "2 uds.",
       "500 g",
       "Compra",
+    ],
+    titleExamples: [
+      "Barbacoa",
+      "Fin de semana",
+      "Baño",
+      "Para el gato",
+      "Meal prep",
+      "Verduras",
+      "Limpieza",
+      "Compra",
+    ],
+    titleAntiExamples: [
+      "Compra del fin de semana para la familia",
+      "Comprar cosas para el baño",
+      "Productos para la barbacoa",
+      "Leche huevos y pan",
     ],
   },
   it: {
@@ -206,6 +326,22 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
       "500 g",
       "Spesa",
     ],
+    titleExamples: [
+      "Barbecue",
+      "Weekend",
+      "Bagno",
+      "Per il gatto",
+      "Meal prep",
+      "Verdure",
+      "Pulizia",
+      "Spesa",
+    ],
+    titleAntiExamples: [
+      "Spesa del weekend per la famiglia",
+      "Compra cose per il bagno",
+      "Prodotti per il barbecue",
+      "Latte uova e pane",
+    ],
   },
   cs: {
     languageName: "Czech (cs-CZ)",
@@ -226,6 +362,22 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
       "2 ks",
       "500 g",
       "Nákup",
+    ],
+    titleExamples: [
+      "Na gril",
+      "Na víkend",
+      "Do koupelny",
+      "Pro kočku",
+      "Meal prep",
+      "Zelenina",
+      "Domácnost",
+      "Nákup",
+    ],
+    titleAntiExamples: [
+      "Nákup na víkend pro rodinu",
+      "Koupit věci do koupelny",
+      "Produkty na gril",
+      "Mléko vejce a chléb",
     ],
   },
   be: {
@@ -248,189 +400,89 @@ export const AI_PROMPTS: Record<AiOutputLanguage, AiPromptConfig> = {
       "500 г",
       "Пакупкі",
     ],
+    titleExamples: [
+      "На грыль",
+      "На выхадныя",
+      "У ванную",
+      "Для ката",
+      "Meal prep",
+      "Агародніна",
+      "Бытавая хімія",
+      "Пакупкі",
+    ],
+    titleAntiExamples: [
+      "Пакупкі на выхадныя для сям'і",
+      "Купіць рэчы ў ванную",
+      "Прадукты на грыль",
+      "Малако яйкі і хлеб",
+    ],
   },
 };
 
-/** Heuristic: Czech-specific letters or grocery words. */
-export function looksCzech(text: string): boolean {
-  // Letters unique to Czech among app locales (not PL/ES/FR).
-  if (/[ěřůďťňĚŘŮĎŤŇ]/.test(text)) return true;
-  return /\b(mléko|chléb|vejce|sýr|máslo|nákup|nakupní|seznam|jablka|prosím|bez\s+laktózy)\b/i.test(
-    text,
-  );
+/**
+ * Pure policy: actor UI locale → owner locale → EN.
+ * Does not use WorkspaceSettings.language or input-language heuristics.
+ */
+export function pickAiLanguageFromLocales(
+  actorLocale: string | null | undefined,
+  ownerLocale: string | null | undefined,
+): AiOutputLanguage {
+  if (isAppLocale(actorLocale)) {
+    return mapToAiLanguage(actorLocale);
+  }
+  if (isAppLocale(ownerLocale)) {
+    return mapToAiLanguage(ownerLocale);
+  }
+  return "en";
 }
 
-export function looksPolish(text: string): boolean {
-  if (/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/.test(text)) return true;
-  return /\b(mleko|chleb|masło|maslo|jajka|jajko|ser|woda|kup|kupić|kupic|proszę|prosze|lista|zakupy|ziemniaki|jabłka|jablka|pomidory|ogórki|ogorki|kurczak|wołowina|wolowina|ryż|ryz|makaron|kawa|herbata|jogurt|śmietana|smietana|kiełbasa|kielbasa|bez\s+laktozy)\b/i.test(
-    text,
-  );
-}
+export async function resolveOutputLanguageForActor(input: {
+  actorUserId: string;
+  workspaceId: string;
+}): Promise<AiOutputLanguage> {
+  const [actor, workspace] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: input.actorUserId },
+      select: { locale: true },
+    }),
+    prisma.workspace.findUnique({
+      where: { id: input.workspaceId },
+      select: {
+        members: {
+          where: { role: "owner" },
+          take: 1,
+          select: { user: { select: { locale: true } } },
+        },
+      },
+    }),
+  ]);
 
-export function looksGerman(text: string): boolean {
-  if (/[äöüÄÖÜß]/.test(text)) return true;
-  return /\b(milch|brot|eier|käse|kaese|butter|wasser|kaufen|einkauf|liste|apfel|äpfel|tomaten|huhn|reis|nudeln|kaffee|tee|joghurt|sahne)\b/i.test(
-    text,
-  );
-}
-
-export function looksUkrainian(text: string): boolean {
-  // Ukrainian-specific letters (ї/є/ґ). Plain і is shared with Belarusian.
-  if (/[їєґЇЄҐ]/.test(text)) return true;
-  return /\b(хліб|яйця|яблука|будь\s*ласка|список\s*покупок|видалити)\b/i.test(
-    text,
-  );
-}
-
-export function looksBelarusian(text: string): boolean {
-  // ў is unique to Belarusian among app locales.
-  if (/[ўЎ]/.test(text)) return true;
-  return /\b(малако|пакупкі|спіс|выдаліць|калі\s*ласка|яблыкі|тавар)\b/i.test(
-    text,
-  );
-}
-
-export function looksRussian(text: string): boolean {
-  if (looksUkrainian(text) || looksBelarusian(text)) return false;
-  if (/[а-яёА-ЯЁ]/.test(text)) return true;
-  return /\b(moloko|khleb|hleb|yajca|jajca|syr|voda|kupi|spisok|pokupki|moloka)\b/i.test(
-    text,
-  );
-}
-
-export function looksFrench(text: string): boolean {
-  if (/[àâäéèêëïîôùûüçœæÀÂÄÉÈÊËÏÎÔÙÛÜÇŒÆ]/.test(text)) return true;
-  return /\b(lait|pain|œufs|oeufs|fromage|beurre|acheter|courses|liste\s+de\s+courses|pommes|yaourt|café|cafe)\b/i.test(
-    text,
-  );
-}
-
-export function looksSpanish(text: string): boolean {
-  if (/[áéíóúüñ¿¡ÁÉÍÓÚÜÑ]/.test(text)) return true;
-  return /\b(leche|pan|huevos|queso|mantequilla|comprar|compra|lista\s+de\s+la\s+compra|manzanas|yogur|café|cafe)\b/i.test(
-    text,
-  );
-}
-
-export function looksItalian(text: string): boolean {
-  // Prefer Italian-specific vowels / shopping vocabulary before FR/ES heuristics.
-  if (/[ìòùÌÒÙ]/.test(text)) return true;
-  return /\b(latte|pane|uova|formaggio|burro|spesa|lista\s+della\s+spesa|mele|yogurt|comprare|caffè|caffe)\b/i.test(
-    text,
+  return pickAiLanguageFromLocales(
+    actor?.locale,
+    workspace?.members[0]?.user.locale,
   );
 }
 
 export async function resolveWorkspaceOutputLanguage(
   workspaceId: string,
+  actorUserId: string,
 ): Promise<AiOutputLanguage> {
-  const workspace = await prisma.workspace.findUnique({
-    where: { id: workspaceId },
-    select: {
-      settings: { select: { language: true } },
-      members: {
-        where: { role: "owner" },
-        take: 1,
-        select: { user: { select: { locale: true } } },
-      },
-    },
-  });
-
-  const settingsLang = workspace?.settings?.language;
-  if (isAppLocale(settingsLang)) {
-    return mapToAiLanguage(settingsLang);
-  }
-
-  const ownerLocale = workspace?.members[0]?.user.locale;
-  return mapToAiLanguage(resolveAppLocale(ownerLocale));
+  return resolveOutputLanguageForActor({ actorUserId, workspaceId });
 }
 
 export async function resolveListOutputLanguage(
   listId: string,
-  inputText?: string | null,
+  actorUserId: string,
 ): Promise<AiOutputLanguage> {
-  if (inputText && looksCzech(inputText)) {
-    return "cs";
-  }
-  if (inputText && looksPolish(inputText)) {
-    return "pl";
-  }
-  if (inputText && looksGerman(inputText)) {
-    return "de";
-  }
-  if (inputText && looksUkrainian(inputText)) {
-    return "uk";
-  }
-  if (inputText && looksBelarusian(inputText)) {
-    return "be";
-  }
-  if (inputText && looksRussian(inputText)) {
-    return "ru";
-  }
-  if (inputText && looksItalian(inputText)) {
-    return "it";
-  }
-  if (inputText && looksFrench(inputText)) {
-    return "fr";
-  }
-  if (inputText && looksSpanish(inputText)) {
-    return "es";
-  }
-
   const list = await prisma.shoppingList.findUnique({
     where: { id: listId },
-    select: {
-      workspace: {
-        select: {
-          settings: { select: { language: true } },
-          members: {
-            where: { role: "owner" },
-            take: 1,
-            select: { user: { select: { locale: true } } },
-          },
-        },
-      },
-      items: {
-        where: { status: { not: "removed" } },
-        take: 12,
-        select: { name: true },
-      },
-    },
+    select: { workspaceId: true },
   });
-
-  const settingsLang = list?.workspace.settings?.language;
-  if (isAppLocale(settingsLang)) {
-    return mapToAiLanguage(settingsLang);
+  if (!list) {
+    return "en";
   }
-
-  const sample = (list?.items ?? []).map((item) => item.name).join(" ");
-  if (sample && looksCzech(sample)) {
-    return "cs";
-  }
-  if (sample && looksPolish(sample)) {
-    return "pl";
-  }
-  if (sample && looksGerman(sample)) {
-    return "de";
-  }
-  if (sample && looksUkrainian(sample)) {
-    return "uk";
-  }
-  if (sample && looksBelarusian(sample)) {
-    return "be";
-  }
-  if (sample && looksRussian(sample)) {
-    return "ru";
-  }
-  if (sample && looksItalian(sample)) {
-    return "it";
-  }
-  if (sample && looksFrench(sample)) {
-    return "fr";
-  }
-  if (sample && looksSpanish(sample)) {
-    return "es";
-  }
-
-  const ownerLocale = list?.workspace.members[0]?.user.locale;
-  return mapToAiLanguage(resolveAppLocale(ownerLocale));
+  return resolveOutputLanguageForActor({
+    actorUserId,
+    workspaceId: list.workspaceId,
+  });
 }

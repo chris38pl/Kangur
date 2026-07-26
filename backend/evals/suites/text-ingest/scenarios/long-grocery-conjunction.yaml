@@ -1,0 +1,50 @@
+id: long-grocery-conjunction
+scenarioVersion: 1
+name: Long comma/and grocery list stays lossless
+adapter: text-ingest
+description: >
+  Many staples separated by commas and Polish „i” — each phrase is an item.
+input:
+  locale: pl
+  sourceLabel: clipboard
+  rawInput: >
+    Mleko, chleb, jajka, masło, ser żółty, szynka, pomidory, ogórek, papryka,
+    banany, jabłka, gruszki, kawa, herbata, kakao, ryż, makaron, kasza,
+    oliwa, ocet i cukier
+expectations:
+  nonEmpty: true
+  minItems: 16
+  mustInclude:
+    - Mleko
+    - Chleb
+    - Jajka
+    - Masło
+    - Ser
+    - Szynka
+    - Pomidory
+    - Ogórek
+    - Papryka
+    - Banany
+    - Jabłka
+    - Gruszki
+    - Kawa
+    - Herbata
+    - Kakao
+    - Ryż
+    - Makaron
+    - Kasza
+    - Oliwa
+    - Ocet
+    - Cukier
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H012
+    type: non_empty_items
+  - id: H014
+    type: unique_item_names
+infoRules:
+  - id: I004
+    type: item_count

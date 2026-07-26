@@ -8,6 +8,10 @@ import {
   listShoppingItems,
   updateShoppingItem,
 } from "./api";
+import {
+  shoppingItemsQueryKey,
+  shoppingItemsQueryPrefix,
+} from "./query-keys";
 import type { ItemStatus, ShoppingCategory } from "./schemas";
 
 export function useShoppingItems(
@@ -17,9 +21,12 @@ export function useShoppingItems(
 ) {
   const { getToken, isSignedIn } = useAuth();
   const allowArchived = options?.allowArchived === true;
+  const scope = allowArchived ? "archived" : "active";
 
   return useQuery({
-    queryKey: ["shopping-items", listId, allowArchived ? "archived" : "active"],
+    queryKey: listId
+      ? shoppingItemsQueryKey(listId, scope)
+      : ["shopping-items", null, scope],
     enabled: enabled && Boolean(isSignedIn) && Boolean(listId),
     queryFn: async () => {
       const token = await getToken();
@@ -54,7 +61,10 @@ export function useCreateShoppingItem(listId: string | null) {
       return createShoppingItem(token, listId, input);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["shopping-items", listId] });
+      if (!listId) return;
+      await queryClient.invalidateQueries({
+        queryKey: shoppingItemsQueryPrefix(listId),
+      });
     },
   });
 }
@@ -79,7 +89,10 @@ export function useUpdateShoppingItem(listId: string | null) {
       return updateShoppingItem(token, input.itemId, input);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["shopping-items", listId] });
+      if (!listId) return;
+      await queryClient.invalidateQueries({
+        queryKey: shoppingItemsQueryPrefix(listId),
+      });
     },
   });
 }

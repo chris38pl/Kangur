@@ -38,6 +38,7 @@ import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { HomeWorkspaceBanner } from "@/features/workspace/home-workspace-banner";
 import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
 import { intlLocaleTag } from "@/lib/i18n/locales";
+import { PressableScale } from "@/lib/motion";
 import {
   isHistorySuggestionsEnabled,
   isMealProposalEnabled,
@@ -106,8 +107,9 @@ function QuickAction({
   const theme = colors[scheme];
 
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
+      pressedScale={0.92}
       style={{ width, alignItems: "center", gap: spacing[2] }}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -135,7 +137,7 @@ function QuickAction({
       >
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -305,12 +307,18 @@ export default function HomeScreen() {
   const workspacesQuery = useWorkspaces();
   const notificationsQuery = useNotifications();
   const prefsQuery = useNotificationPreferences();
-  const { activeWorkspace, hydrated, storedId } = useActiveWorkspace(
+  const { activeWorkspace, hydrated, queryWorkspaceId } = useActiveWorkspace(
     workspacesQuery.data,
   );
-  const workspaceIdForQueries = activeWorkspace?.id ?? storedId ?? null;
-  const membersQuery = useWorkspaceMembers(workspaceIdForQueries, hydrated);
-  const listsQuery = useShoppingLists(workspaceIdForQueries, hydrated);
+  const workspaceIdForQueries = queryWorkspaceId;
+  const membersQuery = useWorkspaceMembers(
+    workspaceIdForQueries,
+    hydrated && Boolean(workspaceIdForQueries),
+  );
+  const listsQuery = useShoppingLists(
+    workspaceIdForQueries,
+    hydrated && Boolean(workspaceIdForQueries),
+  );
   const sessionsQuery = useResumableSessions(hydrated);
   const creditsQuery = useAiCredits(workspaceIdForQueries);
   const { createAndOpen } = useCreateList();

@@ -1,0 +1,47 @@
+id: beer-casserole-weekly
+scenarioVersion: 1
+name: Weekly list keeps beer + casserole (no theme swallow)
+adapter: text-ingest
+description: >
+  Long weekly grocery list ending with zapiekanka — both beer and casserole
+  must remain items; title must not swallow casserole into meal theme only.
+input:
+  locale: pl
+  sourceLabel: text
+  rawInput: >
+    Mleko, chleb, jajka, masło, ser żółty, szynka, pomidory, ogórek, banany,
+    jabłka, kawa, herbata, ryż, makaron, oliwa, jogurt, piwo, zapiekanka
+expectations:
+  nonEmpty: true
+  minItems: 14
+  mustInclude:
+    - Mleko
+    - Chleb
+    - Jajka
+    - Masło
+    - Ser
+    - Szynka
+    - Pomidory
+    - Ogórek
+    - Banany
+    - Jabłka
+    - Kawa
+    - Herbata
+    - Ryż
+    - Makaron
+    - Piwo
+    - Zapiekanka
+  titleMustNotMatch:
+    - (?i)zapiekank
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H012
+    type: non_empty_items
+  - id: H014
+    type: unique_item_names
+infoRules:
+  - id: I004
+    type: item_count

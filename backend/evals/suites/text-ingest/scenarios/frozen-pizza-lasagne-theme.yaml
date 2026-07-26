@@ -1,0 +1,48 @@
+id: frozen-pizza-lasagne-theme
+scenarioVersion: 1
+name: Frozen pizza item + lasagne theme on freezer run
+adapter: text-ingest
+description: >
+  Purchasable frozen pizza stays an item; trailing lasagne phrase is theme only.
+input:
+  locale: pl
+  sourceLabel: text
+  rawInput: >
+    Pizza mrożona, cola, chipsy, lody waniliowe, mrożone warzywa, frytki,
+    nuggetsy, pizza rolls, woda gazowana, sok pomarańczowy, masło, mleko,
+    chleb, jajka, ser, składniki na lasagne
+expectations:
+  nonEmpty: true
+  minItems: 10
+  mustInclude:
+    - Pizza mrożona
+    - Cola
+    - Chipsy
+    - Lody
+    - Frytki
+    - Nuggetsy
+    - Woda
+    - Sok
+    - Mleko
+    - Chleb
+    - Jajka
+    - Ser
+  mustExclude:
+    - Makaron lasagne
+    - Mięso mielone
+    - Passata
+    - Beszamel
+  titleMustNotMatch:
+    - (?i)pizz
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H012
+    type: non_empty_items
+  - id: H014
+    type: unique_item_names
+infoRules:
+  - id: I004
+    type: item_count

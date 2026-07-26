@@ -1,8 +1,11 @@
 /**
  * Central HTTP logger for `apiFetch`.
  * Visible in the Metro terminal (not on the phone UI).
- * On when __DEV__ or EXPO_PUBLIC_APP_ENV=development.
+ * Verbose →/← logs: on when __DEV__ or EXPO_PUBLIC_APP_ENV=development.
+ * Query-storm anomaly: always on (observability).
  */
+
+import { observeHttpRequest } from "./http-anomaly";
 
 type HttpLogRequest = {
   method: string;
@@ -48,6 +51,7 @@ function formatBody(body: unknown): unknown {
 }
 
 export function httpLogRequest(entry: HttpLogRequest): void {
+  observeHttpRequest(entry.method, entry.url);
   if (!loggingEnabled()) return;
   console.log(
     `[HTTP] → ${entry.method} ${entry.url}`,

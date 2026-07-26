@@ -21,6 +21,7 @@ import { LoadingTransition } from "@/lib/motion";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { OfflineStatusBanner } from "@/features/offline/OfflineStatusBanner";
 import { startShoppingSession } from "@/features/notifications/api";
+import { shoppingItemsQueryKey } from "@/features/shopping-item/query-keys";
 import type { ShoppingItem } from "@/features/shopping-item/schemas";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
 import { CategoryOrderHint } from "@/features/shopping-list/category-order-ui";
@@ -94,6 +95,7 @@ export function ShoppingModeScreen({ listId }: Props) {
 
   useListRealtime(listId, {
     workspaceId: listQuery.data?.workspaceId ?? null,
+    cadence: "shopping",
   });
 
   const { allowLeave, exitDialog } = useShoppingModeExitGuard(true, listId, {
@@ -293,6 +295,7 @@ export function ShoppingModeScreen({ listId }: Props) {
           listId={listId}
           overlay
           bottom
+          quietSetStatus
           style={{
             bottom: 0,
             paddingBottom: spacing[2] + insets.bottom,
@@ -500,7 +503,7 @@ export function ShoppingModeScreen({ listId }: Props) {
             updatedAt: new Date().toISOString(),
           };
           queryClient.setQueryData<ShoppingItem[]>(
-            ["shopping-items", listId],
+            shoppingItemsQueryKey(listId, "active"),
             (prev) => [...(prev ?? []), optimistic],
           );
           void session.addItem({ ...input, clientId });

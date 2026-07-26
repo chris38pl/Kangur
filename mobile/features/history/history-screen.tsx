@@ -464,11 +464,11 @@ export function HistoryScreen() {
   const { showError } = useAppResult();
 
   const workspacesQuery = useWorkspaces();
-  const { activeWorkspace, hydrated, storedId } = useActiveWorkspace(
+  const { activeWorkspace, hydrated, queryWorkspaceId } = useActiveWorkspace(
     workspacesQuery.data,
   );
-  // Prefer resolved workspace; fall back to stored id while admin overlay loads.
-  const workspaceId = activeWorkspace?.id ?? storedId ?? null;
+  // Verified workspace only (admin overlay may briefly use browsing id).
+  const workspaceId = queryWorkspaceId;
   const queryClient = useQueryClient();
 
   // No mount/focus refetch here — keep cached lists visible; user pull refreshes.
@@ -476,9 +476,17 @@ export function HistoryScreen() {
     refetchOnMount: false as const,
     refetchOnWindowFocus: false as const,
   };
-  const activeListsQuery = useShoppingLists(workspaceId, hydrated, listQueryOpts);
+  const activeListsQuery = useShoppingLists(
+    workspaceId,
+    hydrated && Boolean(workspaceId),
+    listQueryOpts,
+  );
   const sessionsQuery = useResumableSessions(hydrated, listQueryOpts);
-  const historyQuery = useHistoryLists(workspaceId, hydrated, listQueryOpts);
+  const historyQuery = useHistoryLists(
+    workspaceId,
+    hydrated && Boolean(workspaceId),
+    listQueryOpts,
+  );
   const repeatMutation = useRepeatHistoryList(workspaceId);
   const restoreMutation = useRestoreHistoryList(workspaceId);
   const archiveMutation = useArchiveShoppingList(workspaceId);

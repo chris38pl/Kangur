@@ -1,0 +1,35 @@
+id: frozen-pizza-lasagne-theme-short
+scenarioVersion: 1
+name: Short dual case — frozen pizza item + lasagne theme
+adapter: text-ingest
+description: >
+  Compact smoke: keep Pizza mrożona as item and derive lasagne shoppingContext.
+input:
+  locale: pl
+  sourceLabel: text
+  rawInput: Pizza mrożona, składniki na lasagne
+expectations:
+  nonEmpty: true
+  minItems: 1
+  mustInclude:
+    - Pizza mrożona
+  mustExclude:
+    - Makaron lasagne
+    - Mięso mielone
+    - Passata
+    - Beszamel
+    - Składniki na lasagne
+  titleMustMatch:
+    - (?i)lasagn
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H012
+    type: non_empty_items
+  - id: H014
+    type: unique_item_names
+infoRules:
+  - id: I004
+    type: item_count

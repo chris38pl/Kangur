@@ -7,18 +7,23 @@ import { createRestSyncTransport } from "@/features/data-sync-engine/rest-transp
 import { ReactQuerySyncCacheAdapter } from "@/features/data-sync-engine/sync-cache-adapter";
 
 /**
- * Architecture rule (shopping-items SSoT):
+ * Architecture rule (shopping-items SSoT / Local-first Shopping Sync):
+ *
+ * During an active shopping session the local cache is authoritative for the UI
+ * unless a remote change targets an entity with no pending local mutation.
  *
  * Writers:
- * 1. Optimistic UI + DataSyncEngine.enqueue (outbound)
+ * 1. Optimistic UI + DataSyncEngine.enqueue (outbound) — never wait on network
  * 2. SyncCacheAdapter.applyOperationResult after transport success
  * 3. SyncCacheAdapter.reconcileServerSnapshot after GET / refresh (inbound)
  *
  * Realtime / EventPolling never calls queryClient directly — only
- * DataSyncEngine.requestItemsRefresh (hint). Engine decides wait / invalidate.
+ * DataSyncEngine.requestItemsRefresh for **remote** batches (own echoes ignored).
+ * Engine also schedules one settled reconcile after outbound queue empties.
  *
  * Never blind-replace shopping-items with a raw server list while outbound
- * ops exist; reconcile uses last local operation wins per itemId.
+ * ops exist; reconcile uses last local operation wins per pending itemId.
+ * Query key: ["shopping-items", listId, "active"|"archived"].
  */
 export function useDataSyncEngineBootstrap() {
   const { getToken } = useAuth();

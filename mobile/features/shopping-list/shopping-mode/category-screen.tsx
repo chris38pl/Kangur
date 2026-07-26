@@ -35,6 +35,7 @@ import {
 } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { getCategoryBadgeColors } from "@/features/shopping-item/category-badge-colors";
+import { shoppingItemsQueryKey } from "@/features/shopping-item/query-keys";
 import type { ShoppingItem } from "@/features/shopping-item/schemas";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
 import { notifyFinishedForActiveSession } from "@/features/shopping-list/session/notify-finished";
@@ -181,6 +182,7 @@ export function ShoppingCategoryScreen({
 
   useListRealtime(listId, {
     workspaceId: listQuery.data?.workspaceId ?? null,
+    cadence: "shopping",
   });
 
   const category: ShoppingCategory | null = isShoppingCategory(categoryParam)
@@ -239,7 +241,7 @@ export function ShoppingCategoryScreen({
   const patchCacheStatus = useCallback(
     (itemId: string, status: ShoppingItem["status"]) => {
       queryClient.setQueryData<ShoppingItem[]>(
-        ["shopping-items", listId],
+        shoppingItemsQueryKey(listId, "active"),
         (prev) =>
           prev?.map((i) => (i.id === itemId ? { ...i, status } : i)) ?? prev,
       );

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAppStartup } from "@/features/startup/AppStartupController";
 import { getAppBuildInfo } from "@/lib/app-build-info";
@@ -8,6 +8,7 @@ import { hasApiUrl } from "@/lib/api/client";
 import { fetchAppVersion } from "./api";
 import { AppUpdateSheet } from "./AppUpdateSheet";
 import { evaluateUpdatePolicy } from "./evaluate-update";
+import { setSoftUpdateSheetVisible } from "./soft-update-session";
 import { openStoreUpdate } from "./store-links";
 
 type Props = { children: ReactNode };
@@ -56,6 +57,13 @@ export function AppUpdateGate({ children }: Props) {
   // MVP: soft only. Force kind is computed but not shown yet.
   const visible =
     !isBrandSplashActive && !dismissed && kind === "soft";
+
+  useEffect(() => {
+    setSoftUpdateSheetVisible(visible);
+    return () => {
+      setSoftUpdateSheetVisible(false);
+    };
+  }, [visible]);
 
   return (
     <>

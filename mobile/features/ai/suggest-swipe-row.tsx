@@ -14,6 +14,7 @@ import Animated, {
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
+import { motionDuration, motionEasing, motionSpring } from "@/design-system/motion";
 import {
   colors,
   radius,
@@ -37,8 +38,14 @@ type Props = {
 const COMMIT_DISTANCE = 56;
 const COMMIT_DISTANCE_SLOW = 72;
 const COMMIT_VELOCITY = 600;
+const COLLAPSE_MS = motionDuration.layout;
 const ACCEPT = "#2F9E6F";
 const REJECT = "#D64545";
+
+const dismissTiming = {
+  duration: COLLAPSE_MS,
+  easing: motionEasing.outCubic,
+} as const;
 
 export function SuggestSwipeRow({
   item,
@@ -55,23 +62,27 @@ export function SuggestSwipeRow({
 
   const translateX = useSharedValue(0);
   const measuredHeight = useSharedValue(72);
+  /** -1 = auto layout; >= 0 = collapsing shell height */
   const collapseHeight = useSharedValue(-1);
   const opacity = useSharedValue(1);
+  const bgOpacity = useSharedValue(0);
+  const committed = useSharedValue(0);
   const scale = useSharedValue(1);
   const rowWidth = useSharedValue(320);
 
-  const commitAccept = useCallback(() => {
+  const fireHaptic = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, []);
+
+  const commitAccept = useCallback(() => {
     onAccept(item);
   }, [item, onAccept]);
 
   const commitReject = useCallback(() => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onReject(item);
   }, [item, onReject]);
 
   const commitRestore = useCallback(() => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onRestore(item);
   }, [item, onRestore]);
 
@@ -102,12 +113,16 @@ export function SuggestSwipeRow({
         .failOffsetY([-12, 12])
         .onUpdate((e) => {
           "worklet";
+          if (committed.value) return;
           translateX.value = e.translationX;
+          bgOpacity.value = Math.min(1, Math.abs(e.translationX) / 48);
           scale.value =
             Math.abs(e.translationX) > COMMIT_DISTANCE * 0.5 ? 0.98 : 1;
         })
         .onEnd((e) => {
           "worklet";
+          if (committed.value) return;
+
           const x = translateX.value;
           const v = e.velocityX;
           const w = Math.max(rowWidth.value, 1);
@@ -135,35 +150,55 @@ export function SuggestSwipeRow({
           }
 
           if (action) {
+            const nextAction = action;
+            committed.value = 1;
+            runOnJS(fireHaptic)();
+
             const startH = Math.max(measuredHeight.value, 1);
             collapseHeight.value = startH;
-            translateX.value = withTiming(
-              action === "reject" ||
-                (action === "restore" && bucket === "accepted")
-                ? -w
-                : w,
-              { duration: 160 },
-            );
-            opacity.value = withTiming(0, { duration: 180 });
-            collapseHeight.value = withTiming(0, { duration: 220 });
-            if (action === "accept") runOnJS(runAccept)();
-            else if (action === "reject") runOnJS(runReject)();
-            else runOnJS(runRestore)();
+
+            const exitLeft =
+              nextAction === "reject" ||
+              (nextAction === "restore" && bucket === "accepted");
+
+            translateX.value = withSpring(exitLeft ? -w : w, {
+              ...motionSpring.settle,
+              velocity: v,
+            });
+            opacity.value = withTiming(0, dismissTiming);
+            bgOpacity.value = withTiming(0, dismissTiming);
+            collapseHeight.value = withTiming(0, dismissTiming, (finished) => {
+              if (!finished) return;
+              if (nextAction === "accept") runOnJS(runAccept)();
+              else if (nextAction === "reject") runOnJS(runReject)();
+              else runOnJS(runRestore)();
+            });
             return;
           }
 
           if (Math.abs(x) < 1) return;
-          translateX.value = withSpring(0, { damping: 20, stiffness: 220 });
+          translateX.value = withSpring(0, motionSpring.settle);
+          bgOpacity.value = withSpring(0, motionSpring.settle);
           scale.value = withSpring(1);
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Reanimated gesture
-    [bucket, runAccept, runReject, runRestore],
+    [bucket, fireHaptic, runAccept, runReject, runRestore],
   );
 
-  const rowStyle = useAnimatedStyle(() => {
+  const shellStyle = useAnimatedStyle(() => {
+    "worklet";
+    const collapsing = collapseHeight.value >= 0;
+    return {
+      height: collapsing ? collapseHeight.value : undefined,
+      marginBottom:
+        collapsing && collapseHeight.value < 1 ? 0 : spacing[2],
+      overflow: "hidden" as const,
+    };
+  });
+
+  const cardStyle = useAnimatedStyle(() => {
     "worklet";
     const rotation = interpolate(translateX.value, [-200, 200], [-4, 4]);
-    const collapsing = collapseHeight.value >= 0;
     return {
       transform: [
         { translateX: translateX.value },
@@ -171,10 +206,6 @@ export function SuggestSwipeRow({
         { rotateZ: `${rotation}deg` },
       ],
       opacity: opacity.value,
-      height: collapsing ? collapseHeight.value : undefined,
-      marginBottom:
-        collapsing && collapseHeight.value < 1 ? 0 : spacing[2],
-      overflow: "hidden" as const,
     };
   });
 
@@ -184,7 +215,14 @@ export function SuggestSwipeRow({
     const left = translateX.value < 0;
     return {
       backgroundColor: right ? ACCEPT : left ? REJECT : "transparent",
-      opacity: Math.min(1, Math.abs(translateX.value) / 48),
+      opacity: bgOpacity.value,
+    };
+  });
+
+  const labelsStyle = useAnimatedStyle(() => {
+    "worklet";
+    return {
+      opacity: bgOpacity.value < 0.15 ? 0 : 1,
     };
   });
 
@@ -198,11 +236,15 @@ export function SuggestSwipeRow({
       : `${t("ai.suggestReject")} ✕`;
 
   return (
-    <View
+    <Animated.View
       onLayout={(e) => {
         rowWidth.value = e.nativeEvent.layout.width;
-        measuredHeight.value = e.nativeEvent.layout.height;
+        if (collapseHeight.value < 0) {
+          const h = e.nativeEvent.layout.height;
+          if (h > 0) measuredHeight.value = h;
+        }
       }}
+      style={shellStyle}
     >
       <Animated.View
         pointerEvents="none"
@@ -214,27 +256,30 @@ export function SuggestSwipeRow({
             left: 0,
             right: 0,
             top: 0,
-            bottom: spacing[2],
+            bottom: 0,
             justifyContent: "center",
             paddingHorizontal: spacing[4],
           },
         ]}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-          }}
+        <Animated.View
+          style={[
+            labelsStyle,
+            {
+              flexDirection: "row",
+              justifyContent: "space-between",
+            },
+          ]}
         >
           <Text style={{ color: "#fff", fontWeight: "600" }}>{leftHint}</Text>
           <Text style={{ color: "#fff", fontWeight: "600" }}>{rightHint}</Text>
-        </View>
+        </Animated.View>
       </Animated.View>
 
       <GestureDetector gesture={pan}>
         <Animated.View
           style={[
-            rowStyle,
+            cardStyle,
             {
               backgroundColor: theme.bg,
               borderRadius: radius.xl,
@@ -286,30 +331,7 @@ export function SuggestSwipeRow({
                 {" · "}
                 {lastSeenLabel}
               </Text>
-              {item.reason ? (
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    ...typography.caption,
-                    color: theme.primary,
-                    marginTop: 2,
-                  }}
-                >
-                  {item.reason}
-                </Text>
-              ) : null}
             </View>
-            {item.amount ? (
-              <Text
-                style={{
-                  ...typography.caption,
-                  color: theme.textMuted,
-                  flexShrink: 0,
-                }}
-              >
-                {item.amount}
-              </Text>
-            ) : null}
             <View
               style={{
                 backgroundColor: badge.background,
@@ -331,6 +353,6 @@ export function SuggestSwipeRow({
           </View>
         </Animated.View>
       </GestureDetector>
-    </View>
+    </Animated.View>
   );
 }

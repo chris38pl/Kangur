@@ -1,0 +1,44 @@
+id: piwko-note-casserole-long
+scenarioVersion: 1
+name: Piwko note + casserole among staples
+adapter: text-ingest
+description: >
+  Note-bearing beer plus casserole must both survive on a longer list
+  (original bug: only beer kept, casserole became title).
+input:
+  locale: pl
+  sourceLabel: text
+  rawInput: >
+    Piwko dla męża, mleko, chleb, jajka, masło, ser, szynka, pomidory,
+    ogórek, banany, jabłka, kawa, herbata, ryż, makaron, zapiekanka
+expectations:
+  nonEmpty: true
+  minItems: 12
+  mustInclude:
+    - Piwo
+    - Mleko
+    - Chleb
+    - Jajka
+    - Masło
+    - Ser
+    - Szynka
+    - Pomidory
+    - Banany
+    - Kawa
+    - Ryż
+    - Makaron
+    - Zapiekanka
+  titleMustNotMatch:
+    - (?i)zapiekank
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H012
+    type: non_empty_items
+  - id: H014
+    type: unique_item_names
+infoRules:
+  - id: I004
+    type: item_count

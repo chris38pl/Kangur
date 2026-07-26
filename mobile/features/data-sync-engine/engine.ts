@@ -258,10 +258,45 @@ class DataSyncEngineImpl {
       syncedCount: doneIds.length,
     });
 
+    // Settled reconcile: after local work lands, one GET — not poll-as-confirm.
+    if (doneIds.length > 0 && pending === 0) {
+      const settledListIds = new Set(
+        ops.filter((o) => !failedSet.has(o.id)).map((o) => o.listId),
+      );
+      for (const id of settledListIds) {
+        this.scheduleInvalidate(id);
+      }
+    }
+
     // Ops enqueued while the worker was running must not wait for another tap.
     if (pending > 0 && this.connectivity.isOnline()) {
       this.scheduleFlush(listId);
     }
+  }
+
+  /**
+   * Eventual consistency: if outbound queue is idle for this list, invalidate
+   * once so GET + overlay merges remote state. No-op while local ops are busy.
+   */
+  reconcileIfSettled(listId: string): void {
+    void (async () => {
+      const busy = await this.outboundBusyCount(listId);
+      if (busy > 0) return;
+      this.scheduleInvalidate(listId);
+    })();
+  }
+
+  /**
+   * Pending/syncing ops that are not quiet SET_STATUS (adds, edits, etc.).
+   * Used to hide "Synchronizacja…" for own status swipes in shopping mode.
+   */
+  async pendingNonStatusCount(listId?: string): Promise<number> {
+    const all = await this.queue.getAll(listId);
+    return all.filter(
+      (op) =>
+        (op.state === "PENDING" || op.state === "SYNCING") &&
+        op.action !== "SET_STATUS",
+    ).length;
   }
 
   /**

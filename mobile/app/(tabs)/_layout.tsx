@@ -9,6 +9,7 @@ import { HomeSkeleton } from "@/components/skeleton";
 import { useColorScheme } from "@/components/useColorScheme";
 import { KangurTabBar } from "@/components/tab-bar/kangur-tab-bar";
 import { colors, spacing, typography } from "@/design-system/tokens";
+import { canLoadWorkspaces } from "@/features/auth/canLoadWorkspaces";
 import { useMe } from "@/features/auth/useMe";
 import { CreateListProvider, useCreateList } from "@/features/shopping-list/create-list-provider";
 import { useShoppingLists } from "@/features/shopping-list/useShoppingLists";
@@ -89,15 +90,20 @@ export default function TabLayout() {
   }, [isLoaded, isSignedIn]);
 
   const me = useMe(Boolean(isSignedIn));
-  // Parallel with /me — do not wait for me.data before workspaces (eliminates boot waterfall).
-  const workspacesQuery = useWorkspaces(Boolean(isSignedIn));
-  const { activeWorkspace, hydrated, storedId } = useActiveWorkspace(
+  // Serial boot: /me (seeds locale via X-Device-Locale) before /workspaces
+  // so ensureDefaultWorkspace never races with null locale → English "Home".
+  const workspacesEnabled = canLoadWorkspaces({
+    isSignedIn: Boolean(isSignedIn),
+    meStatus: me.status,
+  });
+  const workspacesQuery = useWorkspaces(workspacesEnabled);
+  const { activeWorkspace, hydrated, queryWorkspaceId } = useActiveWorkspace(
     workspacesQuery.data,
   );
-  const listsWorkspaceId = activeWorkspace?.id ?? storedId ?? null;
+  const listsWorkspaceId = queryWorkspaceId;
   const listsQuery = useShoppingLists(
     listsWorkspaceId,
-    Boolean(isSignedIn) && (hydrated || Boolean(storedId)),
+    Boolean(isSignedIn) && hydrated && Boolean(listsWorkspaceId),
   );
 
   const bootPerfEndedRef = useRef(false);
@@ -118,12 +124,14 @@ export default function TabLayout() {
   }, [isSignedIn, isLoaded, queryClient]);
 
   // Keep full HomeSkeleton until Home data is ready - avoids skeleton → tab bar → spinner.
+  // Lists: wait for success OR error (do not spin forever on retries / empty workspace).
   const homeBootPending =
     (workspacesQuery.isPending && !workspacesQuery.data) ||
     !hydrated ||
     (Boolean(listsWorkspaceId) &&
       listsQuery.isPending &&
-      !listsQuery.data);
+      !listsQuery.data &&
+      !listsQuery.isError);
 
   const homeReady =
     isLoaded &&

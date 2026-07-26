@@ -1,8 +1,17 @@
 # Kangur - MVP Implementation Roadmap
 
 **Status:** Living document - return here between milestones  
-**Last updated:** 2026-07-22  
+**Last updated:** 2026-07-24  
 **Companions:** [prd.md](./prd.md) · [architecture.md](./architecture.md) · [cursor-rules.md](./cursor-rules.md) · [deploy.md](./deploy.md)
+
+### Where we are (M10–M15)
+
+| Band | Reality |
+|------|---------|
+| **M10–M13.11** | **Done** in code + status table (polling, History, Profile, evals, Stripe, Platform Console, landing, boot, Apple, Sentry/PostHog wiring). |
+| **M14** | **In progress** — polish/motion/i18n/soft-update/workspace browser largely shipped; remaining = RC verification (one-handed QA, PRD sweep, Closed Testing EAS, Privacy naming Sentry/PostHog). |
+| **M15** | Post-MVP — not started. |
+| **M16** | **Does not exist** in this roadmap (next product numbers jump to M20+ vision / M13.7 deferred). |
 
 ---
 
@@ -116,7 +125,8 @@ One vertical slice per milestone; register new Zod schemas so OpenAPI regenerate
 | M13.9 | Brand Boot Animation | done |
 | M13.10 | Apple Sign In | done |
 | M13.11 | Observability & Product Analytics | done |
-| M14 | Polish + RC | pending |
+| M14 | Polish + RC | in progress |
+| M14.5 | In-App Feedback | implemented (needs UT token + migrate) |
 | M15 | Custom categories (post-MVP) | pending |
 | M13.7 | Client Metrics Ingestion | deferred (post-release) |
 | M20 | Smart Store Ecosystem | vision (post-release) |
@@ -617,6 +627,8 @@ AI Generate from History requires an **active Premium workspace** *and* still go
 
 **Goal:** Application-level navigation (App Menu) separate from Bottom Tabs; Platform Console shell + `platformRole` access. Prerequisite for M13.5 observability UI.
 
+**Status:** done
+
 **Creates:**
 - Declarative full-screen App Menu (Home tab stack, native push; Bottom Tabs stay visible) - config → visibility predicate → route
 - Home hamburger opens Menu (not Workspace tab; not a left drawer)
@@ -625,6 +637,7 @@ AI Generate from History requires an **active Premium workspace** *and* still go
 - About screen (Version, Environment, API, Build, Commit)
 - Platform Console route shell - Overview (Platform Status + metrics) → Business → Realtime → Scaling → Backend
 - `GET /api/v1/platform/overview` (ADMIN only)
+- Workspace browser (ADMIN): list/search/enter/edit/delete all spaces — shipped with 1.0.1 (`/workspace-browser`, `/api/v1/platform/workspaces`)
 
 **Depends on:** M03, M12  
 **Complexity:** S–M  
@@ -755,6 +768,8 @@ AI Generate from History requires an **active Premium workspace** *and* still go
 
 **Goal:** Calm, premium cold-start experience (~850–1500 ms): white screen → one Splash Mascot lands → soft bounce → app content fades in under the mascot. Covers auth/home loading - **never invents waiting** beyond the min aesthetic window. Not a Premium/billing feature.
 
+**Status:** done
+
 **Creates/updates:**
 - `mobile/features/startup/AppStartupController.tsx` (+ hook/context) - cold-start-only orchestration; future home for onboarding / maintenance / force-update gates
 - `mobile/components/BrandedBootSplash.tsx` - Reanimated mascot (lift, cubic-out enter, spring bounce, decorative shadow)
@@ -788,7 +803,7 @@ AI Generate from History requires an **active Premium workspace** *and* still go
 
 ## M13.11 - Observability & Product Analytics
 
-**Status:** done (code + docs; staging key verify remains for Closed Testing)
+**Status:** done (code + docs; Sentry verified on staging `preview`; Privacy processor naming + PostHog funnel dashboard still before Closed Testing)
 
 **Goal:** Production-ready **error monitoring**, **product analytics**, and **feature flags** before the first public release — using **Sentry** + **PostHog** only. No vanity analytics (button clicks, screen views, scroll). Privacy-first: business events and crashes, not list contents.
 
@@ -1173,8 +1188,9 @@ Docs touch: [architecture.md](./architecture.md) §10.5 addendum; [deploy.md](./
 - [x] identify merge + workspace `group`; `requestId` scoped to one AI import op
 - [x] `.env.example` + roadmap/deploy/architecture docs updated
 - [x] Session Replay disabled; guiding principle / non-goals documented
-- [ ] Staging live verify: Sentry crash + PostHog funnel with real keys (Closed Testing keys in EAS/Vercel)
-- [ ] Privacy Policy mentions Sentry + PostHog processors (M13.8 copy pass)
+- [x] Staging live verify: Sentry crash/fatal events with real keys on `preview` (e.g. Fabric SIGSEGV 2026-07-23)
+- [ ] Staging live verify: PostHog funnel events visible in EU project with real keys (Closed Testing)
+- [ ] Privacy Policy mentions Sentry + PostHog processors by name (M13.8 copy pass)
 
 ### Definition of Done
 
@@ -1210,27 +1226,62 @@ Docs touch: [architecture.md](./architecture.md) §10.5 addendum; [deploy.md](./
 
 **Goal:** Design-system consistency, motion, mascot empty states, a11y, EAS smoke build. **Light mode only** - no dark theme. **Brand boot animation = M13.9** (do not re-scope splash here).
 
+**Status:** in progress (2026-07-24) — code polish largely shipped on `staging` / 1.0.1; RC gate = QA + store ops below.
+
 **Creates/updates:**
 - Token / visual polish pass (light)
-- 2–3 motions (enter, status, toast) - excluding boot splash
-- Empty states (kangaroo / warm orange)
-- Category labels PL/EN complete
-- `mobile/eas.json` (already present - verify preview/prod profiles)
+- Motion Design System: `mobile/design-system/motion.ts` + `mobile/lib/motion/` (`LoadingTransition`, press/toast/list/AI phase) — beyond original 2–3 motions
+- Empty states (kangaroo / warm orange brand assets)
+- Category labels PL/EN (+ full 10-locale parity for mobile UI)
+- Soft app-update gate: `GET /api/v1/app/version` + `AppUpdateGate` / sheet
+- `mobile/eas.json` preview/prod profiles (present; Closed Testing submit still ops)
 - Final sweep against PRD MVP acceptance
-- Optional: remaining deferred settings from M12 (keep-screen-on UI, shopping layout)
+- Optional: remaining deferred settings from M12 (keep-screen-on UI, shopping layout) — still deferred
 
 **Depends on:** M06–M13 substantially complete; **M13.8** (privacy + delete-account URLs before RC / store); **M13.9** (brand boot); **M13.11** (Sentry + PostHog for Closed Testing)  
 **Complexity:** M  
 
 **Acceptance:**
-- [ ] PL/EN parity on user-facing strings
-- [ ] Shopping Mode one-handed verified
-- [ ] PRD MVP checklist mostly green
-- [ ] Dev/preview EAS build succeeds
-- [ ] No dark-mode theme or dual-scheme polish required
-- [ ] M13.8 live (privacy + delete-account URLs usable in Play / Clerk / Stripe)
+- [x] PL/EN parity on user-facing strings (also: 10 locales shipped for mobile)
+- [ ] Shopping Mode one-handed verified (device QA)
+- [ ] PRD MVP checklist mostly green (explicit sweep)
+- [x] Dev/preview EAS profiles configured; preview builds runnable (`eas.json`)
+- [x] No dark-mode theme or dual-scheme polish required
+- [x] M13.8 live (privacy + delete-account URLs on apex; wire dashboards at RC)
 - [x] M13.9 brand boot accepted on cold start
-- [ ] M13.11 Sentry + PostHog live on staging (Closed Testing)
+- [x] M13.11 Sentry live on staging/`preview`
+- [ ] M13.11 PostHog funnel verified on staging + Privacy names processors
+- [ ] Closed Testing / Play track smoke after EAS preview submit
+---
+
+## M14.5 - In-App Feedback (Bug Reports & Feature Requests)
+
+**Goal:** Let early testers and post-launch users report problems and ideas in-app, with automatic diagnostics and a simple platform-admin inbox. Not a helpdesk / ticket product.
+
+**Status:** implemented (code) — requires `UPLOADTHING_TOKEN` + migrate in each env.
+
+**Creates/updates:**
+- Prisma `Feedback` (+ `FeedbackType` / `FeedbackStatus`); content immutable after create; admin mutates only `status` + `adminNote`
+- `POST /api/v1/feedback` (auth); `GET|PATCH /api/v1/platform/feedback` (platform admin)
+- UploadThing `feedbackImage` route (`attachmentKey` + `attachmentUrl`); upload fail must not block text submit
+- Mobile Help entry: “Report a problem” / “I have an idea” → shared form (language selector, optional photo)
+- Platform menu: Feedback inbox (list + detail, Only unresolved, attachment icon)
+- Metadata: `metadataVersion`, app/build/platform/device/OS, `environment`, `apiBaseUrl`, `route`, workspace/list/session nullable
+- Future-proof nullables: `resolvedInVersion`, `closedAt` (unused in MVP UI)
+
+**Depends on:** M14 polish / auth / platform console patterns  
+**Complexity:** M  
+
+**Acceptance:**
+- [x] User can submit BUG and FEATURE_REQUEST
+- [x] Optional screenshot via UploadThing (`attachmentKey` + `attachmentUrl`)
+- [x] Backend stores automatic diagnostics (`metadataVersion=1`, environment, apiBaseUrl, route, …)
+- [x] Platform admin list + detail; change status; admin note
+- [x] Content immutable; PATCH allowlist = status + adminNote only
+- [x] Submit disabled + loading until create finishes (duplicate protection)
+- [x] Feedback submission must never block on optional attachment upload; if upload fails, user can remove it and still submit
+- [x] No comments, replies, email, push, voting, multi-attach, shake-to-report, auto screenshot, web admin, auto-translate
+
 ---
 
 ## M15 - Custom category packs (post-MVP)
@@ -1247,7 +1298,7 @@ Docs touch: [architecture.md](./architecture.md) §10.5 addendum; [deploy.md](./
 
 **Depends on:** M14 (MVP complete); builds on M04–M06 category plumbing  
 **Complexity:** L  
-**Status:** post-MVP
+**Status:** pending (post-MVP — not started)
 
 **Acceptance:**
 - [ ] User can create a custom pack (e.g. “Sklep budowlany”) with ordered categories

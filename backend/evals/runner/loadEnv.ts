@@ -28,4 +28,9 @@ export function loadEvalEnv(cwd = process.cwd()): void {
       }
     }
   }
+
+  // Long text-ingest lists routinely need >18s; default eval timeout if unset.
+  if (process.env.AI_PRIMARY_TIMEOUT_MS === undefined) {
+    process.env.AI_PRIMARY_TIMEOUT_MS = "45000";
+  }
 }

@@ -1,5 +1,9 @@
 import type { QueryClient } from "@tanstack/react-query";
 
+import {
+  shoppingItemsQueryKey,
+  shoppingItemsQueryPrefix,
+} from "@/features/shopping-item/query-keys";
 import type { ShoppingItem } from "@/features/shopping-item/schemas";
 
 import { overlayLocalOutboundStatuses } from "./overlay-local-ops";
@@ -50,8 +54,9 @@ export function resolveServerUpdate(
   return cache;
 }
 
-function shoppingItemsKey(listId: string) {
-  return ["shopping-items", listId] as const;
+/** Active-list cache key — must match {@link useShoppingItems} default scope. */
+function activeShoppingItemsKey(listId: string) {
+  return shoppingItemsQueryKey(listId, "active");
 }
 
 /**
@@ -112,13 +117,13 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
 
   invalidateShoppingItems(listId: string): void {
     void this.queryClient.invalidateQueries({
-      queryKey: shoppingItemsKey(listId),
+      queryKey: shoppingItemsQueryPrefix(listId),
     });
   }
 
   private reconcileItem(listId: string, server: ShoppingItem): void {
     this.queryClient.setQueryData<ShoppingItem[]>(
-      shoppingItemsKey(listId),
+      activeShoppingItemsKey(listId),
       (prev) => {
         if (!prev) return [server];
         // Match by server id, or by non-null clientId only.
@@ -149,7 +154,7 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
     server: ShoppingItem,
   ): void {
     this.queryClient.setQueryData<ShoppingItem[]>(
-      shoppingItemsKey(listId),
+      activeShoppingItemsKey(listId),
       (prev) => {
         if (!prev) return [server];
         const idx = prev.findIndex(
@@ -183,7 +188,7 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
    */
   private removeActiveItem(listId: string, itemId: string): void {
     this.queryClient.setQueryData<ShoppingItem[]>(
-      shoppingItemsKey(listId),
+      activeShoppingItemsKey(listId),
       (prev) => prev?.filter((item) => item.id !== itemId) ?? prev,
     );
   }

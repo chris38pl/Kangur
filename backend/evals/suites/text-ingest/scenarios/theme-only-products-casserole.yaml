@@ -1,0 +1,33 @@
+id: theme-only-products-casserole
+scenarioVersion: 1
+name: Products-for-casserole is theme only
+adapter: text-ingest
+description: >
+  Purpose grammar — do not invent casserole ingredients as shopping items.
+input:
+  locale: pl
+  sourceLabel: text
+  rawInput: Produkty na zapiekankę
+expectations:
+  titleMustMatch:
+    - (?i)zapiekank
+  mustExclude:
+    - Makaron
+    - Ser
+    - Szynka
+    - Pomidory
+    - Pieczarki
+    - Sos
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H006
+    type: product_cap
+    max: 0
+  - id: H014
+    type: unique_item_names
+infoRules:
+  - id: I004
+    type: item_count

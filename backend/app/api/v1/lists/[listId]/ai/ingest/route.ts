@@ -115,8 +115,11 @@ export async function POST(request: Request, context: RouteContext) {
     }
     console.error("[ai]", "IngestFailed", error);
     return NextResponse.json(
-      { code: "VALIDATION_ERROR", message: "AI ingest failed." },
-      { status: 400 },
+      {
+        code: "AI_UNAVAILABLE",
+        message: "AI is temporarily unavailable. Please try again.",
+      },
+      { status: 502 },
     );
   }
 }

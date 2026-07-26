@@ -1,0 +1,32 @@
+id: theme-only-weekend
+scenarioVersion: 1
+name: Weekend shopping is occasion theme only
+adapter: text-ingest
+description: >
+  Occasion phrase without listed products — no invented grocery items.
+input:
+  locale: pl
+  sourceLabel: text
+  rawInput: Zakupy na weekend
+expectations:
+  titleMustMatch:
+    - (?i)weekend
+  mustExclude:
+    - Mleko
+    - Chleb
+    - Jajka
+    - Piwo
+    - Zapiekanka
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H006
+    type: product_cap
+    max: 0
+  - id: H014
+    type: unique_item_names
+infoRules:
+  - id: I004
+    type: item_count

@@ -8,6 +8,15 @@ import {
 import { AppVersionResponseSchema } from "@/features/app/schemas";
 import { ApiErrorSchema, MeResponseSchema, UpdateMeBodySchema } from "@/features/auth/schemas";
 import {
+  CreateFeedbackBodySchema,
+  CreateFeedbackResponseSchema,
+  FeedbackDetailResponseSchema,
+  FeedbackListResponseSchema,
+  FeedbackStatusSchema,
+  FeedbackTypeSchema,
+  UpdateFeedbackBodySchema,
+} from "@/features/feedback/schemas";
+import {
   PlatformAiInsightsResponseSchema,
   PlatformOverviewResponseSchema,
   PlatformRealtimeResponseSchema,
@@ -2209,6 +2218,200 @@ registry.registerPath({
     },
     404: {
       description: "Workspace not found",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/feedback",
+  summary: "Submit in-app feedback (bug or idea)",
+  description:
+    "Creates immutable feedback. Content cannot be edited after submit. Optional UploadThing attachment via attachmentKey + attachmentUrl.",
+  tags: ["Feedback"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: CreateFeedbackBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "Feedback created",
+      content: {
+        "application/json": {
+          schema: CreateFeedbackResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/platform/feedback",
+  summary: "List feedback (PlatformAdmin only)",
+  tags: ["Platform", "Feedback"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z.object({
+      status: FeedbackStatusSchema.optional(),
+      type: FeedbackTypeSchema.optional(),
+      unresolvedOnly: z.enum(["true", "false"]).optional(),
+      cursor: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Feedback list",
+      content: {
+        "application/json": {
+          schema: FeedbackListResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "Not a platform admin",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/v1/platform/feedback/{feedbackId}",
+  summary: "Get feedback detail (PlatformAdmin only)",
+  tags: ["Platform", "Feedback"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ feedbackId: z.string() }),
+  },
+  responses: {
+    200: {
+      description: "Feedback detail",
+      content: {
+        "application/json": {
+          schema: FeedbackDetailResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "Not a platform admin",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: "Not found",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/api/v1/platform/feedback/{feedbackId}",
+  summary: "Update feedback status or admin note (PlatformAdmin only)",
+  description:
+    "Strict allowlist: only status and adminNote. Content fields are immutable.",
+  tags: ["Platform", "Feedback"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ feedbackId: z.string() }),
+    body: {
+      content: {
+        "application/json": {
+          schema: UpdateFeedbackBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Feedback updated",
+      content: {
+        "application/json": {
+          schema: FeedbackDetailResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    403: {
+      description: "Not a platform admin",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: "Not found",
       content: {
         "application/json": {
           schema: ApiErrorSchema,

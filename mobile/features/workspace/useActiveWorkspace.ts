@@ -32,6 +32,7 @@ export function useActiveWorkspace(workspaces: Workspace[] | undefined) {
   const storedId = idQuery.data ?? null;
   const hydrated = idQuery.isSuccess || idQuery.isError;
 
+  const workspacesResolved = workspaces !== undefined;
   const matched = workspaces?.find((w) => w.id === storedId) ?? null;
   /** Admin enter can set storedId before the browsed workspace is merged into `workspaces`. */
   const waitingForAdminOverlay =
@@ -62,6 +63,25 @@ export function useActiveWorkspace(workspaces: Workspace[] | undefined) {
     queryClient,
   ]);
 
+  // Drop stale AsyncStorage id (e.g. other env / deleted workspace) so boot
+  // never keeps firing /lists|/members|/ai-credits against a 404 id.
+  useEffect(() => {
+    if (!hydrated || !workspacesResolved) return;
+    if (!storedId || matched || waitingForAdminOverlay) return;
+    if (browsingId && storedId === browsingId) return;
+    void AsyncStorage.removeItem(STORAGE_KEY).then(() => {
+      queryClient.setQueryData(ACTIVE_WORKSPACE_ID_QUERY_KEY, null);
+    });
+  }, [
+    hydrated,
+    workspacesResolved,
+    storedId,
+    matched,
+    waitingForAdminOverlay,
+    browsingId,
+    queryClient,
+  ]);
+
   const setActiveId = useCallback(
     async (id: string) => {
       const currentBrowsingId = await readAdminBrowsingWorkspaceId();
@@ -82,7 +102,14 @@ export function useActiveWorkspace(workspaces: Workspace[] | undefined) {
   return {
     activeWorkspace,
     activeId: activeWorkspace?.id ?? storedId,
-    /** Raw AsyncStorage id — use to prefetch lists before workspaces resolve. */
+    /**
+     * Safe for network queries. Never returns a stale AsyncStorage id that is
+     * not in `workspaces` (except briefly while an admin-browsing overlay loads).
+     */
+    queryWorkspaceId:
+      activeWorkspace?.id ??
+      (waitingForAdminOverlay ? storedId : null),
+    /** Raw AsyncStorage id — do not use for API calls. */
     storedId,
     setActiveId,
     hydrated,

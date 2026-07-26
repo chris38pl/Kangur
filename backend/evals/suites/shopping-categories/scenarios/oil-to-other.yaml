@@ -1,0 +1,44 @@
+id: oil-to-other
+scenarioVersion: 1
+name: Cooking oils always correct to other
+adapter: shopping-categories
+description: >
+  Business exception oil→other across supported locales.
+  Must not use contains() — olejek waniliowy must NOT match.
+input:
+  locale: en
+  categoryCases:
+    - { name: "Olej", aiCategory: pantry, expectedCategory: other }
+    - { name: "Oliwa", aiCategory: pantry, expectedCategory: other }
+    - { name: "Oliwa z oliwek", aiCategory: pantry, expectedCategory: other }
+    - { name: "Olej roślinny", aiCategory: sauces, expectedCategory: other }
+    - { name: "Oil", aiCategory: pantry, expectedCategory: other }
+    - { name: "Olive oil", aiCategory: pantry, expectedCategory: other }
+    - { name: "Vegetable oil", aiCategory: bakery, expectedCategory: other }
+    - { name: "Cooking oil", aiCategory: other, expectedCategory: other }
+    - { name: "Olivenöl", aiCategory: pantry, expectedCategory: other }
+    - { name: "Pflanzenöl", aiCategory: pantry, expectedCategory: other }
+    - { name: "Huile d'olive", aiCategory: pantry, expectedCategory: other }
+    - { name: "Huile végétale", aiCategory: pantry, expectedCategory: other }
+    - { name: "Aceite de oliva", aiCategory: pantry, expectedCategory: other }
+    - { name: "Aceite vegetal", aiCategory: pantry, expectedCategory: other }
+    - { name: "Olio d'oliva", aiCategory: pantry, expectedCategory: other }
+    - { name: "Olio vegetale", aiCategory: pantry, expectedCategory: other }
+    - { name: "Olivový olej", aiCategory: pantry, expectedCategory: other }
+    - { name: "Оливковое масло", aiCategory: pantry, expectedCategory: other }
+    - { name: "Растительное масло", aiCategory: pantry, expectedCategory: other }
+    - { name: "Оливкова олія", aiCategory: pantry, expectedCategory: other }
+    - { name: "Аліўкавы алей", aiCategory: pantry, expectedCategory: other }
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H013
+    type: no_crash
+  - id: H016
+    type: expected_categories
+softRules: []
+infoRules:
+  - id: I004
+    type: item_count

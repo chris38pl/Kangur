@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "releaseDate": "2026-06-01",
+  "highlight": true,
+  "title": {
+    "pl": "Pierwsza wersja Kangura",
+    "en": "Kangur’s first release"
+  },
+  "changes": [
+    {
+      "type": "feature",
+      "text": {
+        "pl": "Listy zakupów współdzielone w Workspace",
+        "en": "Shared shopping lists in a Workspace"
+      }
+    },
+    {
+      "type": "feature",
+      "text": {
+        "pl": "Dodawanie produktów ze zdjęcia i tekstu dzięki AI",
+        "en": "Add products from a photo or text with AI"
+      }
+    },
+    {
+      "type": "feature",
+      "text": {
+        "pl": "Tryb zakupów do odhaczania produktów w sklepie",
+        "en": "Shopping Mode for checking off items in the store"
+      }
+    }
+  ]
+}

@@ -50,9 +50,16 @@ export const ScenarioInputSchema = z.object({
   locale: z.string().default("pl"),
   lists: z.array(HistoryListSchema).optional(),
   generate: GenerateSchema.optional(),
+  /**
+   * Text ingest (clipboard / typed list): raw user string for
+   * `buildProposalFromText`.
+   */
+  rawInput: z.string().min(1).optional(),
+  /** Text ingest source label (default text). */
+  sourceLabel: z.enum(["text", "clipboard"]).optional(),
   /** Meal proposal: dish / recipe names (1–5). */
   dishes: z.array(z.string().trim().min(1).max(80)).min(1).max(5).optional(),
-  /** Meal proposal: existing list items for merge checks. */
+  /** Meal proposal / text ingest: existing list items for merge checks. */
   existingItems: z
     .array(
       z.object({
@@ -95,6 +102,20 @@ export const ScenarioInputSchema = z.object({
         .max(5),
     })
     .optional(),
+  /**
+   * Shopping Categories Eval (offline): each case runs CategoryCorrections
+   * on (name, aiCategory) and must land on expectedCategory.
+   */
+  categoryCases: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        aiCategory: z.string().min(1),
+        expectedCategory: z.string().min(1),
+      }),
+    )
+    .min(1)
+    .optional(),
 });
 
 export const BaselineSchema = z.object({
@@ -113,6 +134,8 @@ export const ScenarioSchema = z.object({
   baseline: BaselineSchema.optional(),
   expectations: z
     .object({
+      /** Hard: every name must appear in output (lossless identification). */
+      mustInclude: z.array(z.string()).optional(),
       mustIncludeAny: z.array(z.string()).optional(),
       mustExclude: z.array(z.string()).optional(),
       preferExclude: z.array(z.string()).optional(),

@@ -1,0 +1,8 @@
+name: shopping-categories
+suiteVersion: 1
+adapter: shopping-categories
+defaultModel: category-corrections
+defaultPrompt: production
+description: >
+  Shopping Categories Eval — offline CategoryCorrections + aisle golden catalog.
+  No OpenAI. Gate for oil→other business exception and correction non-regression.

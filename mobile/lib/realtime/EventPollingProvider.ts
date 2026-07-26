@@ -9,13 +9,46 @@ import type {
   EventPollingProvider,
 } from "./types";
 
-const INTERVAL_HOT_MS = 3_000;
-const INTERVAL_WARM_MS = 5_000;
-const INTERVAL_COLD_MS = 10_000;
+/** Default list-detail cadence (adaptive). */
+const DEFAULT_HOT_MS = 3_000;
+const DEFAULT_WARM_MS = 5_000;
+const DEFAULT_COLD_MS = 10_000;
+
+/**
+ * Quieter cadence while shopping — still discovers asymmetric remote edits
+ * (partner adds items) without competing with own optimistic flushes.
+ */
+const SHOPPING_HOT_MS = 12_000;
+const SHOPPING_WARM_MS = 15_000;
+const SHOPPING_COLD_MS = 20_000;
+
 const IDLE_WARM_MS = 30_000;
 const IDLE_COLD_MS = 120_000;
 const MAX_PAGES = 20;
 const MAX_EVENTS = 1_000;
+
+export type PollCadence = "default" | "shopping";
+
+type CadenceIntervals = {
+  hot: number;
+  warm: number;
+  cold: number;
+};
+
+function intervalsFor(cadence: PollCadence): CadenceIntervals {
+  if (cadence === "shopping") {
+    return {
+      hot: SHOPPING_HOT_MS,
+      warm: SHOPPING_WARM_MS,
+      cold: SHOPPING_COLD_MS,
+    };
+  }
+  return {
+    hot: DEFAULT_HOT_MS,
+    warm: DEFAULT_WARM_MS,
+    cold: DEFAULT_COLD_MS,
+  };
+}
 
 /**
  * Adaptive event poller for a single active list.
@@ -24,7 +57,10 @@ const MAX_EVENTS = 1_000;
  */
 export function createEventPollingProvider(
   callbacks: EventPollingCallbacks,
-): EventPollingProvider {
+): EventPollingProvider & {
+  setCadence: (cadence: PollCadence) => void;
+  getCadence: () => PollCadence;
+} {
   let listId: string | null = null;
   let running = false;
   let paused = false;
@@ -36,6 +72,7 @@ export function createEventPollingProvider(
   let destroyed = false;
   /** True until first fully drained seed (no cursor → catch up without toast). */
   let seeding = false;
+  let cadence: PollCadence = "default";
 
   const clearTimer = () => {
     if (timer) {
@@ -45,9 +82,10 @@ export function createEventPollingProvider(
   };
 
   const intervalForIdle = (idleMs: number): number => {
-    if (idleMs >= IDLE_COLD_MS) return INTERVAL_COLD_MS;
-    if (idleMs >= IDLE_WARM_MS) return INTERVAL_WARM_MS;
-    return INTERVAL_HOT_MS;
+    const { hot, warm, cold } = intervalsFor(cadence);
+    if (idleMs >= IDLE_COLD_MS) return cold;
+    if (idleMs >= IDLE_WARM_MS) return warm;
+    return hot;
   };
 
   const emitIntervalTier = (delayMs: number) => {
@@ -92,7 +130,7 @@ export function createEventPollingProvider(
       return;
     }
     if (!callbacks.isOnline()) {
-      scheduleNext(INTERVAL_HOT_MS);
+      scheduleNext(intervalsFor(cadence).hot);
       return;
     }
 
@@ -168,7 +206,7 @@ export function createEventPollingProvider(
           bootstrap,
         });
         if (!hitCap) seeding = false;
-        scheduleNext(INTERVAL_HOT_MS);
+        scheduleNext(intervalsFor(cadence).hot);
       } else {
         metrics.increment(MetricNames.realtimePollEmpty);
         seeding = false;
@@ -182,8 +220,8 @@ export function createEventPollingProvider(
         Date.now() - pollStarted,
       );
       callbacks.onError?.(error);
-      // Network / server error: stay hot, do not grow idle backoff.
-      scheduleNext(INTERVAL_HOT_MS);
+      // Network / server error: stay at profile hot, do not grow idle backoff.
+      scheduleNext(intervalsFor(cadence).hot);
     } finally {
       inFlight = false;
       if (pendingPoll) {
@@ -247,6 +285,10 @@ export function createEventPollingProvider(
     stop();
   };
 
+  const setCadence = (next: PollCadence) => {
+    cadence = next;
+  };
+
   return {
     start,
     stop,
@@ -256,6 +298,8 @@ export function createEventPollingProvider(
     destroy,
     pause,
     resume,
+    setCadence,
+    getCadence: () => cadence,
   };
 }
 

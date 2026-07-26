@@ -1,0 +1,38 @@
+{
+  "version": "1.0.1",
+  "releaseDate": "2026-07-15",
+  "title": {
+    "pl": "Stabilność i wygoda",
+    "en": "Stability and polish"
+  },
+  "changes": [
+    {
+      "type": "improvement",
+      "text": {
+        "pl": "Szybsza synchronizacja list między domownikami",
+        "en": "Faster list sync between household members"
+      }
+    },
+    {
+      "type": "improvement",
+      "text": {
+        "pl": "Lepsze rozpoznawanie produktów przez AI",
+        "en": "Better product recognition with AI"
+      }
+    },
+    {
+      "type": "fix",
+      "text": {
+        "pl": "Poprawki stabilności w trybie zakupów",
+        "en": "Stability fixes in Shopping Mode"
+      }
+    },
+    {
+      "type": "security",
+      "text": {
+        "pl": "Ulepszone zabezpieczenia konta",
+        "en": "Improved account security"
+      }
+    }
+  ]
+}

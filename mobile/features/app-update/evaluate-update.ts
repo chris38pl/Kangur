@@ -1,4 +1,4 @@
-import { isVersionNewer } from "./compare-semver";
+import { isVersionNewer } from "@/lib/semver";
 
 export type UpdateKind = "none" | "soft" | "force";
 

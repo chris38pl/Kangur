@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 
+import { DataSyncEngine } from "@/features/data-sync-engine";
 import { finishShoppingSession } from "@/features/notifications/api";
 import { ShoppingSession } from "@/features/shopping-list/session/shopping-session";
 import { Analytics } from "@/lib/analytics";
@@ -82,6 +83,8 @@ export async function completeShoppingTask(args: CompleteArgs): Promise<void> {
  * has no list frame underneath).
  */
 export function leaveShoppingTask(listId: string): void {
+  // Settled reconcile once on leave (queue idle → one GET).
+  DataSyncEngine.reconcileIfSettled(listId);
   router.replace(`/list/${listId}` as never);
 }
 

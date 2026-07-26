@@ -244,7 +244,6 @@ function SummaryItemRow({
   item: ShoppingItem;
   variant: "bought" | "unavailable";
 }) {
-  const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const unavailable = variant === "unavailable";
@@ -279,20 +278,13 @@ function SummaryItemRow({
           </Text>
         ) : null}
       </View>
-      <View style={{ alignItems: "flex-end", gap: 4 }}>
-        <CircleGlyph background={unavailable ? DANGER : SUCCESS} size={26}>
-          {unavailable ? (
-            <CrossMark color="#fff" size={9} />
-          ) : (
-            <CheckMark color="#fff" size={11} />
-          )}
-        </CircleGlyph>
+      <CircleGlyph background={unavailable ? DANGER : SUCCESS} size={26}>
         {unavailable ? (
-          <Text style={{ ...typography.caption, fontSize: 11, color: theme.textMuted }}>
-            {t("shoppingMode.unavailableLabel")}
-          </Text>
-        ) : null}
-      </View>
+          <CrossMark color="#fff" size={9} />
+        ) : (
+          <CheckMark color="#fff" size={11} />
+        )}
+      </CircleGlyph>
     </View>
   );
 }
@@ -460,7 +452,7 @@ export function FinishSummaryScreen({
 
   return (
     <Screen style={{ backgroundColor: theme.section }}>
-      <OfflineStatusBanner listId={listId} overlay />
+      <OfflineStatusBanner listId={listId} overlay quietSetStatus />
 
       <View
         style={{

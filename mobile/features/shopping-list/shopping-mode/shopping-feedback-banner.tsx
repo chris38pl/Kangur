@@ -38,7 +38,7 @@ export function ShoppingFeedbackBanner({
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
-  const sync = useOfflineSyncStatus(listId);
+  const sync = useOfflineSyncStatus(listId, { quietSetStatus: true });
   const docked = layout === "docked";
   const bottomPad = spacing[1] + insets.bottom;
 
@@ -166,6 +166,7 @@ export function ShoppingFeedbackBanner({
         listId={listId}
         overlay
         bottom
+        quietSetStatus
         style={{
           bottom: 0,
           paddingBottom: spacing[2] + insets.bottom,

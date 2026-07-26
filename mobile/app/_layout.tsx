@@ -19,6 +19,7 @@ import { useDataSyncEngineBootstrap } from "@/features/data-sync-engine/useBoots
 import { NotificationSyncTrigger } from "@/features/notifications/NotificationSyncTrigger";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { AppStartupController } from "@/features/startup/AppStartupController";
+import { WhatsNewGate } from "@/features/whats-new/WhatsNewGate";
 import {
   bootLog,
   checkRequiredPublicEnv,
@@ -132,58 +133,70 @@ export default function RootLayout() {
                   <AppStartupController>
                     <NavigationBootProbe />
                     <AppUpdateGate>
-                      <Stack>
-                        <Stack.Screen name="index" options={{ headerShown: false }} />
-                        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                        <Stack.Screen name="account" options={{ headerShown: false }} />
-                        <Stack.Screen
-                          name="change-password"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="notifications"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="notification-center"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen name="about" options={{ headerShown: false }} />
-                        <Stack.Screen name="help" options={{ headerShown: false }} />
-                        <Stack.Screen name="privacy" options={{ headerShown: false }} />
-                        <Stack.Screen name="language" options={{ headerShown: false }} />
-                        <Stack.Screen name="premium" options={{ headerShown: false }} />
-                        <Stack.Screen
-                          name="platform-console"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="workspace-browser"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="invite/[token]"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="invite/id/[invitationId]"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="notification/shopping-started"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="notification/shopping-finished"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="notification/list-created"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen name="list/[listId]" />
-                      </Stack>
+                      <WhatsNewGate>
+                        <Stack>
+                          <Stack.Screen name="index" options={{ headerShown: false }} />
+                          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                          <Stack.Screen name="account" options={{ headerShown: false }} />
+                          <Stack.Screen
+                            name="change-password"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="notifications"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="notification-center"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen name="about" options={{ headerShown: false }} />
+                          <Stack.Screen name="whats-new" options={{ headerShown: false }} />
+                          <Stack.Screen name="help" options={{ headerShown: false }} />
+                          <Stack.Screen name="feedback" options={{ headerShown: false }} />
+                          <Stack.Screen name="privacy" options={{ headerShown: false }} />
+                          <Stack.Screen name="language" options={{ headerShown: false }} />
+                          <Stack.Screen name="premium" options={{ headerShown: false }} />
+                          <Stack.Screen
+                            name="platform-console"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="workspace-browser"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="platform-feedback"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="platform-feedback/[feedbackId]"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="invite/[token]"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="invite/id/[invitationId]"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="notification/shopping-started"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="notification/shopping-finished"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="notification/list-created"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen name="list/[listId]" />
+                        </Stack>
+                      </WhatsNewGate>
                     </AppUpdateGate>
 
                   </AppStartupController>

@@ -1,0 +1,35 @@
+id: casserole-pizza-theme-short
+scenarioVersion: 1
+name: Short dual case — casserole item + pizza theme
+adapter: text-ingest
+description: >
+  Compact smoke: keep Zapiekanka as item and derive pizza shoppingContext.
+input:
+  locale: pl
+  sourceLabel: text
+  rawInput: Zapiekanka, składniki na pizzę
+expectations:
+  nonEmpty: true
+  minItems: 1
+  mustInclude:
+    - Zapiekanka
+  mustExclude:
+    - Ciasto na pizzę
+    - Passata
+    - Mozzarella
+    - Mąka
+    - Składniki na pizzę
+  titleMustMatch:
+    - (?i)pizz
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H012
+    type: non_empty_items
+  - id: H014
+    type: unique_item_names
+infoRules:
+  - id: I004
+    type: item_count

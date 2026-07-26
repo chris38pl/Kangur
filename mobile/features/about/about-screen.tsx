@@ -306,6 +306,11 @@ export function AboutScreen() {
           }}
         >
           <LegalRow
+            title={t("about.whatsNew")}
+            showDivider
+            onPress={() => router.push("/whats-new" as never)}
+          />
+          <LegalRow
             title={t("about.privacy")}
             showDivider
             onPress={() => void WebBrowser.openBrowserAsync(LEGAL_URLS.privacy)}

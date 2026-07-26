@@ -79,6 +79,10 @@ export type EventPropsMap = {
       tokens?: number;
       estimated_cost_usd?: number;
       ok: boolean;
+      used_fallback?: boolean;
+      fallback_provider?: string;
+      fallback_reason?: string;
+      provider_attempt_order?: string[];
     };
   meal_proposal_generated: WorkspaceIdProps &
     ListIdProps & { meal_count: number };

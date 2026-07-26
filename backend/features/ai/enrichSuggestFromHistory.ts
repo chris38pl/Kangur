@@ -215,10 +215,11 @@ export function enrichSuggestFromHistory(input: {
     items.push({
       proposalRowId: raw.proposalRowId!,
       name,
-      amount: raw.amount ?? null,
+      // History propose: never copy/guess quantities or show merge blurbs.
+      amount: null,
       note: raw.note ?? null,
       category: raw.category,
-      reason: raw.reason?.trim() ? raw.reason.trim() : null,
+      reason: null,
       timesSeen,
       lastSeenAt: lastSeenAt.toISOString(),
     });

@@ -1,0 +1,107 @@
+id: aisle-golden-catalog
+scenarioVersion: 1
+name: Aisle golden catalog (corrections non-regression)
+adapter: shopping-categories
+description: >
+  Documented supermarket-aisle expectations. aiCategory equals expectedCategory
+  so CategoryCorrections must pass through (no false oil matches). Expand when
+  adding model-based category evals later.
+input:
+  locale: en
+  categoryCases:
+    # pantry
+    - { name: "Flour", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Mąka", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Mąka pszenna", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Mehl", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Farine", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Rice", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Ryż", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Pasta", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Makaron", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Makaron spaghetti", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Makaron lasagne", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Sugar", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Cukier", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Cocoa", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Kakao", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Yeast", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Drożdże świeże", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Baking powder", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Proszek do pieczenia", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Breadcrumbs", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Bułka tarta", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Oat flakes", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Płatki owsiane", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Vegetable broth", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Bulion warzywny", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Instant noodles", aiCategory: pantry, expectedCategory: pantry }
+    - { name: "Zupki chińskie", aiCategory: pantry, expectedCategory: pantry }
+    # spices
+    - { name: "Salt", aiCategory: spices, expectedCategory: spices }
+    - { name: "Sól", aiCategory: spices, expectedCategory: spices }
+    - { name: "Pepper", aiCategory: spices, expectedCategory: spices }
+    - { name: "Pieprz czarny", aiCategory: spices, expectedCategory: spices }
+    - { name: "Oregano", aiCategory: spices, expectedCategory: spices }
+    - { name: "Oregano suszone", aiCategory: spices, expectedCategory: spices }
+    - { name: "Dried basil", aiCategory: spices, expectedCategory: spices }
+    - { name: "Bazylia suszona", aiCategory: spices, expectedCategory: spices }
+    - { name: "Bay leaf", aiCategory: spices, expectedCategory: spices }
+    - { name: "Liść laurowy", aiCategory: spices, expectedCategory: spices }
+    - { name: "Allspice", aiCategory: spices, expectedCategory: spices }
+    - { name: "Ziele angielskie", aiCategory: spices, expectedCategory: spices }
+    - { name: "Papryka ostra", aiCategory: spices, expectedCategory: spices }
+    - { name: "Papryka słodka", aiCategory: spices, expectedCategory: spices }
+    - { name: "Przyprawy", aiCategory: spices, expectedCategory: spices }
+    # sauces
+    - { name: "Pesto", aiCategory: sauces, expectedCategory: sauces }
+    - { name: "Sos pesto", aiCategory: sauces, expectedCategory: sauces }
+    - { name: "Passata", aiCategory: sauces, expectedCategory: sauces }
+    - { name: "Passata pomidorowa", aiCategory: sauces, expectedCategory: sauces }
+    - { name: "Tomato sauce", aiCategory: sauces, expectedCategory: sauces }
+    - { name: "Sos pomidorowy", aiCategory: sauces, expectedCategory: sauces }
+    - { name: "Soy sauce", aiCategory: sauces, expectedCategory: sauces }
+    - { name: "Sos sojowy", aiCategory: sauces, expectedCategory: sauces }
+    - { name: "Mustard", aiCategory: sauces, expectedCategory: sauces }
+    - { name: "Musztarda dijon", aiCategory: sauces, expectedCategory: sauces }
+    - { name: "Tomato concentrate", aiCategory: sauces, expectedCategory: sauces }
+    - { name: "Koncentrat pomidorowy", aiCategory: sauces, expectedCategory: sauces }
+    # classic aisles (regression)
+    - { name: "Milk", aiCategory: dairy, expectedCategory: dairy }
+    - { name: "Mleko", aiCategory: dairy, expectedCategory: dairy }
+    - { name: "Eggs", aiCategory: dairy, expectedCategory: dairy }
+    - { name: "Jajka", aiCategory: dairy, expectedCategory: dairy }
+    - { name: "Butter", aiCategory: dairy, expectedCategory: dairy }
+    - { name: "Bread", aiCategory: bakery, expectedCategory: bakery }
+    - { name: "Pieczywo", aiCategory: bakery, expectedCategory: bakery }
+    - { name: "Beer", aiCategory: alcohol, expectedCategory: alcohol }
+    - { name: "Piwo", aiCategory: alcohol, expectedCategory: alcohol }
+    - { name: "Melon", aiCategory: fruit, expectedCategory: fruit }
+    - { name: "Tomato", aiCategory: vegetables, expectedCategory: vegetables }
+    - { name: "Pomidor", aiCategory: vegetables, expectedCategory: vegetables }
+    - { name: "Fresh basil", aiCategory: vegetables, expectedCategory: vegetables }
+    - { name: "Bazylia świeża", aiCategory: vegetables, expectedCategory: vegetables }
+    - { name: "Toilet paper", aiCategory: household, expectedCategory: household }
+    - { name: "Papier toaletowy", aiCategory: household, expectedCategory: household }
+    - { name: "Tiles", aiCategory: diy, expectedCategory: diy }
+    - { name: "Płytki", aiCategory: diy, expectedCategory: diy }
+    - { name: "Ham", aiCategory: meat, expectedCategory: meat }
+    - { name: "Szynka", aiCategory: meat, expectedCategory: meat }
+    - { name: "Salmon", aiCategory: fish, expectedCategory: fish }
+    - { name: "Water", aiCategory: drinks, expectedCategory: drinks }
+    - { name: "Woda mineralna", aiCategory: drinks, expectedCategory: drinks }
+    - { name: "Chips", aiCategory: snacks, expectedCategory: snacks }
+    - { name: "Frozen fries", aiCategory: frozen, expectedCategory: frozen }
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H013
+    type: no_crash
+  - id: H016
+    type: expected_categories
+softRules: []
+infoRules:
+  - id: I004
+    type: item_count

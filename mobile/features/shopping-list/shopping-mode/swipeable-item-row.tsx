@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { shoppingDensity } from "@/design-system/shopping-density";
-import { motionDuration, motionSpring } from "@/design-system/motion";
+import { motionEasing, motionSpring } from "@/design-system/motion";
 import {
   colors,
   radius,
@@ -42,6 +42,11 @@ const COLLAPSE_MS = shoppingDensity.collapseDurationMs;
 const PURCHASED = shoppingDensity.purchasedColor;
 const UNAVAILABLE = shoppingDensity.unavailableColor;
 
+const dismissTiming = {
+  duration: COLLAPSE_MS,
+  easing: motionEasing.outCubic,
+} as const;
+
 export function SwipeableItemRow({
   item,
   onPurchase,
@@ -55,18 +60,23 @@ export function SwipeableItemRow({
 
   const translateX = useSharedValue(0);
   const measuredHeight = useSharedValue(72);
-  const collapseHeight = useSharedValue(-1); // -1 = auto layout
+  /** -1 = auto layout; >= 0 = collapsing shell height */
+  const collapseHeight = useSharedValue(-1);
   const opacity = useSharedValue(1);
+  const bgOpacity = useSharedValue(0);
+  const committed = useSharedValue(0);
   const scale = useSharedValue(1);
   const rowWidth = useSharedValue(320);
 
-  const commitPurchase = useCallback(() => {
+  const fireHaptic = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, []);
+
+  const commitPurchase = useCallback(() => {
     onPurchase(item, index);
   }, [index, item, onPurchase]);
 
   const commitUnavailable = useCallback(() => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onUnavailable(item, index);
   }, [index, item, onUnavailable]);
 
@@ -93,12 +103,16 @@ export function SwipeableItemRow({
         .failOffsetY([-12, 12])
         .onUpdate((e) => {
           "worklet";
+          if (committed.value) return;
           translateX.value = e.translationX;
+          bgOpacity.value = Math.min(1, Math.abs(e.translationX) / 48);
           scale.value =
             Math.abs(e.translationX) > COMMIT_DISTANCE * 0.5 ? 0.98 : 1;
         })
         .onEnd((e) => {
           "worklet";
+          if (committed.value) return;
+
           const x = translateX.value;
           const v = e.velocityX;
           const abs = Math.abs(x);
@@ -115,31 +129,50 @@ export function SwipeableItemRow({
             (x < -28 && v < -COMMIT_VELOCITY);
 
           if (commitRight || commitLeft) {
+            committed.value = 1;
+            runOnJS(fireHaptic)();
+
             const startH = Math.max(measuredHeight.value, 1);
             collapseHeight.value = startH;
-            translateX.value = withTiming(commitRight ? w : -w, {
-              duration: motionDuration.fade,
+
+            translateX.value = withSpring(commitRight ? w : -w, {
+              ...motionSpring.settle,
+              velocity: v,
             });
-            opacity.value = withTiming(0, { duration: motionDuration.enter });
-            collapseHeight.value = withTiming(0, { duration: COLLAPSE_MS });
-            if (commitRight) runOnJS(runPurchase)();
-            else runOnJS(runUnavailable)();
+            opacity.value = withTiming(0, dismissTiming);
+            bgOpacity.value = withTiming(0, dismissTiming);
+            collapseHeight.value = withTiming(0, dismissTiming, (finished) => {
+              if (!finished) return;
+              if (commitRight) runOnJS(runPurchase)();
+              else runOnJS(runUnavailable)();
+            });
             return;
           }
 
           if (abs < 1) return;
 
           translateX.value = withSpring(0, motionSpring.settle);
+          bgOpacity.value = withSpring(0, motionSpring.settle);
           scale.value = withSpring(1);
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Reanimated gesture
-    [runPurchase, runUnavailable],
+    [fireHaptic, runPurchase, runUnavailable],
   );
 
-  const rowStyle = useAnimatedStyle(() => {
+  const shellStyle = useAnimatedStyle(() => {
+    "worklet";
+    const collapsing = collapseHeight.value >= 0;
+    return {
+      height: collapsing ? collapseHeight.value : undefined,
+      marginBottom:
+        collapsing && collapseHeight.value < 1 ? 0 : spacing[3],
+      overflow: "hidden" as const,
+    };
+  });
+
+  const cardStyle = useAnimatedStyle(() => {
     "worklet";
     const rotation = interpolate(translateX.value, [-200, 200], [-4, 4]);
-    const collapsing = collapseHeight.value >= 0;
     return {
       transform: [
         { translateX: translateX.value },
@@ -147,10 +180,6 @@ export function SwipeableItemRow({
         { rotateZ: `${rotation}deg` },
       ],
       opacity: opacity.value,
-      height: collapsing ? collapseHeight.value : undefined,
-      marginBottom:
-        collapsing && collapseHeight.value < 1 ? 0 : spacing[3],
-      overflow: "hidden" as const,
     };
   });
 
@@ -160,136 +189,145 @@ export function SwipeableItemRow({
     const left = translateX.value < 0;
     return {
       backgroundColor: right ? PURCHASED : left ? UNAVAILABLE : "transparent",
-      opacity: Math.min(1, Math.abs(translateX.value) / 48),
+      opacity: bgOpacity.value,
+    };
+  });
+
+  const labelsStyle = useAnimatedStyle(() => {
+    "worklet";
+    return {
+      opacity: bgOpacity.value < 0.15 ? 0 : 1,
     };
   });
 
   return (
     <Animated.View entering={listItemEntering}>
-    <View
-      onLayout={(e) => {
-        rowWidth.value = e.nativeEvent.layout.width;
-      }}
-    >
       <Animated.View
-        pointerEvents="none"
-        style={[
-          bgStyle,
-          {
-            borderRadius: radius.xl,
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: spacing[3],
-            justifyContent: "center",
-            paddingHorizontal: spacing[4],
-          },
-        ]}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-          }}
-        >
-          <Text style={{ color: "#fff", fontWeight: "600" }}>
-            ✓ {t("shoppingMode.purchased")}
-          </Text>
-          <Text style={{ color: "#fff", fontWeight: "600" }}>
-            {t("shoppingMode.unavailable")}
-          </Text>
-        </View>
-      </Animated.View>
-
-      <GestureDetector gesture={pan}>
-        <Animated.View
-          onLayout={(e) => {
+        onLayout={(e) => {
+          rowWidth.value = e.nativeEvent.layout.width;
+          if (collapseHeight.value < 0) {
             const h = e.nativeEvent.layout.height;
-            if (h > 0 && collapseHeight.value < 0) {
-              measuredHeight.value = h;
-            }
-          }}
+            if (h > 0) measuredHeight.value = h;
+          }
+        }}
+        style={shellStyle}
+      >
+        <Animated.View
+          pointerEvents="none"
           style={[
-            rowStyle,
+            bgStyle,
             {
-              backgroundColor: theme.surface,
               borderRadius: radius.xl,
-              borderWidth: 1,
-              borderColor: theme.border,
-              paddingHorizontal: spacing[4],
-              paddingVertical: spacing[3],
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
               justifyContent: "center",
-              ...shadows.soft,
+              paddingHorizontal: spacing[4],
             },
           ]}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: spacing[3],
-            }}
+          <Animated.View
+            style={[
+              labelsStyle,
+              {
+                flexDirection: "row",
+                justifyContent: "space-between",
+              },
+            ]}
+          >
+            <Text style={{ color: "#fff", fontWeight: "600" }}>
+              ✓ {t("shoppingMode.purchased")}
+            </Text>
+            <Text style={{ color: "#fff", fontWeight: "600" }}>
+              {t("shoppingMode.unavailable")}
+            </Text>
+          </Animated.View>
+        </Animated.View>
+
+        <GestureDetector gesture={pan}>
+          <Animated.View
+            style={[
+              cardStyle,
+              {
+                backgroundColor: theme.surface,
+                borderRadius: radius.xl,
+                borderWidth: 1,
+                borderColor: theme.border,
+                paddingHorizontal: spacing[4],
+                paddingVertical: spacing[3],
+                justifyContent: "center",
+                ...shadows.soft,
+              },
+            ]}
           >
             <View
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: radius.lg,
-                backgroundColor: badge.background,
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
+                gap: spacing[3],
               }}
             >
-              <Text style={{ fontSize: 22 }}>
-                {getShoppingCategoryIcon(item.category)}
-              </Text>
-            </View>
-
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text
+              <View
                 style={{
-                  ...typography.headline,
-                  color: theme.text,
-                  fontSize: 16,
-                  lineHeight: 22,
+                  width: 44,
+                  height: 44,
+                  borderRadius: radius.lg,
+                  backgroundColor: badge.background,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
                 }}
-                numberOfLines={1}
               >
-                {item.name}
-              </Text>
-              {item.note ? (
+                <Text style={{ fontSize: 22 }}>
+                  {getShoppingCategoryIcon(item.category)}
+                </Text>
+              </View>
+
+              <View style={{ flex: 1, minWidth: 0 }}>
                 <Text
                   style={{
-                    ...typography.caption,
-                    color: theme.textMuted,
-                    marginTop: 2,
+                    ...typography.headline,
+                    color: theme.text,
+                    fontSize: 16,
+                    lineHeight: 22,
                   }}
                   numberOfLines={1}
                 >
-                  {item.note}
+                  {item.name}
+                </Text>
+                {item.note ? (
+                  <Text
+                    style={{
+                      ...typography.caption,
+                      color: theme.textMuted,
+                      marginTop: 2,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {item.note}
+                  </Text>
+                ) : null}
+              </View>
+
+              {item.amount ? (
+                <Text
+                  style={{
+                    ...typography.label,
+                    color: theme.textMuted,
+                    flexShrink: 0,
+                    marginLeft: spacing[2],
+                  }}
+                  numberOfLines={1}
+                >
+                  {item.amount}
                 </Text>
               ) : null}
             </View>
-
-            {item.amount ? (
-              <Text
-                style={{
-                  ...typography.label,
-                  color: theme.textMuted,
-                  flexShrink: 0,
-                  marginLeft: spacing[2],
-                }}
-                numberOfLines={1}
-              >
-                {item.amount}
-              </Text>
-            ) : null}
-          </View>
-        </Animated.View>
-      </GestureDetector>
-    </View>
+          </Animated.View>
+        </GestureDetector>
+      </Animated.View>
     </Animated.View>
   );
 }

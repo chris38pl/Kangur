@@ -2,6 +2,7 @@ import { SHOPPING_CATEGORIES } from "@shared/shopping-categories";
 
 import {
   findName,
+  findNameLoose,
   namesMatch,
   normalizeNameKey,
   precisionRecallF1,
@@ -120,7 +121,7 @@ function judgeMustExclude(ref: RuleRef, output: Proposal | null): RuleResult {
   return timed(resolveMeta(ref, "must_exclude"), () => {
     const names = ref.names ?? [];
     const actual = itemNames(output);
-    const offending = names.filter((n) => findName(actual, n));
+    const offending = names.filter((n) => findNameLoose(actual, n));
     if (offending.length) {
       return {
         status: "fail",
@@ -428,7 +429,7 @@ function judgeMustIncludeAny(ref: RuleRef, output: Proposal | null): RuleResult 
   return timed(resolveMeta(ref, "must_include_any"), () => {
     const names = ref.names ?? [];
     const actual = itemNames(output);
-    const hit = names.some((n) => findName(actual, n));
+    const hit = names.some((n) => findNameLoose(actual, n));
     if (!hit) {
       return {
         status: "warn",
@@ -440,6 +441,53 @@ function judgeMustIncludeAny(ref: RuleRef, output: Proposal | null): RuleResult 
       status: "pass",
       message: "At least one preferred staple included.",
       evidence: { expected: names, actual },
+    };
+  });
+}
+
+function judgeMustInclude(ref: RuleRef, output: Proposal | null): RuleResult {
+  return timed(resolveMeta(ref, "must_include"), () => {
+    const names = ref.names ?? [];
+    const actual = itemNames(output);
+    const missing = names.filter((n) => !findNameLoose(actual, n));
+    if (missing.length) {
+      return {
+        status: "fail",
+        message: `Missing required items (${missing.length}/${names.length}).`,
+        evidence: { expected: names, actual, missing },
+      };
+    }
+    return {
+      status: "pass",
+      message: `All ${names.length} required items present.`,
+      evidence: { expected: names, actual },
+    };
+  });
+}
+
+function judgeTitleMustMatch(
+  ref: RuleRef,
+  output: Proposal | null,
+): RuleResult {
+  return timed(resolveMeta(ref, "title_must_match"), () => {
+    const patterns = ref.patterns ?? [];
+    const title = output?.shoppingContext?.title ?? "";
+    const unmatched = patterns.filter((p) => !compilePattern(p).test(title));
+    if (unmatched.length) {
+      return {
+        status: "fail",
+        message: "Title missing required pattern(s).",
+        evidence: {
+          actual: [title],
+          expected: patterns,
+          missing: unmatched,
+        },
+      };
+    }
+    return {
+      status: "pass",
+      message: "Title matches required pattern(s).",
+      evidence: { actual: [title], expected: patterns },
     };
   });
 }
@@ -689,6 +737,61 @@ function judgeNoPremiumTerms(
   });
 }
 
+function judgeExpectedCategories(
+  ref: RuleRef,
+  output: Proposal | null,
+  scenario: Scenario,
+): RuleResult {
+  return timed(resolveMeta(ref, "expected_categories"), () => {
+    const cases = scenario.input.categoryCases ?? [];
+    if (!cases.length) {
+      return {
+        status: "fail",
+        message: "expected_categories requires input.categoryCases.",
+        evidence: {},
+      };
+    }
+    if (!output?.items?.length) {
+      return {
+        status: "fail",
+        message: "No items to check expected categories.",
+        evidence: {},
+      };
+    }
+    const byName = new Map(
+      (output.items ?? []).map((i) => [normalizeNameKey(i.name), i]),
+    );
+    const mismatches: Array<{
+      name: string;
+      expected: string;
+      actual: string | undefined;
+    }> = [];
+    for (const c of cases) {
+      const item = byName.get(normalizeNameKey(c.name));
+      const actual = item?.category;
+      if (!actual || actual !== c.expectedCategory) {
+        mismatches.push({
+          name: c.name,
+          expected: c.expectedCategory,
+          actual,
+        });
+      }
+    }
+    if (mismatches.length) {
+      return {
+        status: "fail",
+        message: `${mismatches.length}/${cases.length} category mismatches.`,
+        evidence: { details: { mismatches } },
+      };
+    }
+    return {
+      status: "pass",
+      message: `All ${cases.length} expected categories match.`,
+      evidence: {},
+    };
+  });
+}
+
 function runOne(
   ref: RuleRef,
   ctx: {
@@ -697,6 +800,7 @@ function runOne(
     error?: { code: string; message: string };
     sourceListsCount: number;
     baselineItems: string[];
+    scenario: Scenario;
   },
 ): RuleResult {
   switch (ref.type) {
@@ -704,6 +808,8 @@ function runOne(
       return judgeJsonValid(ref, ctx.output, ctx.error);
     case "category_enum":
       return judgeCategoryEnum(ref, ctx.output);
+    case "expected_categories":
+      return judgeExpectedCategories(ref, ctx.output, ctx.scenario);
     case "must_exclude":
       return judgeMustExclude(ref, ctx.output);
     case "no_hallucination":
@@ -728,6 +834,10 @@ function runOne(
       return judgeNoCrash(ref, ctx.error);
     case "must_include_any":
       return judgeMustIncludeAny(ref, ctx.output);
+    case "must_include":
+      return judgeMustInclude(ref, ctx.output);
+    case "title_must_match":
+      return judgeTitleMustMatch(ref, ctx.output);
     case "golden_similarity":
       return judgeGoldenSimilarity(ref, ctx.output, ctx.baselineItems);
     case "reason_honesty":
@@ -805,11 +915,25 @@ export function runJudges(input: {
   if (scenario.expectations?.nonEmpty) {
     expanded.push({ id: "H012", type: "non_empty_items" });
   }
+  if (scenario.expectations?.mustInclude?.length) {
+    expanded.push({
+      id: "H017",
+      type: "must_include",
+      names: scenario.expectations.mustInclude,
+    });
+  }
   if (scenario.expectations?.mustIncludeAny?.length) {
     expanded.push({
       id: "S001",
       type: "must_include_any",
       names: scenario.expectations.mustIncludeAny,
+    });
+  }
+  if (scenario.expectations?.titleMustMatch?.length) {
+    expanded.push({
+      id: "H018",
+      type: "title_must_match",
+      patterns: scenario.expectations.titleMustMatch,
     });
   }
   if (scenario.expectations?.preferExclude?.length) {
@@ -851,6 +975,7 @@ export function runJudges(input: {
       error: input.error,
       sourceListsCount: input.sourceListsCount,
       baselineItems: input.baselineItems,
+      scenario,
     }),
   );
 

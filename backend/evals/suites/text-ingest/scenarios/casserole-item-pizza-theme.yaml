@@ -1,0 +1,49 @@
+id: casserole-item-pizza-theme
+scenarioVersion: 1
+name: Casserole item + pizza theme on a long list
+adapter: text-ingest
+description: >
+  First noun is a product; trailing theme grammar sets pizza context
+  without inventing pizza ingredients or dropping casserole.
+input:
+  locale: pl
+  sourceLabel: text
+  rawInput: >
+    Zapiekanka, mleko, chleb, jajka, masło, ser żółty, szynka, ogórek,
+    pomidory, banany, jabłka, kawa, herbata, ryż, makaron, woda, cola,
+    składniki na pizzę
+expectations:
+  nonEmpty: true
+  minItems: 12
+  mustInclude:
+    - Zapiekanka
+    - Mleko
+    - Chleb
+    - Jajka
+    - Masło
+    - Ser
+    - Szynka
+    - Pomidory
+    - Banany
+    - Kawa
+    - Ryż
+    - Makaron
+    - Cola
+  mustExclude:
+    - Ciasto na pizzę
+    - Passata
+    - Mozzarella
+  titleMustNotMatch:
+    - (?i)zapiekank
+hardRules:
+  - id: H001
+    type: json_valid
+  - id: H002
+    type: category_enum
+  - id: H012
+    type: non_empty_items
+  - id: H014
+    type: unique_item_names
+infoRules:
+  - id: I004
+    type: item_count

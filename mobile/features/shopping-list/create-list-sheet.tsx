@@ -1,5 +1,4 @@
 import {
-  ActivityIndicator,
   Image,
   Modal,
   Pressable,
@@ -33,7 +32,8 @@ export type CreateListPath =
 
 type Props = {
   visible: boolean;
-  busy?: boolean;
+  /** True while clipboard/image capture runs — options stay visible, rows disabled. */
+  preparing?: boolean;
   showFromHistory?: boolean;
   showFromRecipe?: boolean;
   /** Show Premium badge on From history (Free plan teaser). */
@@ -44,7 +44,7 @@ type Props = {
 
 export function CreateListSheet({
   visible,
-  busy,
+  preparing = false,
   showFromHistory = false,
   showFromRecipe = false,
   fromHistoryLocked = false,
@@ -55,6 +55,11 @@ export function CreateListSheet({
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
+
+  const select = (path: CreateListPath) => {
+    if (preparing) return;
+    onSelect(path);
+  };
 
   return (
     <Modal
@@ -164,94 +169,91 @@ export function CreateListSheet({
               />
             </View>
 
-            {busy ? (
-              <ActivityIndicator
-                color={theme.primary}
-                style={{ marginVertical: spacing[10] }}
+            <CreateListOptionRow
+              icon="📷"
+              title={t("home.createImage")}
+              subtitle={t("home.createImageHint")}
+              disabled={preparing}
+              onPress={() => select("photo")}
+            />
+            <CreateListOptionRow
+              icon="🛒"
+              title={t("home.createClipboard")}
+              subtitle={t("home.createClipboardHint")}
+              disabled={preparing}
+              onPress={() => select("clipboard")}
+            />
+            <CreateListOptionRow
+              icon="✏️"
+              title={t("home.createDescribe")}
+              subtitle={t("home.createDescribeHint")}
+              disabled={preparing}
+              onPress={() => select("describe")}
+            />
+            {showFromRecipe ? (
+              <CreateListOptionRow
+                icon="🍽️"
+                title={t("home.createFromRecipe")}
+                subtitle={t("home.createFromRecipeHint")}
+                disabled={preparing}
+                onPress={() => select("fromRecipe")}
               />
-            ) : (
-              <>
-                <CreateListOptionRow
-                  icon="📷"
-                  title={t("home.createImage")}
-                  subtitle={t("home.createImageHint")}
-                  onPress={() => onSelect("photo")}
-                />
-                <CreateListOptionRow
-                  icon="🛒"
-                  title={t("home.createClipboard")}
-                  subtitle={t("home.createClipboardHint")}
-                  onPress={() => onSelect("clipboard")}
-                />
-                <CreateListOptionRow
-                  icon="✏️"
-                  title={t("home.createDescribe")}
-                  subtitle={t("home.createDescribeHint")}
-                  onPress={() => onSelect("describe")}
-                />
-                {showFromRecipe ? (
-                  <CreateListOptionRow
-                    icon="🍽️"
-                    title={t("home.createFromRecipe")}
-                    subtitle={t("home.createFromRecipeHint")}
-                    onPress={() => onSelect("fromRecipe")}
-                  />
-                ) : null}
-                {showFromHistory ? (
-                  <CreateListOptionRow
-                    icon="✨"
-                    title={t("home.createFromHistory")}
-                    subtitle={t("home.createFromHistoryHint")}
-                    badge={
-                      fromHistoryLocked ? t("billing.premiumBadge") : undefined
-                    }
-                    onPress={() => onSelect("fromHistory")}
-                  />
-                ) : null}
+            ) : null}
+            {showFromHistory ? (
+              <CreateListOptionRow
+                icon="✨"
+                title={t("home.createFromHistory")}
+                subtitle={t("home.createFromHistoryHint")}
+                badge={
+                  fromHistoryLocked ? t("billing.premiumBadge") : undefined
+                }
+                disabled={preparing}
+                onPress={() => select("fromHistory")}
+              />
+            ) : null}
 
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: spacing[3],
-                    marginVertical: spacing[4],
-                  }}
-                >
-                  <View
-                    style={{ flex: 1, height: 1, backgroundColor: theme.border }}
-                  />
-                  <Text
-                    style={{
-                      ...typography.caption,
-                      color: theme.textMuted,
-                      fontWeight: "700",
-                      letterSpacing: 1,
-                    }}
-                  >
-                    {t("home.createOr")}
-                  </Text>
-                  <View
-                    style={{ flex: 1, height: 1, backgroundColor: theme.border }}
-                  />
-                </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing[3],
+                marginVertical: spacing[4],
+              }}
+            >
+              <View
+                style={{ flex: 1, height: 1, backgroundColor: theme.border }}
+              />
+              <Text
+                style={{
+                  ...typography.caption,
+                  color: theme.textMuted,
+                  fontWeight: "700",
+                  letterSpacing: 1,
+                }}
+              >
+                {t("home.createOr")}
+              </Text>
+              <View
+                style={{ flex: 1, height: 1, backgroundColor: theme.border }}
+              />
+            </View>
 
-                <CreateListOptionRow
-                  icon="☰"
-                  title={t("home.createEmpty")}
-                  subtitle={t("home.createEmptyHint")}
-                  onPress={() => onSelect("empty")}
-                />
-                <CreateListOptionRow
-                  icon="🎤"
-                  title={t("home.createVoice")}
-                  subtitle={t("home.createVoiceHint")}
-                  disabled
-                  soon
-                  soonLabel={t("home.comingSoonBadge")}
-                  onPress={() => {}}
-                />
-              </>
-            )}
+            <CreateListOptionRow
+              icon="☰"
+              title={t("home.createEmpty")}
+              subtitle={t("home.createEmptyHint")}
+              disabled={preparing}
+              onPress={() => select("empty")}
+            />
+            <CreateListOptionRow
+              icon="🎤"
+              title={t("home.createVoice")}
+              subtitle={t("home.createVoiceHint")}
+              disabled
+              soon
+              soonLabel={t("home.comingSoonBadge")}
+              onPress={() => {}}
+            />
           </ScrollView>
         </View>
       </View>

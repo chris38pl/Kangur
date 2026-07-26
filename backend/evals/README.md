@@ -17,6 +17,10 @@ pnpm eval:ai --suite history-suggest --write-golden grill-one-off --force
 # Meal Proposal (M21) — offline fixtures need no OpenAI key
 pnpm eval:ai --suite meal-proposal --only dedupe-cheese-two-meals
 pnpm eval:ai --suite meal-proposal
+# Shopping Categories Eval (offline CategoryCorrections + aisle catalog)
+pnpm eval:ai --suite shopping-categories
+# Text ingest — ITEM IDENTIFICATION / shoppingContext (needs OpenAI)
+pnpm eval:ai --suite text-ingest
 pnpm eval:prune-reports
 ```
 
@@ -26,9 +30,9 @@ pnpm eval:prune-reports
 Scenario YAML → thin Adapter → Evaluator → Judges → Report
 ```
 
-- **Adapter** (`adapters/historySuggest.ts`, `adapters/mealProposal.ts`): validates fixture input, calls production builders (`buildSuggestFromHistory` / `buildMealProposal` + `dedupeMealIngredients`), returns raw + normalized + corpus.
+- **Adapter** (`adapters/historySuggest.ts`, `adapters/mealProposal.ts`, `adapters/shoppingCategories.ts`, `adapters/textIngest.ts`): validates fixture input, calls production builders (`buildSuggestFromHistory` / `buildMealProposal` / CategoryCorrections / `buildProposalFromText`), returns raw + normalized + corpus.
 - **Evaluator**: timing, default seed (`424242`), `--repeat` stability, telemetry.
-- **Judges**: hard / soft / info with stable IDs (`H003`, `S002`, `H014`, …), structured evidence, per-judge latency.
+- **Judges**: hard / soft / info with stable IDs (`H003`, `S002`, `H014`, `H017`, …), structured evidence, per-judge latency.
 - **Report**: dated under `reports/YYYY-MM-DD/` (gitignored); includes repro command, cost aggregates, corpus snapshot.
 
 ### Suites
@@ -37,6 +41,8 @@ Scenario YAML → thin Adapter → Evaluator → Judges → Report
 |-------|---------|--------|
 | `history-suggest` | `shopping-history` | Weekly grocery from history; needs OpenAI for model scenarios |
 | `meal-proposal` | `meal-proposal` | Dish → ingredients; `mealsFixture` scenarios are offline (0 tokens) |
+| `shopping-categories` | `shopping-categories` | Offline CategoryCorrections + aisle golden catalog (0 tokens) |
+| `text-ingest` | `text-ingest` | Typed/clipboard lists → items + shoppingContext; needs OpenAI |
 
 ## Suite versioning
 

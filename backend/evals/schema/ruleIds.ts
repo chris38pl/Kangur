@@ -100,6 +100,24 @@ export const RULE_CATALOG = {
     tier: "hard",
     severity: "major",
   },
+  H016: {
+    id: "H016",
+    type: "expected_categories",
+    tier: "hard",
+    severity: "critical",
+  },
+  H017: {
+    id: "H017",
+    type: "must_include",
+    tier: "hard",
+    severity: "critical",
+  },
+  H018: {
+    id: "H018",
+    type: "title_must_match",
+    tier: "hard",
+    severity: "major",
+  },
   S001: {
     id: "S001",
     type: "must_include_any",

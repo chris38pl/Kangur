@@ -2,6 +2,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
+import { openSettings } from "expo-linking";
 import { router } from "expo-router";
 import {
   createContext,
@@ -14,6 +15,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 
+import { AppResultScreen } from "@/components/AppResultScreen";
 import { useAppResult } from "@/components/AppResultProvider";
 import { FeedbackSheet } from "@/components/feedback-sheet";
 import { brandAssets } from "@/design-system/brand-assets";
@@ -24,30 +26,47 @@ import {
 } from "@/features/ai/api";
 import { SuggestFromHistorySheet } from "@/features/ai/suggest-from-history-sheet";
 import type { SuggestFromHistoryResponse } from "@/features/ai/schemas";
+import { shoppingItemsQueryKey } from "@/features/shopping-item/query-keys";
 import {
   CreateListSheet,
   type CreateListPath,
 } from "@/features/shopping-list/create-list-sheet";
-import { setPendingListImport } from "@/features/shopping-list/pending-list-import";
+import { CreateListPreparingOverlay } from "@/features/shopping-list/create-list-preparing-overlay";
+import {
+  beginCreateListHandoff,
+  cancelCreateListHandoff,
+} from "@/features/shopping-list/create-list-handoff";
+import { createShoppingList } from "@/features/shopping-list/api";
+import { setPendingCreateDraft } from "@/features/shopping-list/pending-create-draft";
 import { setPendingListFocus } from "@/features/shopping-list/pending-list-focus";
+import {
+  setPendingListImport,
+  clearPendingListImport,
+} from "@/features/shopping-list/pending-list-import";
 import { markListProvisional } from "@/features/shopping-list/provisional-list";
-import { useCreateShoppingList } from "@/features/shopping-list/useShoppingLists";
+import type { ShoppingList } from "@/features/shopping-list/schemas";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import {
   getCreditShortage,
   isInsufficientCreditsError,
 } from "@/lib/ai/insufficientCredits";
+import { Analytics } from "@/lib/analytics";
+import { oncePerUser } from "@/lib/analytics/once";
 import { ApiClientError } from "@/lib/api/client";
-import { finishTaskAndOpen } from "@/lib/navigation";
+import { finishTaskAndOpen, openDetails } from "@/lib/navigation";
 import {
   isHistorySuggestionsEnabled,
   isMealProposalEnabled,
 } from "@/lib/featureGates";
+import { persistShoppingListsCache } from "@/lib/query/persist-bootstrap";
 
 type CreateListContextValue = {
   openCreateList: () => void;
-  createAndOpen: (path: CreateListPath) => Promise<void>;
+  createAndOpen: (
+    path: CreateListPath,
+    options?: { imageSource?: "camera" | "library" },
+  ) => Promise<void>;
 };
 
 const CreateListContext = createContext<CreateListContextValue | null>(null);
@@ -71,10 +90,12 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
   } = useAppResult();
   const workspacesQuery = useWorkspaces();
   const { activeWorkspace, hydrated } = useActiveWorkspace(workspacesQuery.data);
-  const createList = useCreateShoppingList(activeWorkspace?.id ?? null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [preparing, setPreparing] = useState(false);
+  const [creatingOverlay, setCreatingOverlay] = useState(false);
   const [clipboardEmptyOpen, setClipboardEmptyOpen] = useState(false);
+  const [photoSourceOpen, setPhotoSourceOpen] = useState(false);
+  const createInFlightRef = useRef(false);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [applyBusy, setApplyBusy] = useState(false);
   const [suggestRun, setSuggestRun] =
@@ -144,8 +165,14 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
       if (error instanceof ApiClientError) {
         if (error.code === "AI_UNAVAILABLE" || error.status === 502) {
           showError({
-            title: t("ai.suggestErrorTitle"),
-            description: t("ai.suggestUnavailable"),
+            title: t("ai.unavailableTitle"),
+            description: t("ai.unavailableBody"),
+            image: brandAssets.aiUnavailable,
+            primaryLabel: t("common.tryAgain"),
+            secondaryLabel: t("common.return"),
+            onPrimary: () => {
+              void runFromHistory();
+            },
           });
           return;
         }
@@ -185,8 +212,14 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         }
       }
       showError({
-        title: t("ai.suggestErrorTitle"),
-        description: t("ai.suggestUnavailable"),
+        title: t("ai.unavailableTitle"),
+        description: t("ai.unavailableBody"),
+        image: brandAssets.aiUnavailable,
+        primaryLabel: t("common.tryAgain"),
+        secondaryLabel: t("common.return"),
+        onPrimary: () => {
+          void runFromHistory();
+        },
       });
     } finally {
       if (suggestRequestIdRef.current === requestId) {
@@ -270,9 +303,13 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
   );
 
   const createAndOpen = useCallback(
-    async (path: CreateListPath) => {
+    async (
+      path: CreateListPath,
+      options?: { imageSource?: "camera" | "library" },
+    ) => {
       if (!activeWorkspace || !hydrated) return;
       if (path === "voice") return;
+      if (createInFlightRef.current) return;
 
       if (path === "fromHistory") {
         if (activeWorkspace.plan !== "premium") {
@@ -289,25 +326,74 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      if (
+        (path === "photo" || path === "screenshot") &&
+        !options?.imageSource
+      ) {
+        setSheetOpen(false);
+        setPhotoSourceOpen(true);
+        return;
+      }
+
+      // Capture (clipboard/picker) while sheet can still show preparing.
+      // Then close sheet → honest fullscreen wait → POST → /list/:id.
+      // No Home invalidate here: seed cache, navigate; Home revalidates later.
       try {
-        // Capture import payload BEFORE creating a list - cancel must not spam empty lists.
+        createInFlightRef.current = true;
+        setPreparing(true);
+
+        let focus: "ai" | "meal" | "manual" = "ai";
+        let name = t("home.aiListName");
+        let emoji = "🛒";
+        let aiText = "";
+
         if (path === "clipboard") {
-          setPreparing(true);
           const text = (await Clipboard.getStringAsync()).trim();
-          setPreparing(false);
           if (!text) {
+            setPreparing(false);
+            createInFlightRef.current = false;
             setClipboardEmptyOpen(true);
             return;
           }
           setPendingListImport({ kind: "clipboard", text });
+          aiText = text;
         } else if (path === "photo" || path === "screenshot") {
-          setPreparing(true);
-          const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ["images"],
-            quality: 0.55,
-          });
-          setPreparing(false);
-          if (result.canceled) return;
+          const imageSource = options?.imageSource ?? "library";
+          const permission =
+            imageSource === "camera"
+              ? await ImagePicker.requestCameraPermissionsAsync()
+              : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+          if (!permission.granted) {
+            setPreparing(false);
+            createInFlightRef.current = false;
+            showError({
+              title: t("feedback.permissionTitle"),
+              description: t("feedback.permissionBody"),
+              primaryLabel: t("feedback.openSettings"),
+              onPrimary: () => {
+                void openSettings();
+              },
+              secondaryLabel: t("common.cancel"),
+            });
+            return;
+          }
+
+          const result =
+            imageSource === "camera"
+              ? await ImagePicker.launchCameraAsync({
+                  mediaTypes: ["images"],
+                  quality: 0.55,
+                })
+              : await ImagePicker.launchImageLibraryAsync({
+                  mediaTypes: ["images"],
+                  quality: 0.55,
+                });
+          if (result.canceled) {
+            setPreparing(false);
+            createInFlightRef.current = false;
+            return;
+          }
           const asset = result.assets[0];
           setPendingListImport({
             kind: "image",
@@ -315,44 +401,81 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
             fileName: asset.fileName,
             mimeType: asset.mimeType,
           });
-        }
-
-        const list = await createList.mutateAsync({
-          name:
-            path === "empty"
-              ? t("home.defaultListName")
-              : path === "fromRecipe"
-                ? t("home.mealListName")
-                : t("home.aiListName"),
-          // Must be in SHOPPING_LIST_EMOJIS.
-          emoji: path === "fromRecipe" ? "🍽️" : "🛒",
-        });
-        // Discard if user leaves before any products are saved.
-        markListProvisional(list.id);
-        if (path === "fromRecipe") {
-          setPendingListFocus(list.id, "meal");
+        } else if (path === "fromRecipe") {
+          focus = "meal";
+          name = t("home.mealListName");
+          emoji = "🍽️";
         } else if (path === "empty") {
-          setPendingListFocus(list.id, "manual");
-        } else {
-          setPendingListFocus(list.id, "ai");
+          focus = "manual";
+          name = t("home.defaultListName");
         }
-        setSheetOpen(false);
 
-        finishTaskAndOpen(`/list/${list.id}` as never);
+        setPreparing(false);
+        setSheetOpen(false);
+        setCreatingOverlay(true);
+
+        const token = await getToken();
+        if (!token) throw new Error("Missing auth token");
+
+        const list = await createShoppingList(token, activeWorkspace.id, {
+          name,
+          emoji,
+        });
+        markListProvisional(list.id);
+        queryClient.setQueryData(["shopping-list", list.id, "active"], list);
+        queryClient.setQueryData(shoppingItemsQueryKey(list.id, "active"), []);
+
+        const homeLists = queryClient.setQueryData<ShoppingList[]>(
+          ["shopping-lists", activeWorkspace.id],
+          (prev) => {
+            if (!prev) return [list];
+            if (prev.some((entry) => entry.id === list.id)) return prev;
+            return [list, ...prev];
+          },
+        );
+        if (homeLists) {
+          void persistShoppingListsCache(activeWorkspace.id, homeLists);
+        }
+
+        void oncePerUser("first_list_created", () => {
+          Analytics.track("first_list_created", {
+            workspace_id: activeWorkspace.id,
+            list_id: list.id,
+          });
+        });
+
+        setPendingCreateDraft({ focus, aiText });
+        setPendingListFocus(list.id, focus);
+        // Push Details under the overlay — do not finishTaskAndOpen/goRoot
+        // (that remounts Home and flashes between skeleton and list).
+        beginCreateListHandoff(() => {
+          setCreatingOverlay(false);
+          createInFlightRef.current = false;
+        });
+        openDetails(`/list/${list.id}` as never);
       } catch {
         setPreparing(false);
-        // keep sheet open; drop any staged import so we do not attach it later
-        const { clearPendingListImport } = await import(
-          "@/features/shopping-list/pending-list-import"
-        );
+        setCreatingOverlay(false);
+        createInFlightRef.current = false;
+        cancelCreateListHandoff();
         clearPendingListImport();
         showError({
-          title: t("ai.suggestErrorTitle"),
-          description: t("list.ingestFailed"),
+          title: t("home.createFailedTitle"),
+          description: t("home.createFailedBody"),
+          primaryLabel: t("common.tryAgain"),
+          secondaryLabel: t("common.return"),
         });
       }
     },
-    [activeWorkspace, createList, hydrated, runFromHistory, showError, t],
+    [
+      activeWorkspace,
+      getToken,
+      hydrated,
+      queryClient,
+      runFromHistory,
+      showError,
+      t,
+    ],
   );
 
   const value = useMemo(
@@ -365,13 +488,35 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
       {children}
       <CreateListSheet
         visible={sheetOpen}
-        busy={createList.isPending || preparing}
+        preparing={preparing || creatingOverlay}
         showFromHistory={isHistorySuggestionsEnabled()}
         showFromRecipe={isMealProposalEnabled()}
         fromHistoryLocked={activeWorkspace?.plan !== "premium"}
-        onClose={() => setSheetOpen(false)}
+        onClose={() => {
+          if (preparing || creatingOverlay) return;
+          setSheetOpen(false);
+        }}
         onSelect={(path) => void createAndOpen(path)}
       />
+      <AppResultScreen
+        visible={photoSourceOpen}
+        variant="info"
+        image={brandAssets.createListMascot}
+        title={t("feedback.addPhoto")}
+        description={t("home.createImageHint")}
+        primaryLabel={t("feedback.takePhoto")}
+        onPrimary={() => {
+          setPhotoSourceOpen(false);
+          void createAndOpen("photo", { imageSource: "camera" });
+        }}
+        secondaryLabel={t("feedback.chooseGallery")}
+        onSecondary={() => {
+          setPhotoSourceOpen(false);
+          void createAndOpen("photo", { imageSource: "library" });
+        }}
+        onBack={() => setPhotoSourceOpen(false)}
+      />
+      <CreateListPreparingOverlay visible={creatingOverlay} />
       <SuggestFromHistorySheet
         // Hide while global result Modal is up (nested Modals often stay underneath).
         visible={(suggestLoading || Boolean(suggestRun)) && !appResultVisible}

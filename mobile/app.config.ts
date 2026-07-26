@@ -26,7 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: isDevApp ? "Kangur DEV" : "Kangur",
     slug: "kangur",
     owner: "chris38pl",
-    version: "1.0.1",
+    version: "1.0.2",
     orientation: "portrait",
     icon: isDevApp
       ? "./assets/images/icon-dev.png"
@@ -88,6 +88,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             "Allow Kangur to access your photos to import shopping lists.",
           cameraPermission:
             "Allow Kangur to use the camera to capture shopping lists.",
+        },
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          microphonePermission:
+            "Allow Kangur to use the microphone to dictate shopping list items.",
+          speechRecognitionPermission:
+            "Allow Kangur to use speech recognition to dictate shopping list items.",
         },
       ],
       [

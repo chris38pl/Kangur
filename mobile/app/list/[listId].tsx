@@ -13,8 +13,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
+  InteractionManager,
   Keyboard,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -42,7 +42,9 @@ import { AiPhaseCrossfade, LoadingTransition } from "@/lib/motion";
 import { applyAi, ingestAi } from "@/features/ai/api";
 import { buildScreenshotIngestFormData } from "@/features/ai/buildScreenshotIngestFormData";
 import { MealProposalComposer } from "@/features/ai/meal-proposal-composer";
+import { MicIcon } from "@/features/ai/mic-icon";
 import type { ProposalOperation } from "@/features/ai/schemas";
+import { useSpeechDictation } from "@/features/ai/use-speech-dictation";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { perfEnd, perfStart } from "@/lib/performance";
 import { useAiCredits } from "@/features/billing/useAiCredits";
@@ -55,6 +57,7 @@ import {
 import { EditItemSheet } from "@/features/shopping-item/edit-item-sheet";
 import { RemoteChangeToast, useListRealtime } from "@/lib/realtime";
 import { ListItemRow } from "@/features/shopping-item/list-item-row";
+import { shoppingItemsQueryKey } from "@/features/shopping-item/query-keys";
 import type {
   ShoppingCategory,
   ShoppingItem,
@@ -68,7 +71,9 @@ import { getShoppingList } from "@/features/shopping-list/api";
 import { CreateListOptionRow } from "@/features/shopping-list/create-list-option-row";
 import { DeleteListDialog } from "@/features/shopping-list/delete-list-dialog";
 import { takePendingListImport } from "@/features/shopping-list/pending-list-import";
+import { takePendingCreateDraft } from "@/features/shopping-list/pending-create-draft";
 import { takePendingListFocus } from "@/features/shopping-list/pending-list-focus";
+import { completeCreateListHandoff } from "@/features/shopping-list/create-list-handoff";
 import {
   takePendingScrollToItems,
 } from "@/features/shopping-list/pending-scroll-to-items";
@@ -144,7 +149,7 @@ export default function ShoppingListScreen() {
   const keyboardHeight = useKeyboardHeight();
   const router = useRouter();
   const navigation = useNavigation();
-  const { showInsufficientCredits } = useAppResult();
+  const { showInsufficientCredits, showError } = useAppResult();
   const { listId, import: importSource } = useLocalSearchParams<{
     listId: string;
     import?: string;
@@ -154,12 +159,22 @@ export default function ShoppingListScreen() {
   const importTriggered = useRef(false);
   const aiRequestIdRef = useRef<string | null>(null);
   const aiSourceRef = useRef<AiImportSource>("text");
+  const lastIngestFormDataRef = useRef<FormData | null>(null);
   const aiOriginalOpsRef = useRef<ProposalOperation[]>([]);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [category, setCategory] = useState<ShoppingCategory>("other");
   const [aiText, setAiText] = useState("");
+  const {
+    isAvailable: isDictateAvailable,
+    isListening: isDictating,
+    toggle: toggleDictate,
+    stop: stopDictate,
+  } = useSpeechDictation({
+    text: aiText,
+    onTranscript: setAiText,
+  });
   const [reviewRunId, setReviewRunId] = useState<string | null>(null);
   const [reviewOperations, setReviewOperations] = useState<ProposalOperation[]>([]);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -318,7 +333,10 @@ export default function ShoppingListScreen() {
         operations: buildApplyOperations(input.operations),
       });
 
-      queryClient.setQueryData(["shopping-items", listId], result.items);
+      queryClient.setQueryData(
+        shoppingItemsQueryKey(listId, "active"),
+        result.items,
+      );
       return result;
     },
     onError: (error) => {
@@ -464,15 +482,47 @@ export default function ShoppingListScreen() {
         return;
       }
       if (error instanceof ApiClientError && error.code === "NOT_FOUND") {
-        Alert.alert(t("list.missingTitle"), t("list.missingBody"), [
-          {
-            text: t("invite.goHome"),
-            onPress: () => goRoot(),
-          },
-        ]);
+        showError({
+          title: t("list.missingTitle"),
+          description: t("list.missingBody"),
+          primaryLabel: t("invite.goHome"),
+          onPrimary: () => goRoot(),
+        });
         return;
       }
-      Alert.alert(t("list.title"), error.message || t("list.ingestFailed"));
+
+      const retryFormData = lastIngestFormDataRef.current;
+      const retrySource = aiSourceRef.current;
+      showError({
+        title: t("ai.unavailableTitle"),
+        description: t("ai.unavailableBody"),
+        image: brandAssets.aiUnavailable,
+        primaryLabel: t("common.tryAgain"),
+        secondaryLabel: t("common.return"),
+        onPrimary: () => {
+          if (!retryFormData || typeof listId !== "string") return;
+          const workspaceId = listQuery.data?.workspaceId;
+          if (!workspaceId) return;
+          const requestId = createRequestId();
+          aiRequestIdRef.current = requestId;
+          aiSourceRef.current = retrySource;
+          lastIngestFormDataRef.current = retryFormData;
+          setSentryRequestId(requestId);
+          setAiPhase(retrySource === "screenshot" ? "uploading" : "analyzing");
+          perfStart("ai.ingest", {
+            id: listId,
+            labels: { source: retrySource },
+          });
+          Analytics.track("ai_import_started", {
+            workspace_id: workspaceId,
+            list_id: listId,
+            request_id: requestId,
+            source: retrySource,
+          });
+          ingestMutation.mutate(retryFormData);
+        },
+        onSecondary: () => goRoot(),
+      });
     },
     onSuccess: (result) => {
       const title =
@@ -546,8 +596,9 @@ export default function ShoppingListScreen() {
         return;
       }
       const items =
-        queryClient.getQueryData<ShoppingItem[]>(["shopping-items", listId]) ??
-        [];
+        queryClient.getQueryData<ShoppingItem[]>(
+          shoppingItemsQueryKey(listId, "active"),
+        ) ?? [];
       const count = items.filter((item) => item.status !== "removed").length;
       clearListProvisional(listId);
       if (count === 0) {
@@ -596,6 +647,7 @@ export default function ShoppingListScreen() {
     const requestId = createRequestId();
     aiRequestIdRef.current = requestId;
     aiSourceRef.current = source;
+    lastIngestFormDataRef.current = formData;
     setSentryRequestId(requestId);
     setAiPhase(source === "screenshot" ? "uploading" : "analyzing");
     perfStart("ai.ingest", { id: listId, labels: { source } });
@@ -615,6 +667,7 @@ export default function ShoppingListScreen() {
   };
 
   const startTextIngest = () => {
+    stopDictate();
     Keyboard.dismiss();
     const formData = new FormData();
     formData.append("source", "text");
@@ -663,10 +716,18 @@ export default function ShoppingListScreen() {
           code: "screenshot_build_failed",
         });
       }
-      Alert.alert(
-        t("list.title"),
-        error instanceof Error ? error.message : t("list.ingestFailed"),
-      );
+      setAiPhase("idle");
+      showError({
+        title: t("ai.unavailableTitle"),
+        description: t("ai.unavailableBody"),
+        image: brandAssets.aiUnavailable,
+        primaryLabel: t("common.tryAgain"),
+        secondaryLabel: t("common.return"),
+        onPrimary: () => {
+          void startScreenshotIngest(picked);
+        },
+        onSecondary: () => goRoot(),
+      });
     }
   };
 
@@ -697,19 +758,31 @@ export default function ShoppingListScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once when list ready
   }, [listQuery.isSuccess, listId, importSource]);
 
-  // Expand the section that matches how the list was opened (FAB path).
+  // Expand the section that matches how the list was opened (FAB path / shell).
   useEffect(() => {
     if (entryFocusApplied.current) return;
     if (!listQuery.isSuccess || typeof listId !== "string") return;
     entryFocusApplied.current = true;
-    const focus = takePendingListFocus(listId);
+    const draft = takePendingCreateDraft();
+    const focus = takePendingListFocus(listId) ?? draft?.focus ?? null;
     // Defer so we don't sync-setState inside the effect body (react-hooks/set-state-in-effect).
     queueMicrotask(() => {
-      setAiSectionOpen(focus === "ai");
-      setMealSectionOpen(focus === "meal");
-      setManualAddOpen(focus === "manual");
+      if (draft?.aiText) setAiText(draft.aiText);
+      if (focus === "ai") setAiSectionOpen(true);
+      if (focus === "meal") setMealSectionOpen(true);
+      if (focus === "manual") setManualAddOpen(true);
     });
   }, [listQuery.isSuccess, listId]);
+
+  // Create FAB overlay stays until list paints — avoids Home flash under goRoot/push.
+  useEffect(() => {
+    if (typeof listId !== "string") return;
+    if (isPending) return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      completeCreateListHandoff();
+    });
+    return () => task.cancel();
+  }, [listId, isPending]);
 
   // Meal proposal (and other off-screen AI apply) → scroll to items on return.
   useEffect(() => {
@@ -950,7 +1023,12 @@ export default function ShoppingListScreen() {
           <>
             <View>
               <Pressable
-                onPress={() => setAiSectionOpen((open) => !open)}
+                onPress={() => {
+                  setAiSectionOpen((open) => {
+                    if (open) stopDictate();
+                    return !open;
+                  });
+                }}
                 accessibilityRole="button"
                 accessibilityState={{ expanded: aiSectionOpen }}
                 style={{
@@ -994,24 +1072,70 @@ export default function ShoppingListScreen() {
                     {t("ai.quickAddSubtitle")}
                   </Text>
 
-                  <TextInput
-                    value={aiText}
-                    onChangeText={setAiText}
-                    multiline
-                    placeholder={t("ai.textPlaceholder")}
-                    placeholderTextColor={theme.textMuted}
-                    style={{
-                      marginTop: spacing[4],
-                      minHeight: 96,
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                      backgroundColor: theme.surface,
-                      borderRadius: radius.lg,
-                      padding: spacing[4],
-                      color: theme.text,
-                      textAlignVertical: "top",
-                    }}
-                  />
+                  <View style={{ marginTop: spacing[4], position: "relative" }}>
+                    <TextInput
+                      value={aiText}
+                      onChangeText={setAiText}
+                      multiline
+                      placeholder={t("ai.textPlaceholder")}
+                      placeholderTextColor={theme.textMuted}
+                      editable={
+                        !ingestMutation.isPending && !applyMutation.isPending
+                      }
+                      style={{
+                        minHeight: 96,
+                        borderWidth: 1,
+                        borderColor: isDictating
+                          ? theme.primary
+                          : theme.border,
+                        backgroundColor: theme.surface,
+                        borderRadius: radius.lg,
+                        paddingTop: spacing[4],
+                        paddingBottom: spacing[4] + 36,
+                        paddingLeft: spacing[4],
+                        paddingRight: spacing[4] + 36,
+                        color: theme.text,
+                        textAlignVertical: "top",
+                      }}
+                    />
+                    <Pressable
+                      disabled={
+                        ingestMutation.isPending ||
+                        applyMutation.isPending ||
+                        (!isDictateAvailable && !isDictating)
+                      }
+                      onPress={toggleDictate}
+                      accessibilityRole="button"
+                      accessibilityLabel={t(
+                        isDictating ? "ai.dictateStop" : "ai.dictateStart",
+                      )}
+                      hitSlop={8}
+                      style={{
+                        position: "absolute",
+                        right: spacing[2],
+                        bottom: spacing[2],
+                        width: 40,
+                        height: 40,
+                        borderRadius: radius.md,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: isDictating
+                          ? `${theme.danger}22`
+                          : `${theme.primary}14`,
+                        opacity:
+                          ingestMutation.isPending ||
+                          applyMutation.isPending ||
+                          (!isDictateAvailable && !isDictating)
+                            ? 0.45
+                            : 1,
+                      }}
+                    >
+                      <MicIcon
+                        color={isDictating ? theme.danger : theme.primary}
+                        size={20}
+                      />
+                    </Pressable>
+                  </View>
 
                   <Pressable
                     disabled={

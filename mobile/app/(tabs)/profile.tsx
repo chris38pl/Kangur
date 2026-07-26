@@ -249,12 +249,12 @@ export default function ProfileScreen() {
   const queryClient = useQueryClient();
 
   const workspacesQuery = useWorkspaces();
-  const { activeWorkspace, hydrated, storedId } = useActiveWorkspace(
+  const { activeWorkspace, hydrated, queryWorkspaceId } = useActiveWorkspace(
     workspacesQuery.data,
   );
   const listsQuery = useShoppingLists(
-    activeWorkspace?.id ?? storedId ?? null,
-    hydrated,
+    queryWorkspaceId,
+    hydrated && Boolean(queryWorkspaceId),
   );
 
   const spacesCount = workspacesQuery.data?.length ?? 0;

@@ -8,6 +8,8 @@ export const brandAssets = {
   splashMascot: require("@/assets/brand/splash-mascot.webp"),
   leaveShopping: require("@/assets/brand/leave-shopping.webp"),
   error: require("@/assets/brand/error.webp"),
+  /** AI temporarily unavailable / timeout (ingest, suggest, meal). */
+  aiUnavailable: require("@/assets/brand/ai-unavailable.png"),
   createListMascot: require("@/assets/brand/create-list-mascot.webp"),
   homeHero: require("@/assets/brand/home-hero.webp"),
   listBag: require("@/assets/brand/list-bag.webp"),

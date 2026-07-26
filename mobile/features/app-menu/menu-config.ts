@@ -18,7 +18,8 @@ export type AppMenuItemId =
   | "terms"
   | "about"
   | "platform-console"
-  | "workspace-browser";
+  | "workspace-browser"
+  | "platform-feedback";
 
 export type AppMenuItem = {
   id: AppMenuItemId;
@@ -99,7 +100,10 @@ export const APP_MENU_SECTIONS: AppMenuSection[] = [
       {
         id: "feedback",
         labelKey: "appMenu.feedback",
-        href: "/help",
+        href: {
+          pathname: "/feedback",
+          params: { type: "FEATURE_REQUEST" },
+        } as unknown as Href,
         visible: everyone,
       },
       {
@@ -136,6 +140,12 @@ export const APP_MENU_SECTIONS: AppMenuSection[] = [
         id: "workspace-browser",
         labelKey: "appMenu.workspaceBrowser",
         href: "/workspace-browser",
+        visible: platformAdmin,
+      },
+      {
+        id: "platform-feedback",
+        labelKey: "appMenu.platformFeedback",
+        href: "/platform-feedback" as Href,
         visible: platformAdmin,
       },
     ],

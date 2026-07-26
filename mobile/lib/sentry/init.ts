@@ -142,6 +142,7 @@ export function captureException(
 export function addSentryBreadcrumb(
   message: string,
   data?: Record<string, unknown>,
+  level: "info" | "warning" | "error" | "debug" = "info",
 ): void {
   const Sentry = loadSentry();
   if (!Sentry) return;
@@ -149,7 +150,7 @@ export function addSentryBreadcrumb(
     Sentry.addBreadcrumb({
       message,
       data,
-      level: "info",
+      level,
     });
   } catch {
     // ignore

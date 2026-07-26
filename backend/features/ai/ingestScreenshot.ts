@@ -1,14 +1,13 @@
 import type { Prisma } from "@prisma/client";
 
 import {
-  AI_PROVIDER,
   IMPORT_PROPOSAL_TYPE,
   IMPORT_PROPOSAL_VERSION,
 } from "@/lib/openai";
 import { Analytics } from "@/lib/analytics";
 import {
-  estimateOpenAiCostUsd,
-  usageFromCompletion,
+  estimateAiCostUsd,
+  usageFromTokenCounts,
 } from "@/lib/analytics/aiCost";
 import { withReservedAiCredits } from "@/lib/aiCredits";
 import { prisma } from "@/lib/prisma";
@@ -47,7 +46,10 @@ export async function ingestScreenshot(input: {
     },
   });
 
-  const outputLanguage = await resolveListOutputLanguage(input.listId);
+  const outputLanguage = await resolveListOutputLanguage(
+    input.listId,
+    input.userId,
+  );
 
   return withReservedAiCredits(list.workspaceId, "screenshot", async () => {
     let proposalResult: Awaited<ReturnType<typeof buildProposalFromScreenshot>>;
@@ -65,7 +67,7 @@ export async function ingestScreenshot(input: {
         "ai_model_completed",
         {
           workspace_id: list.workspaceId,
-          provider: AI_PROVIDER,
+          provider: "unknown",
           model: "unknown",
           latency_ms: durationMs,
           ok: false,
@@ -86,28 +88,25 @@ export async function ingestScreenshot(input: {
     }
 
     const durationMs = Date.now() - startedAt;
-    const usage = usageFromCompletion(
-      proposalResult.rawResponse as {
-        usage?: {
-          prompt_tokens?: number;
-          completion_tokens?: number;
-          total_tokens?: number;
-        };
-      },
-    );
+    const usage = usageFromTokenCounts(proposalResult.usage);
+    const timing = proposalResult.timing;
     Analytics.track(
       "ai_model_completed",
       {
         workspace_id: list.workspaceId,
-        provider: AI_PROVIDER,
+        provider: proposalResult.provider,
         model: proposalResult.model,
         latency_ms: durationMs,
         tokens: usage.tokens,
-        estimated_cost_usd: estimateOpenAiCostUsd({
+        estimated_cost_usd: estimateAiCostUsd({
           model: proposalResult.model,
           promptTokens: usage.promptTokens,
           completionTokens: usage.completionTokens,
         }),
+        used_fallback: timing.usedFallback,
+        fallback_provider: timing.fallbackProvider,
+        fallback_reason: timing.fallbackReason,
+        provider_attempt_order: timing.providerAttemptOrder,
         ok: true,
       },
       input.userId,
@@ -121,7 +120,7 @@ export async function ingestScreenshot(input: {
         source: "screenshot",
         proposalType: IMPORT_PROPOSAL_TYPE,
         proposalVersion: IMPORT_PROPOSAL_VERSION,
-        provider: AI_PROVIDER,
+        provider: proposalResult.provider,
         status: "proposed",
         model: proposalResult.model,
         durationMs,
@@ -138,7 +137,7 @@ export async function ingestScreenshot(input: {
     return {
       runId: run.id,
       model: proposalResult.model,
-      provider: AI_PROVIDER,
+      provider: proposalResult.provider,
       proposalType: IMPORT_PROPOSAL_TYPE,
       proposalVersion: IMPORT_PROPOSAL_VERSION,
       durationMs,

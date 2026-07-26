@@ -7,8 +7,11 @@ import type { ShoppingEvent } from "@/features/shopping-item/schemas";
 import {
   createEventPollingProvider,
   type EventPollingProviderInstance,
+  type PollCadence,
 } from "./EventPollingProvider";
 import type { EventBatchMeta } from "./types";
+
+export type { PollCadence };
 
 type GetToken = () => Promise<string | null>;
 type BatchHandler = (
@@ -22,6 +25,7 @@ type SubState = {
   provider: EventPollingProviderInstance | null;
   getToken: GetToken | null;
   onBatch: BatchHandler | null;
+  cadence: PollCadence;
   appSub: { remove: () => void } | null;
   offOnline: (() => void) | null;
 };
@@ -32,6 +36,7 @@ const sub: SubState = {
   provider: null,
   getToken: null,
   onBatch: null,
+  cadence: "default",
   appSub: null,
   offOnline: null,
 };
@@ -70,6 +75,10 @@ function attachGlobalListeners(provider: EventPollingProviderInstance) {
         } else if (next === "active") {
           provider.resume();
           provider.pollNow();
+          // Settled reconcile after foreground (queue idle → one GET).
+          if (sub.listId) {
+            DataSyncEngine.reconcileIfSettled(sub.listId);
+          }
         }
       },
     );
@@ -87,6 +96,9 @@ function attachGlobalListeners(provider: EventPollingProviderInstance) {
       if (!wasOnline) {
         provider.resume();
         provider.pollNow();
+        if (sub.listId) {
+          DataSyncEngine.reconcileIfSettled(sub.listId);
+        }
       }
       wasOnline = online;
     });
@@ -109,12 +121,15 @@ export function subscribeListEvents(input: {
   listId: string;
   getToken: GetToken;
   onBatch: BatchHandler;
+  cadence?: PollCadence;
 }): () => void {
   const provider = ensureProvider();
   attachGlobalListeners(provider);
 
   sub.getToken = input.getToken;
   sub.onBatch = input.onBatch;
+  sub.cadence = input.cadence ?? "default";
+  provider.setCadence(sub.cadence);
 
   if (sub.listId === input.listId && sub.refCount > 0) {
     sub.refCount += 1;
@@ -149,6 +164,8 @@ export function subscribeListEvents(input: {
       provider.stop();
       sub.listId = null;
       sub.onBatch = null;
+      sub.cadence = "default";
+      provider.setCadence("default");
       detachGlobalListenersIfIdle();
     }
   };
