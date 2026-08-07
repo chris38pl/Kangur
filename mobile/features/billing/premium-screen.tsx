@@ -1099,13 +1099,16 @@ export function PremiumScreen() {
   /** Shown only after silent restore/sync fails — never the default path. */
   const [showCheckStatus, setShowCheckStatus] = useState(false);
 
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
         await BillingService.initialize();
         if (cancelled) return;
-        const token = await getToken();
+        const token = await getTokenRef.current();
         const products = await BillingService.availableProducts({
           authToken: token,
           workspaceId: workspace?.id,
@@ -1119,9 +1122,10 @@ export function PremiumScreen() {
     })();
     return () => {
       cancelled = true;
-      void BillingService.dispose();
+      // Do not endConnection() here — leaving Premium / remounting was killing
+      // BillingClient and caused "Play Store service is not connected" on CTA.
     };
-  }, [getToken, workspace?.id]);
+  }, [workspace?.id]);
 
   useEffect(() => {
     if (paramWorkspaceId) {
@@ -1162,7 +1166,6 @@ export function PremiumScreen() {
 
   const workspaceIdRef = useRef(workspace?.id);
   const planRef = useRef(workspace?.plan);
-  const getTokenRef = useRef(getToken);
   const refetchWorkspacesRef = useRef(workspacesQuery.refetch);
   workspaceIdRef.current = workspace?.id;
   planRef.current = workspace?.plan;

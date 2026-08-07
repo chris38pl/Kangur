@@ -98,7 +98,13 @@ export class GoogleMobileBillingProvider implements MobileBillingProvider {
 
   async initialize(): Promise<void> {
     if (this.connected) return;
-    await initConnection();
+    const ok = await initConnection();
+    if (!ok) {
+      this.connected = false;
+      throw new Error(
+        "Play Store service is not connected. Open the Play Store app, sign in, then retry.",
+      );
+    }
     this.connected = true;
   }
 
@@ -109,6 +115,11 @@ export class GoogleMobileBillingProvider implements MobileBillingProvider {
     } finally {
       this.connected = false;
     }
+  }
+
+  /** Drop local connected flag so the next initialize() retries Play Billing. */
+  markDisconnected(): void {
+    this.connected = false;
   }
 
   async fetchProducts(): Promise<BillingProduct[]> {
@@ -142,95 +153,107 @@ export class GoogleMobileBillingProvider implements MobileBillingProvider {
   }
 
   async purchase(productId: ProductCatalogId): Promise<StoreProof> {
-    await this.initialize();
-    const sku = getProduct(productId).providerConfig.google.externalProductId;
-    const products = await fetchProducts({ skus: [sku], type: "subs" });
-    const list = (Array.isArray(products) ? products : []) as ProductSubscription[];
-    const sub = list.find((s) => s.id === sku);
-    const androidOffers =
-      sub && "subscriptionOffers" in sub && Array.isArray(sub.subscriptionOffers)
-        ? sub.subscriptionOffers
-        : [];
-    const offerToken =
-      (androidOffers[0] as { offerTokenAndroid?: string; offerToken?: string } | undefined)
-        ?.offerTokenAndroid ??
-      (androidOffers[0] as { offerToken?: string } | undefined)?.offerToken ??
-      null;
-    if (!offerToken) {
-      throw new Error("Google subscription offerToken missing");
+    try {
+      await this.initialize();
+      const sku = getProduct(productId).providerConfig.google.externalProductId;
+      const products = await fetchProducts({ skus: [sku], type: "subs" });
+      const list = (Array.isArray(products) ? products : []) as ProductSubscription[];
+      const sub = list.find((s) => s.id === sku);
+      const androidOffers =
+        sub && "subscriptionOffers" in sub && Array.isArray(sub.subscriptionOffers)
+          ? sub.subscriptionOffers
+          : [];
+      const offerToken =
+        (androidOffers[0] as { offerTokenAndroid?: string; offerToken?: string } | undefined)
+          ?.offerTokenAndroid ??
+        (androidOffers[0] as { offerToken?: string } | undefined)?.offerToken ??
+        null;
+      if (!offerToken) {
+        throw new Error(
+          "Google subscription offerToken missing — create/activate the product in Play Console.",
+        );
+      }
+
+      return await new Promise<StoreProof>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          remove();
+          reject(new Error("Purchase timed out"));
+        }, 120_000);
+
+        const remove = () => {
+          clearTimeout(timeout);
+          successSub.remove();
+          errorSub.remove();
+        };
+
+        const successSub = purchaseUpdatedListener(async (purchase) => {
+          const token =
+            purchase.purchaseToken ??
+            (purchase as { purchaseTokenAndroid?: string }).purchaseTokenAndroid;
+          if (!token) {
+            remove();
+            reject(new Error("Missing purchaseToken"));
+            return;
+          }
+          this.lastPurchaseByToken.set(token, purchase);
+          remove();
+          resolve({
+            productId,
+            purchaseToken: token,
+            packageName: packageName(),
+            raw: purchase as unknown as Record<string, unknown>,
+          });
+        });
+
+        const errorSub = purchaseErrorListener((err) => {
+          remove();
+          reject(err);
+        });
+
+        void requestPurchase({
+          type: "subs",
+          request: {
+            google: {
+              skus: [sku],
+              subscriptionOffers: [{ sku, offerToken }],
+            },
+          },
+        }).catch((err) => {
+          remove();
+          reject(err);
+        });
+      });
+    } catch (err) {
+      this.markDisconnected();
+      throw err;
     }
+  }
 
-    return new Promise<StoreProof>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        remove();
-        reject(new Error("Purchase timed out"));
-      }, 120_000);
-
-      const remove = () => {
-        clearTimeout(timeout);
-        successSub.remove();
-        errorSub.remove();
-      };
-
-      const successSub = purchaseUpdatedListener(async (purchase) => {
+  async collectRestoreProofs(): Promise<StoreProof[]> {
+    try {
+      await this.initialize();
+      const purchases = await getAvailablePurchases();
+      const proofs: StoreProof[] = [];
+      for (const purchase of purchases) {
         const token =
           purchase.purchaseToken ??
           (purchase as { purchaseTokenAndroid?: string }).purchaseTokenAndroid;
-        if (!token) {
-          remove();
-          reject(new Error("Missing purchaseToken"));
-          return;
-        }
+        if (!token) continue;
+        const catalogId = catalogIdFromSku(purchase.productId);
+        if (!catalogId) continue;
         this.lastPurchaseByToken.set(token, purchase);
-        remove();
-        resolve({
-          productId,
+        proofs.push({
+          productId: catalogId,
           purchaseToken: token,
           packageName: packageName(),
           raw: purchase as unknown as Record<string, unknown>,
         });
-      });
-
-      const errorSub = purchaseErrorListener((err) => {
-        remove();
-        reject(err);
-      });
-
-      void requestPurchase({
-        type: "subs",
-        request: {
-          google: {
-            skus: [sku],
-            subscriptionOffers: [{ sku, offerToken }],
-          },
-        },
-      }).catch((err) => {
-        remove();
-        reject(err);
-      });
-    });
-  }
-
-  async collectRestoreProofs(): Promise<StoreProof[]> {
-    await this.initialize();
-    const purchases = await getAvailablePurchases();
-    const proofs: StoreProof[] = [];
-    for (const purchase of purchases) {
-      const token =
-        purchase.purchaseToken ??
-        (purchase as { purchaseTokenAndroid?: string }).purchaseTokenAndroid;
-      if (!token) continue;
-      const catalogId = catalogIdFromSku(purchase.productId);
-      if (!catalogId) continue;
-      this.lastPurchaseByToken.set(token, purchase);
-      proofs.push({
-        productId: catalogId,
-        purchaseToken: token,
-        packageName: packageName(),
-        raw: purchase as unknown as Record<string, unknown>,
-      });
+      }
+      return proofs;
+    } catch (err) {
+      this.markDisconnected();
+      throw err;
     }
-    return proofs;
   }
 
   async finishPurchase(proof: StoreProof): Promise<void> {

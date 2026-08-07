@@ -1,7 +1,7 @@
 import * as Clipboard from "expo-clipboard";
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -30,55 +30,60 @@ export function BillingDebugScreen() {
   const theme = colors[scheme];
   const router = useRouter();
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
   const workspacesQuery = useWorkspaces();
   const { activeWorkspace } = useActiveWorkspace(workspacesQuery.data);
+  const workspaceId = activeWorkspace?.id;
 
   const [products, setProducts] = useState<BillingProduct[]>([]);
   const [busy, setBusy] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const decision = BillingService.decisionTree();
   const caps = BillingService.capabilities();
   const meta = BillingService.cacheMeta();
 
-  const reload = useCallback(async () => {
-    setBusy(true);
+  const loadProducts = useCallback(async (opts?: { showBusy?: boolean }) => {
+    const showBusy = opts?.showBusy ?? false;
+    if (showBusy) setBusy(true);
     try {
       await BillingService.initialize();
-      const token = await getToken();
+      const token = await getTokenRef.current();
       const list = await BillingService.availableProducts({
         authToken: token,
-        workspaceId: activeWorkspace?.id,
+        workspaceId,
       });
       setProducts(list);
     } finally {
-      setBusy(false);
+      if (showBusy) setBusy(false);
+      setInitialLoading(false);
     }
-  }, [activeWorkspace?.id, getToken]);
+  }, [workspaceId]);
+
+  const reload = useCallback(async () => {
+    await loadProducts({ showBusy: true });
+  }, [loadProducts]);
 
   useEffect(() => {
     let cancelled = false;
-    const timer = setTimeout(() => {
-      void (async () => {
+    void (async () => {
+      try {
+        await BillingService.initialize();
         if (cancelled) return;
-        setBusy(true);
-        try {
-          await BillingService.initialize();
-          if (cancelled) return;
-          const token = await getToken();
-          const list = await BillingService.availableProducts({
-            authToken: token,
-            workspaceId: activeWorkspace?.id,
-          });
-          if (!cancelled) setProducts(list);
-        } finally {
-          if (!cancelled) setBusy(false);
-        }
-      })();
-    }, 0);
+        const token = await getTokenRef.current();
+        const list = await BillingService.availableProducts({
+          authToken: token,
+          workspaceId,
+        });
+        if (!cancelled) setProducts(list);
+      } finally {
+        if (!cancelled) setInitialLoading(false);
+      }
+    })();
     return () => {
       cancelled = true;
-      clearTimeout(timer);
     };
-  }, [activeWorkspace?.id, getToken]);
+  }, [workspaceId]);
 
   if (!BillingService.isBillingDebugEnabled()) {
     return (
@@ -108,7 +113,7 @@ export function BillingDebugScreen() {
   const forceRefresh = async () => {
     setBusy(true);
     try {
-      const token = await getToken();
+      const token = await getTokenRef.current();
       const list = await BillingService.forceRefreshProducts(token);
       setProducts(list);
     } finally {
@@ -172,15 +177,24 @@ export function BillingDebugScreen() {
         </Section>
 
         <Section title={t("billing.debugProducts")} theme={theme}>
-          {busy ? (
+          {initialLoading && products.length === 0 ? (
             <ActivityIndicator color={theme.primary} />
           ) : (
-            products.map((p) => (
-              <Mono key={p.productId} theme={theme}>
-                {p.productId} | {p.displayPrice || "—"} | avail={String(p.isAvailable)}{" "}
-                | {p.source}
-              </Mono>
-            ))
+            <>
+              {busy ? (
+                <ActivityIndicator color={theme.primary} />
+              ) : null}
+              {products.length === 0 ? (
+                <Mono theme={theme}>no products (store offline or empty)</Mono>
+              ) : (
+                products.map((p) => (
+                  <Mono key={p.productId} theme={theme}>
+                    {p.productId} | {p.displayPrice || "—"} | avail=
+                    {String(p.isAvailable)} | {p.source}
+                  </Mono>
+                ))
+              )}
+            </>
           )}
         </Section>
 

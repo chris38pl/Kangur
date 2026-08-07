@@ -190,13 +190,17 @@ export const BillingService = {
     });
     try {
       if (provider.capabilities().purchaseMode === "native_iap") {
-        const proofs = await provider.collectRestoreProofs();
-        let last: BillingSyncResponse | null = null;
-        for (const proof of proofs) {
-          last = await this.verifyProof(token, workspaceId, proof);
-          await provider.finishPurchase(proof);
+        try {
+          const proofs = await provider.collectRestoreProofs();
+          let last: BillingSyncResponse | null = null;
+          for (const proof of proofs) {
+            last = await this.verifyProof(token, workspaceId, proof);
+            await provider.finishPurchase(proof);
+          }
+          if (last) return last;
+        } catch {
+          // Play BillingClient down — still sync entitlement from backend.
         }
-        if (last) return last;
       }
       return syncBillingEntitlement(token, workspaceId);
     } catch (err) {
