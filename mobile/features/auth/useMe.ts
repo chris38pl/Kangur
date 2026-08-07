@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { apiFetch } from "@/lib/api/client";
 import i18n from "@/lib/i18n";
+import { applyAppLocale } from "@/lib/i18n/apply-app-locale";
 import { resolveAppLocale } from "@/lib/i18n/locales";
 import { persistMeCache } from "@/lib/query/persist-bootstrap";
 import { createEnumSchema } from "@/lib/zod-enum";
@@ -50,13 +51,11 @@ export function useMe(enabled = true) {
   });
 
   // Restore persisted profile language after boot (web often starts as "en").
-  // Device language remains the initial fallback until /me resolves.
+  // Device / preferred locale remains the initial fallback until /me resolves.
   useEffect(() => {
     const profileLocale = query.data?.locale;
     if (!profileLocale) return;
-    const next = resolveAppLocale(profileLocale);
-    if (resolveAppLocale(i18n.language) === next) return;
-    void i18n.changeLanguage(next);
+    void applyAppLocale(resolveAppLocale(profileLocale));
   }, [query.data?.locale]);
 
   return query;

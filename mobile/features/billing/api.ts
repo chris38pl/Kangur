@@ -61,3 +61,23 @@ export async function syncBillingEntitlement(
   );
   return BillingSyncResponseSchema.parse(data);
 }
+
+export async function verifyBillingPurchase(
+  token: string,
+  workspaceId: string,
+  body: {
+    provider: "google" | "apple" | "stripe";
+    productId: string;
+    proof: Record<string, unknown>;
+  },
+): Promise<BillingSyncResponse> {
+  const data = await apiFetch<unknown>(
+    `/api/v1/workspaces/${workspaceId}/billing/verify`,
+    {
+      method: "POST",
+      token,
+      body,
+    },
+  );
+  return BillingSyncResponseSchema.parse(data);
+}

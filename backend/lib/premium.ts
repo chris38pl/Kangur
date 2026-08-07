@@ -16,16 +16,13 @@ export type WorkspaceEntitlement = {
   isPremium: boolean;
   status: EntitlementStatus;
   currentPeriodEnd: Date | null;
-  stripeCustomerId: string | null;
-  stripeSubscriptionId: string | null;
+  productId: string | null;
+  billingOwnerUserId: string | null;
 };
 
 type SubscriptionFields = Pick<
   Subscription,
-  | "status"
-  | "currentPeriodEnd"
-  | "stripeCustomerId"
-  | "stripeSubscriptionId"
+  "status" | "currentPeriodEnd" | "productId" | "billingOwnerUserId"
 >;
 
 const PREMIUM_STATUSES: ReadonlySet<SubscriptionStatus> = new Set([
@@ -58,8 +55,8 @@ export function entitlementFromSubscription(
       isPremium: false,
       status: "none",
       currentPeriodEnd: null,
-      stripeCustomerId: null,
-      stripeSubscriptionId: null,
+      productId: null,
+      billingOwnerUserId: null,
     };
   }
 
@@ -76,8 +73,8 @@ export function entitlementFromSubscription(
     isPremium,
     status,
     currentPeriodEnd: sub.currentPeriodEnd,
-    stripeCustomerId: sub.stripeCustomerId,
-    stripeSubscriptionId: sub.stripeSubscriptionId,
+    productId: sub.productId ?? null,
+    billingOwnerUserId: sub.billingOwnerUserId ?? null,
   };
 }
 
@@ -90,8 +87,8 @@ export async function getWorkspaceEntitlement(
     select: {
       status: true,
       currentPeriodEnd: true,
-      stripeCustomerId: true,
-      stripeSubscriptionId: true,
+      productId: true,
+      billingOwnerUserId: true,
     },
   });
   return entitlementFromSubscription(sub);

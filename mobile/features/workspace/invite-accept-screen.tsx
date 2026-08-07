@@ -24,6 +24,7 @@ import {
   listNotifications,
   markNotificationRead,
 } from "@/features/notifications/api";
+import { clearLocalUserData } from "@/features/profile/clearLocalUserData";
 import {
   acceptInvitation,
   previewInvitation,
@@ -248,6 +249,7 @@ export function InviteAcceptScreen() {
   };
 
   const switchAccount = async () => {
+    await clearLocalUserData(queryClient);
     await signOut();
     goAuth();
   };

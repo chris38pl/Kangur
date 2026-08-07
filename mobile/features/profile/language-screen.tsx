@@ -15,6 +15,7 @@ import {
 } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { updateMeLocale } from "@/features/profile/api";
+import { applyAppLocale } from "@/lib/i18n/apply-app-locale";
 import {
   SUPPORTED_LOCALES,
   type AppLocale,
@@ -70,7 +71,7 @@ export function LanguageScreen() {
     setSaving(true);
     void (async () => {
       try {
-        await i18n.changeLanguage(locale);
+        await applyAppLocale(locale);
         const token = await getToken();
         if (token) {
           const me = await updateMeLocale(token, locale);

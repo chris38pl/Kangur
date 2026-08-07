@@ -11,6 +11,7 @@ import { KangurTabBar } from "@/components/tab-bar/kangur-tab-bar";
 import { colors, spacing, typography } from "@/design-system/tokens";
 import { canLoadWorkspaces } from "@/features/auth/canLoadWorkspaces";
 import { useMe } from "@/features/auth/useMe";
+import { clearLocalUserData } from "@/features/profile/clearLocalUserData";
 import { CreateListProvider, useCreateList } from "@/features/shopping-list/create-list-provider";
 import { useShoppingLists } from "@/features/shopping-list/useShoppingLists";
 import { useAppStartup } from "@/features/startup/AppStartupController";
@@ -78,7 +79,7 @@ export default function TabLayout() {
   const colorScheme = useColorScheme() ?? "light";
   const theme = colors[colorScheme];
   const { t } = useTranslation();
-  const { isSignedIn, isLoaded, signOut } = useAuth();
+  const { isSignedIn, isLoaded, signOut, userId } = useAuth();
   const { notifyBootReady } = useAppStartup();
   const queryClient = useQueryClient();
 
@@ -90,20 +91,42 @@ export default function TabLayout() {
   }, [isLoaded, isSignedIn]);
 
   const me = useMe(Boolean(isSignedIn));
+
+  // Drop warm cache from a previous Clerk account before workspaces/lists fire.
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !userId) return;
+    const cachedClerkId = me.data?.clerkId;
+    if (!cachedClerkId || cachedClerkId === userId) return;
+    bootLog(
+      "tabs_layout",
+      `clearLocalUserData: me.clerkId=${cachedClerkId} !== session=${userId}`,
+    );
+    void clearLocalUserData(queryClient);
+  }, [isLoaded, isSignedIn, userId, me.data?.clerkId, queryClient]);
+
   // Serial boot: /me (seeds locale via X-Device-Locale) before /workspaces
   // so ensureDefaultWorkspace never races with null locale → English "Home".
+  // Also requires me.clerkId === session userId (blocks cross-account warm cache).
   const workspacesEnabled = canLoadWorkspaces({
     isSignedIn: Boolean(isSignedIn),
     meStatus: me.status,
+    sessionClerkId: userId,
+    meClerkId: me.data?.clerkId,
   });
   const workspacesQuery = useWorkspaces(workspacesEnabled);
+  const membershipsForBoot = workspacesEnabled
+    ? workspacesQuery.data
+    : undefined;
   const { activeWorkspace, hydrated, queryWorkspaceId } = useActiveWorkspace(
-    workspacesQuery.data,
+    membershipsForBoot,
   );
   const listsWorkspaceId = queryWorkspaceId;
   const listsQuery = useShoppingLists(
     listsWorkspaceId,
-    Boolean(isSignedIn) && hydrated && Boolean(listsWorkspaceId),
+    Boolean(isSignedIn) &&
+      workspacesEnabled &&
+      hydrated &&
+      Boolean(listsWorkspaceId),
   );
 
   const bootPerfEndedRef = useRef(false);
@@ -125,7 +148,9 @@ export default function TabLayout() {
 
   // Keep full HomeSkeleton until Home data is ready - avoids skeleton → tab bar → spinner.
   // Lists: wait for success OR error (do not spin forever on retries / empty workspace).
+  // !workspacesEnabled: block warm paint from another account's cached memberships/lists.
   const homeBootPending =
+    !workspacesEnabled ||
     (workspacesQuery.isPending && !workspacesQuery.data) ||
     !hydrated ||
     (Boolean(listsWorkspaceId) &&
@@ -136,6 +161,7 @@ export default function TabLayout() {
   const homeReady =
     isLoaded &&
     isSignedIn &&
+    workspacesEnabled &&
     !(me.isPending && !me.data) &&
     !me.isError &&
     !homeBootPending;
@@ -193,7 +219,13 @@ export default function TabLayout() {
     return <Redirect href="/(auth)" />;
   }
 
-  if (me.isPending) {
+  const meMatchesSession =
+    Boolean(userId) &&
+    Boolean(me.data?.clerkId) &&
+    me.data!.clerkId === userId;
+
+  // Cached /me from another account looks like success — keep skeleton until wipe + refetch.
+  if (me.isPending || (Boolean(me.data) && !meMatchesSession)) {
     return <HomeSkeleton />;
   }
 
@@ -236,7 +268,10 @@ export default function TabLayout() {
         <Pressable
           onPress={() => {
             console.info("[auth]", "SignOut", { reason: "me_failed" });
-            void signOut();
+            void (async () => {
+              await clearLocalUserData(queryClient);
+              await signOut();
+            })();
           }}
           style={{
             marginTop: spacing[3],

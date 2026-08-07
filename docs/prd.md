@@ -491,7 +491,7 @@ Exact Free monthly allowance set before beta. Enforce server-side.
 
 ## 13. Monetization
 
-Billing attaches to **Workspace**. Stripe is the payment provider; **Premium entitlements** unlock product features.
+Billing attaches to **Workspace**. Payments go through the **Billing Platform** (provider fixed by channel): Web → Stripe (Checkout + Customer Portal + Invoices); Android → Google Play Billing; iOS → App Store. **Premium entitlements** (backend SoT) unlock product features.
 
 | Feature | Free | Premium |
 |---------|------|---------|
@@ -503,9 +503,9 @@ Billing attaches to **Workspace**. Stripe is the payment provider; **Premium ent
 | Plan | Price | Notes |
 |------|-------|--------|
 | Free | 0 | Limited monthly **AI Credits**; limited history |
-| Premium | ~9.99 PLN / month | Entitlements above + Stripe Checkout / Customer Portal |
+| Premium | via ProductCatalog (monthly/yearly) | Entitlements above; manage = Open Subscription Management |
 
-- Stripe Checkout + Customer Portal for owner/admin.
+- Owner/admin manage billing; members inherit workspace Premium.
 - AI Credits exhausted → upgrade CTA; list CRUD still works; AI blocked.
 - Premium-only features stay blocked after subscription expiry (`403 PREMIUM_REQUIRED`), even if credit accounting would allow unlimited.
 

@@ -62,6 +62,46 @@ export type EventPropsMap = {
   subscription_activated: WorkspaceIdProps;
   subscription_cancelled: WorkspaceIdProps;
   subscription_expired: WorkspaceIdProps;
+  billing_provider_resolved: {
+    provider: string;
+    platform: string;
+    channel: string;
+    purchase_mode: string;
+  } & Partial<WorkspaceIdProps>;
+  billing_products_loaded: {
+    provider: string;
+    count: number;
+    duration_ms: number;
+    cache_hit: boolean;
+    cache_age_ms?: number;
+  } & Partial<WorkspaceIdProps>;
+  billing_purchase_started: WorkspaceIdProps & {
+    provider: string;
+    product_id: string;
+  };
+  billing_purchase_cancelled: WorkspaceIdProps & {
+    provider: string;
+    product_id?: string;
+  };
+  billing_purchase_verified: WorkspaceIdProps & {
+    provider: string;
+    product_id: string;
+  };
+  billing_purchase_failed: WorkspaceIdProps & {
+    provider: string;
+    product_id?: string;
+    code?: string;
+  };
+  billing_restore: WorkspaceIdProps & { provider: string };
+  billing_restore_failed: WorkspaceIdProps & {
+    provider: string;
+    code?: string;
+  };
+  billing_apply_completed: WorkspaceIdProps & {
+    provider: string;
+    product_id: string;
+    status: string;
+  };
   history_opened: Record<string, never>;
   history_search: { had_query: boolean };
   history_repeat: { source_list_id: string };
@@ -90,6 +130,14 @@ export type EventPropsMap = {
     ListIdProps & { meal_count: number };
   meal_proposal_failed: WorkspaceIdProps &
     ListIdProps & { code: string };
+  forgot_password_started: Record<string, never>;
+  forgot_password_code_sent: { resend?: boolean };
+  forgot_password_verified: Record<string, never>;
+  forgot_password_completed: Record<string, never>;
+  forgot_password_failed: {
+    step: "email" | "code" | "password" | "resend" | "oauth";
+    clerk_code?: string;
+  };
   // Future (M20–M22) — names reserved; do not emit until owned in matrix + UI
   recipe_discovery_opened: Record<string, never>;
   recipe_card_liked: { card_index: number };

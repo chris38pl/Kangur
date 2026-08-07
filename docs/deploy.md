@@ -211,11 +211,14 @@ pnpm db:migrate:deploy   # manual / local; Vercel runs this in build:vercel
 
 Mobile `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` must match the backend publishable key for that environment. No Clerk webhooks in MVP - Bearer JWT only.
 
+**Forgot password (mobile):** On each Clerk instance (Development + Production), enable Email/Password and the **reset password email code** strategy (`reset_password_email_code`). Keep the default reset-password email template active. No Resend/SMTP app integration — Clerk sends the code.
+
 ### 6.4 Stripe
 
 One Stripe account; modes split by environment:
 
 | Env | Mode | Price IDs |
+
 |-----|------|-----------|
 | Local + Staging | **Test** | `price_test_*` (e.g. monthly) |
 | Production | **Live** | `price_live_*` |
@@ -236,6 +239,27 @@ Webhook endpoints:
 | Production | `https://api.getkangur.com/api/v1/billing/webhook` |
 
 Events handled: `checkout.session.completed`, `customer.subscription.created|updated|deleted`.
+
+### 6.4b Google Play Billing (Android Closed Testing)
+
+Architecture: [docs/adr/0001-billing-platform.md](./adr/0001-billing-platform.md). Catalog SKUs live in `shared/billing` `providerConfig.google`.
+
+**Play Console (app `app.kangur`):**
+
+| Catalog id | Product ID | Base plan ID |
+|------------|------------|--------------|
+| `PREMIUM_MONTHLY` | `premium_monthly` | `monthly` |
+| `PREMIUM_YEARLY` | `premium_yearly` | `yearly` |
+
+1. Create subscription products + base plans matching the table (optional free-trial offer in Play, not Stripe).
+2. Add **license testers** for Closed Testing.
+3. Link a Google Cloud **service account** with Android Publisher access; paste JSON (or base64) into `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`.
+4. Set `GOOGLE_PLAY_PACKAGE_NAME=app.kangur` on staging/production API.
+5. **RTDN:** Pub/Sub topic → push to `https://staging-api.getkangur.com/api/v1/billing/webhook/google` (prod: `api.getkangur.com`).
+
+**Client:** Android uses Play Billing via `expo-iap` → `POST …/billing/verify` (`provider: google`). Web keeps Stripe Checkout. iOS purchase disabled (`supportsPurchase: false`) until Apple IAP.
+
+**Closed Testing checklist:** no Stripe on Android paywall; purchase→verify→ApplyPurchase→finish; restore after reinstall + Google account change; refund/grace/expiry via RTDN; Billing Debug via `ENABLE_BILLING_DEBUG` / `EXPO_PUBLIC_ENABLE_BILLING_DEBUG`.
 
 ### 6.5 OpenAI
 
@@ -355,6 +379,8 @@ Source of truth: [backend/.env.example](../backend/.env.example).
 | `STRIPE_PRICE_PREMIUM_YEARLY` | when used | when used | when used | Same split rule |
 | `BILLING_RETURN_URL_BASE` | `kangur://premium` | `kangur://premium` | `kangur://premium` | |
 | `RESEND_API_KEY` / `EMAIL_FROM` | optional | optional | preferred | Invites |
+| `GOOGLE_PLAY_PACKAGE_NAME` | `app.kangur` | same | same | Play package for Publisher API |
+| `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | optional local | required for Android IAP | required | Service account JSON or base64 |
 | `INVITE_ACCEPT_URL_BASE` | `kangur://invite` | same | same | |
 | `PLATFORM_ADMIN_EMAILS` | optional | optional | optional | Bootstrap admins |
 | `POSTHOG_KEY` / `POSTHOG_HOST` | optional | Closed Testing+ | required | Product analytics (noop if unset) |

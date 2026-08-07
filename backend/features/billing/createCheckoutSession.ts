@@ -1,7 +1,12 @@
 import type Stripe from "stripe";
+import { DEFAULT_PREMIUM_PRODUCT } from "@shared/billing";
 
 import { conflict, validationError } from "@/lib/auth/errors";
 import { authorize, requireRole } from "@/lib/authorize";
+import {
+  ensureSubscriptionShell,
+  getStripeCustomerIdForWorkspace,
+} from "@/lib/billing";
 import { prisma } from "@/lib/prisma";
 import { getWorkspaceEntitlement } from "@/lib/premium";
 import {
@@ -62,7 +67,7 @@ export async function createCheckoutSession(input: {
     select: { email: true },
   });
 
-  let customerId = entitlement.stripeCustomerId;
+  let customerId = await getStripeCustomerIdForWorkspace(input.workspaceId);
   let eligibleForTrial = !customerId;
 
   if (!customerId) {
@@ -72,20 +77,25 @@ export async function createCheckoutSession(input: {
     });
     customerId = customer.id;
 
-    // Persist customer id early (not Premium until webhook sets active/trialing).
-    await prisma.subscription.upsert({
-      where: { workspaceId: input.workspaceId },
-      create: {
+    await ensureSubscriptionShell({
+      workspaceId: input.workspaceId,
+      billingOwnerUserId: input.userId,
+    });
+
+    // Bootstrap purchase only (pending) — entitlement stays free until sub webhook.
+    await prisma.billingPurchase.create({
+      data: {
         workspaceId: input.workspaceId,
-        status: "cancelled",
-        stripeCustomerId: customerId,
-      },
-      update: {
-        stripeCustomerId: customerId,
+        userId: input.userId,
+        providerId: "stripe",
+        productId: DEFAULT_PREMIUM_PRODUCT,
+        externalId: `customer:${customerId}`,
+        status: "pending",
+        featureSetAtPurchase: "PREMIUM_V1",
+        payload: { stripeCustomerId: customerId },
       },
     });
   } else {
-    // Stripe is source of truth: any prior subscription → no second trial.
     eligibleForTrial = !(await customerHasSubscriptionHistory(
       stripe,
       customerId,
@@ -95,9 +105,7 @@ export async function createCheckoutSession(input: {
   const subscriptionData: Stripe.Checkout.SessionCreateParams.SubscriptionData =
     {
       metadata: { workspaceId: input.workspaceId },
-      ...(eligibleForTrial
-        ? { trial_period_days: TRIAL_PERIOD_DAYS }
-        : {}),
+      ...(eligibleForTrial ? { trial_period_days: TRIAL_PERIOD_DAYS } : {}),
     };
 
   const session = await stripe.checkout.sessions.create({

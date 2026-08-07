@@ -1,5 +1,6 @@
 import * as WebBrowser from "expo-web-browser";
 import { Link } from "expo-router";
+import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { Trans, useTranslation } from "react-i18next";
 
@@ -11,6 +12,11 @@ import {
 } from "@/design-system/shopping-density";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { AuthBrandHero } from "@/features/auth/auth-brand-hero";
+import { LanguagePickerSheet } from "@/features/auth/language-picker-sheet";
+import {
+  localeMeta,
+  resolveAppLocale,
+} from "@/lib/i18n/locales";
 
 const LEGAL_URLS = {
   terms: "https://getkangur.com/terms",
@@ -18,9 +24,12 @@ const LEGAL_URLS = {
 } as const;
 
 export function WelcomeScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const currentLocale = resolveAppLocale(i18n.language);
+  const currentMeta = localeMeta(currentLocale);
 
   const pillPrimary = {
     ...primaryButtonStyle(theme),
@@ -75,7 +84,7 @@ export function WelcomeScreen() {
           {t("auth.welcomeTagline")}
         </Text>
 
-        <View style={{ marginTop: spacing[8], gap: spacing[3] }}>
+        <View style={{ marginTop: spacing[8], gap: spacing[3], flexGrow: 1 }}>
           <Link href="/(auth)/sign-up" asChild>
             <Pressable style={pillPrimary}>
               <Text style={{ ...typography.label, color: theme.onPrimary }}>
@@ -125,8 +134,56 @@ export function WelcomeScreen() {
               }}
             />
           </Text>
+
+          <View style={{ flex: 1, minHeight: spacing[6] }} />
+
+          <Pressable
+            onPress={() => setLanguageOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t("auth.chooseLanguage")}
+            hitSlop={8}
+            style={{
+              alignSelf: "center",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing[2],
+              paddingVertical: spacing[2],
+              paddingHorizontal: spacing[3],
+              borderRadius: radius.full,
+              borderWidth: 1,
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <Text style={{ fontSize: 16, lineHeight: 20 }}>
+              {currentMeta.emoji}
+            </Text>
+            <Text
+              style={{
+                ...typography.caption,
+                color: theme.text,
+                fontWeight: "600",
+              }}
+            >
+              {currentMeta.nativeName}
+            </Text>
+            <Text
+              style={{
+                ...typography.caption,
+                color: theme.textMuted,
+                fontSize: 11,
+              }}
+            >
+              ▾
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
+
+      <LanguagePickerSheet
+        visible={languageOpen}
+        onClose={() => setLanguageOpen(false)}
+      />
     </Screen>
   );
 }

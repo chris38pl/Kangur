@@ -81,6 +81,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "expo-localization",
       "expo-secure-store",
       "expo-notifications",
+      "expo-iap",
       [
         "expo-image-picker",
         {

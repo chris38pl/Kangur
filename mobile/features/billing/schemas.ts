@@ -30,6 +30,14 @@ export const BillingSyncResponseSchema = z.object({
   plan: z.enum(["free", "premium"]),
   status: z.string(),
   currentPeriodEnd: z.string().nullable().optional().default(null),
+  purchaseId: z.string().optional(),
+  externalId: z.string().optional(),
 });
 
 export type BillingSyncResponse = z.infer<typeof BillingSyncResponseSchema>;
+
+export const VerifyPurchaseRequestSchema = z.object({
+  provider: z.enum(["google", "apple", "stripe"]),
+  productId: z.string(),
+  proof: z.record(z.string(), z.unknown()),
+});

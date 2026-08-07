@@ -7,16 +7,16 @@ import type { WorkspaceDTO } from "./schemas";
 export const workspaceSubscriptionSelect = {
   status: true,
   currentPeriodEnd: true,
-  stripeCustomerId: true,
-  stripeSubscriptionId: true,
+  productId: true,
+  billingOwnerUserId: true,
 } as const;
 
 type WorkspaceWithRelations = Workspace & {
   subscription: {
     status: import("@prisma/client").SubscriptionStatus;
     currentPeriodEnd: Date | null;
-    stripeCustomerId: string | null;
-    stripeSubscriptionId: string | null;
+    productId: string | null;
+    billingOwnerUserId: string | null;
   } | null;
   _count: { members: number };
 };

@@ -28,7 +28,7 @@ Kangur Platform (Next.js REST + OpenAPI)
 | Client data - forbidden | **No Redux, MobX, Saga, Context-everywhere** |
 | DB | **Neon** (serverless Postgres) + Prisma - **no Prisma Accelerate** for MVP |
 | Auth | Clerk (email/password, Google, Apple) |
-| Payments | Stripe (subscription on Workspace) |
+| Payments | **Billing Platform**: Google Play / Apple / Stripe providers → workspace entitlement (SoT on backend) |
 | AI | OpenAI (official SDK) - vision + structured outputs + Zod |
 | Sync (MVP) | Smart polling behind `RealtimeProvider` |
 | Sync (later) | Ably / Supabase Realtime / SSE - undecided; cost-driven |
@@ -425,7 +425,9 @@ Also future: OTel/Prometheus exporters (same call sites), tracing, ETag `304_rat
 
 ### Entities
 
-`User`, `Workspace`, `WorkspaceMember`, `Invitation`, `WorkspaceSettings`, `Subscription`, `AIUsage`, `ShoppingList`, `ShoppingItem`, `ShoppingEvent`, `AiIngestRun`
+`User`, `Workspace`, `WorkspaceMember`, `Invitation`, `WorkspaceSettings`, `Subscription` (workspace entitlement / WorkspaceSubscription), `BillingPurchase`, `BillingEvent`, `AIUsage`, `ShoppingList`, `ShoppingItem`, `ShoppingEvent`, `AiIngestRun`
+
+**Billing Platform:** entitlement lives on `Subscription` (no store-specific columns). Purchases live in `BillingPurchase` (`providerId`, immutable `externalId`, queryable `status`/`expiresAt`, thin JSON `providerMetadata` in `payload`). Flow: `PurchaseSnapshot` / `SubscriptionSnapshot` → **ApplyPurchase** (deterministic, transactional single write) → **UpdateEntitlement**. Provider webhooks (Stripe / Google RTDN / Apple ASN V2) append `BillingEvent` then refresh via `getSubscription` → Apply. Product SKUs via `shared/billing` ProductCatalog + `providerConfig` (`PREMIUM_MONTHLY` / `PREMIUM_YEARLY`, featureSet `PREMIUM_V1`). See [ADR 0001](./adr/0001-billing-platform.md).
 
 ### Notable fields
 
@@ -471,7 +473,7 @@ Update rows as source of truth; append events; **never** replay events to rebuil
 - AI Credits checked server-side  
 - Premium entitlements checked server-side for Premium-only AI (`PREMIUM_REQUIRED`)  
 - Image size/MIME limits  
-- Stripe webhook verification (billing → entitlement only)  
+- Billing Platform webhook verification (Stripe / Google RTDN / Apple ASN V2 → entitlement only)  
 
 ### Auth identity & invitations (design lock)
 
@@ -508,7 +510,7 @@ Purpose: bootstrap Platform Console access on new environments without manual SQ
 | Landing | **getkangur.com** - marketing / privacy / terms / contact / delete-account (no API or `/health` on apex) |
 | Database | **Neon** (serverless Postgres) - `kangur-dev` / `kangur-staging` / `kangur-prod` |
 | Mobile | EAS Build / Submit (`development` / `preview` / `production`) |
-| Vendors | Clerk, Stripe, OpenAI, Resend (optional), Expo Push, PostHog, Sentry |
+| Vendors | Clerk, Billing Platform (Stripe + Google Play + Apple), OpenAI, Resend (optional), Expo Push, PostHog, Sentry |
 
 ### Why Neon
 

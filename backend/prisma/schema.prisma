@@ -153,6 +153,7 @@ model User {
   pushDevices          PushDevice[]
   shoppingSessions     ShoppingSession[]
   feedback             Feedback[]
+  billingPurchases     BillingPurchase[]
 }
 
 model Workspace {
@@ -174,6 +175,7 @@ model Workspace {
   aiProposalRuns   AiProposalRun[]
   notifications    Notification[]
   shoppingSessions ShoppingSession[]
+  billingPurchases BillingPurchase[]
 }
 
 model WorkspaceMember {
@@ -225,13 +227,79 @@ model Subscription {
   id                   String             @id @default(cuid())
   workspaceId          String             @unique
   status               SubscriptionStatus
-  stripeCustomerId     String?
-  stripeSubscriptionId String?
+  /** Catalog product id, e.g. PREMIUM_MONTHLY — not a store SKU string. */
+  productId            String?
+  featureSetAtPurchase String?
+  billingOwnerUserId   String?
+  activePurchaseId     String?            @unique
   currentPeriodEnd     DateTime?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace      Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  activePurchase BillingPurchase? @relation("ActiveWorkspacePurchase", fields: [activePurchaseId], references: [id], onDelete: SetNull)
+}
+
+enum BillingProviderId {
+  google
+  apple
+  stripe
+}
+
+enum BillingPurchaseStatus {
+  pending
+  active
+  trialing
+  past_due
+  cancelled
+  expired
+  revoked
+  superseded
+}
+
+/**
+ * Payment proof per provider. externalId is immutable after create.
+ * Store-specific fields live only in payload JSON.
+ */
+model BillingPurchase {
+  id                   String                @id @default(cuid())
+  workspaceId          String
+  userId               String
+  providerId           BillingProviderId
+  productId            String
+  /** Opaque provider purchase id — never updated after insert. */
+  externalId           String
+  status               BillingPurchaseStatus
+  expiresAt            DateTime?
+  featureSetAtPurchase String?
+  acknowledgedAt       DateTime?
+  /** Raw provider response / diagnostics only — not status/expires/product. */
+  payload              Json?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  workspace          Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeForWorkspace Subscription?  @relation("ActiveWorkspacePurchase")
+
+  @@unique([providerId, externalId])
+  @@index([workspaceId, status])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model BillingEvent {
+  id          String            @id @default(cuid())
+  providerId  BillingProviderId
+  type        String
+  externalId  String?
+  payload     Json?
+  processedAt DateTime?
+  createdAt   DateTime          @default(now())
+
+  @@index([providerId, createdAt])
+  @@index([externalId])
+  @@index([processedAt])
 }
 
 model AIUsage {

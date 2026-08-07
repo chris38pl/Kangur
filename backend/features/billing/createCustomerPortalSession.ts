@@ -1,6 +1,6 @@
 import { authorize, requireRole } from "@/lib/authorize";
 import { validationError } from "@/lib/auth/errors";
-import { getWorkspaceEntitlement } from "@/lib/premium";
+import { getStripeCustomerIdForWorkspace } from "@/lib/billing";
 import { getBillingReturnUrlBase, getStripe } from "@/lib/stripe";
 
 function billingReturnUrl(workspaceId: string): string {
@@ -21,14 +21,14 @@ export async function createCustomerPortalSession(input: {
     "Only owners and admins can manage billing.",
   );
 
-  const entitlement = await getWorkspaceEntitlement(input.workspaceId);
-  if (!entitlement.stripeCustomerId) {
+  const customerId = await getStripeCustomerIdForWorkspace(input.workspaceId);
+  if (!customerId) {
     throw validationError("No Stripe customer for this workspace yet.");
   }
 
   const stripe = getStripe();
   const session = await stripe.billingPortal.sessions.create({
-    customer: entitlement.stripeCustomerId,
+    customer: customerId,
     return_url: billingReturnUrl(input.workspaceId),
   });
 

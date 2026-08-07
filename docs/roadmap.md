@@ -623,6 +623,34 @@ AI Generate from History requires an **active Premium workspace** *and* still go
 
 ---
 
+## M13.x - Billing Platform (multi-provider)
+
+**Goal:** Provider-agnostic billing architecture so Android (Google Play), iOS (App Store), and Web (Stripe Checkout + Customer Portal + Invoices) share one entitlement model on Workspace.
+
+**Status:** in progress (Android IAP path; Apple stub)
+
+**Key split:**
+- **BillingProvider** + **BillingRegistry.resolve / resolveCurrent** — provider fixed by platform channel (not UI choice)
+- **ProductCatalog** + `providerConfig` — SSOT; ApplyPurchase + UpdateEntitlement; ProductRepository on mobile
+- **Subscription** = entitlement only; **BillingPurchase** + **BillingEvent** = payment proof / audit
+- Stripe = Web; Google Play = Android; Apple stub until IAP
+- ADR: [docs/adr/0001-billing-platform.md](./adr/0001-billing-platform.md)
+
+**Depends on:** M13  
+**Complexity:** L
+
+**Acceptance (foundation + Android):**
+- [x] ProductCatalog + `providerConfig` in `shared/billing`
+- [x] Schema: BillingPurchase / BillingEvent; entitlement without Stripe columns (migrated into purchase payload)
+- [x] BackendBillingProvider + BillingRegistry + ApplyPurchase (deterministic, transactional)
+- [x] GooglePlayProvider (`subscriptionsv2`) + RTDN live (signal → get → Apply)
+- [x] `POST …/billing/verify` (provider-agnostic)
+- [x] Mobile ProductRepository / ProductCache / BillingService (Play on Android)
+- [ ] AppleProvider full purchase flows
+- [ ] Reconcile job (MVP+1)
+
+---
+
 ## M13.4 - App Navigation & Side Menu
 
 **Goal:** Application-level navigation (App Menu) separate from Bottom Tabs; Platform Console shell + `platformRole` access. Prerequisite for M13.5 observability UI.

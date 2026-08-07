@@ -23,6 +23,7 @@ import {
 } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { useMe } from "@/features/auth/useMe";
+import { clearLocalUserData } from "@/features/profile/clearLocalUserData";
 import {
   ProfileIconBag,
   ProfileIconBell,
@@ -288,8 +289,8 @@ export default function ProfileScreen() {
     console.info("[auth]", "SignOut", { clerkId: userId });
     const { Analytics } = await import("@/lib/analytics");
     Analytics.reset();
+    await clearLocalUserData(queryClient);
     await signOut();
-    queryClient.removeQueries({ queryKey: ["me"] });
   };
 
   const goHome = () => {

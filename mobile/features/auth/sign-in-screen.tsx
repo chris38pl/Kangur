@@ -37,6 +37,80 @@ import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 
 WebBrowser.maybeCompleteAuthSession();
 
+const RESEND_COOLDOWN_SECONDS = 60;
+
+type Step = "credentials" | "verify";
+type EmailCodeFactorKind = "first" | "second";
+
+type EmailCodeFactor = {
+  kind: EmailCodeFactorKind;
+  emailAddressId?: string;
+  safeIdentifier?: string;
+};
+
+function findEmailCodeFactor(result: {
+  status: string | null;
+  supportedFirstFactors?: Array<{
+    strategy: string;
+    emailAddressId?: string;
+    safeIdentifier?: string;
+  }> | null;
+  supportedSecondFactors?: Array<{
+    strategy: string;
+    emailAddressId?: string;
+    safeIdentifier?: string;
+  }> | null;
+}): EmailCodeFactor | null {
+  if (result.status === "needs_second_factor") {
+    const match = result.supportedSecondFactors?.find(
+      (f) => f.strategy === "email_code",
+    );
+    if (!match) return null;
+    return {
+      kind: "second",
+      emailAddressId: match.emailAddressId,
+      safeIdentifier: match.safeIdentifier,
+    };
+  }
+
+  if (result.status === "needs_first_factor") {
+    const match = result.supportedFirstFactors?.find(
+      (f) => f.strategy === "email_code",
+    );
+    if (!match?.emailAddressId) return null;
+    return {
+      kind: "first",
+      emailAddressId: match.emailAddressId,
+      safeIdentifier: match.safeIdentifier,
+    };
+  }
+
+  // Password accepted but email verification still required (some Clerk configs).
+  const second = result.supportedSecondFactors?.find(
+    (f) => f.strategy === "email_code",
+  );
+  if (second) {
+    return {
+      kind: "second",
+      emailAddressId: second.emailAddressId,
+      safeIdentifier: second.safeIdentifier,
+    };
+  }
+
+  const first = result.supportedFirstFactors?.find(
+    (f) => f.strategy === "email_code",
+  );
+  if (first?.emailAddressId) {
+    return {
+      kind: "first",
+      emailAddressId: first.emailAddressId,
+      safeIdentifier: first.safeIdentifier,
+    };
+  }
+
+  return null;
+}
+
 export function SignInScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -59,18 +133,28 @@ export function SignInScreen() {
   } = useKeyboardScroll();
   const emailFieldRef = useRef<View>(null);
   const passwordFieldRef = useRef<View>(null);
+  const codeFieldRef = useRef<View>(null);
+  const codeInputRef = useRef<TextInput>(null);
   const keyboardOpen = keyboardHeight > 0;
 
+  const [step, setStep] = useState<Step>("credentials");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [codeFocused, setCodeFocused] = useState(false);
+  const [verifyFactor, setVerifyFactor] = useState<EmailCodeFactor | null>(
+    null,
+  );
+  const [resendSecondsLeft, setResendSecondsLeft] = useState(0);
 
   const emailFocus = bindFieldFocus(emailFieldRef);
   const passwordFocus = bindFieldFocus(passwordFieldRef);
+  const codeFocus = bindFieldFocus(codeFieldRef);
 
   useEffect(() => {
     if (Platform.OS === "web") return;
@@ -79,6 +163,71 @@ export function SignInScreen() {
       void WebBrowser.coolDownAsync();
     };
   }, []);
+
+  useEffect(() => {
+    if (resendSecondsLeft <= 0) return;
+    const id = setTimeout(() => {
+      setResendSecondsLeft((s) => Math.max(0, s - 1));
+    }, 1000);
+    return () => clearTimeout(id);
+  }, [resendSecondsLeft]);
+
+  const startResendCooldown = () => {
+    setResendSecondsLeft(RESEND_COOLDOWN_SECONDS);
+  };
+
+  const prepareEmailCode = async (factor: EmailCodeFactor) => {
+    if (!signIn) throw new Error("Clerk not ready");
+    if (factor.kind === "first") {
+      if (!factor.emailAddressId) {
+        throw new Error("Missing emailAddressId for email_code");
+      }
+      await signIn.prepareFirstFactor({
+        strategy: "email_code",
+        emailAddressId: factor.emailAddressId,
+      });
+      return;
+    }
+    await signIn.prepareSecondFactor({
+      strategy: "email_code",
+    });
+  };
+
+  const beginEmailCodeStep = async (
+    result: {
+      status: string | null;
+      createdSessionId?: string | null;
+      supportedFirstFactors?: Array<{
+        strategy: string;
+        emailAddressId?: string;
+        safeIdentifier?: string;
+      }> | null;
+      supportedSecondFactors?: Array<{
+        strategy: string;
+        emailAddressId?: string;
+        safeIdentifier?: string;
+      }> | null;
+    },
+  ): Promise<boolean> => {
+    const factor = findEmailCodeFactor(result);
+    if (!factor) return false;
+
+    console.info("[auth]", "SignInNeedsEmailCode", {
+      status: result.status,
+      kind: factor.kind,
+      safeIdentifier: factor.safeIdentifier ?? null,
+      identifier: email.trim(),
+    });
+
+    await prepareEmailCode(factor);
+    setVerifyFactor(factor);
+    setCode("");
+    setError(null);
+    setStep("verify");
+    startResendCooldown();
+    setTimeout(() => codeInputRef.current?.focus(), 250);
+    return true;
+  };
 
   const onEmailSignIn = async () => {
     if (!isLoaded || !signIn) return;
@@ -97,14 +246,123 @@ export function SignInScreen() {
           email: email.trim(),
           createdSession: true,
         });
-      } else {
-        setError(t("auth.errors.incomplete"));
+        return;
       }
+
+      const started = await beginEmailCodeStep(result);
+      if (started) return;
+
+      const firstFactors =
+        result.supportedFirstFactors?.map((f) => ({
+          strategy: f.strategy,
+          safeIdentifier:
+            "safeIdentifier" in f ? f.safeIdentifier : undefined,
+        })) ?? [];
+      const secondFactors =
+        result.supportedSecondFactors?.map((f) => f.strategy) ?? [];
+      console.info("[auth]", "SignInIncomplete", {
+        status: result.status,
+        createdSessionId: result.createdSessionId ?? null,
+        firstFactors,
+        secondFactors,
+        identifier: email.trim(),
+      });
+      setError(t("auth.errors.incomplete"));
     } catch (err) {
       console.info("[auth]", "SignInFailed", err);
       setError(getClerkErrorMessage(err, t, "auth.errors.signInFailed"));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const onVerifyCode = async () => {
+    if (!isLoaded || !signIn || !verifyFactor) return;
+    const trimmed = code.trim();
+    if (!trimmed) {
+      setError(t("auth.verificationCodeRequired"));
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    try {
+      const result =
+        verifyFactor.kind === "first"
+          ? await signIn.attemptFirstFactor({
+              strategy: "email_code",
+              code: trimmed,
+            })
+          : await signIn.attemptSecondFactor({
+              strategy: "email_code",
+              code: trimmed,
+            });
+
+      if (result.status === "complete" && result.createdSessionId) {
+        await setActive({ session: result.createdSessionId });
+        logAuthSuccess({
+          event: "SignIn",
+          provider: "email",
+          email: email.trim(),
+          createdSession: true,
+        });
+        return;
+      }
+
+      // Rare: first factor done, still need second email_code / MFA.
+      const continued = await beginEmailCodeStep(result);
+      if (continued) return;
+
+      console.info("[auth]", "SignInVerifyIncomplete", {
+        status: result.status,
+        createdSessionId: result.createdSessionId ?? null,
+        kind: verifyFactor.kind,
+      });
+      setError(t("auth.errors.incomplete"));
+    } catch (err) {
+      console.info("[auth]", "SignInVerifyFailed", err);
+      setError(
+        getClerkErrorMessage(err, t, "auth.errors.verificationFailed"),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onResendCode = async () => {
+    if (!isLoaded || !signIn || !verifyFactor || resendSecondsLeft > 0) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await prepareEmailCode(verifyFactor);
+      startResendCooldown();
+      console.info("[auth]", "SignInEmailCodeResent", {
+        kind: verifyFactor.kind,
+        identifier: email.trim(),
+      });
+    } catch (err) {
+      console.info("[auth]", "SignInEmailCodeResendFailed", err);
+      setError(
+        getClerkErrorMessage(err, t, "auth.errors.verificationFailed"),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onBack = () => {
+    if (step === "verify") {
+      setStep("credentials");
+      setCode("");
+      setVerifyFactor(null);
+      setError(null);
+      setResendSecondsLeft(0);
+      return;
+    }
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(auth)");
     }
   };
 
@@ -166,6 +424,9 @@ export function SignInScreen() {
     minHeight: 56,
   });
 
+  const verifyEmailLabel =
+    verifyFactor?.safeIdentifier?.trim() || email.trim();
+
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <KeyboardAvoidingView
@@ -189,13 +450,7 @@ export function SignInScreen() {
           scrollEventThrottle={16}
         >
           <Pressable
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.replace("/(auth)");
-              }
-            }}
+            onPress={onBack}
             accessibilityRole="button"
             accessibilityLabel={t("auth.back")}
             style={{
@@ -217,220 +472,343 @@ export function SignInScreen() {
             <BackIcon size={18} />
           </Pressable>
 
-        {!keyboardOpen ? <AuthBrandHero /> : null}
+          {!keyboardOpen ? <AuthBrandHero /> : null}
 
-        <Text
-          style={{
-            ...typography.title,
-            color: theme.text,
-            textAlign: "center",
-            marginTop: keyboardOpen ? spacing[4] : spacing[8],
-          }}
-        >
-          {t("auth.signInTitle")}
-        </Text>
-        <View
-          style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: spacing[2],
-            marginTop: spacing[2],
-            marginBottom: keyboardOpen ? spacing[4] : spacing[8],
-            paddingHorizontal: spacing[2],
-          }}
-        >
           <Text
             style={{
-              ...typography.body,
-              color: theme.textBody,
-              textAlign: "center",
-            }}
-          >
-            {t("auth.signInSubtitle")}
-          </Text>
-          {!keyboardOpen ? (
-            <KangurMascot variant="icon" width={28} height={28} />
-          ) : null}
-        </View>
-
-        <View ref={setFormBlockRef} collapsable={false}>
-        <View
-          ref={emailFieldRef}
-          collapsable={false}
-          style={{ ...fieldShell(emailFocused), marginBottom: spacing[4] }}
-        >
-          <MailFieldIcon size={20} />
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            placeholder={t("auth.emailPlaceholder")}
-            placeholderTextColor={theme.textMuted}
-            value={email}
-            onChangeText={setEmail}
-            onFocus={() => {
-              setEmailFocused(true);
-              emailFocus.onFocus();
-            }}
-            onBlur={() => {
-              setEmailFocused(false);
-              emailFocus.onBlur();
-            }}
-            style={{
-              flex: 1,
+              ...typography.title,
               color: theme.text,
-              fontSize: typography.body.fontSize,
-              paddingVertical: spacing[3],
-            }}
-          />
-        </View>
-
-        <View
-          ref={passwordFieldRef}
-          collapsable={false}
-          style={fieldShell(passwordFocused)}
-        >
-          <LockFieldIcon size={20} />
-          <TextInput
-            secureTextEntry={!showPassword}
-            textContentType="password"
-            placeholder={t("auth.passwordPlaceholder")}
-            placeholderTextColor={theme.textMuted}
-            value={password}
-            onChangeText={setPassword}
-            onFocus={() => {
-              setPasswordFocused(true);
-              passwordFocus.onFocus();
-            }}
-            onBlur={() => {
-              setPasswordFocused(false);
-              passwordFocus.onBlur();
-            }}
-            style={{
-              flex: 1,
-              color: theme.text,
-              fontSize: typography.body.fontSize,
-              paddingVertical: spacing[3],
-            }}
-          />
-          <Pressable
-            onPress={() => setShowPassword((v) => !v)}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={
-              showPassword ? t("auth.hidePassword") : t("auth.showPassword")
-            }
-          >
-            <EyeIcon size={20} off={showPassword} />
-          </Pressable>
-        </View>
-
-        <Pressable
-          disabled
-          style={{ alignSelf: "flex-end", marginTop: spacing[3] }}
-        >
-          <Text style={{ ...typography.label, color: theme.primary }}>
-            {t("auth.forgotPassword")}
-          </Text>
-        </Pressable>
-
-        {error ? (
-          <Text
-            style={{
-              ...typography.caption,
-              color: theme.danger,
-              marginTop: spacing[3],
               textAlign: "center",
+              marginTop: keyboardOpen ? spacing[4] : spacing[8],
             }}
           >
-            {error}
+            {step === "verify"
+              ? t("auth.verifyTitle")
+              : t("auth.signInTitle")}
           </Text>
-        ) : null}
-
-        <Pressable
-          disabled={busy || !isLoaded}
-          onPress={() => void onEmailSignIn()}
-          style={{
-            ...pillPrimary,
-            marginTop: spacing[6],
-            opacity: busy ? 0.7 : 1,
-          }}
-        >
-          {busy ? (
-            <ActivityIndicator color={theme.onPrimary} />
-          ) : (
-            <Text style={{ ...typography.label, color: theme.onPrimary }}>
-              {t("auth.logIn")}
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: spacing[2],
+              marginTop: spacing[2],
+              marginBottom: keyboardOpen ? spacing[4] : spacing[8],
+              paddingHorizontal: spacing[2],
+            }}
+          >
+            <Text
+              style={{
+                ...typography.body,
+                color: theme.textBody,
+                textAlign: "center",
+              }}
+            >
+              {step === "verify"
+                ? t("auth.verifySubtitle", { email: verifyEmailLabel })
+                : t("auth.signInSubtitle")}
             </Text>
-          )}
-        </Pressable>
-        </View>
+            {step === "credentials" && !keyboardOpen ? (
+              <KangurMascot variant="icon" width={28} height={28} />
+            ) : null}
+          </View>
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginVertical: spacing[5],
-            gap: spacing[3],
-          }}
-        >
-          <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
-          <Text style={{ ...typography.caption, color: theme.textMuted }}>
-            {t("auth.orContinueWith")}
-          </Text>
-          <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
-        </View>
-
-        <Pressable
-          disabled={busy || !isLoaded}
-          onPress={() => void onOAuth("google")}
-          style={{ ...pillSecondary, opacity: busy ? 0.7 : 1 }}
-        >
-          {busy ? (
-            <ActivityIndicator color={theme.primary} />
-          ) : (
+          {step === "credentials" ? (
             <>
-              <GoogleIcon size={20} />
-              <Text style={{ ...typography.label, color: theme.text }}>
-                {t("auth.continueGoogle")}
-              </Text>
+              <View ref={setFormBlockRef} collapsable={false}>
+                <View
+                  ref={emailFieldRef}
+                  collapsable={false}
+                  style={{
+                    ...fieldShell(emailFocused),
+                    marginBottom: spacing[4],
+                  }}
+                >
+                  <MailFieldIcon size={20} />
+                  <TextInput
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="email-address"
+                    textContentType="emailAddress"
+                    placeholder={t("auth.emailPlaceholder")}
+                    placeholderTextColor={theme.textMuted}
+                    value={email}
+                    onChangeText={setEmail}
+                    editable={!busy}
+                    onFocus={() => {
+                      setEmailFocused(true);
+                      emailFocus.onFocus();
+                    }}
+                    onBlur={() => {
+                      setEmailFocused(false);
+                      emailFocus.onBlur();
+                    }}
+                    style={{
+                      flex: 1,
+                      color: theme.text,
+                      fontSize: typography.body.fontSize,
+                      paddingVertical: spacing[3],
+                    }}
+                  />
+                </View>
+
+                <View
+                  ref={passwordFieldRef}
+                  collapsable={false}
+                  style={fieldShell(passwordFocused)}
+                >
+                  <LockFieldIcon size={20} />
+                  <TextInput
+                    secureTextEntry={!showPassword}
+                    textContentType="password"
+                    placeholder={t("auth.passwordPlaceholder")}
+                    placeholderTextColor={theme.textMuted}
+                    value={password}
+                    onChangeText={setPassword}
+                    editable={!busy}
+                    onFocus={() => {
+                      setPasswordFocused(true);
+                      passwordFocus.onFocus();
+                    }}
+                    onBlur={() => {
+                      setPasswordFocused(false);
+                      passwordFocus.onBlur();
+                    }}
+                    style={{
+                      flex: 1,
+                      color: theme.text,
+                      fontSize: typography.body.fontSize,
+                      paddingVertical: spacing[3],
+                    }}
+                  />
+                  <Pressable
+                    onPress={() => setShowPassword((v) => !v)}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      showPassword
+                        ? t("auth.hidePassword")
+                        : t("auth.showPassword")
+                    }
+                  >
+                    <EyeIcon size={20} off={showPassword} />
+                  </Pressable>
+                </View>
+
+                <Pressable
+                  onPress={() => {
+                    router.push({
+                      pathname: "/(auth)/forgot-password",
+                      params: email.trim() ? { email: email.trim() } : {},
+                    } as never);
+                  }}
+                  style={{ alignSelf: "flex-end", marginTop: spacing[3] }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("auth.forgotPassword")}
+                >
+                  <Text style={{ ...typography.label, color: theme.primary }}>
+                    {t("auth.forgotPassword")}
+                  </Text>
+                </Pressable>
+
+                {error ? (
+                  <Text
+                    style={{
+                      ...typography.caption,
+                      color: theme.danger,
+                      marginTop: spacing[3],
+                      textAlign: "center",
+                    }}
+                  >
+                    {error}
+                  </Text>
+                ) : null}
+
+                <Pressable
+                  disabled={busy || !isLoaded}
+                  onPress={() => void onEmailSignIn()}
+                  style={{
+                    ...pillPrimary,
+                    marginTop: spacing[6],
+                    opacity: busy ? 0.7 : 1,
+                  }}
+                >
+                  {busy ? (
+                    <ActivityIndicator color={theme.onPrimary} />
+                  ) : (
+                    <Text
+                      style={{ ...typography.label, color: theme.onPrimary }}
+                    >
+                      {t("auth.logIn")}
+                    </Text>
+                  )}
+                </Pressable>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginVertical: spacing[5],
+                  gap: spacing[3],
+                }}
+              >
+                <View
+                  style={{ flex: 1, height: 1, backgroundColor: theme.border }}
+                />
+                <Text style={{ ...typography.caption, color: theme.textMuted }}>
+                  {t("auth.orContinueWith")}
+                </Text>
+                <View
+                  style={{ flex: 1, height: 1, backgroundColor: theme.border }}
+                />
+              </View>
+
+              <Pressable
+                disabled={busy || !isLoaded}
+                onPress={() => void onOAuth("google")}
+                style={{ ...pillSecondary, opacity: busy ? 0.7 : 1 }}
+              >
+                {busy ? (
+                  <ActivityIndicator color={theme.primary} />
+                ) : (
+                  <>
+                    <GoogleIcon size={20} />
+                    <Text style={{ ...typography.label, color: theme.text }}>
+                      {t("auth.continueGoogle")}
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+
+              <Pressable
+                disabled
+                style={{
+                  ...pillSecondary,
+                  marginTop: spacing[3],
+                  opacity: 0.45,
+                }}
+              >
+                <AppleIcon size={20} />
+                <Text style={{ ...typography.label, color: theme.text }}>
+                  {t("auth.continueApple")}
+                </Text>
+              </Pressable>
+
+              <View
+                style={{
+                  marginTop: spacing[5],
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ ...typography.body, color: theme.textBody }}>
+                  {t("auth.needAccountPrompt")}{" "}
+                  <Link href="/(auth)/sign-up" asChild>
+                    <Text style={{ ...typography.label, color: theme.primary }}>
+                      {t("auth.signUp")}
+                    </Text>
+                  </Link>
+                </Text>
+              </View>
             </>
+          ) : (
+            <View ref={setFormBlockRef} collapsable={false}>
+              <View
+                ref={codeFieldRef}
+                collapsable={false}
+                style={fieldShell(codeFocused)}
+              >
+                <TextInput
+                  ref={codeInputRef}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="number-pad"
+                  textContentType="oneTimeCode"
+                  autoComplete="sms-otp"
+                  placeholder={t("auth.verificationCode")}
+                  placeholderTextColor={theme.textMuted}
+                  value={code}
+                  onChangeText={setCode}
+                  editable={!busy}
+                  onFocus={() => {
+                    setCodeFocused(true);
+                    codeFocus.onFocus();
+                  }}
+                  onBlur={() => {
+                    setCodeFocused(false);
+                    codeFocus.onBlur();
+                  }}
+                  style={{
+                    flex: 1,
+                    color: theme.text,
+                    fontSize: typography.body.fontSize,
+                    paddingVertical: spacing[3],
+                    letterSpacing: 2,
+                  }}
+                />
+              </View>
+
+              {error ? (
+                <Text
+                  style={{
+                    ...typography.caption,
+                    color: theme.danger,
+                    marginTop: spacing[3],
+                    textAlign: "center",
+                  }}
+                >
+                  {error}
+                </Text>
+              ) : null}
+
+              <Pressable
+                disabled={busy || !isLoaded}
+                onPress={() => void onVerifyCode()}
+                style={{
+                  ...pillPrimary,
+                  marginTop: spacing[6],
+                  opacity: busy ? 0.7 : 1,
+                }}
+              >
+                {busy ? (
+                  <ActivityIndicator color={theme.onPrimary} />
+                ) : (
+                  <Text style={{ ...typography.label, color: theme.onPrimary }}>
+                    {t("auth.verify")}
+                  </Text>
+                )}
+              </Pressable>
+
+              <Pressable
+                disabled={busy || resendSecondsLeft > 0}
+                onPress={() => void onResendCode()}
+                style={{
+                  marginTop: spacing[4],
+                  alignItems: "center",
+                  paddingVertical: spacing[3],
+                  opacity: busy || resendSecondsLeft > 0 ? 0.55 : 1,
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t("auth.resendCode")}
+              >
+                <Text
+                  style={{
+                    ...typography.label,
+                    color:
+                      resendSecondsLeft > 0
+                        ? theme.textMuted
+                        : theme.primary,
+                  }}
+                >
+                  {resendSecondsLeft > 0
+                    ? t("auth.resendCodeIn", { seconds: resendSecondsLeft })
+                    : t("auth.resendCode")}
+                </Text>
+              </Pressable>
+            </View>
           )}
-        </Pressable>
-
-        <Pressable
-          disabled
-          style={{
-            ...pillSecondary,
-            marginTop: spacing[3],
-            opacity: 0.45,
-          }}
-        >
-          <AppleIcon size={20} />
-          <Text style={{ ...typography.label, color: theme.text }}>
-            {t("auth.continueApple")}
-          </Text>
-        </Pressable>
-
-        <View
-          style={{
-            marginTop: spacing[5],
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ ...typography.body, color: theme.textBody }}>
-            {t("auth.needAccountPrompt")}{" "}
-            <Link href="/(auth)/sign-up" asChild>
-              <Text style={{ ...typography.label, color: theme.primary }}>
-                {t("auth.signUp")}
-              </Text>
-            </Link>
-          </Text>
-        </View>
-      </ScrollView>
+        </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
   );

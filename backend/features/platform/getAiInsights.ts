@@ -120,8 +120,8 @@ export async function getAiInsights(
             select: {
               status: true,
               currentPeriodEnd: true,
-              stripeCustomerId: true,
-              stripeSubscriptionId: true,
+              productId: true,
+              billingOwnerUserId: true,
             },
           },
           _count: {

@@ -99,3 +99,10 @@ export function aiUnavailable(
 ): ApiError {
   return new ApiError("AI_UNAVAILABLE", message, 502);
 }
+
+/** Upstream (e.g. Clerk) rate limit — do not treat as invalid auth. */
+export function rateLimited(
+  message = "Too many requests. Please try again shortly.",
+): ApiError {
+  return new ApiError("RATE_LIMITED", message, 429);
+}

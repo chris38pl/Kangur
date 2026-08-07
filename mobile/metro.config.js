@@ -53,9 +53,16 @@ const upstreamResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName.startsWith("@shared/")) {
     const rel = moduleName.slice("@shared/".length);
+    const asFile = path.resolve(sharedRoot, `${rel}.ts`);
+    const asIndex = path.resolve(sharedRoot, rel, "index.ts");
+    const filePath = fs.existsSync(asFile)
+      ? asFile
+      : fs.existsSync(asIndex)
+        ? asIndex
+        : asFile;
     return {
       type: "sourceFile",
-      filePath: path.resolve(sharedRoot, `${rel}.ts`),
+      filePath,
     };
   }
 

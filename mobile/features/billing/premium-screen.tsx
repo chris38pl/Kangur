@@ -7,12 +7,16 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   Text,
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+
+import type { BillingProduct } from "@shared/billing";
+import { DEFAULT_PREMIUM_PRODUCT } from "@shared/billing";
 
 import { Screen } from "@/components/Screen";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -21,15 +25,13 @@ import {
   brand,
   colors,
   radius,
+  shadows,
   spacing,
   typography,
 } from "@/design-system/tokens";
 import { BackIcon, LockFieldIcon } from "@/features/auth/auth-icons";
-import {
-  createBillingCheckout,
-  createBillingPortal,
-  syncBillingEntitlement,
-} from "@/features/billing/api";
+import { BillingService } from "@/features/billing/billing-service";
+import type { PurchaseState } from "@/features/billing/types";
 import { StripeTestCardHelper } from "@/features/billing/stripe-test-card-helper";
 import { usePremiumPrice } from "@/features/billing/usePremiumPrice";
 import {
@@ -45,6 +47,30 @@ import { ApiClientError } from "@/lib/api/client";
 const activatingKey = (workspaceId: string) =>
   `kangur.billing.activating.${workspaceId}`;
 
+/**
+ * Stripe Checkout must open from a user gesture on web. After `await createCheckout`,
+ * `window.open` is often blocked — open a blank tab sync on click, then navigate it.
+ * If that fails, same-tab redirect (requires BILLING_RETURN_URL_BASE → web /premium).
+ */
+function openStripeCheckoutUrl(
+  url: string,
+  pendingWindow: Window | null,
+): void {
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    if (pendingWindow && !pendingWindow.closed) {
+      pendingWindow.location.href = url;
+      try {
+        pendingWindow.focus();
+      } catch {
+        // ignore
+      }
+      return;
+    }
+    window.location.assign(url);
+    return;
+  }
+  void WebBrowser.openBrowserAsync(url);
+}
 const TRIAL_BADGE_BG = "#FFF3CD";
 const TRIAL_BADGE_TEXT = "#8A6A1A";
 const FEATURE_ICON_BG = "#E8F8F4";
@@ -732,16 +758,32 @@ function PremiumPurchaseView({
   busy,
   canManage,
   onCheckout,
+  onCheckStatus,
+  showCheckStatus,
+  supportsPurchase,
+  unavailableReason,
+  showStripeHelper,
+  onOpenDebug,
   priceFormatted,
   priceInterval,
   priceLoading,
+  /** Play / Apple: show verifying copy next to the CTA spinner. */
+  showVerifyingPaymentCta = false,
 }: {
   busy: boolean;
   canManage: boolean;
   onCheckout: () => void;
+  /** Manual status check — only when silent sync failed / inconsistency. */
+  onCheckStatus?: () => void;
+  showCheckStatus?: boolean;
+  supportsPurchase: boolean;
+  unavailableReason?: "COMING_SOON" | "STORE_NOT_SUPPORTED" | null;
+  showStripeHelper: boolean;
+  onOpenDebug?: () => void;
   priceFormatted: string | null;
   priceInterval: "day" | "week" | "month" | "year" | null;
   priceLoading: boolean;
+  showVerifyingPaymentCta?: boolean;
 }) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
@@ -825,8 +867,40 @@ function PremiumPurchaseView({
           </View>
         </ScrollView>
 
-        {/* Non-production only: Stripe test Visa for staging / local checkout. */}
-        <StripeTestCardHelper />
+        {/* Non-production FABs — same height: debug left, Stripe test card right. */}
+        {onOpenDebug ? (
+          <Pressable
+            onPress={onOpenDebug}
+            accessibilityRole="button"
+            accessibilityLabel={t("billing.debugTitle")}
+            style={{
+              position: "absolute",
+              left: spacing[4],
+              bottom: spacing[3],
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: theme.surface,
+              borderWidth: 1,
+              borderColor: theme.border,
+              alignItems: "center",
+              justifyContent: "center",
+              ...shadows.fab,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: "800",
+                letterSpacing: 0.2,
+                color: theme.textMuted,
+              }}
+            >
+              DBG
+            </Text>
+          </Pressable>
+        ) : null}
+        {showStripeHelper ? <StripeTestCardHelper /> : null}
       </View>
 
       <View
@@ -865,12 +939,16 @@ function PremiumPurchaseView({
           </Text>
         )}
 
-        {canManage ? (
+        {canManage && supportsPurchase ? (
           <Pressable
             onPress={onCheckout}
             disabled={busy}
             accessibilityRole="button"
-            accessibilityLabel={t("billing.tryFreeCta")}
+            accessibilityLabel={
+              busy && showVerifyingPaymentCta
+                ? t("billing.verifyingPaymentCta")
+                : t("billing.tryFreeCta")
+            }
             style={{
               backgroundColor: brand.primary,
               borderRadius: radius.full,
@@ -880,13 +958,40 @@ function PremiumPurchaseView({
             }}
           >
             {busy ? (
-              <ActivityIndicator color="#fff" />
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing[2],
+                }}
+              >
+                <ActivityIndicator color="#fff" />
+                {showVerifyingPaymentCta ? (
+                  <Text
+                    style={{ ...typography.label, color: "#fff", fontSize: 16 }}
+                  >
+                    {t("billing.verifyingPaymentCta")}
+                  </Text>
+                ) : null}
+              </View>
             ) : (
               <Text style={{ ...typography.label, color: "#fff", fontSize: 16 }}>
                 {t("billing.tryFreeCta")}
               </Text>
             )}
           </Pressable>
+        ) : canManage && !supportsPurchase ? (
+          <Text
+            style={{
+              ...typography.body,
+              color: theme.textMuted,
+              textAlign: "center",
+            }}
+          >
+            {unavailableReason === "COMING_SOON"
+              ? t("billing.purchaseComingSoon")
+              : t("billing.purchaseStoreUnsupported")}
+          </Text>
         ) : (
           <Text
             style={{
@@ -898,6 +1003,20 @@ function PremiumPurchaseView({
             {t("billing.memberCannotManage")}
           </Text>
         )}
+
+        {showCheckStatus && canManage && onCheckStatus ? (
+          <Pressable
+            onPress={onCheckStatus}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={t("billing.checkPremiumStatus")}
+            style={{ alignItems: "center", paddingVertical: spacing[2] }}
+          >
+            <Text style={{ ...typography.label, color: brand.primary }}>
+              {t("billing.checkPremiumStatus")}
+            </Text>
+          </Pressable>
+        ) : null}
 
         <View
           style={{
@@ -947,7 +1066,9 @@ export function PremiumScreen() {
   }>();
 
   const workspacesQuery = useWorkspaces();
-  const priceQuery = usePremiumPrice();
+  const caps = BillingService.capabilities();
+  const useStorePrice = caps.priceSource === "store";
+  const priceQuery = usePremiumPrice(!useStorePrice);
   const { activeWorkspace, setActiveId, hydrated } = useActiveWorkspace(
     workspacesQuery.data,
   );
@@ -972,6 +1093,35 @@ export function PremiumScreen() {
   const [busy, setBusy] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<1 | 2 | 3 | 4 | null>(null);
   const [refreshingStatus, setRefreshingStatus] = useState(false);
+  const [purchaseState, setPurchaseState] = useState<PurchaseState>("idle");
+  const [storeProducts, setStoreProducts] = useState<BillingProduct[]>([]);
+  const [productsLoading, setProductsLoading] = useState(useStorePrice);
+  /** Shown only after silent restore/sync fails — never the default path. */
+  const [showCheckStatus, setShowCheckStatus] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        await BillingService.initialize();
+        if (cancelled) return;
+        const token = await getToken();
+        const products = await BillingService.availableProducts({
+          authToken: token,
+          workspaceId: workspace?.id,
+        });
+        if (!cancelled) setStoreProducts(products);
+      } catch {
+        // Price may stay empty; user can retry via restore / refresh
+      } finally {
+        if (!cancelled) setProductsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      void BillingService.dispose();
+    };
+  }, [getToken, workspace?.id]);
 
   useEffect(() => {
     if (paramWorkspaceId) {
@@ -987,47 +1137,73 @@ export function PremiumScreen() {
     });
   }, [workspace, checkout]);
 
+  // Return from Stripe cancel, or a normal visit without checkout return —
+  // never rehydrate a stale "activating" flag from a previous abandoned session.
   useEffect(() => {
-    if (!workspace) return;
-    void AsyncStorage.getItem(activatingKey(workspace.id)).then((v) => {
-      if (v === "1") {
-        setActivating(true);
-        setCheckoutStep((current) => current ?? 3);
+    if (!workspace?.id) return;
+    if (checkout === "success") return;
+    const workspaceId = workspace.id;
+    void AsyncStorage.removeItem(activatingKey(workspaceId)).then(() => {
+      if (checkout === "cancel") {
+        setActivating(false);
+        setCheckoutStep(null);
       }
     });
-  }, [workspace?.id]);
-
-  if (workspace?.plan === "premium" && activating) {
-    setActivating(false);
-    setCheckoutStep(null);
-  }
+  }, [workspace?.id, checkout]);
 
   useEffect(() => {
     if (!workspace || workspace.plan !== "premium") return;
-    void AsyncStorage.removeItem(activatingKey(workspace.id));
+    const workspaceId = workspace.id;
+    void AsyncStorage.removeItem(activatingKey(workspaceId)).then(() => {
+      setActivating(false);
+      setCheckoutStep(null);
+    });
   }, [workspace?.id, workspace?.plan]);
+
+  const workspaceIdRef = useRef(workspace?.id);
+  const planRef = useRef(workspace?.plan);
+  const getTokenRef = useRef(getToken);
+  const refetchWorkspacesRef = useRef(workspacesQuery.refetch);
+  workspaceIdRef.current = workspace?.id;
+  planRef.current = workspace?.plan;
+  getTokenRef.current = getToken;
+  refetchWorkspacesRef.current = workspacesQuery.refetch;
 
   // After Checkout, webhooks may be delayed (or missing locally). Sync from Stripe
   // and poll until plan flips to premium.
+  // Deps intentionally omit getToken / refetch — unstable identities restarted the
+  // interval every render and hammered /workspaces + Clerk.
   useEffect(() => {
     if (!workspace?.id || !activating || workspace.plan === "premium") return;
     if (!canManage) return;
 
     const workspaceId = workspace.id;
     let cancelled = false;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 40; // ~3.3 min at 5s
+    const INTERVAL_MS = 5_000;
 
     const pull = async () => {
+      if (cancelled) return;
+      attempts += 1;
+      if (attempts > MAX_ATTEMPTS) {
+        cancelled = true;
+        setActivating(false);
+        setCheckoutStep(null);
+        void AsyncStorage.removeItem(activatingKey(workspaceId));
+        return;
+      }
       try {
-        const token = await getToken();
+        const token = await getTokenRef.current();
         if (!token || cancelled) return;
         // Stay on step 3 (payment confirmation) until Stripe entitlement is Premium.
         setCheckoutStep((s) => (s == null || s < 3 ? 3 : s === 4 ? 4 : 3));
-        const synced = await syncBillingEntitlement(token, workspaceId);
+        const synced = await BillingService.restore(token, workspaceId);
         if (cancelled) return;
         if (synced.plan === "premium") {
           setCheckoutStep(4);
         }
-        await workspacesQuery.refetch();
+        await refetchWorkspacesRef.current();
       } catch {
         // Keep progress UI; user can Refresh / cancel.
       }
@@ -1036,31 +1212,19 @@ export function PremiumScreen() {
     void pull();
     const interval = setInterval(() => {
       void pull();
-    }, 2500);
+    }, INTERVAL_MS);
 
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [
-    activating,
-    canManage,
-    getToken,
-    workspace?.id,
-    workspace?.plan,
-    workspacesQuery.refetch,
-  ]);
-
-  const workspaceIdRef = useRef(workspace?.id);
-  const planRef = useRef(workspace?.plan);
-  workspaceIdRef.current = workspace?.id;
-  planRef.current = workspace?.plan;
+  }, [activating, canManage, workspace?.id, workspace?.plan]);
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
       void (async () => {
-        await workspacesQuery.refetch();
+        await refetchWorkspacesRef.current();
         const workspaceId = workspaceIdRef.current;
         if (workspaceId) {
           Analytics.track("paywall_viewed", {
@@ -1068,29 +1232,31 @@ export function PremiumScreen() {
             surface: "premium_screen",
           });
         }
-        if (!workspaceId || !canManage || planRef.current !== "premium") {
-          return;
-        }
+        // Silent restore/sync for owners/admins — no loader, no toast on no-op.
+        if (workspaceId == null || !canManage) return;
         try {
-          const token = await getToken();
+          const token = await getTokenRef.current();
           if (!token || cancelled) return;
-          await syncBillingEntitlement(token, workspaceId);
-          if (!cancelled) {
-            await workspacesQuery.refetch();
-          }
+          await BillingService.restore(token, workspaceId);
+          if (cancelled) return;
+          await refetchWorkspacesRef.current();
+          if (!cancelled) setShowCheckStatus(false);
         } catch {
-          // Non-blocking - UI still shows last known entitlement.
+          // Keep paywall usable; offer a manual status check only on failure.
+          if (!cancelled) setShowCheckStatus(true);
         }
       })();
       return () => {
         cancelled = true;
       };
-    }, [canManage, getToken, workspacesQuery.refetch]),
+    }, [canManage]),
   );
 
   const isPremium = workspace?.plan === "premium";
   const showCheckoutProgress =
-    !isPremium && (activating || checkoutStep != null);
+    !isPremium &&
+    caps.purchaseMode === "checkout_url" &&
+    (activating || checkoutStep != null);
   const progressStep: 1 | 2 | 3 | 4 = checkoutStep ?? 3;
 
   const clearCheckoutProgress = useCallback(async () => {
@@ -1110,15 +1276,17 @@ export function PremiumScreen() {
     try {
       const token = await getToken();
       if (token) {
-        const synced = await syncBillingEntitlement(token, workspace.id);
+        const synced = await BillingService.restore(token, workspace.id);
         if (synced.plan === "premium") {
           setCheckoutStep(4);
         } else {
           setCheckoutStep(3);
         }
+        setShowCheckStatus(false);
       }
       await workspacesQuery.refetch();
     } catch {
+      setShowCheckStatus(true);
       await workspacesQuery.refetch();
     } finally {
       setRefreshingStatus(false);
@@ -1127,7 +1295,13 @@ export function PremiumScreen() {
 
   const onCheckout = async () => {
     if (!workspace || !canManage) return;
+    // Open blank tab while still in the click gesture (web popup-blocker safe).
+    const pendingCheckoutWindow =
+      Platform.OS === "web" && typeof window !== "undefined"
+        ? window.open("about:blank", "_blank")
+        : null;
     setBusy(true);
+    setPurchaseState("pending");
     setCheckoutStep(1);
     try {
       const token = await getToken();
@@ -1135,22 +1309,39 @@ export function PremiumScreen() {
       Analytics.track("checkout_started", { workspace_id: workspace.id });
       await AsyncStorage.setItem(activatingKey(workspace.id), "1");
       setActivating(true);
-      const { url } = await createBillingCheckout(token, workspace.id);
-      // Step 2 while Stripe Checkout is open - do not advance past this yet.
-      setCheckoutStep(2);
-      await WebBrowser.openBrowserAsync(url);
-      // Browser closed: wait for real payment confirmation (card + confirm).
-      setCheckoutStep(3);
-      try {
-        const synced = await syncBillingEntitlement(token, workspace.id);
-        if (synced.plan === "premium") {
-          setCheckoutStep(4);
+      const result = await BillingService.purchase(
+        token,
+        workspace.id,
+        DEFAULT_PREMIUM_PRODUCT,
+      );
+      if (result.mode === "checkout") {
+        setCheckoutStep(2);
+        openStripeCheckoutUrl(result.url, pendingCheckoutWindow);
+        // Same-tab redirect unloads this page; tab/popup path keeps waiting here.
+        setCheckoutStep(3);
+        setPurchaseState("verifying");
+        try {
+          const synced = await BillingService.restore(token, workspace.id);
+          if (synced.plan === "premium") {
+            setCheckoutStep(4);
+            setPurchaseState("active");
+          }
+        } catch {
+          // Stay on step 3; poll / Refresh may still activate.
         }
-      } catch {
-        // Stay on step 3; poll / Refresh may still activate.
+      } else {
+        pendingCheckoutWindow?.close();
+        setPurchaseState("verifying");
+        setCheckoutStep(3);
+        if (result.sync.plan === "premium") {
+          setCheckoutStep(4);
+          setPurchaseState("active");
+        }
       }
       await workspacesQuery.refetch();
     } catch (error) {
+      pendingCheckoutWindow?.close();
+      setPurchaseState("failed");
       await clearCheckoutProgress();
       const message =
         error instanceof ApiClientError
@@ -1161,6 +1352,33 @@ export function PremiumScreen() {
       Alert.alert(t("billing.screenTitle"), message);
     } finally {
       setBusy(false);
+      setPurchaseState((s) => (s === "pending" || s === "verifying" ? "idle" : s));
+    }
+  };
+
+  const onCheckPremiumStatus = async () => {
+    if (!workspace || !canManage) return;
+    setBusy(true);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("Missing auth token");
+      const synced = await BillingService.restore(token, workspace.id);
+      await workspacesQuery.refetch();
+      setShowCheckStatus(false);
+      if (synced.plan === "premium") {
+        setPurchaseState("active");
+        Alert.alert(t("billing.screenTitle"), t("billing.checkPremiumActive"));
+      } else {
+        Alert.alert(t("billing.screenTitle"), t("billing.checkPremiumNone"));
+      }
+    } catch (error) {
+      setShowCheckStatus(true);
+      const message =
+        error instanceof Error ? error.message : t("billing.checkPremiumFailed");
+      Alert.alert(t("billing.screenTitle"), message);
+    } finally {
+      setBusy(false);
+      setPurchaseState("idle");
     }
   };
 
@@ -1170,11 +1388,12 @@ export function PremiumScreen() {
     try {
       const token = await getToken();
       if (!token) throw new Error("Missing auth token");
-      const { url } = await createBillingPortal(token, workspace.id);
-      await WebBrowser.openBrowserAsync(url);
-      // Portal may set cancel_at_period_end - pull Stripe (webhooks alone are not enough locally).
+      const result = await BillingService.manage(token, workspace.id);
+      if ("url" in result) {
+        await WebBrowser.openBrowserAsync(result.url);
+      }
       try {
-        await syncBillingEntitlement(token, workspace.id);
+        await BillingService.restore(token, workspace.id);
       } catch {
         // Refetch still helps if webhook already landed.
       }
@@ -1191,6 +1410,19 @@ export function PremiumScreen() {
       setBusy(false);
     }
   };
+
+  const primaryProduct =
+    storeProducts.find((p) => p.productId === DEFAULT_PREMIUM_PRODUCT) ??
+    storeProducts[0];
+  const displayPrice = useStorePrice
+    ? primaryProduct?.displayPrice || null
+    : (priceQuery.data?.formatted ?? null);
+  const displayInterval = useStorePrice
+    ? primaryProduct?.billingInterval ?? "month"
+    : (priceQuery.data?.interval ?? null);
+  const priceLoading = useStorePrice
+    ? productsLoading
+    : priceQuery.isPending;
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
@@ -1263,9 +1495,23 @@ export function PremiumScreen() {
           busy={busy}
           canManage={canManage}
           onCheckout={() => void onCheckout()}
-          priceFormatted={priceQuery.data?.formatted ?? null}
-          priceInterval={priceQuery.data?.interval ?? null}
-          priceLoading={priceQuery.isPending}
+          onCheckStatus={() => void onCheckPremiumStatus()}
+          showCheckStatus={showCheckStatus}
+          supportsPurchase={caps.supportsPurchase}
+          unavailableReason={BillingService.purchaseUnavailableReason()}
+          showStripeHelper={caps.purchaseMode === "checkout_url"}
+          showVerifyingPaymentCta={
+            caps.purchaseMode === "native_iap" &&
+            (purchaseState === "pending" || purchaseState === "verifying")
+          }
+          onOpenDebug={
+            BillingService.isBillingDebugEnabled()
+              ? () => router.push("/billing-debug" as never)
+              : undefined
+          }
+          priceFormatted={displayPrice}
+          priceInterval={displayInterval}
+          priceLoading={priceLoading}
         />
       )}
     </Screen>
