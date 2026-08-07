@@ -39,6 +39,9 @@ export function BillingDebugScreen() {
   const [products, setProducts] = useState<BillingProduct[]>([]);
   const [busy, setBusy] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [offerDiag, setOfferDiag] = useState<Record<string, unknown> | null>(
+    null,
+  );
   const decision = BillingService.decisionTree();
   const caps = BillingService.capabilities();
   const meta = BillingService.cacheMeta();
@@ -54,6 +57,17 @@ export function BillingDebugScreen() {
         workspaceId,
       });
       setProducts(list);
+      setOfferDiag(BillingService.getStoreOfferDiagnostics());
+      // Fresh inspect (includes selection + phases) for debug accuracy.
+      try {
+        const offers = await BillingService.inspectStoreOffers();
+        setOfferDiag(offers);
+      } catch (err) {
+        setOfferDiag({
+          ...(BillingService.getStoreOfferDiagnostics() ?? {}),
+          error: err instanceof Error ? err.message : "inspect failed",
+        });
+      }
     } finally {
       if (showBusy) setBusy(false);
       setInitialLoading(false);
@@ -76,6 +90,16 @@ export function BillingDebugScreen() {
           workspaceId,
         });
         if (!cancelled) setProducts(list);
+        try {
+          const offers = await BillingService.inspectStoreOffers();
+          if (!cancelled) setOfferDiag(offers);
+        } catch (err) {
+          if (!cancelled) {
+            setOfferDiag({
+              error: err instanceof Error ? err.message : "inspect failed",
+            });
+          }
+        }
       } finally {
         if (!cancelled) setInitialLoading(false);
       }
@@ -191,11 +215,33 @@ export function BillingDebugScreen() {
                   <Mono key={p.productId} theme={theme}>
                     {p.productId} | {p.displayPrice || "—"} | avail=
                     {String(p.isAvailable)} | {p.source}
+                    {p.introductoryOffer
+                      ? ` | intro=${p.introductoryOffer.displayPrice} (${p.introductoryOffer.paymentMode ?? "?"}) offer=${p.introductoryOffer.offerId ?? "?"}`
+                      : " | intro=none"}
                   </Mono>
                 ))
               )}
             </>
           )}
+        </Section>
+
+        <Section title="Google offers (raw)" theme={theme}>
+          <Mono theme={theme}>
+            {offerDiag
+              ? JSON.stringify(offerDiag, null, 2)
+              : "— (open Premium / Refresh to fetch)"}
+          </Mono>
+        </Section>
+
+        <Section title="Last purchase request" theme={theme}>
+          <Mono theme={theme}>
+            {JSON.stringify(
+              BillingService.getStoreOfferDiagnostics()?.lastPurchaseRequest ??
+                null,
+              null,
+              2,
+            )}
+          </Mono>
         </Section>
 
         <Section title={t("billing.debugEntitlement")} theme={theme}>

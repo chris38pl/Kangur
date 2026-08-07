@@ -43,7 +43,12 @@ export type BillingProduct = {
   billingInterval: BillingInterval;
   isAvailable: boolean;
   source: BillingProductSource;
-  introductoryOffer?: { displayPrice: string; period?: string } | null;
+  introductoryOffer?: {
+    displayPrice: string;
+    period?: string;
+    paymentMode?: string;
+    offerId?: string;
+  } | null;
 };
 
 /** Shared fields for ApplyPurchase — providerMetadata is raw store/API only. */

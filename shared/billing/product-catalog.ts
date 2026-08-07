@@ -26,6 +26,8 @@ export type BillingInterval = "month" | "year";
 export type GoogleProviderConfig = {
   externalProductId: string;
   basePlanId: string;
+  /** Play Console offer id to prefer (e.g. free-trial). Optional. */
+  preferredOfferId?: string;
 };
 
 export type AppleProviderConfig = {
@@ -72,6 +74,7 @@ export const PRODUCT_CATALOG: Record<ProductCatalogId, ProductCatalogEntry> = {
       google: {
         externalProductId: "premium_monthly",
         basePlanId: "monthly",
+        preferredOfferId: "free-trial",
       },
       apple: { productId: "premium_monthly" },
       stripe: { priceId: "env:STRIPE_PRICE_PREMIUM_MONTHLY" },

@@ -61,5 +61,8 @@ Only `BillingRegistry.resolve(providerId)` and `resolveCurrent(channel)`. Platfo
 
 - Premium UI never branches on `Platform.OS`; it uses capabilities + `BillingProduct[]`.
 - Adding Apple is a new adapter + ProductRepository wiring, not a new paywall.
-- Play Console must create products/base plans matching `providerConfig.google`.
+- Play Console must create products/base plans matching `providerConfig.google`
+  (`externalProductId`, `basePlanId`, optional `preferredOfferId` e.g. `free-trial`).
+  Android purchases must pass the selected offer’s `offerToken` explicitly (expo-iap
+  does not auto-pick free trial).
 - Stripe remains Web-only rail; checkout/portal unchanged for web channel.

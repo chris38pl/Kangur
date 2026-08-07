@@ -11,6 +11,7 @@ import {
   requestPurchase,
   type ProductSubscription,
   type Purchase,
+  type SubscriptionOffer,
 } from "expo-iap";
 import {
   getProduct,
@@ -23,6 +24,14 @@ import {
 } from "@shared/billing";
 
 import type { MobileBillingProvider, StoreProof } from "../types";
+import {
+  isFreeTrialOffer,
+  offerTokenOf,
+  recurringDisplayPrice,
+  selectSubscriptionOffer,
+  serializeOfferForDebug,
+  trialPhaseSummary,
+} from "./google-offers";
 
 function packageName(): string {
   return (
@@ -35,6 +44,15 @@ function catalogIdFromSku(sku: string): ProductCatalogId | null {
   return resolveProductIdFromGoogleSku(sku);
 }
 
+function subscriptionOffersOf(
+  sub: ProductSubscription,
+): SubscriptionOffer[] {
+  if ("subscriptionOffers" in sub && Array.isArray(sub.subscriptionOffers)) {
+    return sub.subscriptionOffers;
+  }
+  return [];
+}
+
 function mapSubscriptionToBillingProduct(
   sub: ProductSubscription,
   source: BillingProduct["source"],
@@ -42,31 +60,35 @@ function mapSubscriptionToBillingProduct(
   const productId = catalogIdFromSku(sub.id);
   if (!productId) return null;
   const catalog = getProduct(productId);
-  const androidOffers =
-    "subscriptionOffers" in sub && Array.isArray(sub.subscriptionOffers)
-      ? sub.subscriptionOffers
-      : [];
-  const offer = androidOffers[0] as
-    | { offerToken?: string; displayPrice?: string; currency?: string }
-    | undefined;
-  const displayPrice =
-    offer?.displayPrice ||
-    sub.displayPrice ||
-    "";
-  const currency =
-    offer?.currency ||
-    ("currency" in sub ? sub.currency : null) ||
-    null;
+  const googleCfg = catalog.providerConfig.google;
+  const offers = subscriptionOffersOf(sub);
+  const selected = selectSubscriptionOffer(offers, {
+    basePlanId: googleCfg.basePlanId,
+    preferredOfferId: googleCfg.preferredOfferId,
+  });
+  const trial = selected ? trialPhaseSummary(selected) : null;
 
   return {
     productId,
     displayName: sub.title || catalog.displayNameKey,
-    displayPrice,
-    currency,
+    displayPrice: selected
+      ? recurringDisplayPrice(selected)
+      : sub.displayPrice || "",
+    currency:
+      selected?.currency ||
+      ("currency" in sub ? sub.currency : null) ||
+      null,
     billingInterval: catalog.billingInterval,
-    isAvailable: true,
+    isAvailable: Boolean(selected && offerTokenOf(selected)),
     source,
-    introductoryOffer: null,
+    introductoryOffer: trial
+      ? {
+          displayPrice: trial.displayPrice,
+          period: trial.period,
+          paymentMode: trial.paymentMode,
+          offerId: selected?.id,
+        }
+      : null,
   };
 }
 
@@ -77,6 +99,8 @@ export class GoogleMobileBillingProvider implements MobileBillingProvider {
   readonly id = "google" as const;
   private connected = false;
   private lastPurchaseByToken = new Map<string, Purchase>();
+  private lastOfferInspect: Record<string, unknown> | null = null;
+  private lastPurchaseRequest: Record<string, unknown> | null = null;
 
   capabilities(): BillingCapability {
     return {
@@ -122,6 +146,63 @@ export class GoogleMobileBillingProvider implements MobileBillingProvider {
     this.connected = false;
   }
 
+  /** Last offer / purchase payload for Billing Debug (no purchase tokens). */
+  getOfferDiagnostics(): Record<string, unknown> {
+    return {
+      lastOfferInspect: this.lastOfferInspect,
+      lastPurchaseRequest: this.lastPurchaseRequest,
+    };
+  }
+
+  async inspectOffers(): Promise<Record<string, unknown>> {
+    await this.initialize();
+    const skus = listCatalogProductsSorted().map(
+      (p) => p.providerConfig.google.externalProductId,
+    );
+    const result = await fetchProducts({ skus, type: "subs" });
+    const list = (Array.isArray(result) ? result : []) as ProductSubscription[];
+    const bySku: Record<string, unknown> = {};
+
+    for (const entry of listCatalogProductsSorted()) {
+      const sku = entry.providerConfig.google.externalProductId;
+      const googleCfg = entry.providerConfig.google;
+      const found = list.find((s) => s.id === sku);
+      if (!found) {
+        bySku[sku] = { found: false };
+        continue;
+      }
+      const offers = subscriptionOffersOf(found);
+      const selected = selectSubscriptionOffer(offers, {
+        basePlanId: googleCfg.basePlanId,
+        preferredOfferId: googleCfg.preferredOfferId,
+      });
+      bySku[sku] = {
+        found: true,
+        productId: entry.id,
+        catalogBasePlanId: googleCfg.basePlanId,
+        preferredOfferId: googleCfg.preferredOfferId ?? null,
+        productDisplayPrice: found.displayPrice,
+        productStatusAndroid:
+          "productStatusAndroid" in found
+            ? found.productStatusAndroid
+            : null,
+        offers: offers.map(serializeOfferForDebug),
+        selectedOffer: selected ? serializeOfferForDebug(selected) : null,
+        selectedOfferTokenPresent: Boolean(
+          selected && offerTokenOf(selected),
+        ),
+        selectedIsFreeTrial: selected ? isFreeTrialOffer(selected) : false,
+      };
+    }
+
+    this.lastOfferInspect = {
+      fetchedAt: new Date().toISOString(),
+      skus,
+      bySku,
+    };
+    return this.lastOfferInspect;
+  }
+
   async fetchProducts(): Promise<BillingProduct[]> {
     await this.initialize();
     const skus = listCatalogProductsSorted().map(
@@ -129,6 +210,8 @@ export class GoogleMobileBillingProvider implements MobileBillingProvider {
     );
     const result = await fetchProducts({ skus, type: "subs" });
     const list = (Array.isArray(result) ? result : []) as ProductSubscription[];
+    // Keep diagnostics warm for Billing Debug without a second network call.
+    void this.inspectOffersFromList(list);
     const mapped: BillingProduct[] = [];
     for (const entry of listCatalogProductsSorted()) {
       const sku = entry.providerConfig.google.externalProductId;
@@ -152,27 +235,83 @@ export class GoogleMobileBillingProvider implements MobileBillingProvider {
     return mapped;
   }
 
+  private inspectOffersFromList(list: ProductSubscription[]): void {
+    const bySku: Record<string, unknown> = {};
+    for (const entry of listCatalogProductsSorted()) {
+      const sku = entry.providerConfig.google.externalProductId;
+      const googleCfg = entry.providerConfig.google;
+      const found = list.find((s) => s.id === sku);
+      if (!found) {
+        bySku[sku] = { found: false };
+        continue;
+      }
+      const offers = subscriptionOffersOf(found);
+      const selected = selectSubscriptionOffer(offers, {
+        basePlanId: googleCfg.basePlanId,
+        preferredOfferId: googleCfg.preferredOfferId,
+      });
+      bySku[sku] = {
+        found: true,
+        offers: offers.map(serializeOfferForDebug),
+        selectedOffer: selected ? serializeOfferForDebug(selected) : null,
+      };
+    }
+    this.lastOfferInspect = {
+      fetchedAt: new Date().toISOString(),
+      bySku,
+    };
+  }
+
   async purchase(productId: ProductCatalogId): Promise<StoreProof> {
     try {
       await this.initialize();
-      const sku = getProduct(productId).providerConfig.google.externalProductId;
+      const catalog = getProduct(productId);
+      const googleCfg = catalog.providerConfig.google;
+      const sku = googleCfg.externalProductId;
       const products = await fetchProducts({ skus: [sku], type: "subs" });
       const list = (Array.isArray(products) ? products : []) as ProductSubscription[];
       const sub = list.find((s) => s.id === sku);
-      const androidOffers =
-        sub && "subscriptionOffers" in sub && Array.isArray(sub.subscriptionOffers)
-          ? sub.subscriptionOffers
-          : [];
-      const offerToken =
-        (androidOffers[0] as { offerTokenAndroid?: string; offerToken?: string } | undefined)
-          ?.offerTokenAndroid ??
-        (androidOffers[0] as { offerToken?: string } | undefined)?.offerToken ??
-        null;
-      if (!offerToken) {
+      const offers = sub ? subscriptionOffersOf(sub) : [];
+      const selected = selectSubscriptionOffer(offers, {
+        basePlanId: googleCfg.basePlanId,
+        preferredOfferId: googleCfg.preferredOfferId,
+      });
+      const offerToken = selected ? offerTokenOf(selected) : null;
+      if (!selected || !offerToken) {
         throw new Error(
-          "Google subscription offerToken missing — create/activate the product in Play Console.",
+          "Google subscription offerToken missing — create/activate the offer in Play Console.",
         );
       }
+
+      const purchasePayload = {
+        type: "subs" as const,
+        request: {
+          google: {
+            skus: [sku],
+            subscriptionOffers: [{ sku, offerToken }],
+          },
+        },
+      };
+      this.lastPurchaseRequest = {
+        productId,
+        sku,
+        basePlanId: googleCfg.basePlanId,
+        preferredOfferId: googleCfg.preferredOfferId ?? null,
+        selectedOffer: serializeOfferForDebug(selected),
+        // Truncate token in debug — full token only goes to Play.
+        offerTokenPreview: `${offerToken.slice(0, 8)}…`,
+        requestPurchase: {
+          type: purchasePayload.type,
+          request: {
+            google: {
+              skus: purchasePayload.request.google.skus,
+              subscriptionOffers: [
+                { sku, offerToken: `${offerToken.slice(0, 8)}…` },
+              ],
+            },
+          },
+        },
+      };
 
       return await new Promise<StoreProof>((resolve, reject) => {
         const timeout = setTimeout(() => {
@@ -210,15 +349,7 @@ export class GoogleMobileBillingProvider implements MobileBillingProvider {
           reject(err);
         });
 
-        void requestPurchase({
-          type: "subs",
-          request: {
-            google: {
-              skus: [sku],
-              subscriptionOffers: [{ sku, offerToken }],
-            },
-          },
-        }).catch((err) => {
+        void requestPurchase(purchasePayload).catch((err) => {
           remove();
           reject(err);
         });

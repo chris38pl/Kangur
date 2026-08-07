@@ -236,6 +236,7 @@ export const BillingService = {
     const decision = this.decisionTree();
     const caps = this.capabilities();
     const meta = productCache.meta();
+    const offerDiag = this.getStoreOfferDiagnostics();
     const lines = [
       "Kangur Billing Diagnostics",
       `platform: ${decision.platform}`,
@@ -253,14 +254,41 @@ export const BillingService = {
       `products: ${(input.products ?? [])
         .map(
           (p) =>
-            `${p.productId} available=${p.isAvailable} price=${p.displayPrice || "—"} source=${p.source}`,
+            `${p.productId} available=${p.isAvailable} price=${p.displayPrice || "—"} intro=${p.introductoryOffer?.displayPrice ?? "none"} source=${p.source}`,
         )
         .join("; ") || "none"}`,
       `entitlement: ${JSON.stringify(input.entitlement ?? null)}`,
+      `storeOffers: ${JSON.stringify(offerDiag)}`,
       `lastError: ${input.lastError ?? "none"}`,
-      "(no purchase tokens included)",
+      "(no full purchase tokens included)",
     ];
     return lines.join("\n");
+  },
+
+  getStoreOfferDiagnostics(): Record<string, unknown> | null {
+    const provider = MobileBillingRegistry.resolveCurrent();
+    if (provider.id !== "google") return null;
+    if (!("getOfferDiagnostics" in provider)) return null;
+    return (
+      provider as {
+        getOfferDiagnostics: () => Record<string, unknown>;
+      }
+    ).getOfferDiagnostics();
+  },
+
+  async inspectStoreOffers(): Promise<Record<string, unknown>> {
+    const provider = MobileBillingRegistry.resolveCurrent();
+    if (provider.id !== "google") {
+      return { error: "inspectStoreOffers only supported for google provider" };
+    }
+    if (!("inspectOffers" in provider)) {
+      return { error: "google adapter missing inspectOffers" };
+    }
+    return (
+      provider as {
+        inspectOffers: () => Promise<Record<string, unknown>>;
+      }
+    ).inspectOffers();
   },
 
   isBillingDebugEnabled(): boolean {
