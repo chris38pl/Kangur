@@ -1,0 +1,53 @@
+{
+  "version": "1.0.3",
+  "releaseDate": "2026-08-10",
+  "highlight": true,
+  "title": {
+    "pl": "Listy z poprzednich zakupów dla wszystkich",
+    "en": "Lists from previous shopping for everyone"
+  },
+  "changes": [
+    {
+      "type": "feature",
+      "text": {
+        "pl": "Lista z poprzednich zakupów jest dostępna dla każdego - bez Premium. Przeglądasz propozycję i zostawiasz to, czego potrzebujesz",
+        "en": "Building a list from previous shopping is available to everyone - no Premium. Review the proposal and keep what you need"
+      }
+    },
+    {
+      "type": "improvement",
+      "text": {
+        "pl": "Kangur składa tę propozycję z Twoich ostatnich list bez AI - szybciej i przejrzyściej",
+        "en": "Kangur builds that proposal from your recent lists without AI - faster and clearer"
+      }
+    },
+    {
+      "type": "improvement",
+      "text": {
+        "pl": "Premium nadal daje głębszą historię zakupów i nieograniczone użycia AI",
+        "en": "Premium still gives deeper shopping history and unlimited AI uses"
+      }
+    },
+    {
+      "type": "improvement",
+      "text": {
+        "pl": "Anulowanie płatności Premium w sklepie pokazuje teraz czytelny ekran Kangura zamiast technicznego komunikatu",
+        "en": "Cancelling a Premium purchase in the store now shows a clear Kangur screen instead of a technical message"
+      }
+    },
+    {
+      "type": "fix",
+      "text": {
+        "pl": "Przy dodawaniu z AI, z przepisu lub ręcznie klawiatura nie zasłania już przycisku akcji - sekcja przewija się tak, by pola i CTA były widoczne",
+        "en": "When adding via AI, from a recipe, or manually, the keyboard no longer covers the action button - the section scrolls so fields and the CTA stay visible"
+      }
+    },
+    {
+      "type": "fix",
+      "text": {
+        "pl": "Notatki wspólnych składników z kilku dań (np. „für … und …”) są teraz w języku aplikacji, a nie zawsze po polsku",
+        "en": "Notes on ingredients shared across dishes (e.g. “for … and …”) now follow the app language instead of always using Polish"
+      }
+    }
+  ]
+}

@@ -48,13 +48,13 @@ export type EventPropsMap = {
       source?: AiImportSource;
       code?: string;
     };
-  history_ai_generate_started: WorkspaceIdProps;
-  history_ai_generate_reviewed: WorkspaceIdProps & { run_id: string };
-  history_ai_generate_applied: WorkspaceIdProps & {
+  history_merge_started: WorkspaceIdProps;
+  history_merge_reviewed: WorkspaceIdProps & { run_id: string };
+  history_merge_applied: WorkspaceIdProps & {
     run_id: string;
     list_id: string;
   };
-  history_ai_generate_cancelled: WorkspaceIdProps & { run_id: string };
+  history_merge_cancelled: WorkspaceIdProps & { run_id: string };
   invitation_sent: WorkspaceIdProps;
   invitation_accepted: WorkspaceIdProps;
   paywall_viewed: WorkspaceIdProps & { surface?: string };

@@ -37,9 +37,9 @@ export const AI_PROVIDER = "openai";
 export const IMPORT_PROPOSAL_TYPE = "shopping-import";
 export const IMPORT_PROPOSAL_VERSION = 4;
 
-/** History suggestions generator - whole pipeline version. */
+/** History-merge generator (deterministic; was LLM through v6). */
 export const HISTORY_PROPOSAL_TYPE = "shopping-history";
-export const HISTORY_PROPOSAL_VERSION = 6;
+export const HISTORY_PROPOSAL_VERSION = 7;
 
 /** Meal proposal → shopping list ingredients. */
 export const MEAL_PROPOSAL_TYPE = "meal-proposal";

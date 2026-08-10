@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
 import { openSettings } from "expo-linking";
-import { router } from "expo-router";
 import {
   createContext,
   useCallback,
@@ -47,10 +46,6 @@ import { markListProvisional } from "@/features/shopping-list/provisional-list";
 import type { ShoppingList } from "@/features/shopping-list/schemas";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
-import {
-  getCreditShortage,
-  isInsufficientCreditsError,
-} from "@/lib/ai/insufficientCredits";
 import { Analytics } from "@/lib/analytics";
 import { oncePerUser } from "@/lib/analytics/once";
 import { ApiClientError } from "@/lib/api/client";
@@ -85,7 +80,6 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const {
     showError,
-    showInsufficientCredits,
     visible: appResultVisible,
   } = useAppResult();
   const workspacesQuery = useWorkspaces();
@@ -163,43 +157,10 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
       if (suggestRequestIdRef.current !== requestId) return;
       setSuggestRun(null);
       if (error instanceof ApiClientError) {
-        if (error.code === "AI_UNAVAILABLE" || error.status === 502) {
-          showError({
-            title: t("ai.unavailableTitle"),
-            description: t("ai.unavailableBody"),
-            image: brandAssets.aiUnavailable,
-            primaryLabel: t("common.tryAgain"),
-            secondaryLabel: t("common.return"),
-            onPrimary: () => {
-              void runFromHistory();
-            },
-          });
-          return;
-        }
-        if (isInsufficientCreditsError(error)) {
-          const shortage = getCreditShortage(error) ?? {
-            needed: 3,
-            remaining: 0,
-          };
-          showInsufficientCredits({
-            ...shortage,
-            description: t("ai.suggestInsufficientCredits"),
-          });
-          return;
-        }
         if (error.code === "NOT_FOUND" || error.status === 404) {
           showError({
             title: t("ai.suggestErrorTitle"),
             description: t("ai.suggestNoHistory"),
-          });
-          return;
-        }
-        if (error.code === "PREMIUM_REQUIRED") {
-          showError({
-            title: t("home.createFromHistory"),
-            description: t("ai.suggestPremiumRequired"),
-            primaryLabel: t("billing.upgradeCta"),
-            onPrimary: () => router.push("/premium"),
           });
           return;
         }
@@ -212,9 +173,8 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         }
       }
       showError({
-        title: t("ai.unavailableTitle"),
-        description: t("ai.unavailableBody"),
-        image: brandAssets.aiUnavailable,
+        title: t("ai.suggestErrorTitle"),
+        description: t("ai.suggestUnavailable"),
         primaryLabel: t("common.tryAgain"),
         secondaryLabel: t("common.return"),
         onPrimary: () => {
@@ -226,7 +186,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         setSuggestLoading(false);
       }
     }
-  }, [activeWorkspace, getToken, hydrated, showError, showInsufficientCredits, t]);
+  }, [activeWorkspace, getToken, hydrated, showError, t]);
 
   const confirmSuggest = useCallback(
     async (acceptedIds: string[]) => {
@@ -312,16 +272,6 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
       if (createInFlightRef.current) return;
 
       if (path === "fromHistory") {
-        if (activeWorkspace.plan !== "premium") {
-          setSheetOpen(false);
-          showError({
-            title: t("billing.hintGenerateFromHistoryTitle"),
-            description: t("billing.hintGenerateFromHistoryBody"),
-            primaryLabel: t("billing.upgradeCta"),
-            onPrimary: () => router.push("/premium"),
-          });
-          return;
-        }
         await runFromHistory();
         return;
       }
@@ -491,7 +441,6 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         preparing={preparing || creatingOverlay}
         showFromHistory={isHistorySuggestionsEnabled()}
         showFromRecipe={isMealProposalEnabled()}
-        fromHistoryLocked={activeWorkspace?.plan !== "premium"}
         onClose={() => {
           if (preparing || creatingOverlay) return;
           setSheetOpen(false);

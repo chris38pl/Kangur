@@ -30,14 +30,14 @@ import {
   typography,
 } from "@/design-system/tokens";
 import { BackIcon, LockFieldIcon } from "@/features/auth/auth-icons";
-import { BillingService } from "@/features/billing/billing-service";
+import { BillingService, isBillingUserCancelled } from "@/features/billing/billing-service";
 import type { PurchaseState } from "@/features/billing/types";
+import { PurchaseCancelledSheet } from "@/features/billing/purchase-cancelled-sheet";
 import { StripeTestCardHelper } from "@/features/billing/stripe-test-card-helper";
 import { usePremiumPrice } from "@/features/billing/usePremiumPrice";
 import {
   ProfileIconList,
   ProfileIconShield,
-  ProfileIconStar,
 } from "@/features/profile/profile-icons";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
@@ -316,7 +316,6 @@ function PremiumActiveView({
         <View style={{ width: "100%", gap: spacing[3] }}>
           <BenefitCheckRow label={t("billing.featureUnlimitedCredits")} />
           <BenefitCheckRow label={t("billing.featureHistoryDepth")} />
-          <BenefitCheckRow label={t("billing.featureGenerateFromHistory")} />
           {isTrialing && !isCancelled && daysLeft != null ? (
             <BenefitCheckRow
               label={t("billing.activeBenefitPaymentIn", { count: daysLeft })}
@@ -859,11 +858,6 @@ function PremiumPurchaseView({
               label={t("billing.featureHistoryDepth")}
               textColor={theme.text}
             />
-            <FeatureRow
-              icon={<ProfileIconStar color={brand.primary} size={18} />}
-              label={t("billing.featureGenerateFromHistory")}
-              textColor={theme.text}
-            />
           </View>
         </ScrollView>
 
@@ -1098,6 +1092,8 @@ export function PremiumScreen() {
   const [productsLoading, setProductsLoading] = useState(useStorePrice);
   /** Shown only after silent restore/sync fails — never the default path. */
   const [showCheckStatus, setShowCheckStatus] = useState(false);
+  const [purchaseCancelledVisible, setPurchaseCancelledVisible] =
+    useState(false);
 
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
@@ -1344,15 +1340,20 @@ export function PremiumScreen() {
       await workspacesQuery.refetch();
     } catch (error) {
       pendingCheckoutWindow?.close();
-      setPurchaseState("failed");
       await clearCheckoutProgress();
-      const message =
-        error instanceof ApiClientError
-          ? error.message
-          : error instanceof Error
+      if (isBillingUserCancelled(error)) {
+        setPurchaseState("idle");
+        setPurchaseCancelledVisible(true);
+      } else {
+        setPurchaseState("failed");
+        const message =
+          error instanceof ApiClientError
             ? error.message
-            : t("billing.checkoutFailed");
-      Alert.alert(t("billing.screenTitle"), message);
+            : error instanceof Error
+              ? error.message
+              : t("billing.checkoutFailed");
+        Alert.alert(t("billing.screenTitle"), message);
+      }
     } finally {
       setBusy(false);
       setPurchaseState((s) => (s === "pending" || s === "verifying" ? "idle" : s));
@@ -1517,6 +1518,10 @@ export function PremiumScreen() {
           priceLoading={priceLoading}
         />
       )}
+      <PurchaseCancelledSheet
+        visible={purchaseCancelledVisible}
+        onClose={() => setPurchaseCancelledVisible(false)}
+      />
     </Screen>
   );
 }

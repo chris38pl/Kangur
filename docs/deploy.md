@@ -270,7 +270,7 @@ One OpenAI account, **two projects**:
 | **Kangur Development** | Local + Staging |
 | **Kangur Production** | Production |
 
-Separate API keys, usage, limits, and billing dashboards. Set `OPENAI_API_KEY` per env. Optional: `OPENAI_MODEL_TEXT`, `OPENAI_MODEL_VISION`, `AI_FREE_MONTHLY_CREDITS` (default `15`).
+Separate API keys, usage, limits, and billing dashboards. Set `OPENAI_API_KEY` per env. Optional: `OPENAI_MODEL_TEXT`, `OPENAI_MODEL_VISION`, `AI_FREE_LIFETIME_CREDITS` (default `15`; legacy `AI_FREE_MONTHLY_CREDITS` still accepted).
 
 ### 6.6 Resend (optional)
 
@@ -370,7 +370,7 @@ Source of truth: [backend/.env.example](../backend/.env.example).
 | `CLERK_SECRET_KEY` | Dev | Dev | Prod | JWT verify |
 | `CLERK_PUBLISHABLE_KEY` / `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Dev | Dev | Prod | Match mobile |
 | `OPENAI_API_KEY` | Kangur Development | Kangur Development | Kangur Production | Separate projects |
-| `AI_FREE_MONTHLY_CREDITS` | `15` | `15` | `15` | Or override |
+| `AI_FREE_LIFETIME_CREDITS` | `15` | `15` | `15` | Free AI uses (lifetime); legacy `AI_FREE_MONTHLY_CREDITS` still works |
 | `HISTORY_SUGGESTIONS_ENABLED` | optional | optional | optional | Kill switch |
 | `STRIPE_SECRET_KEY` | Test | Test | Live | Never mix |
 | `STRIPE_WEBHOOK_SECRET` | from `stripe listen` | staging endpoint | prod endpoint | Per URL |

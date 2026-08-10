@@ -1862,8 +1862,8 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/api/v1/workspaces/{workspaceId}/ai/suggest-from-history",
-  summary: "Generate a shopping list proposal from recent active and archived lists",
-  tags: ["AI"],
+  summary: "Build a shopping list proposal by merging recent lists (deterministic history-merge; no LLM)",
+  tags: ["ShoppingLists"],
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
@@ -1872,23 +1872,15 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: "History suggestion proposal created",
+      description: "History-merge proposal created",
       content: {
         "application/json": {
           schema: SuggestFromHistoryResponseSchema,
         },
       },
     },
-    402: {
-      description: "Insufficient AI Credits",
-      content: {
-        "application/json": {
-          schema: ApiErrorSchema,
-        },
-      },
-    },
     403: {
-      description: "Premium required, feature disabled, or forbidden",
+      description: "Feature disabled or forbidden",
       content: {
         "application/json": {
           schema: ApiErrorSchema,
@@ -1896,15 +1888,7 @@ registry.registerPath({
       },
     },
     404: {
-      description: "No history or workspace not found",
-      content: {
-        "application/json": {
-          schema: ApiErrorSchema,
-        },
-      },
-    },
-    502: {
-      description: "AI temporarily unavailable",
+      description: "No eligible source lists with products",
       content: {
         "application/json": {
           schema: ApiErrorSchema,

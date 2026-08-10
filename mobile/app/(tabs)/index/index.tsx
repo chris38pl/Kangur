@@ -37,7 +37,6 @@ import { useWorkspaceMembers } from "@/features/workspace/useWorkspaceMembers";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { HomeWorkspaceBanner } from "@/features/workspace/home-workspace-banner";
 import { formatRelativeUpdatedAt } from "@/lib/formatRelativeUpdatedAt";
-import { intlLocaleTag } from "@/lib/i18n/locales";
 import { PressableScale } from "@/lib/motion";
 import {
   isHistorySuggestionsEnabled,
@@ -47,17 +46,6 @@ import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
 
 const QUICK_ACTION_GAP = spacing[2];
 const QUICK_ACTIONS_VISIBLE = 4;
-
-function formatCreditsRefreshDate(iso: string, locale: string): string {
-  try {
-    return new Intl.DateTimeFormat(intlLocaleTag(locale), {
-      day: "numeric",
-      month: "long",
-    }).format(new Date(iso));
-  } catch {
-    return iso.slice(0, 10);
-  }
-}
 
 function SectionHeader({
   title,
@@ -700,23 +688,6 @@ export default function HomeScreen() {
                       </Text>
                     </Text>
                   </View>
-                  <Text
-                    style={{
-                      ...typography.caption,
-                      color: theme.textMuted,
-                      fontSize: 11,
-                      lineHeight: 14,
-                      flexShrink: 1,
-                      textAlign: "right",
-                    }}
-                  >
-                    {t("billing.creditsRefreshed", {
-                      date: formatCreditsRefreshDate(
-                        credits.periodStart,
-                        i18n.language,
-                      ),
-                    })}
-                  </Text>
                 </View>
                 <View
                   style={{

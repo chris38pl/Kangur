@@ -154,6 +154,8 @@ export function CategoryOrderHint({ children }: { children: string }) {
 type EditRowProps = {
   icon: string;
   label: string;
+  /** Caption under the label (e.g. item count). */
+  subtitle?: string;
   onLongPress: () => void;
   isActive?: boolean;
   moveUp?: () => void;
@@ -164,6 +166,7 @@ type EditRowProps = {
 export function CategoryOrderEditRow({
   icon,
   label,
+  subtitle,
   onLongPress,
   isActive,
   moveUp,
@@ -190,12 +193,26 @@ export function CategoryOrderEditRow({
       }}
     >
       <Text style={{ fontSize: 22 }}>{icon}</Text>
-      <Text
-        numberOfLines={1}
-        style={{ ...typography.body, color: theme.text, flex: 1 }}
-      >
-        {label}
-      </Text>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text
+          numberOfLines={1}
+          style={{ ...typography.body, color: theme.text }}
+        >
+          {label}
+        </Text>
+        {subtitle ? (
+          <Text
+            numberOfLines={1}
+            style={{
+              ...typography.caption,
+              color: theme.textMuted,
+              marginTop: 2,
+            }}
+          >
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
       {webControls ? (
         <CategoryReorderWebControls moveUp={moveUp} moveDown={moveDown} />
       ) : (

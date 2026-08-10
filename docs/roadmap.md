@@ -567,7 +567,7 @@ Import (Screenshot | Text | Clipboard)
 
 **Acceptance:**
 - [x] `pnpm eval:ai --suite history-suggest` harness wired (needs `OPENAI_API_KEY` for model scenarios)
-- [x] Thin adapter over prod `buildSuggestFromHistory` + enrich (no HTTP/credits/DB)
+- Deterministic history-merge adapter over `mergeHistoryLists` (no HTTP/credits/DB/LLM)
 - [x] Hard FAIL → exit 1; soft = warnings; info = metrics only
 - [x] Golden write guarded (hard PASS + `--force`/confirm)
 - [x] Report includes repro command, corpus snapshot, cost aggregates
@@ -604,7 +604,7 @@ AI Generate from History requires an **active Premium workspace** *and* still go
   - Backend loads up to **5** latest archived lists (`updatedAt` DESC); **no user list picker**
   - Same shared AI path: proposal (`AiIngestRun`) → **AI Review** → Apply (not a separate AI stack)
   - Server enforces Premium before start; Free / expired → `403 PREMIUM_REQUIRED`
-- Analytics stubs: `history_ai_generate_started` / `_reviewed` / `_applied` / `_cancelled`
+- Analytics: `history_merge_started` / `_reviewed` / `_applied` / `_cancelled`
 - Register billing (+ generate-from-history) Zod schemas → regenerate OpenAPI
 
 **Depends on:** M07, M03, **M11** (archived history)  
@@ -1015,7 +1015,7 @@ Props: `list_id` (opaque uuid), `item_count` (number only), `duration_sec` optio
 | `ai_import_rejected` | Abandon / reject-all / cancel before apply |
 | `ai_import_failed` | Ingest/apply hard failure (mobile and/or backend 5xx) |
 | `ai_model_completed` | Backend model call finished (cost props only) |
-| `history_ai_generate_started` / `_reviewed` / `_applied` / `_cancelled` | Existing stubs (M13) |
+| `history_merge_started` / `_reviewed` / `_applied` / `_cancelled` | History-merge funnel (was history_ai_generate_*) |
 
 Props: `source`, `credit_cost`, `proposal_item_count`, `request_id`, `edited_count`, `estimated_cost_usd` — **never** proposal text.
 

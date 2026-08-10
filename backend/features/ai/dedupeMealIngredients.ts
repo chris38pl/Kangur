@@ -1,3 +1,4 @@
+import type { AiOutputLanguage } from "./outputLanguage";
 import type {
   MealProposal,
   MealProposalAiResponse,
@@ -13,6 +14,37 @@ type ExistingItem = {
   status: string;
 };
 
+/** Connector words for shared-ingredient notes: "für X und Y" / "for X and Y". */
+const MEAL_NOTE_LOCALE: Record<
+  AiOutputLanguage,
+  { for: string; and: string }
+> = {
+  pl: { for: "na", and: "i" },
+  en: { for: "for", and: "and" },
+  de: { for: "für", and: "und" },
+  fr: { for: "pour", and: "et" },
+  es: { for: "para", and: "y" },
+  it: { for: "per", and: "e" },
+  cs: { for: "na", and: "a" },
+  ru: { for: "для", and: "и" },
+  uk: { for: "для", and: "і" },
+  be: { for: "для", and: "і" },
+};
+
+/** Fallback list title when meal titles are empty (matches AI_PROMPTS). */
+const SHOPPING_TITLE_FALLBACK: Record<AiOutputLanguage, string> = {
+  pl: "Zakupy",
+  en: "Shopping",
+  de: "Einkauf",
+  fr: "Courses",
+  es: "Compra",
+  it: "Spesa",
+  cs: "Nákup",
+  ru: "Покупки",
+  uk: "Покупки",
+  be: "Пакупкі",
+};
+
 function normalizeName(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -26,9 +58,13 @@ function capitalizeProductName(name: string): string {
   return chars.join("");
 }
 
-function noteForMeals(titles: string[]): string | null {
+export function noteForMeals(
+  titles: string[],
+  language: AiOutputLanguage,
+): string | null {
   if (titles.length <= 1) return null;
-  return `na ${titles.join(" i ")}`;
+  const { for: forPrefix, and: andJoiner } = MEAL_NOTE_LOCALE[language];
+  return `${forPrefix} ${titles.join(` ${andJoiner} `)}`;
 }
 
 function preferAmount(
@@ -45,6 +81,7 @@ function preferAmount(
 export function dedupeMealIngredients(
   ai: MealProposalAiResponse,
   existingItems: ExistingItem[],
+  outputLanguage: AiOutputLanguage = "pl",
 ): MealProposal {
   const meals = ai.meals.map((meal) => ({
     mealId: meal.mealId,
@@ -100,7 +137,7 @@ export function dedupeMealIngredients(
   const operations: MealProposalOperation[] = [];
 
   for (const acc of byKey.values()) {
-    const sharedNote = noteForMeals(acc.mealTitles);
+    const sharedNote = noteForMeals(acc.mealTitles, outputLanguage);
     const note = sharedNote
       ? acc.note
         ? `${acc.note}; ${sharedNote}`
@@ -155,7 +192,7 @@ export function dedupeMealIngredients(
 
   return {
     shoppingContext: {
-      title: title || "Zakupy",
+      title: title || SHOPPING_TITLE_FALLBACK[outputLanguage],
       theme: "generic",
     },
     meals,

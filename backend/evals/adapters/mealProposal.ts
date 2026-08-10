@@ -162,7 +162,7 @@ export const mealProposalAdapter: EvalAdapter = {
         usage = extractUsage(generated.rawResponse);
       }
 
-      const proposal = dedupeMealIngredients(ai, existingItems);
+      const proposal = dedupeMealIngredients(ai, existingItems, locale);
       const normalizedOutput = normalizeProposal(proposal);
       const latencyMs = Date.now() - started;
 

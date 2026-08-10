@@ -15,9 +15,9 @@ import { prisma } from "@/lib/prisma";
 import { maybePublishShoppingListCreated } from "../shopping-list/maybePublishShoppingListCreated";
 import { PREVIEW_TAKE, toShoppingListDto } from "../shopping-list/toShoppingListDto";
 import {
-  historyAiGenerateApplied,
-  historyAiGenerateCancelled,
-} from "./historyAiAnalytics";
+  historyMergeApplied,
+  historyMergeCancelled,
+} from "./historyMergeAnalytics";
 import { SuggestFromHistoryProposalSchema } from "./schemas";
 
 const DEFAULT_EMOJI = "🛒";
@@ -173,7 +173,7 @@ export async function applySuggestFromHistory(input: {
       actorUserId: input.userId,
     });
 
-    historyAiGenerateApplied({
+    historyMergeApplied({
       workspaceId: input.workspaceId,
       runId: input.runId,
       listId: result.list.id,
@@ -227,7 +227,7 @@ export async function abandonSuggestFromHistory(input: {
     throw conflict("AI run is no longer proposed.");
   }
 
-  historyAiGenerateCancelled({
+  historyMergeCancelled({
     workspaceId: input.workspaceId,
     runId: input.runId,
   });

@@ -1,42 +1,23 @@
-import {
-  buildHistorySuggestSystemPrompt,
-  buildSuggestFromHistory,
-  buildUserPrompt,
-  HISTORY_SUGGEST_JSON_SCHEMA_NAME,
-  HISTORY_SUGGEST_TEMPERATURE,
-  type HistorySourceList,
-} from "@/features/ai/buildSuggestFromHistory";
-import { enrichSuggestFromHistory } from "@/features/ai/enrichSuggestFromHistory";
-import type { AiOutputLanguage } from "@/features/ai/outputLanguage";
+/**
+ * Eval adapter for deterministic history-merge (no LLM).
+ */
+
+import { applyCategoryCorrectionsToSuggestItems } from "@/features/ai/applyCategoryCorrections";
 import { SuggestFromHistoryProposalSchema } from "@/features/ai/schemas";
 import { selectHistorySourceListsFromFixtures } from "@/features/ai/selectHistorySourceLists";
 import {
+  mergeHistoryLists,
+  type HistorySourceList,
+} from "@/features/shopping-list/mergeHistoryLists";
+import {
   HISTORY_PROPOSAL_TYPE,
-  OPENAI_TEXT_MODEL,
+  HISTORY_PROPOSAL_VERSION,
 } from "@/lib/openai";
 
-import { estimateCostUsd } from "../config";
 import { sha256 } from "../lib/names";
 import type { Scenario } from "../schema/scenario";
 
 import type { AdapterRunResult, EvalAdapter } from "./types";
-
-const AI_LOCALES = new Set([
-  "pl",
-  "en",
-  "de",
-  "ru",
-  "uk",
-  "fr",
-  "es",
-  "it",
-  "cs",
-  "be",
-]);
-
-function asLocale(locale: string): AiOutputLanguage {
-  return (AI_LOCALES.has(locale) ? locale : "pl") as AiOutputLanguage;
-}
 
 function expandLists(scenario: Scenario): HistorySourceList[] {
   const { input } = scenario;
@@ -110,58 +91,36 @@ function extractCorpus(lists: HistorySourceList[]): string[] {
   return names;
 }
 
-function extractUsage(raw: Record<string, unknown>): {
-  promptTokens?: number;
-  completionTokens?: number;
-  resolvedModel?: string;
-} {
-  const usage = raw.usage as
-    | { prompt_tokens?: number; completion_tokens?: number }
-    | undefined;
-  const model = typeof raw.model === "string" ? raw.model : undefined;
-  return {
-    promptTokens: usage?.prompt_tokens,
-    completionTokens: usage?.completion_tokens,
-    resolvedModel: model,
-  };
-}
-
 export const historySuggestAdapter: EvalAdapter = {
   id: "shopping-history",
   proposalType: HISTORY_PROPOSAL_TYPE,
 
   async run(ctx): Promise<AdapterRunResult> {
-    const locale = asLocale(ctx.scenario.input.locale);
     const listsProvidedCount =
       (ctx.scenario.input.lists?.length ?? 0) +
       (ctx.scenario.input.generate?.listCount ?? 0);
-    // Preferred-first select (same as production) - already capped to HISTORY_LIST_TAKE
     const lists = expandLists(ctx.scenario);
     const corpus = extractCorpus(lists);
-
     const promptHash = sha256(
-      [
-        buildHistorySuggestSystemPrompt(locale),
-        // Template identity without fixture payload size blow-up for generate fixtures
-        "USER_PROMPT_TEMPLATE_v1",
-        HISTORY_SUGGEST_JSON_SCHEMA_NAME,
-        String(lists.length),
-      ].join("\n"),
+      ["history-merge-v1", String(lists.length), ctx.promptId].join("\n"),
     );
 
     const baseTelemetry = {
-      model: ctx.modelOverride?.trim() || OPENAI_TEXT_MODEL,
-      resolvedModel: ctx.modelOverride?.trim() || OPENAI_TEXT_MODEL,
-      provider: "openai",
+      model: "history-merge-v1",
+      resolvedModel: "history-merge-v1",
+      provider: "local",
       proposalType: HISTORY_PROPOSAL_TYPE,
-      proposalVersion: 0,
+      proposalVersion: HISTORY_PROPOSAL_VERSION,
       promptHash,
-      temperature: HISTORY_SUGGEST_TEMPERATURE,
+      temperature: 0,
       seed: ctx.seed,
-      seedSupported: true,
+      seedSupported: false,
       listsProvidedCount,
       sourceListsCount: lists.length,
       latencyMs: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      estimatedCostUsd: 0,
     };
 
     if (lists.length === 0) {
@@ -173,70 +132,30 @@ export const historySuggestAdapter: EvalAdapter = {
           code: "EMPTY_HISTORY",
           message: "No shopping lists with products to suggest from.",
         },
-        telemetry: {
-          ...baseTelemetry,
-          proposalVersion: 3,
-          latencyMs: 0,
-        },
+        telemetry: baseTelemetry,
       };
     }
 
     const started = Date.now();
     try {
-      // Hash includes real user prompt for non-generate runs (debuggability)
-      const userPrompt = buildUserPrompt(lists, locale);
-      const fullPromptHash = sha256(
-        [
-          buildHistorySuggestSystemPrompt(locale),
-          userPrompt,
-          HISTORY_SUGGEST_JSON_SCHEMA_NAME,
-        ].join("\n"),
-      );
-
-      const generated = await buildSuggestFromHistory({
-        lists,
-        outputLanguage: locale,
-        modelOverride: ctx.modelOverride,
-        seed: ctx.seed,
+      const merged = mergeHistoryLists(lists);
+      const items = applyCategoryCorrectionsToSuggestItems(merged.items);
+      const normalized = SuggestFromHistoryProposalSchema.parse({
+        shoppingContext: merged.shoppingContext,
+        items,
       });
-
-      const enriched = enrichSuggestFromHistory({
-        proposal: generated.proposal,
-        lists,
-      });
-
-      const normalized = SuggestFromHistoryProposalSchema.parse(enriched);
-      const usage = extractUsage(generated.rawResponse);
-      const latencyMs = Date.now() - started;
 
       return {
-        rawModelResponse: generated.rawResponse,
+        rawModelResponse: { kind: "history-merge", proposal: normalized },
         normalizedOutput: normalized,
         corpus,
         telemetry: {
-          latencyMs,
-          model: generated.model,
-          resolvedModel: usage.resolvedModel ?? generated.model,
-          provider: generated.provider,
-          proposalType: HISTORY_PROPOSAL_TYPE,
-          proposalVersion: generated.proposalVersion,
-          promptHash: fullPromptHash,
-          temperature: generated.temperature,
-          seed: generated.seed,
-          seedSupported: true,
-          promptTokens: usage.promptTokens,
-          completionTokens: usage.completionTokens,
-          estimatedCostUsd: estimateCostUsd({
-            model: generated.model,
-            promptTokens: usage.promptTokens,
-            completionTokens: usage.completionTokens,
-          }),
-          listsProvidedCount,
+          ...baseTelemetry,
+          latencyMs: Date.now() - started,
           sourceListsCount: lists.length,
         },
       };
     } catch (err) {
-      const latencyMs = Date.now() - started;
       const message = err instanceof Error ? err.message : String(err);
       return {
         rawModelResponse: null,
@@ -245,8 +164,7 @@ export const historySuggestAdapter: EvalAdapter = {
         error: { code: "ADAPTER_ERROR", message },
         telemetry: {
           ...baseTelemetry,
-          proposalVersion: 3,
-          latencyMs,
+          latencyMs: Date.now() - started,
         },
       };
     }

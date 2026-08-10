@@ -244,10 +244,11 @@ export function FaqContent({ locale }: Props) {
             q: "Jakie są limity w darmowej wersji?",
             a: (
               <>
-                Na planie Free masz miesięczny limit AI Credits (domyślnie 30) i
-                ograniczoną historię list (ostatnie 20 zakończonych). Premium
-                odblokowuje nielimitowane AI Credits (fair use), pełniejszą
-                historię oraz generowanie listy na podstawie historii zakupów.
+                Darmowe konto obejmuje 15 użyć funkcji AI. Limit nie odnawia
+                się co miesiąc. Masz też ograniczoną historię list (ostatnie 20
+                zakończonych). Premium daje nieograniczony dostęp do funkcji AI
+                (fair use) oraz pełniejszą historię. Tworzenie listy z
+                poprzednich zakupów jest dostępne na Free w limicie historii.
               </>
             ),
           },
@@ -375,10 +376,11 @@ export function FaqContent({ locale }: Props) {
             q: "What are the limits on the free plan?",
             a: (
               <>
-                Free includes a monthly AI Credits limit (default 30) and limited
-                list history (last 20 finished lists). Premium unlocks unlimited
-                AI Credits (fair use), fuller history, and generating a list
-                from shopping history.
+                Free includes 15 uses of AI features. The limit does not renew
+                each month. You also get limited list history (last 20 finished
+                lists). Premium unlocks unlimited AI features (fair use) and
+                fuller history. Building a list from previous shopping is
+                available on Free within your history depth.
               </>
             ),
           },

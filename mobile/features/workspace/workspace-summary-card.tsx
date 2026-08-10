@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
-import { intlLocaleTag } from "@/lib/i18n/locales";
 import { isCreditsLow } from "@/features/billing/credits-low";
 import { PremiumHintRow } from "@/features/billing/premium-hint-row";
 import { useAiCredits } from "@/features/billing/useAiCredits";
@@ -16,19 +15,8 @@ type Props = {
   onMenuPress?: () => void;
 };
 
-function formatRefreshDate(iso: string, locale: string): string {
-  try {
-    return new Intl.DateTimeFormat(intlLocaleTag(locale), {
-      day: "numeric",
-      month: "long",
-    }).format(new Date(iso));
-  } catch {
-    return iso.slice(0, 10);
-  }
-}
-
 export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
@@ -230,20 +218,6 @@ export function WorkspaceSummaryCard({ workspace, emoji, onMenuPress }: Props) {
                   {" / "}
                   {limit}
                 </Text>
-              </Text>
-              <Text
-                style={{
-                  ...typography.caption,
-                  color: theme.textMuted,
-                  fontSize: 11,
-                  lineHeight: 14,
-                  flexShrink: 1,
-                  textAlign: "right",
-                }}
-              >
-                {t("billing.creditsRefreshed", {
-                  date: formatRefreshDate(credits.periodStart, i18n.language),
-                })}
               </Text>
             </View>
             <View

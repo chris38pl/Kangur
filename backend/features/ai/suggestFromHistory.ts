@@ -1,6 +1,5 @@
 import type { Prisma } from "@prisma/client";
 
-import { assertCanIngest, withReservedAiCredits } from "@/lib/aiCredits";
 import { authorize } from "@/lib/authorize";
 import { forbidden, notFound, validationError } from "@/lib/auth/errors";
 import { isHistorySuggestionsEnabled } from "@/lib/featureGates";
@@ -8,19 +7,21 @@ import {
   HISTORY_PROPOSAL_TYPE,
   HISTORY_PROPOSAL_VERSION,
 } from "@/lib/openai";
-import { assertPremiumWorkspace } from "@/lib/premium";
 import { prisma } from "@/lib/prisma";
 
-import { buildSuggestFromHistory } from "./buildSuggestFromHistory";
-import { enrichSuggestFromHistory } from "./enrichSuggestFromHistory";
 import {
-  historyAiGenerateReviewed,
-  historyAiGenerateStarted,
-} from "./historyAiAnalytics";
-import { resolveWorkspaceOutputLanguage } from "./outputLanguage";
+  historyMergeReviewed,
+  historyMergeStarted,
+} from "./historyMergeAnalytics";
 import { SuggestFromHistoryProposalSchema } from "./schemas";
 import { selectHistorySourceLists } from "./selectHistorySourceLists";
+import { mergeHistoryLists } from "../shopping-list/mergeHistoryLists";
+import { applyCategoryCorrectionsToSuggestItems } from "./applyCategoryCorrections";
 
+/**
+ * Create-from-history: deterministic merge of recent lists (no LLM, no Premium, no credits).
+ * HTTP path remains /ai/suggest-from-history for API compatibility.
+ */
 export async function suggestFromHistory(input: {
   workspaceId: string;
   userId: string;
@@ -31,10 +32,7 @@ export async function suggestFromHistory(input: {
     throw forbidden("History suggestions are disabled.");
   }
 
-  await assertPremiumWorkspace(input.workspaceId);
-  await assertCanIngest(input.workspaceId, "history");
-
-  historyAiGenerateStarted(input.workspaceId);
+  historyMergeStarted(input.workspaceId);
 
   const lists = await selectHistorySourceLists(input.workspaceId);
 
@@ -43,60 +41,52 @@ export async function suggestFromHistory(input: {
   }
 
   const startedAt = Date.now();
-  const outputLanguage = await resolveWorkspaceOutputLanguage(
-    input.workspaceId,
-    input.userId,
-  );
+  const merged = mergeHistoryLists(lists);
+  const correctedItems = applyCategoryCorrectionsToSuggestItems(merged.items);
 
-  return withReservedAiCredits(input.workspaceId, "history", async () => {
-    const generated = await buildSuggestFromHistory({
-      lists,
-      outputLanguage,
-    });
+  if (correctedItems.length === 0) {
+    throw validationError("No usable products found in history.");
+  }
 
-    const enriched = enrichSuggestFromHistory({
-      proposal: generated.proposal,
-      lists,
-    });
+  const proposal = SuggestFromHistoryProposalSchema.parse({
+    shoppingContext: merged.shoppingContext,
+    items: correctedItems,
+  });
+  const durationMs = Date.now() - startedAt;
 
-    if (enriched.items.length === 0) {
-      throw validationError("AI produced no usable suggestions from history.");
-    }
-
-    const proposal = SuggestFromHistoryProposalSchema.parse(enriched);
-    const durationMs = Date.now() - startedAt;
-
-    const run = await prisma.aiProposalRun.create({
-      data: {
-        workspaceId: input.workspaceId,
-        listId: null,
-        userId: input.userId,
-        source: "history",
-        proposalType: HISTORY_PROPOSAL_TYPE,
-        proposalVersion: HISTORY_PROPOSAL_VERSION,
-        provider: generated.provider,
-        model: generated.model,
-        status: "proposed",
-        durationMs,
-        rawResponse: generated.rawResponse as Prisma.InputJsonValue,
-        proposal: proposal as unknown as Prisma.InputJsonValue,
-      },
-    });
-
-    historyAiGenerateReviewed({
+  const run = await prisma.aiProposalRun.create({
+    data: {
       workspaceId: input.workspaceId,
-      runId: run.id,
-    });
-
-    return {
-      runId: run.id,
-      model: generated.model,
-      provider: generated.provider,
+      listId: null,
+      userId: input.userId,
+      source: "history",
       proposalType: HISTORY_PROPOSAL_TYPE,
       proposalVersion: HISTORY_PROPOSAL_VERSION,
+      provider: "local",
+      model: "history-merge-v1",
+      status: "proposed",
       durationMs,
-      sourceListsCount: lists.length,
-      proposal,
-    };
+      rawResponse: {
+        kind: "history-merge",
+        sourceListIds: lists.map((l) => l.id),
+      } as Prisma.InputJsonValue,
+      proposal: proposal as unknown as Prisma.InputJsonValue,
+    },
   });
+
+  historyMergeReviewed({
+    workspaceId: input.workspaceId,
+    runId: run.id,
+  });
+
+  return {
+    runId: run.id,
+    model: "history-merge-v1",
+    provider: "local",
+    proposalType: HISTORY_PROPOSAL_TYPE,
+    proposalVersion: HISTORY_PROPOSAL_VERSION,
+    durationMs,
+    sourceListsCount: lists.length,
+    proposal,
+  };
 }

@@ -43,7 +43,7 @@ export async function updateShoppingList(input: {
     });
     if (preferredCount >= MAX_PREFERRED_FOR_AI_LISTS) {
       throw conflict(
-        `You can mark up to ${MAX_PREFERRED_FOR_AI_LISTS} lists for AI. Unstar one first.`,
+        `You can mark up to ${MAX_PREFERRED_FOR_AI_LISTS} lists as preferred for history. Unstar one first.`,
         { code: "PREFERRED_FOR_AI_LIMIT", limit: MAX_PREFERRED_FOR_AI_LISTS },
       );
     }

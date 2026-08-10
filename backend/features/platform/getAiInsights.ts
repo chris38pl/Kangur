@@ -3,7 +3,7 @@ import type { AiProposalSource, User } from "@prisma/client";
 import { requirePlatformAdmin } from "@/lib/authorize";
 import {
   AI_CREDIT_COSTS,
-  getFreeMonthlyLimit,
+  getFreeLifetimeLimit,
   getPeriodStart,
 } from "@/lib/aiCredits";
 import { entitlementFromSubscription } from "@/lib/premium";
@@ -100,10 +100,15 @@ export async function getAiInsights(
   const now = new Date();
   const limit = parseLimit(options?.limit ?? null);
   const q = parseQuery(options?.q);
-  const periodStart = getPeriodStart(now);
-  const lastPeriodStart = previousPeriodStart(periodStart);
+  /** Free-plan meter bucket (lifetime). */
+  const lifetimePeriodStart = getPeriodStart();
+  /** Calendar month for activity KPIs (runs this/last month). */
+  const calendarMonthStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+  );
+  const lastCalendarMonthStart = previousPeriodStart(calendarMonthStart);
   const createdSince30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const freeLimit = getFreeMonthlyLimit();
+  const freeLimit = getFreeLifetimeLimit();
 
   const ownedMemberships = await prisma.workspaceMember.findMany({
     where: { role: "owner" },
@@ -136,7 +141,7 @@ export async function getAiInsights(
 
   if (ownedMemberships.length === 0) {
     return {
-      periodStart: periodStart.toISOString(),
+      periodStart: lifetimePeriodStart.toISOString(),
       freeCreditLimit: freeLimit,
       rows: [],
     };
@@ -172,7 +177,7 @@ export async function getAiInsights(
     prisma.aIUsage.findMany({
       where: {
         workspaceId: { in: workspaceIds },
-        periodStart,
+        periodStart: lifetimePeriodStart,
       },
       select: { workspaceId: true, aiCreditsUsed: true },
     }),
@@ -198,7 +203,7 @@ export async function getAiInsights(
       by: ["workspaceId", "source"],
       where: {
         workspaceId: { in: workspaceIds },
-        createdAt: { gte: periodStart },
+        createdAt: { gte: calendarMonthStart },
         status: "applied",
       },
       _count: { _all: true },
@@ -207,7 +212,7 @@ export async function getAiInsights(
       by: ["workspaceId"],
       where: {
         workspaceId: { in: workspaceIds },
-        createdAt: { gte: periodStart },
+        createdAt: { gte: calendarMonthStart },
       },
       _count: { _all: true },
     }),
@@ -215,7 +220,7 @@ export async function getAiInsights(
       by: ["workspaceId"],
       where: {
         workspaceId: { in: workspaceIds },
-        createdAt: { gte: lastPeriodStart, lt: periodStart },
+        createdAt: { gte: lastCalendarMonthStart, lt: calendarMonthStart },
       },
       _count: { _all: true },
     }),
@@ -360,7 +365,7 @@ export async function getAiInsights(
     .map(({ raw: _raw, ...row }) => row);
 
   return {
-    periodStart: periodStart.toISOString(),
+    periodStart: lifetimePeriodStart.toISOString(),
     freeCreditLimit: freeLimit,
     rows,
   };

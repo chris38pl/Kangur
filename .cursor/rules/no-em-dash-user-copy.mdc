@@ -1,0 +1,17 @@
+---
+description: User-facing copy - use ASCII hyphen, never em dash
+alwaysApply: true
+---
+
+# No em dashes in user-facing copy
+
+In text that users see (What's New, i18n JSON, marketing/FAQ, store listings, in-app toasts and screens), **do not use the em dash `—`** (U+2014) or en dash `–` (U+2013).
+
+Use a normal hyphen-minus **`-`** instead.
+
+```text
+❌ bez Premium — przeglądasz
+✅ bez Premium - przeglądasz
+```
+
+Internal/tech docs (e.g. `docs/releases/*.md`, code comments) may keep other punctuation if already established; prefer `-` when writing new user-facing strings.

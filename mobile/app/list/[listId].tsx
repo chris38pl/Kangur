@@ -195,6 +195,13 @@ export default function ShoppingListScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const scrollYRef = useRef(0);
   const itemsSectionRef = useRef<View>(null);
+  const aiSectionRef = useRef<View>(null);
+  const mealSectionRef = useRef<View>(null);
+  const manualAddSectionRef = useRef<View>(null);
+  const composerFocusedRef = useRef(false);
+  const composerFocusTokenRef = useRef(0);
+  const composerSectionRef = useRef<"ai" | "meal" | "manual" | null>(null);
+  const [composerKeyboardOpen, setComposerKeyboardOpen] = useState(false);
   /** Set after AI apply; scroll runs only once items are on screen (not empty state). */
   const pendingScrollToItemsRef = useRef(false);
   const scrollAnimFrameRef = useRef<number | null>(null);
@@ -236,29 +243,83 @@ export default function ShoppingListScreen() {
     [cancelSmoothScroll],
   );
 
+  const measureViewY = useCallback((target: View | ScrollView): Promise<number> => {
+    return new Promise((resolve) => {
+      (
+        target as unknown as {
+          measureInWindow: (
+            cb: (x: number, y: number, w: number, h: number) => void,
+          ) => void;
+        }
+      ).measureInWindow((_x, y) => resolve(y));
+    });
+  }, []);
+
   const scrollItemsSectionToTop = useCallback(() => {
     const scroll = scrollRef.current;
     const section = itemsSectionRef.current;
     if (!scroll || !section) return;
 
-    const measureY = (target: View | ScrollView): Promise<number> =>
-      new Promise((resolve) => {
-        (
-          target as unknown as {
-            measureInWindow: (
-              cb: (x: number, y: number, w: number, h: number) => void,
-            ) => void;
-          }
-        ).measureInWindow((_x, y) => resolve(y));
-      });
-
     void (async () => {
-      const scrollTop = await measureY(scroll);
-      const sectionTop = await measureY(section);
+      const scrollTop = await measureViewY(scroll);
+      const sectionTop = await measureViewY(section);
       const delta = sectionTop - scrollTop;
       smoothScrollToY(Math.max(0, scrollYRef.current + delta), 700);
     })();
-  }, [smoothScrollToY]);
+  }, [measureViewY, smoothScrollToY]);
+
+  /**
+   * Pin the focused composer section (AI / recipe / manual add) to the top of the
+   * scroll viewport so fields and the section CTA stay visible above the keyboard.
+   */
+  const scrollComposerSectionToTop = useCallback(() => {
+    const scroll = scrollRef.current;
+    const sectionKey = composerSectionRef.current;
+    const section =
+      sectionKey === "ai"
+        ? aiSectionRef.current
+        : sectionKey === "meal"
+          ? mealSectionRef.current
+          : sectionKey === "manual"
+            ? manualAddSectionRef.current
+            : null;
+    if (!scroll || !section) return;
+
+    void (async () => {
+      const scrollTop = await measureViewY(scroll);
+      const sectionTop = await measureViewY(section);
+      const delta = sectionTop - scrollTop;
+      if (Math.abs(delta) < 2) return;
+      smoothScrollToY(Math.max(0, scrollYRef.current + delta), 420);
+    })();
+  }, [measureViewY, smoothScrollToY]);
+
+  const scheduleComposerScroll = useCallback(() => {
+    const delay = Platform.OS === "ios" ? 90 : 160;
+    setTimeout(() => scrollComposerSectionToTop(), delay);
+    setTimeout(() => scrollComposerSectionToTop(), delay + 220);
+  }, [scrollComposerSectionToTop]);
+
+  const onComposerFieldFocus = useCallback(
+    (section: "ai" | "meal" | "manual") => {
+      composerFocusTokenRef.current += 1;
+      composerFocusedRef.current = true;
+      composerSectionRef.current = section;
+      setComposerKeyboardOpen(true);
+      scheduleComposerScroll();
+    },
+    [scheduleComposerScroll],
+  );
+
+  const onComposerFieldBlur = useCallback(() => {
+    const token = composerFocusTokenRef.current;
+    setTimeout(() => {
+      if (composerFocusTokenRef.current !== token) return;
+      composerFocusedRef.current = false;
+      composerSectionRef.current = null;
+      setComposerKeyboardOpen(false);
+    }, 80);
+  }, []);
 
   /** Queue scroll; actual scroll waits until products are rendered. */
   const requestScrollToItems = useCallback(() => {
@@ -273,6 +334,17 @@ export default function ShoppingListScreen() {
   );
 
   useEffect(() => () => cancelSmoothScroll(), [cancelSmoothScroll]);
+
+  useEffect(() => {
+    if (keyboardHeight <= 0) {
+      composerFocusedRef.current = false;
+      composerSectionRef.current = null;
+      return;
+    }
+    if (composerFocusedRef.current) {
+      scheduleComposerScroll();
+    }
+  }, [keyboardHeight, scheduleComposerScroll]);
 
   const listQuery = useQuery({
     queryKey: ["shopping-list", listId],
@@ -860,6 +932,14 @@ export default function ShoppingListScreen() {
     return ordered;
   }, [activeItems, categoryOrder]);
 
+  const categoryItemCounts = useMemo(() => {
+    const counts = new Map<SharedShoppingCategory, number>();
+    for (const item of activeItems) {
+      counts.set(item.category, (counts.get(item.category) ?? 0) + 1);
+    }
+    return counts;
+  }, [activeItems]);
+
   const onCategoryReorder = (data: SharedShoppingCategory[]) => {
     const nextOrder = mergeActiveCategoryOrder(categoryOrder, data);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -886,6 +966,11 @@ export default function ShoppingListScreen() {
 
   const footerPad =
     spacing[3] + 56 + spacing[3] + Math.max(insets.bottom, spacing[2]);
+  const hideStickyForComposer =
+    composerKeyboardOpen && keyboardHeight > 0;
+  const scrollBottomPad = hideStickyForComposer
+    ? keyboardHeight + Math.max(insets.bottom, spacing[2]) + spacing[8]
+    : footerPad + spacing[4];
 
   return (
     <>
@@ -963,7 +1048,7 @@ export default function ShoppingListScreen() {
           contentContainerStyle={{
             paddingHorizontal: spacing[6],
             paddingTop: spacing[5],
-            paddingBottom: footerPad + spacing[4],
+            paddingBottom: scrollBottomPad,
           }}
           keyboardShouldPersistTaps="handled"
           onScroll={onListScroll}
@@ -1021,7 +1106,7 @@ export default function ShoppingListScreen() {
           </View>
         ) : (
           <>
-            <View>
+            <View ref={aiSectionRef} collapsable={false}>
               <Pressable
                 onPress={() => {
                   setAiSectionOpen((open) => {
@@ -1076,6 +1161,8 @@ export default function ShoppingListScreen() {
                     <TextInput
                       value={aiText}
                       onChangeText={setAiText}
+                      onFocus={() => onComposerFieldFocus("ai")}
+                      onBlur={onComposerFieldBlur}
                       multiline
                       placeholder={t("ai.textPlaceholder")}
                       placeholderTextColor={theme.textMuted}
@@ -1254,7 +1341,11 @@ export default function ShoppingListScreen() {
             </View>
 
             {isMealProposalEnabled() ? (
-              <View style={{ marginTop: spacing[6] }}>
+              <View
+                ref={mealSectionRef}
+                collapsable={false}
+                style={{ marginTop: spacing[6] }}
+              >
                 <Pressable
                   onPress={() => setMealSectionOpen((open) => !open)}
                   accessibilityRole="button"
@@ -1295,13 +1386,19 @@ export default function ShoppingListScreen() {
                     listId={listId}
                     workspaceId={listQuery.data.workspaceId}
                     onGeneratingChange={onMealGeneratingChange}
+                    onFieldFocus={() => onComposerFieldFocus("meal")}
+                    onFieldBlur={onComposerFieldBlur}
                     hideTitle
                   />
                 ) : null}
               </View>
             ) : null}
 
-            <View style={{ marginTop: spacing[6] }}>
+            <View
+              ref={manualAddSectionRef}
+              collapsable={false}
+              style={{ marginTop: spacing[6] }}
+            >
               <Pressable
                 onPress={() => setManualAddOpen((open) => !open)}
                 accessibilityRole="button"
@@ -1338,6 +1435,8 @@ export default function ShoppingListScreen() {
                   <TextInput
                     value={name}
                     onChangeText={setName}
+                    onFocus={() => onComposerFieldFocus("manual")}
+                    onBlur={onComposerFieldBlur}
                     placeholder={t("list.namePlaceholder")}
                     placeholderTextColor={theme.textMuted}
                     style={{
@@ -1354,6 +1453,8 @@ export default function ShoppingListScreen() {
                   <TextInput
                     value={amount}
                     onChangeText={setAmount}
+                    onFocus={() => onComposerFieldFocus("manual")}
+                    onBlur={onComposerFieldBlur}
                     placeholder={t("list.amountPlaceholder")}
                     placeholderTextColor={theme.textMuted}
                     style={{
@@ -1370,6 +1471,8 @@ export default function ShoppingListScreen() {
                   <TextInput
                     value={note}
                     onChangeText={setNote}
+                    onFocus={() => onComposerFieldFocus("manual")}
+                    onBlur={onComposerFieldBlur}
                     placeholder={t("list.notePlaceholder")}
                     placeholderTextColor={theme.textMuted}
                     style={{
@@ -1657,6 +1760,9 @@ export default function ShoppingListScreen() {
                     <CategoryOrderEditRow
                       icon={getShoppingCategoryIcon(item)}
                       label={t(`categories.${item}`)}
+                      subtitle={t("list.itemCount", {
+                        count: categoryItemCounts.get(item) ?? 0,
+                      })}
                       onLongPress={drag}
                       isActive={isActive}
                       moveUp={moveUp}
@@ -1793,6 +1899,7 @@ export default function ShoppingListScreen() {
         </LoadingTransition>
         </NestableScreenScroll>
 
+        {!hideStickyForComposer ? (
         <View
           style={{
             borderTopWidth: 1,
@@ -1886,6 +1993,7 @@ export default function ShoppingListScreen() {
             )}
           </Pressable>
         </View>
+        ) : null}
       </View>
 
       <RenameListSheet

@@ -4,27 +4,46 @@ import { ApiError } from "@/lib/auth/errors";
 import { getWorkspaceEntitlement } from "@/lib/premium";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * Flat cost: 1 use per AI action. History-merge is free (not an AI meter).
+ */
 export const AI_CREDIT_COSTS: Record<AiProposalSource, number> = {
   text: 1,
   clipboard: 1,
-  screenshot: 2,
-  history: 3,
-  /** Flat cost per meal-proposal run (1–5 dishes). */
-  meal: 2,
+  screenshot: 1,
+  history: 0,
+  meal: 1,
 };
 
 /** Orphaned reserves (crash mid-request) auto-refund after this TTL. */
 export const AI_CREDIT_HOLD_TTL_MS = 15 * 60 * 1000;
 
-export function getFreeMonthlyLimit(): number {
-  const raw = process.env.AI_FREE_MONTHLY_CREDITS?.trim();
+/** Lifetime free-use bucket key (one AIUsage row per Free workspace). */
+export const AI_USAGE_LIFETIME_PERIOD_START = new Date(0);
+
+/**
+ * Free plan lifetime AI-use limit (backend meter; UX says "uses").
+ * Prefers AI_FREE_LIFETIME_CREDITS, then legacy AI_FREE_MONTHLY_CREDITS, else 15.
+ */
+export function getFreeLifetimeLimit(): number {
+  const raw =
+    process.env.AI_FREE_LIFETIME_CREDITS?.trim() ||
+    process.env.AI_FREE_MONTHLY_CREDITS?.trim();
   const parsed = raw ? Number.parseInt(raw, 10) : 15;
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 15;
 }
 
-/** First day of current UTC calendar month. */
-export function getPeriodStart(now = new Date()): Date {
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+/** @deprecated Prefer getFreeLifetimeLimit — Free uses no longer reset monthly. */
+export function getFreeMonthlyLimit(): number {
+  return getFreeLifetimeLimit();
+}
+
+/**
+ * Period key for AIUsage. Always the lifetime sentinel (ignores `now`).
+ * Parameter kept for call-site compatibility (e.g. hold refunds).
+ */
+export function getPeriodStart(_now = new Date()): Date {
+  return AI_USAGE_LIFETIME_PERIOD_START;
 }
 
 export type AiCreditsBalance = {
@@ -67,7 +86,7 @@ export async function getAiCreditsBalance(
   });
 
   const used = usage?.aiCreditsUsed ?? 0;
-  const limit = getFreeMonthlyLimit();
+  const limit = getFreeLifetimeLimit();
 
   return {
     used,
@@ -156,7 +175,7 @@ export async function reserveAiCredits(
   if (unlimited) return { holdId: null };
 
   const periodStart = getPeriodStart();
-  const limit = getFreeMonthlyLimit();
+  const limit = getFreeLifetimeLimit();
   const now = new Date();
   const expiresAt = new Date(now.getTime() + AI_CREDIT_HOLD_TTL_MS);
 

@@ -5886,9 +5886,9 @@
     },
     "/api/v1/workspaces/{workspaceId}/ai/suggest-from-history": {
       "post": {
-        "summary": "Generate a shopping list proposal from recent active and archived lists",
+        "summary": "Build a shopping list proposal by merging recent lists (deterministic history-merge; no LLM)",
         "tags": [
-          "AI"
+          "ShoppingLists"
         ],
         "security": [
           {
@@ -5907,7 +5907,7 @@
         ],
         "responses": {
           "200": {
-            "description": "History suggestion proposal created",
+            "description": "History-merge proposal created",
             "content": {
               "application/json": {
                 "schema": {
@@ -5916,18 +5916,8 @@
               }
             }
           },
-          "402": {
-            "description": "Insufficient AI Credits",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
           "403": {
-            "description": "Premium required, feature disabled, or forbidden",
+            "description": "Feature disabled or forbidden",
             "content": {
               "application/json": {
                 "schema": {
@@ -5937,17 +5927,7 @@
             }
           },
           "404": {
-            "description": "No history or workspace not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "502": {
-            "description": "AI temporarily unavailable",
+            "description": "No eligible source lists with products",
             "content": {
               "application/json": {
                 "schema": {

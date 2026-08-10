@@ -1,36 +1,36 @@
 /**
- * AI Generate from History analytics (M13 / M13.11).
+ * History-merge analytics (create from previous lists).
  * Backend ownership — emit via Analytics wrapper only.
  */
 
 import { Analytics } from "@/lib/analytics";
 
-export function historyAiGenerateStarted(workspaceId: string): void {
+export function historyMergeStarted(workspaceId: string): void {
   Analytics.track(
-    "history_ai_generate_started",
+    "history_merge_started",
     { workspace_id: workspaceId },
     workspaceId,
   );
 }
 
-export function historyAiGenerateReviewed(input: {
+export function historyMergeReviewed(input: {
   workspaceId: string;
   runId: string;
 }): void {
   Analytics.track(
-    "history_ai_generate_reviewed",
+    "history_merge_reviewed",
     { workspace_id: input.workspaceId, run_id: input.runId },
     input.workspaceId,
   );
 }
 
-export function historyAiGenerateApplied(input: {
+export function historyMergeApplied(input: {
   workspaceId: string;
   runId: string;
   listId: string;
 }): void {
   Analytics.track(
-    "history_ai_generate_applied",
+    "history_merge_applied",
     {
       workspace_id: input.workspaceId,
       run_id: input.runId,
@@ -40,12 +40,12 @@ export function historyAiGenerateApplied(input: {
   );
 }
 
-export function historyAiGenerateCancelled(input: {
+export function historyMergeCancelled(input: {
   workspaceId: string;
   runId: string;
 }): void {
   Analytics.track(
-    "history_ai_generate_cancelled",
+    "history_merge_cancelled",
     { workspace_id: input.workspaceId, run_id: input.runId },
     input.workspaceId,
   );

@@ -310,7 +310,7 @@ Not a runtime path. Live under `backend/evals/`:
 Scenario YAML → thin Adapter (prod generator) → Evaluator (timing/seed/repeat) → Judges → Report
 ```
 
-- Same structured OpenAI + Zod path as production (`buildSuggestFromHistory` → enrich); no credits, no DB persist.
+- History-merge adapter uses deterministic `mergeHistoryLists` (no OpenAI); other suites may still call LLM builders; no credits, no DB persist.
 - Pin identity via `proposalVersion`, `promptHash`, `model` / `resolvedModel`, suite/scenario versions.
 - Run: `pnpm eval:ai --suite history-suggest` (see `backend/evals/README.md`).
 
@@ -457,7 +457,7 @@ Also future: OTel/Prometheus exporters (same call sites), tracing, ETag `304_rat
 - **Input selection:** server-side only - up to **5** latest archived lists for the workspace (`updatedAt` DESC). **No user list picker.**
 - **Gate:** active Premium entitlement. Missing or expired → **`403 PREMIUM_REQUIRED`** (backend is source of truth). Stripe only updates entitlement via webhooks; it is not part of the AI handler.
 - **Pipeline:** shared AI architecture - `AiIngestRun` proposal → AI Review → Apply (same as import). Debit AI Credits on the normal meter.
-- Analytics stubs: `history_ai_generate_started` / `_reviewed` / `_applied` / `_cancelled`.
+- Analytics: `history_merge_started` / `_reviewed` / `_applied` / `_cancelled`.
 
 ### Activity log vs event sourcing
 

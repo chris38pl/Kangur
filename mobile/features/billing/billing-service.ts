@@ -23,6 +23,28 @@ import type { ProviderResolveInfo, PurchaseState, StoreProof } from "./types";
 
 export type { PurchaseState };
 
+/** True when the user dismissed the store purchase UI (not a hard failure). */
+export function isBillingUserCancelled(error: unknown): boolean {
+  if (error == null) return false;
+  const code =
+    typeof error === "object" && error !== null && "code" in error
+      ? String((error as { code?: string }).code)
+      : "";
+  const message = error instanceof Error ? error.message : String(error);
+  const haystack = `${code} ${message}`.toLowerCase();
+  return (
+    code === "E_USER_CANCELLED" ||
+    code === "E_USER_CANCELED" ||
+    haystack.includes("e_user_cancelled") ||
+    haystack.includes("e_user_canceled") ||
+    haystack.includes("user cancelled") ||
+    haystack.includes("user canceled") ||
+    haystack.includes("billingresponse_user_canceled") ||
+    haystack.includes("purchase was cancelled") ||
+    haystack.includes("purchase was canceled")
+  );
+}
+
 /**
  * UI-facing billing facade. Premium screen must not import store SDKs.
  */

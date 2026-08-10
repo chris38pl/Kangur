@@ -40,6 +40,8 @@ type Props = {
   onGeneratingChange?: (generating: boolean) => void;
   /** When wrapped in an outer collapsible section, hide the in-composer title. */
   hideTitle?: boolean;
+  onFieldFocus?: () => void;
+  onFieldBlur?: () => void;
 };
 
 export function MealProposalComposer({
@@ -47,6 +49,8 @@ export function MealProposalComposer({
   workspaceId,
   onGeneratingChange,
   hideTitle = false,
+  onFieldFocus,
+  onFieldBlur,
 }: Props) {
   const { t } = useTranslation();
   const { getToken } = useAuth();
@@ -80,7 +84,7 @@ export function MealProposalComposer({
       });
       if (isInsufficientCreditsError(error)) {
         const shortage = getCreditShortage(error) ?? {
-          needed: 2,
+          needed: 1,
           remaining: 0,
         };
         showInsufficientCredits({
@@ -140,6 +144,8 @@ export function MealProposalComposer({
         <TextInput
           value={draft}
           onChangeText={setDraft}
+          onFocus={onFieldFocus}
+          onBlur={onFieldBlur}
           editable={!busy && dishes.length < MAX_DISHES}
           placeholder={t("ai.mealProposalPlaceholder")}
           placeholderTextColor={theme.textMuted}

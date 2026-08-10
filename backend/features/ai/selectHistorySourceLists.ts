@@ -1,10 +1,11 @@
-import { prisma } from "@/lib/prisma";
-import type { ListStatus } from "@prisma/client";
-
+import { FREE_HISTORY_LIMIT } from "@/features/shopping-list/historyAccess";
 import {
   HISTORY_LIST_TAKE,
   type HistorySourceList,
-} from "@/features/ai/buildSuggestFromHistory";
+} from "@/features/shopping-list/mergeHistoryLists";
+import { getWorkspaceEntitlement } from "@/lib/premium";
+import { prisma } from "@/lib/prisma";
+import type { ListStatus } from "@prisma/client";
 
 const listItemsInclude = {
   items: {
@@ -19,8 +20,6 @@ const listItemsInclude = {
     },
   },
 };
-
-const HISTORY_SOURCE_STATUSES: ListStatus[] = ["active", "archived"];
 
 function normalizeName(name: string): string {
   return name.trim().toLowerCase();
@@ -40,10 +39,7 @@ type DbList = {
   }>;
 };
 
-function toSourceList(
-  list: DbList,
-  index: number,
-): HistorySourceList {
+function toSourceList(list: DbList, index: number): HistorySourceList {
   return {
     id: list.id,
     name: list.name,
@@ -60,18 +56,64 @@ function toSourceList(
   };
 }
 
+async function freeArchivedEligibleIds(
+  workspaceId: string,
+): Promise<string[] | null> {
+  const { isPremium } = await getWorkspaceEntitlement(workspaceId);
+  if (isPremium) return null;
+
+  const recent = await prisma.shoppingList.findMany({
+    where: {
+      workspaceId,
+      status: "archived",
+      items: { some: { status: { not: "removed" } } },
+    },
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+    take: FREE_HISTORY_LIMIT,
+    select: { id: true },
+  });
+  return recent.map((row) => row.id);
+}
+
+function buildStatusFilter(
+  freeArchivedIds: string[] | null,
+):
+  | { status: { in: ListStatus[] } }
+  | {
+      OR: Array<
+        | { status: "active" }
+        | { status: "archived"; id: { in: string[] } }
+      >;
+    } {
+  if (freeArchivedIds === null) {
+    return { status: { in: ["active", "archived"] } };
+  }
+  // Free: any active list + archived only within history depth.
+  if (freeArchivedIds.length === 0) {
+    return { status: { in: ["active"] } };
+  }
+  return {
+    OR: [
+      { status: "active" },
+      { status: "archived", id: { in: freeArchivedIds } },
+    ],
+  };
+}
+
 /**
- * Preferred-for-AI lists first (newest preferred, max 5), then fill with
+ * Preferred-for-history lists first (newest preferred, max 5), then fill with
  * newest non-preferred until HISTORY_LIST_TAKE.
- * Sources: active + archived lists with at least one non-removed item
- * (deleted lists are excluded).
+ * Free workspaces: archived sources limited to FREE_HISTORY_LIMIT.
  */
 export async function selectHistorySourceLists(
   workspaceId: string,
 ): Promise<HistorySourceList[]> {
+  const freeArchivedIds = await freeArchivedEligibleIds(workspaceId);
+  const statusFilter = buildStatusFilter(freeArchivedIds);
+
   const baseWhere = {
     workspaceId,
-    status: { in: HISTORY_SOURCE_STATUSES },
+    ...statusFilter,
     items: { some: { status: { not: "removed" as const } } },
   };
 
@@ -101,9 +143,6 @@ export async function selectHistorySourceLists(
     selected.push(...fill);
   }
 
-  // Preferred first (already newest-first), then fill (newest-first).
-  // Within the final set, re-sort: preferred before non-preferred, then updatedAt desc
-  // so prompt order matches product intent.
   selected.sort((a, b) => {
     if (a.preferredForAi !== b.preferredForAi) {
       return a.preferredForAi ? -1 : 1;
@@ -115,7 +154,8 @@ export async function selectHistorySourceLists(
 }
 
 /**
- * Pure select for evals / fixtures - same algorithm as production DB select.
+ * Pure select for fixtures / tests - same algorithm as production DB select
+ * (without Free depth — caller supplies already-eligible lists).
  */
 export function selectHistorySourceListsFromFixtures(
   lists: HistorySourceList[],

@@ -30,7 +30,7 @@ pnpm eval:prune-reports
 Scenario YAML → thin Adapter → Evaluator → Judges → Report
 ```
 
-- **Adapter** (`adapters/historySuggest.ts`, `adapters/mealProposal.ts`, `adapters/shoppingCategories.ts`, `adapters/textIngest.ts`): validates fixture input, calls production builders (`buildSuggestFromHistory` / `buildMealProposal` / CategoryCorrections / `buildProposalFromText`), returns raw + normalized + corpus.
+- **Adapter** (`adapters/historySuggest.ts`, …): history-merge uses deterministic `mergeHistoryLists` (no OpenAI); other adapters call production builders.
 - **Evaluator**: timing, default seed (`424242`), `--repeat` stability, telemetry.
 - **Judges**: hard / soft / info with stable IDs (`H003`, `S002`, `H014`, `H017`, …), structured evidence, per-judge latency.
 - **Report**: dated under `reports/YYYY-MM-DD/` (gitignored); includes repro command, cost aggregates, corpus snapshot.
