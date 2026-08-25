@@ -12,6 +12,7 @@ import { Stack, useLocalSearchParams, useNavigation, useRouter } from "expo-rout
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
+  Alert,
   ActivityIndicator,
   Image,
   InteractionManager,
@@ -37,8 +38,8 @@ import { FeedbackSheet } from "@/components/feedback-sheet";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
 import { primaryButtonStyle } from "@/design-system/shopping-density";
-import { colors, radius, spacing, typography } from "@/design-system/tokens";
-import { AiPhaseCrossfade, LoadingTransition } from "@/lib/motion";
+import { colors, radius, shadows, spacing, typography } from "@/design-system/tokens";
+import { AiPhaseCrossfade, LoadingTransition, ToastMotion } from "@/lib/motion";
 import { applyAi, ingestAi } from "@/features/ai/api";
 import { buildScreenshotIngestFormData } from "@/features/ai/buildScreenshotIngestFormData";
 import { MealProposalComposer } from "@/features/ai/meal-proposal-composer";
@@ -50,6 +51,7 @@ import { perfEnd, perfStart } from "@/lib/performance";
 import { useAiCredits } from "@/features/billing/useAiCredits";
 import { PremiumHintRow } from "@/features/billing/premium-hint-row";
 import { CategoryChips } from "@/features/shopping-item/category-chips";
+import { getCategoryBadgeColors } from "@/features/shopping-item/category-badge-colors";
 import {
   ListStatusFilterChips,
   type ListStatusFilter,
@@ -57,7 +59,7 @@ import {
 import { EditItemSheet } from "@/features/shopping-item/edit-item-sheet";
 import { RemoteChangeToast, useListRealtime } from "@/lib/realtime";
 import { ListItemRow } from "@/features/shopping-item/list-item-row";
-import { shoppingItemsQueryKey } from "@/features/shopping-item/query-keys";
+import { shoppingItemsQueryKey, shoppingItemsQueryPrefix } from "@/features/shopping-item/query-keys";
 import type {
   ShoppingCategory,
   ShoppingItem,
@@ -70,6 +72,15 @@ import {
 import { getShoppingList } from "@/features/shopping-list/api";
 import { CreateListOptionRow } from "@/features/shopping-list/create-list-option-row";
 import { DeleteListDialog } from "@/features/shopping-list/delete-list-dialog";
+import {
+  historyRepeat,
+  historyRepeatCompleted,
+  historyRestore,
+} from "@/features/history/historyTelemetry";
+import {
+  useRepeatHistoryList,
+  useRestoreHistoryList,
+} from "@/features/history/useHistoryLists";
 import { takePendingListImport } from "@/features/shopping-list/pending-list-import";
 import { takePendingCreateDraft } from "@/features/shopping-list/pending-create-draft";
 import { takePendingListFocus } from "@/features/shopping-list/pending-list-focus";
@@ -87,7 +98,13 @@ import {
   CategoryOrderHint,
 } from "@/features/shopping-list/category-order-ui";
 import { CategoryReorderList } from "@/features/shopping-list/category-reorder-list";
+import {
+  resolveListLifecycleStatus,
+  type ListLifecycleStatus,
+} from "@/features/shopping-list/list-lifecycle-status";
+import { ListStatusBadge } from "@/features/shopping-list/list-status-badge";
 import { NestableScreenScroll } from "@/features/shopping-list/nestable-screen-scroll";
+import { useResumableSessions } from "@/features/shopping-list/session/useResumableSessions";
 import {
   useArchiveShoppingList,
   useUpdateShoppingList,
@@ -165,6 +182,21 @@ export default function ShoppingListScreen() {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [category, setCategory] = useState<ShoppingCategory>("other");
+  const [categoryChipsKey, setCategoryChipsKey] = useState(0);
+  const [itemAddedToast, setItemAddedToast] = useState<{
+    name: string;
+    category: ShoppingCategory;
+    amount?: string;
+    note?: string;
+    nonce: number;
+  } | null>(null);
+  const [itemAddedToastRendered, setItemAddedToastRendered] = useState<{
+    name: string;
+    category: ShoppingCategory;
+    amount?: string;
+    note?: string;
+    nonce: number;
+  } | null>(null);
   const [aiText, setAiText] = useState("");
   const {
     isAvailable: isDictateAvailable,
@@ -182,7 +214,12 @@ export default function ShoppingListScreen() {
   const [manualAddOpen, setManualAddOpen] = useState(false);
   const [aiSectionOpen, setAiSectionOpen] = useState(false);
   const [mealSectionOpen, setMealSectionOpen] = useState(false);
+  const [categoryOrderOpen, setCategoryOrderOpen] = useState(true);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [finishedFeedback, setFinishedFeedback] = useState<
+    "restored" | "limit" | null
+  >(null);
+  const categoryOrderDefaultApplied = useRef(false);
   const [removeItemTarget, setRemoveItemTarget] = useState<ShoppingItem | null>(
     null,
   );
@@ -195,6 +232,12 @@ export default function ShoppingListScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const scrollYRef = useRef(0);
   const itemsSectionRef = useRef<View>(null);
+  const categoryAnchorRefs = useRef<
+    Partial<Record<SharedShoppingCategory, View | null>>
+  >({});
+  const pendingScrollToCategoryRef = useRef<SharedShoppingCategory | null>(
+    null,
+  );
   const aiSectionRef = useRef<View>(null);
   const mealSectionRef = useRef<View>(null);
   const manualAddSectionRef = useRef<View>(null);
@@ -208,6 +251,17 @@ export default function ShoppingListScreen() {
   const onMealGeneratingChange = useCallback((generating: boolean) => {
     setMealGenerating(generating);
   }, []);
+
+  useEffect(() => {
+    if (!itemAddedToast) return;
+    queueMicrotask(() => setItemAddedToastRendered(itemAddedToast));
+  }, [itemAddedToast]);
+
+  useEffect(() => {
+    if (!itemAddedToast) return;
+    const handle = setTimeout(() => setItemAddedToast(null), 2800);
+    return () => clearTimeout(handle);
+  }, [itemAddedToast?.nonce, itemAddedToast]);
 
   const cancelSmoothScroll = useCallback(() => {
     if (scrollAnimFrameRef.current != null) {
@@ -267,6 +321,42 @@ export default function ShoppingListScreen() {
       smoothScrollToY(Math.max(0, scrollYRef.current + delta), 700);
     })();
   }, [measureViewY, smoothScrollToY]);
+
+  const scrollToCategoryInItems = useCallback(
+    (category: SharedShoppingCategory) => {
+      const scroll = scrollRef.current;
+      const anchor = categoryAnchorRefs.current[category];
+      if (!scroll || !anchor) {
+        scrollItemsSectionToTop();
+        return;
+      }
+
+      void (async () => {
+        const scrollTop = await measureViewY(scroll);
+        const anchorTop = await measureViewY(anchor);
+        const delta = anchorTop - scrollTop;
+        // Slight offset so the category header sits below the sticky top chrome.
+        smoothScrollToY(Math.max(0, scrollYRef.current + delta - 8), 550);
+      })();
+    },
+    [measureViewY, scrollItemsSectionToTop, smoothScrollToY],
+  );
+
+  const focusCategoryInItems = useCallback(
+    (category: SharedShoppingCategory) => {
+      const needsFilterReset = statusFilter !== "all";
+      if (needsFilterReset) {
+        pendingScrollToCategoryRef.current = category;
+        setStatusFilter("all");
+        return;
+      }
+      // Layout may still be settling after expand / reorder.
+      requestAnimationFrame(() => {
+        setTimeout(() => scrollToCategoryInItems(category), 40);
+      });
+    },
+    [scrollToCategoryInItems, statusFilter],
+  );
 
   /**
    * Pin the focused composer section (AI / recipe / manual add) to the top of the
@@ -347,7 +437,7 @@ export default function ShoppingListScreen() {
   }, [keyboardHeight, scheduleComposerScroll]);
 
   const listQuery = useQuery({
-    queryKey: ["shopping-list", listId],
+    queryKey: ["shopping-list", listId, "allow-archived"],
     enabled: Boolean(isSignedIn) && typeof listId === "string",
     retry: (failureCount, error) => {
       if (error instanceof ApiClientError && error.code === "NOT_FOUND") {
@@ -360,9 +450,33 @@ export default function ShoppingListScreen() {
       if (!token || typeof listId !== "string") {
         throw new Error("Missing auth token or list id");
       }
-      return getShoppingList(token, listId);
+      return getShoppingList(token, listId, { allowArchived: true });
     },
   });
+
+  const isFinishedList = listQuery.data?.status === "archived";
+
+  useEffect(() => {
+    if (categoryOrderDefaultApplied.current) return;
+    if (!listQuery.data) return;
+    categoryOrderDefaultApplied.current = true;
+    if (listQuery.data.status === "archived") {
+      setCategoryOrderOpen(false);
+    }
+  }, [listQuery.data]);
+
+  const sessionsQuery = useResumableSessions(Boolean(isSignedIn));
+  const listLifecycleStatus = useMemo((): ListLifecycleStatus | null => {
+    const list = listQuery.data;
+    if (!list) return null;
+    const hasResumableSession = (sessionsQuery.data ?? []).some(
+      (session) => session.listId === list.id,
+    );
+    return resolveListLifecycleStatus({
+      status: list.status,
+      hasResumableSession,
+    });
+  }, [listQuery.data, sessionsQuery.data]);
 
   const creditsQuery = useAiCredits(listQuery.data?.workspaceId ?? null);
 
@@ -371,7 +485,8 @@ export default function ShoppingListScreen() {
   });
   const itemsQuery = useShoppingItems(
     typeof listId === "string" ? listId : null,
-    Boolean(isSignedIn) && !listQuery.isError,
+    Boolean(isSignedIn) && !listQuery.isError && listQuery.isSuccess,
+    { allowArchived: listQuery.data?.status === "archived" },
   );
   const createItem = useCreateShoppingItem(
     typeof listId === "string" ? listId : null,
@@ -384,6 +499,12 @@ export default function ShoppingListScreen() {
   );
   const updateList = useUpdateShoppingList(
     typeof listId === "string" ? listId : null,
+  );
+  const repeatMutation = useRepeatHistoryList(
+    listQuery.data?.workspaceId ?? null,
+  );
+  const restoreMutation = useRestoreHistoryList(
+    listQuery.data?.workspaceId ?? null,
   );
   const applyMutation = useMutation({
     mutationFn: async (input: {
@@ -917,6 +1038,15 @@ export default function ShoppingListScreen() {
       ? activeItems
       : activeItems.filter((item) => item.status === statusFilter);
 
+  // After resetting status filter to "all", scroll to the requested category.
+  useEffect(() => {
+    const category = pendingScrollToCategoryRef.current;
+    if (!category || statusFilter !== "all") return;
+    pendingScrollToCategoryRef.current = null;
+    const timer = setTimeout(() => scrollToCategoryInItems(category), 80);
+    return () => clearTimeout(timer);
+  }, [statusFilter, filteredItems.length, scrollToCategoryInItems]);
+
   const categoriesOnList = useMemo(() => {
     const seen = new Set<SharedShoppingCategory>();
     const ordered: SharedShoppingCategory[] = [];
@@ -941,9 +1071,55 @@ export default function ShoppingListScreen() {
   }, [activeItems]);
 
   const onCategoryReorder = (data: SharedShoppingCategory[]) => {
+    if (isFinishedList) return;
     const nextOrder = mergeActiveCategoryOrder(categoryOrder, data);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     updateList.mutate({ categoryOrder: nextOrder });
+  };
+
+  const handleFinishedListLimitError = (err: unknown) => {
+    if (err instanceof ApiClientError && err.code === "HISTORY_LIMIT_EXCEEDED") {
+      setFinishedFeedback("limit");
+      return;
+    }
+    Alert.alert(
+      t("history.actionFailed"),
+      err instanceof Error ? err.message : undefined,
+    );
+  };
+
+  const onRepeatFinishedList = () => {
+    if (typeof listId !== "string" || !isFinishedList) return;
+    historyRepeat(listId);
+    repeatMutation.mutate(listId, {
+      onSuccess: (created) => {
+        historyRepeatCompleted({
+          sourceListId: listId,
+          newListId: created.id,
+        });
+        router.replace(`/list/${created.id}` as never);
+      },
+      onError: handleFinishedListLimitError,
+    });
+  };
+
+  const onRestoreFinishedList = () => {
+    if (typeof listId !== "string" || !isFinishedList) return;
+    restoreMutation.mutate(listId, {
+      onSuccess: async (restored) => {
+        historyRestore(listId);
+        queryClient.setQueryData(
+          ["shopping-list", listId, "allow-archived"],
+          restored,
+        );
+        queryClient.setQueryData(["shopping-list", listId], restored);
+        await queryClient.invalidateQueries({
+          queryKey: shoppingItemsQueryPrefix(listId),
+        });
+        setFinishedFeedback("restored");
+      },
+      onError: handleFinishedListLimitError,
+    });
   };
 
   const confirmDeleteList = () => {
@@ -1017,7 +1193,7 @@ export default function ShoppingListScreen() {
             ) : (
               <Pressable
                 onPress={() => setRenameOpen(true)}
-                disabled={!listQuery.data}
+                disabled={!listQuery.data || isFinishedList}
                 accessibilityRole="button"
                 accessibilityLabel={t("list.renameTitle")}
                 style={{ flex: 1, minWidth: 0 }}
@@ -1028,15 +1204,27 @@ export default function ShoppingListScreen() {
                 >
                   {listQuery.data?.name ?? t("list.title")}
                 </Text>
-                <Text
+                <View
                   style={{
-                    ...typography.caption,
-                    color: theme.textMuted,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: spacing[2],
                     marginTop: 2,
                   }}
                 >
-                  {t("list.itemCount", { count: itemCount })}
-                </Text>
+                  <Text
+                    style={{
+                      ...typography.caption,
+                      color: theme.textMuted,
+                    }}
+                  >
+                    {t("list.itemCount", { count: itemCount })}
+                  </Text>
+                  {listLifecycleStatus ? (
+                    <ListStatusBadge status={listLifecycleStatus} />
+                  ) : null}
+                </View>
               </Pressable>
             )}
           </View>
@@ -1487,20 +1675,28 @@ export default function ShoppingListScreen() {
                   />
 
                   <View style={{ marginTop: spacing[5] }}>
-                    <CategoryChips value={category} onChange={setCategory} />
+                    <CategoryChips
+                      key={categoryChipsKey}
+                      value={category}
+                      onChange={setCategory}
+                    />
                   </View>
 
                   <Pressable
                     disabled={createItem.isPending || !name.trim()}
                     onPress={() => {
                       Keyboard.dismiss();
+                      const addedName = name.trim();
+                      const addedAmount = amount.trim();
+                      const addedNote = note.trim();
+                      const addedCategory = category;
                       createItem.mutate(
                         {
                           clientId: createClientId(),
-                          name,
-                          ...(amount.trim() ? { amount: amount.trim() } : {}),
-                          ...(note.trim() ? { note: note.trim() } : {}),
-                          category,
+                          name: addedName,
+                          ...(addedAmount ? { amount: addedAmount } : {}),
+                          ...(addedNote ? { note: addedNote } : {}),
+                          category: addedCategory,
                         },
                         {
                           onSuccess: () => {
@@ -1508,6 +1704,14 @@ export default function ShoppingListScreen() {
                             setAmount("");
                             setNote("");
                             setCategory("other");
+                            setCategoryChipsKey((key) => key + 1);
+                            setItemAddedToast({
+                              name: addedName,
+                              category: addedCategory,
+                              ...(addedAmount ? { amount: addedAmount } : {}),
+                              ...(addedNote ? { note: addedNote } : {}),
+                              nonce: Date.now(),
+                            });
                             if (typeof listId === "string") {
                               clearListProvisional(listId);
                             }
@@ -1737,39 +1941,69 @@ export default function ShoppingListScreen() {
 
             {categoriesOnList.length > 1 ? (
               <View style={{ marginTop: spacing[8] }}>
-                <Text
+                <Pressable
+                  onPress={() => setCategoryOrderOpen((open) => !open)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: categoryOrderOpen }}
                   style={{
-                    ...typography.headline,
-                    color: theme.text,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    minHeight: 44,
                   }}
                 >
-                  {t("list.categoryOrderTitle")}
-                </Text>
-                <CategoryOrderHint>
-                  {t(
-                    Platform.OS === "web"
-                      ? "list.categoryOrderHintWeb"
-                      : "list.categoryOrderHint",
-                  )}
-                </CategoryOrderHint>
-                <CategoryReorderList
-                  data={categoriesOnList}
-                  keyExtractor={(item) => item}
-                  onReorder={onCategoryReorder}
-                  renderItem={({ item, drag, isActive, moveUp, moveDown }) => (
-                    <CategoryOrderEditRow
-                      icon={getShoppingCategoryIcon(item)}
-                      label={t(`categories.${item}`)}
-                      subtitle={t("list.itemCount", {
-                        count: categoryItemCounts.get(item) ?? 0,
-                      })}
-                      onLongPress={drag}
-                      isActive={isActive}
-                      moveUp={moveUp}
-                      moveDown={moveDown}
+                  <Text
+                    style={{
+                      ...typography.headline,
+                      color: categoryOrderOpen ? theme.text : theme.textMuted,
+                      flex: 1,
+                      paddingRight: spacing[3],
+                    }}
+                  >
+                    {t("list.categoryOrderTitle")}
+                  </Text>
+                  <Text
+                    style={{
+                      color: categoryOrderOpen ? theme.text : theme.textMuted,
+                      fontSize: 22,
+                      lineHeight: 26,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {categoryOrderOpen ? "▾" : "▸"}
+                  </Text>
+                </Pressable>
+                {categoryOrderOpen ? (
+                  <View>
+                    <CategoryOrderHint>
+                      {t(
+                        Platform.OS === "web"
+                          ? "list.categoryOrderHintWeb"
+                          : "list.categoryOrderHint",
+                      )}
+                    </CategoryOrderHint>
+                    <CategoryReorderList
+                      data={categoriesOnList}
+                      keyExtractor={(item) => item}
+                      onReorder={onCategoryReorder}
+                      renderItem={({ item, drag, isActive, moveUp, moveDown }) => (
+                        <CategoryOrderEditRow
+                          icon={getShoppingCategoryIcon(item)}
+                          label={t(`categories.${item}`)}
+                          subtitle={t("list.itemCount", {
+                            count: categoryItemCounts.get(item) ?? 0,
+                          })}
+                          onLongPress={drag}
+                          onPress={() => focusCategoryInItems(item)}
+                          readOnly={isFinishedList}
+                          isActive={isActive}
+                          moveUp={isFinishedList ? undefined : moveUp}
+                          moveDown={isFinishedList ? undefined : moveDown}
+                        />
+                      )}
                     />
-                  )}
-                />
+                  </View>
+                ) : null}
               </View>
             ) : null}
 
@@ -1798,14 +2032,35 @@ export default function ShoppingListScreen() {
             <View style={{ marginTop: spacing[3] }}>
               {itemCount > 0 ? (
                 filteredItems.length > 0 ? (
-                  filteredItems.map((item, index) => (
-                    <ListItemRow
-                      key={item.id}
-                      item={item}
-                      showDivider={index < filteredItems.length - 1}
-                      onMenuPress={() => openItemMenu(item)}
-                    />
-                  ))
+                  filteredItems.map((item, index) => {
+                    const prev = filteredItems[index - 1];
+                    const isCategoryStart =
+                      !prev || prev.category !== item.category;
+                    return (
+                      <View
+                        key={item.id}
+                        ref={
+                          isCategoryStart
+                            ? (node) => {
+                                categoryAnchorRefs.current[item.category] =
+                                  node;
+                              }
+                            : undefined
+                        }
+                        collapsable={isCategoryStart ? false : undefined}
+                      >
+                        <ListItemRow
+                          item={item}
+                          showDivider={index < filteredItems.length - 1}
+                          onMenuPress={
+                            isFinishedList
+                              ? undefined
+                              : () => openItemMenu(item)
+                          }
+                        />
+                      </View>
+                    );
+                  })
                 ) : (
                   <Text
                     style={{
@@ -1859,41 +2114,46 @@ export default function ShoppingListScreen() {
               )}
             </View>
 
-            <Pressable
-              disabled={archiveList.isPending}
-              onPress={confirmDeleteList}
-              style={{
-                marginTop: spacing[8],
-                borderRadius: radius.lg,
-                paddingVertical: spacing[4],
-                paddingHorizontal: spacing[4],
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-                gap: spacing[2],
-                borderWidth: 1,
-                borderColor: `${theme.danger}55`,
-                backgroundColor: theme.surface,
-                opacity: archiveList.isPending ? 0.6 : 1,
-              }}
-            >
-              {archiveList.isPending ? (
-                <ActivityIndicator color={`${theme.danger}AA`} />
-              ) : (
+            <View style={{ marginTop: spacing[8] }}>
+              <CreateListOptionRow
+                icon="🗑"
+                title={t("list.delete")}
+                subtitle={t("history.deleteHint")}
+                tone="danger"
+                disabled={
+                  archiveList.isPending ||
+                  restoreMutation.isPending ||
+                  repeatMutation.isPending
+                }
+                onPress={confirmDeleteList}
+              />
+              {isFinishedList ? (
                 <>
-                  <Text style={{ fontSize: 15, opacity: 0.75 }}>🗑️</Text>
-                  <Text
-                    style={{
-                      ...typography.label,
-                      fontWeight: "500",
-                      color: `${theme.danger}CC`,
-                    }}
-                  >
-                    {t("list.delete")}
-                  </Text>
+                  <CreateListOptionRow
+                    icon="↺"
+                    title={t("history.restore")}
+                    subtitle={t("history.restoreHint")}
+                    disabled={
+                      archiveList.isPending ||
+                      restoreMutation.isPending ||
+                      repeatMutation.isPending
+                    }
+                    onPress={onRestoreFinishedList}
+                  />
+                  <CreateListOptionRow
+                    icon="🔁"
+                    title={t("history.repeat")}
+                    subtitle={t("history.repeatHint")}
+                    disabled={
+                      archiveList.isPending ||
+                      restoreMutation.isPending ||
+                      repeatMutation.isPending
+                    }
+                    onPress={onRepeatFinishedList}
+                  />
                 </>
-              )}
-            </Pressable>
+              ) : null}
+            </View>
           </>
         )}
         </LoadingTransition>
@@ -1915,11 +2175,13 @@ export default function ShoppingListScreen() {
         >
           <Pressable
             onPress={() => {
+              if (isFinishedList) return;
               if (typeof listId === "string" && itemCount > 0) {
                 openTask(`/list/${listId}/shop`);
               }
             }}
             disabled={
+              isFinishedList ||
               itemCount === 0 ||
               mealGenerating ||
               ingestMutation.isPending ||
@@ -1928,6 +2190,7 @@ export default function ShoppingListScreen() {
             accessibilityRole="button"
             accessibilityState={{
               disabled:
+                isFinishedList ||
                 itemCount === 0 ||
                 mealGenerating ||
                 ingestMutation.isPending ||
@@ -1945,6 +2208,7 @@ export default function ShoppingListScreen() {
               borderRadius: radius.full,
               minHeight: 56,
               opacity:
+                isFinishedList ||
                 itemCount === 0 ||
                 mealGenerating ||
                 ingestMutation.isPending ||
@@ -1994,6 +2258,138 @@ export default function ShoppingListScreen() {
           </Pressable>
         </View>
         ) : null}
+
+        {itemAddedToastRendered ? (
+          <View
+            pointerEvents="box-none"
+            style={{
+              position: "absolute",
+              left: spacing[4],
+              right: spacing[4],
+              bottom: hideStickyForComposer
+                ? keyboardHeight + Math.max(insets.bottom, spacing[2]) + spacing[3]
+                : footerPad + spacing[2],
+              zIndex: 50,
+            }}
+          >
+            <ToastMotion
+              visible={itemAddedToast != null}
+              onExited={() => {
+                if (!itemAddedToast) setItemAddedToastRendered(null);
+              }}
+            >
+              <Pressable
+                onPress={() => setItemAddedToast(null)}
+                accessibilityRole="button"
+                accessibilityLabel={[
+                  t("list.itemAddedToast", {
+                    name: itemAddedToastRendered.name,
+                  }),
+                  t(`categories.${itemAddedToastRendered.category}`),
+                  [itemAddedToastRendered.amount, itemAddedToastRendered.note]
+                    .filter(Boolean)
+                    .join(" · ") || null,
+                ]
+                  .filter(Boolean)
+                  .join(". ")}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing[3],
+                  backgroundColor: theme.surface,
+                  borderRadius: radius.xl,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  paddingVertical: spacing[3],
+                  paddingHorizontal: spacing[3],
+                  ...shadows.soft,
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: radius.lg,
+                    backgroundColor: getCategoryBadgeColors(
+                      itemAddedToastRendered.category,
+                    ).background,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Text style={{ fontSize: 22 }}>
+                    {getShoppingCategoryIcon(itemAddedToastRendered.category)}
+                  </Text>
+                </View>
+
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text
+                    style={{
+                      ...typography.caption,
+                      color: theme.primary,
+                      fontWeight: "700",
+                    }}
+                    numberOfLines={1}
+                  >
+                    {t("list.itemAddedToastLabel")}
+                  </Text>
+                  <Text
+                    style={{
+                      ...typography.label,
+                      color: theme.text,
+                      marginTop: 1,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {itemAddedToastRendered.name}
+                  </Text>
+                  {itemAddedToastRendered.amount ||
+                  itemAddedToastRendered.note ? (
+                    <Text
+                      style={{
+                        ...typography.caption,
+                        color: theme.textMuted,
+                        marginTop: 2,
+                      }}
+                      numberOfLines={1}
+                    >
+                      {[
+                        itemAddedToastRendered.amount,
+                        itemAddedToastRendered.note,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </Text>
+                  ) : null}
+                </View>
+
+                <View
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: radius.full,
+                    backgroundColor: `${theme.primary}18`,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: theme.primary,
+                      fontSize: 12,
+                      fontWeight: "700",
+                      lineHeight: 14,
+                    }}
+                  >
+                    ✓
+                  </Text>
+                </View>
+              </Pressable>
+            </ToastMotion>
+          </View>
+        ) : null}
       </View>
 
       <RenameListSheet
@@ -2014,7 +2410,7 @@ export default function ShoppingListScreen() {
 
       <EditItemSheet
         key={editingItem?.id ?? "edit-closed"}
-        visible={Boolean(editingItem)}
+        visible={Boolean(editingItem) && removeItemTarget == null}
         item={editingItem}
         onClose={() => setEditingItem(null)}
         onSave={(input) => {
@@ -2029,6 +2425,7 @@ export default function ShoppingListScreen() {
         }}
         onDelete={() => {
           if (!editingItem) return;
+          Keyboard.dismiss();
           setRemoveItemTarget(editingItem);
         }}
       />
@@ -2051,6 +2448,45 @@ export default function ShoppingListScreen() {
         primaryDestructive
         imageWidth={200}
         imageHeight={200}
+      />
+
+      <FeedbackSheet
+        visible={finishedFeedback != null}
+        image={
+          finishedFeedback === "restored"
+            ? brandAssets.listCreated
+            : brandAssets.listBag
+        }
+        title={
+          finishedFeedback === "restored"
+            ? t("history.restoredTitle")
+            : t("history.limitTitle")
+        }
+        body={
+          finishedFeedback === "restored"
+            ? t("history.restoredBody")
+            : t("history.limitBody")
+        }
+        primaryLabel={
+          finishedFeedback === "limit"
+            ? t("billing.upgradeCta")
+            : t("common.return")
+        }
+        onPrimary={() => {
+          const kind = finishedFeedback;
+          setFinishedFeedback(null);
+          if (kind === "limit") {
+            router.push("/premium");
+          }
+        }}
+        secondaryLabel={
+          finishedFeedback === "limit" ? t("common.return") : undefined
+        }
+        onSecondary={
+          finishedFeedback === "limit"
+            ? () => setFinishedFeedback(null)
+            : undefined
+        }
       />
 
       <DeleteListDialog

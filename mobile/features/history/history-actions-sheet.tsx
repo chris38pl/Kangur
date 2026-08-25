@@ -41,7 +41,7 @@ function ActionIcon({
   color: string;
   fallback: string;
 }) {
-  return <FallbackSymbol fallback={fallback} color={color} size={15} />;
+  return <FallbackSymbol fallback={fallback} color={color} size={20} />;
 }
 
 function ActionRow({
@@ -110,8 +110,8 @@ function ActionRow({
     >
       <View
         style={{
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           borderRadius: radius.full,
           backgroundColor: colorsForTone.bg,
           alignItems: "center",
@@ -286,7 +286,7 @@ export function HistoryActionsSheet({
                 subtitle={t("history.previewHint")}
                 onPress={onPreview}
                 tone="neutral"
-                fallback="◉"
+                fallback="👁"
               />
               {mode === "shopping" || mode === "waiting" ? (
                 <ActionRow
@@ -294,7 +294,7 @@ export function HistoryActionsSheet({
                   subtitle={t("history.editListHint")}
                   onPress={onEdit}
                   tone="neutral"
-                  fallback="✎"
+                  fallback="✏"
                 />
               ) : null}
               <ActionRow
@@ -334,14 +334,14 @@ export function HistoryActionsSheet({
                     subtitle={t("history.repeatHint")}
                     onPress={onRepeat}
                     tone="primary"
-                    fallback="↻"
+                    fallback="🔁"
                   />
                   <ActionRow
                     label={t("history.restore")}
                     subtitle={t("history.restoreHint")}
                     onPress={onRestore}
                     tone="restore"
-                    fallback="↩"
+                    fallback="↺"
                   />
                 </>
               ) : null}
@@ -350,7 +350,7 @@ export function HistoryActionsSheet({
                 subtitle={t("history.deleteHint")}
                 onPress={onDelete}
                 tone="danger"
-                fallback="⌫"
+                fallback="🗑"
                 showDivider={false}
               />
             </View>

@@ -157,6 +157,10 @@ type EditRowProps = {
   /** Caption under the label (e.g. item count). */
   subtitle?: string;
   onLongPress: () => void;
+  /** Tap the row body to focus this category in the product list. */
+  onPress?: () => void;
+  /** Hide drag / arrow controls (e.g. finished list preview). */
+  readOnly?: boolean;
   isActive?: boolean;
   moveUp?: () => void;
   moveDown?: () => void;
@@ -168,6 +172,8 @@ export function CategoryOrderEditRow({
   label,
   subtitle,
   onLongPress,
+  onPress,
+  readOnly,
   isActive,
   moveUp,
   moveDown,
@@ -175,23 +181,11 @@ export function CategoryOrderEditRow({
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   // Always use ↑/↓ on web — drag handle is native-only (and RNGH nests buttons on web).
-  const webControls = Platform.OS === "web" || Boolean(moveUp || moveDown);
+  const webControls =
+    !readOnly && (Platform.OS === "web" || Boolean(moveUp || moveDown));
 
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: spacing[3],
-        paddingVertical: spacing[3],
-        paddingHorizontal: spacing[3],
-        marginBottom: spacing[2],
-        borderRadius: radius.lg,
-        borderWidth: 1,
-        borderColor: theme.border,
-        backgroundColor: isActive ? theme.section : theme.surface,
-      }}
-    >
+  const labelBlock = (
+    <>
       <Text style={{ fontSize: 22 }}>{icon}</Text>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text
@@ -213,7 +207,53 @@ export function CategoryOrderEditRow({
           </Text>
         ) : null}
       </View>
-      {webControls ? (
+    </>
+  );
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing[3],
+        paddingVertical: spacing[3],
+        paddingHorizontal: spacing[3],
+        marginBottom: spacing[2],
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: theme.border,
+        backgroundColor: isActive ? theme.section : theme.surface,
+      }}
+    >
+      {onPress ? (
+        <Pressable
+          onPress={onPress}
+          accessibilityRole="button"
+          accessibilityLabel={label}
+          style={{
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: spacing[3],
+            minWidth: 0,
+          }}
+        >
+          {labelBlock}
+        </Pressable>
+      ) : (
+        <View
+          style={{
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: spacing[3],
+            minWidth: 0,
+          }}
+        >
+          {labelBlock}
+        </View>
+      )}
+      {readOnly ? null : webControls ? (
         <CategoryReorderWebControls moveUp={moveUp} moveDown={moveDown} />
       ) : (
         <CategoryDragHandle onLongPress={onLongPress} />

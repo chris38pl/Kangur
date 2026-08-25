@@ -3,7 +3,7 @@ import {
   SHOPPING_CATEGORIES,
   type ShoppingCategory,
 } from "@shared/shopping-categories";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -96,6 +96,7 @@ export function CategoryChips({ value, onChange, showLabel = true }: Props) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const searchRef = useRef<TextInput>(null);
+  const scrollRef = useRef<ScrollView>(null);
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -107,10 +108,23 @@ export function CategoryChips({ value, onChange, showLabel = true }: Props) {
   }, [searchOpen]);
 
   const normalizedQuery = query.trim().toLocaleLowerCase();
-  const visibleCategories = CATEGORY_PICKER_ORDER.filter((cat) => {
-    if (!normalizedQuery) return true;
-    return t(`categories.${cat}`).toLocaleLowerCase().includes(normalizedQuery);
-  });
+
+  const visibleCategories = useMemo(() => {
+    const filtered = CATEGORY_PICKER_ORDER.filter((cat) => {
+      if (!normalizedQuery) return true;
+      return t(`categories.${cat}`)
+        .toLocaleLowerCase()
+        .includes(normalizedQuery);
+    });
+    // Selected chip always first so it stays visible after search closes.
+    if (!filtered.includes(value)) return [...filtered];
+    return [value, ...filtered.filter((cat) => cat !== value)];
+  }, [normalizedQuery, t, value]);
+
+  // Keep the row pinned to the start whenever selection / filter changes.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ x: 0, animated: false });
+  }, [value, searchOpen, normalizedQuery]);
 
   const clearSearch = () => {
     setQuery("");
@@ -234,6 +248,7 @@ export function CategoryChips({ value, onChange, showLabel = true }: Props) {
         </Text>
       ) : (
         <ScrollView
+          ref={scrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -244,7 +259,10 @@ export function CategoryChips({ value, onChange, showLabel = true }: Props) {
             return (
               <Pressable
                 key={cat}
-                onPress={() => onChange(cat)}
+                onPress={() => {
+                  onChange(cat);
+                  closeSearch();
+                }}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
                 style={{

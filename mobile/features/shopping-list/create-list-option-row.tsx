@@ -10,6 +10,8 @@ type Props = {
   disabled?: boolean;
   soon?: boolean;
   soonLabel?: string;
+  /** Soft danger styling for destructive actions (same row layout). */
+  tone?: "default" | "danger";
   /** Compact trailing badge (e.g. Premium) — takes precedence over chevron when set. */
   badge?: string;
   onPress: () => void;
@@ -22,11 +24,13 @@ export function CreateListOptionRow({
   disabled,
   soon,
   soonLabel,
+  tone = "default",
   badge,
   onPress,
 }: Props) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+  const isDanger = tone === "danger";
 
   return (
     <Pressable
@@ -43,7 +47,11 @@ export function CreateListOptionRow({
         borderRadius: radius.xl,
         backgroundColor: theme.surface,
         borderWidth: soon ? 1.5 : 1,
-        borderColor: soon ? brand.primaryLight : theme.border,
+        borderColor: soon
+          ? brand.primaryLight
+          : isDanger
+            ? `${theme.danger}40`
+            : theme.border,
         borderStyle: soon ? "dashed" : "solid",
         minHeight: 72,
         marginBottom: spacing[3],
@@ -56,7 +64,7 @@ export function CreateListOptionRow({
           width: 44,
           height: 44,
           borderRadius: radius.full,
-          backgroundColor: brand.accent,
+          backgroundColor: isDanger ? "#FDECEC" : brand.accent,
           alignItems: "center",
           justifyContent: "center",
         }}
@@ -66,7 +74,10 @@ export function CreateListOptionRow({
 
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text
-          style={{ ...typography.headline, color: theme.text }}
+          style={{
+            ...typography.headline,
+            color: isDanger ? theme.danger : theme.text,
+          }}
           numberOfLines={1}
         >
           {title}

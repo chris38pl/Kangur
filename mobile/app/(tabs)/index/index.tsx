@@ -25,6 +25,8 @@ import {
 } from "@/design-system/tokens";
 import { useCreateList } from "@/features/shopping-list/create-list-provider";
 import type { CreateListPath } from "@/features/shopping-list/create-list-sheet";
+import type { ListLifecycleStatus } from "@/features/shopping-list/list-lifecycle-status";
+import { ListStatusBadge } from "@/features/shopping-list/list-status-badge";
 import type { ShoppingList } from "@/features/shopping-list/schemas";
 import { useNotifications, useNotificationPreferences } from "@/features/notifications/useNotifications";
 import { refreshNotifications } from "@/features/notifications/refreshNotifications";
@@ -193,17 +195,27 @@ function ResumeCard({
         >
           {list.name}
         </Text>
-        <Text
+        <View
           style={{
-            ...typography.caption,
-            color: theme.textBody,
+            flexDirection: "row",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: spacing[2],
             marginTop: 2,
-            fontWeight: "500",
           }}
-          numberOfLines={1}
         >
-          {t("home.productCount", { count: list.itemCount ?? 0 })}
-        </Text>
+          <Text
+            style={{
+              ...typography.caption,
+              color: theme.textBody,
+              fontWeight: "500",
+            }}
+            numberOfLines={1}
+          >
+            {t("home.productCount", { count: list.itemCount ?? 0 })}
+          </Text>
+          <ListStatusBadge status="shopping" />
+        </View>
         <Text
           style={{
             ...typography.caption,
@@ -224,10 +236,12 @@ function ResumeCard({
 
 function RecentListRow({
   list,
+  status,
   updatedLabel,
   onPress,
 }: {
   list: ShoppingList;
+  status: ListLifecycleStatus;
   updatedLabel: string;
   onPress: () => void;
 }) {
@@ -258,17 +272,27 @@ function RecentListRow({
         >
           {list.name}
         </Text>
-        <Text
+        <View
           style={{
-            ...typography.caption,
-            color: theme.textBody,
+            flexDirection: "row",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: spacing[2],
             marginTop: 2,
-            fontWeight: "500",
           }}
-          numberOfLines={1}
         >
-          {t("home.productCount", { count: list.itemCount ?? 0 })}
-        </Text>
+          <Text
+            style={{
+              ...typography.caption,
+              color: theme.textBody,
+              fontWeight: "500",
+            }}
+            numberOfLines={1}
+          >
+            {t("home.productCount", { count: list.itemCount ?? 0 })}
+          </Text>
+          <ListStatusBadge status={status} />
+        </View>
         <Text
           style={{
             ...typography.caption,
@@ -328,6 +352,14 @@ export default function HomeScreen() {
     [listsQuery.data],
   );
   const recentLists = useMemo(() => lists.slice(0, 6), [lists]);
+
+  const resumableIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const session of sessionsQuery.data ?? []) {
+      ids.add(session.listId);
+    }
+    return ids;
+  }, [sessionsQuery.data]);
 
   const resumable = useMemo(() => {
     const sessions = sessionsQuery.data ?? [];
@@ -749,6 +781,7 @@ export default function HomeScreen() {
               <RecentListRow
                 key={list.id}
                 list={list}
+                status={resumableIds.has(list.id) ? "shopping" : "waiting"}
                 updatedLabel={updatedLabel(list.updatedAt)}
                 onPress={() => router.push(`/list/${list.id}` as never)}
               />

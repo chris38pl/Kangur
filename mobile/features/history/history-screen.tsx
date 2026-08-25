@@ -40,6 +40,7 @@ import { BackIcon } from "@/features/auth/auth-icons";
 import { CATEGORY_BADGE_COLORS } from "@/features/shopping-item/category-badge-colors";
 import { DeleteListDialog } from "@/features/shopping-list/delete-list-dialog";
 import { updateShoppingList } from "@/features/shopping-list/api";
+import { listLifecycleAccentColor } from "@/features/shopping-list/list-lifecycle-status";
 import type { ShoppingList } from "@/features/shopping-list/schemas";
 import { useResumableSessions } from "@/features/shopping-list/session/useResumableSessions";
 import {
@@ -280,6 +281,20 @@ function SegmentedControl({
   );
 }
 
+function statusAccentColor(
+  group: ListCardModel["group"],
+  scheme: "light" | "dark",
+): string {
+  return listLifecycleAccentColor(group, scheme);
+}
+
+function sortListsByUpdatedAtDesc(lists: ListCardModel[]): ListCardModel[] {
+  return [...lists].sort(
+    (a, b) =>
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+  );
+}
+
 function HistoryCard({
   list,
   onOpenMenu,
@@ -294,6 +309,7 @@ function HistoryCard({
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
+  const accent = statusAccentColor(list.group, scheme);
 
   const relativeLabels = {
     justNow: t("home.updatedJustNow"),
@@ -311,6 +327,7 @@ function HistoryCard({
         flexDirection: "row",
         alignItems: "flex-start",
         gap: spacing[3],
+        padding: spacing[4],
       }}
     >
       <ListBagIcon size={48} />
@@ -418,21 +435,37 @@ function HistoryCard({
   const cardStyle = {
     backgroundColor: theme.surface,
     borderRadius: radius.xl,
-    padding: spacing[4],
     marginBottom: spacing[3],
     borderWidth: 1,
     borderColor: theme.border,
+    overflow: "hidden" as const,
+    flexDirection: "row" as const,
   };
+
+  const content = (
+    <>
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={{
+          width: 7,
+          alignSelf: "stretch",
+          backgroundColor: accent,
+        }}
+      />
+      <View style={{ flex: 1, minWidth: 0 }}>{body}</View>
+    </>
+  );
 
   if (onPress) {
     return (
       <Pressable onPress={onPress} style={cardStyle}>
-        {body}
+        {content}
       </Pressable>
     );
   }
 
-  return <View style={cardStyle}>{body}</View>;
+  return <View style={cardStyle}>{content}</View>;
 }
 
 export function HistoryScreen() {
@@ -661,24 +694,21 @@ export function HistoryScreen() {
     }));
   }, [historyQuery.data]);
 
-  const filteredShopping = useMemo(
-    () => filterListsByQuery(shoppingLists, query),
-    [shoppingLists, query],
-  );
-  const filteredWaiting = useMemo(
-    () => filterListsByQuery(waitingLists, query),
-    [waitingLists, query],
-  );
-  const filteredFinished = useMemo(
-    () => filterListsByQuery(finishedLists, query),
-    [finishedLists, query],
-  );
-
   const segmentLists = useMemo(() => {
-    if (segment === "shopping") return shoppingLists;
-    if (segment === "waiting") return waitingLists;
-    if (segment === "finished") return finishedLists;
-    return [...shoppingLists, ...waitingLists, ...finishedLists];
+    if (segment === "shopping") {
+      return sortListsByUpdatedAtDesc(shoppingLists);
+    }
+    if (segment === "waiting") {
+      return sortListsByUpdatedAtDesc(waitingLists);
+    }
+    if (segment === "finished") {
+      return sortListsByUpdatedAtDesc(finishedLists);
+    }
+    return sortListsByUpdatedAtDesc([
+      ...shoppingLists,
+      ...waitingLists,
+      ...finishedLists,
+    ]);
   }, [segment, shoppingLists, waitingLists, finishedLists]);
 
   const filtered = useMemo(
@@ -686,33 +716,16 @@ export function HistoryScreen() {
     [segmentLists, query],
   );
 
-  /** All view: 20 per section. Single filter: 10. */
-  const pageSize = segment === "all" ? 20 : 10;
+  const pageSize = 10;
   const paginationResetKey = `${segment}|${query}|${workspaceId ?? ""}`;
 
-  const shoppingPage = useListPagination(filteredShopping, {
-    pageSize,
-    resetKey: paginationResetKey,
-  });
-  const waitingPage = useListPagination(filteredWaiting, {
-    pageSize,
-    resetKey: paginationResetKey,
-  });
-  const finishedPage = useListPagination(filteredFinished, {
-    pageSize,
-    resetKey: paginationResetKey,
-  });
-  const singlePage = useListPagination(filtered, {
+  const listPage = useListPagination(filtered, {
     pageSize,
     resetKey: paginationResetKey,
   });
 
   const totalCount =
     shoppingLists.length + waitingLists.length + finishedLists.length;
-  const filteredTotalCount =
-    filteredShopping.length +
-    filteredWaiting.length +
-    filteredFinished.length;
 
   const loading =
     ((segment === "finished" || segment === "all") &&
@@ -879,11 +892,10 @@ export function HistoryScreen() {
   const noSearchResults =
     !loading &&
     !loadError &&
-    (segment === "all"
-      ? totalCount > 0 && filteredTotalCount === 0
-      : segmentLists.length > 0 && filtered.length === 0);
+    segmentLists.length > 0 &&
+    filtered.length === 0;
 
-  const renderCard = (list: ListCardModel, openAsShopping: boolean) => (
+  const renderCard = (list: ListCardModel) => (
     <HistoryCard
       key={list.id}
       list={list}
@@ -891,55 +903,15 @@ export function HistoryScreen() {
       onTogglePreferred={() => {
         void togglePreferredForAi(list);
       }}
-      onPress={
-        list.kind === "active"
-          ? () => {
-              if (openAsShopping || list.group === "shopping") {
+      onPress={() => {
+              if (list.group === "shopping") {
                 router.push(`/list/${list.id}/shop` as never);
               } else {
                 router.push(`/list/${list.id}` as never);
               }
-            }
-          : undefined
-      }
+            }}
     />
   );
-
-  const renderSection = (
-    titleKey: string,
-    page: {
-      visibleItems: ListCardModel[];
-      hasMore: boolean;
-      remainingCount: number;
-      showMore: () => void;
-      isLoadingMore: boolean;
-    },
-    openAsShopping: boolean,
-    /** Full filtered length - hide section when empty before pagination. */
-    totalInSection: number,
-  ) => {
-    if (totalInSection === 0) return null;
-    return (
-      <View key={titleKey} style={{ marginBottom: spacing[4] }}>
-        <Text
-          style={{
-            ...typography.headline,
-            color: theme.text,
-            marginBottom: spacing[3],
-          }}
-        >
-          {t(titleKey)}
-        </Text>
-        {page.visibleItems.map((list) => renderCard(list, openAsShopping))}
-        <ShowMoreButton
-          visible={page.hasMore}
-          onPress={page.showMore}
-          busy={page.isLoadingMore}
-          remainingCount={page.remainingCount}
-        />
-      </View>
-    );
-  };
 
   const goHome = () => {
     goRoot();
@@ -1079,7 +1051,7 @@ export function HistoryScreen() {
         <LoadingTransition
           variant="inline"
           loading={loading}
-          skeleton={<ListsSkeleton multiSection={segment === "all"} />}
+          skeleton={<ListsSkeleton />}
         >
         {loadError ? (
           <Text style={{ ...typography.body, color: theme.danger }}>
@@ -1128,41 +1100,14 @@ export function HistoryScreen() {
           </Text>
         ) : null}
 
-        {!loadError && segment === "all" && !isEmpty
-          ? (
-              <>
-                {renderSection(
-                  "history.sectionShopping",
-                  shoppingPage,
-                  true,
-                  filteredShopping.length,
-                )}
-                {renderSection(
-                  "history.sectionWaiting",
-                  waitingPage,
-                  false,
-                  filteredWaiting.length,
-                )}
-                {renderSection(
-                  "history.sectionFinished",
-                  finishedPage,
-                  false,
-                  filteredFinished.length,
-                )}
-              </>
-            )
-          : null}
-
-        {!loadError && segment !== "all" ? (
+        {!loadError && !isEmpty && !noSearchResults ? (
           <>
-            {singlePage.visibleItems.map((list) =>
-              renderCard(list, segment === "shopping"),
-            )}
+            {listPage.visibleItems.map((list) => renderCard(list))}
             <ShowMoreButton
-              visible={singlePage.hasMore}
-              onPress={singlePage.showMore}
-              busy={singlePage.isLoadingMore}
-              remainingCount={singlePage.remainingCount}
+              visible={listPage.hasMore}
+              onPress={listPage.showMore}
+              busy={listPage.isLoadingMore}
+              remainingCount={listPage.remainingCount}
             />
           </>
         ) : null}
