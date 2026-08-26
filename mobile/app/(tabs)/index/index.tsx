@@ -34,6 +34,7 @@ import { perfEnd, perfStart } from "@/lib/performance";
 import { useResumableSessions } from "@/features/shopping-list/session/useResumableSessions";
 import { useShoppingLists } from "@/features/shopping-list/useShoppingLists";
 import { useAiCredits } from "@/features/billing/useAiCredits";
+import { refreshAiCredits } from "@/features/billing/ai-credits-query";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaceMembers } from "@/features/workspace/useWorkspaceMembers";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
@@ -312,7 +313,7 @@ function RecentListRow({
 }
 
 export default function HomeScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const queryClient = useQueryClient();
@@ -403,8 +404,15 @@ export default function HomeScreen() {
             queryKey: ["workspace-members", workspaceId],
           })
         : Promise.resolve(),
+      refreshAiCredits(queryClient, workspaceId),
     ]);
   }, [queryClient, workspaceId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshAiCredits(queryClient, workspaceId);
+    }, [queryClient, workspaceId]),
+  );
 
   // Heavy queries: no forced focus refetch (staleTime + pull-to-refresh + mutation invalidation).
   // Light paths may still refresh on focus elsewhere; do not set refetchOnWindowFocus globally.

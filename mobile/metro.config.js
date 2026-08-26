@@ -59,7 +59,14 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       ? asFile
       : fs.existsSync(asIndex)
         ? asIndex
-        : asFile;
+        : null;
+    if (!filePath) {
+      // Avoid returning a phantom path — Metro SHA-1 then fails with a cryptic error.
+      // Usually means: run `pnpm sync-shared` (or restart `pnpm start`).
+      throw new Error(
+        `[metro] @shared/${rel} not found under ${sharedRoot}. Run: pnpm sync-shared`,
+      );
+    }
     return {
       type: "sourceFile",
       filePath,

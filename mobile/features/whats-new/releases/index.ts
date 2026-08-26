@@ -4,6 +4,7 @@ import v100 from "./1.0.0.json";
 import v101 from "./1.0.1.json";
 import v102 from "./1.0.2.json";
 import v103 from "./1.0.3.json";
+import v104 from "./1.0.4.json";
 
 /**
  * Explicit Metro registry. Adding a release = new JSON + one import line here.
@@ -14,4 +15,5 @@ export const RELEASE_NOTES_RAW: ReleaseNotes[] = [
   v101 as ReleaseNotes,
   v102 as ReleaseNotes,
   v103 as ReleaseNotes,
+  v104 as ReleaseNotes,
 ];

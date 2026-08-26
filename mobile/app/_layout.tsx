@@ -30,6 +30,7 @@ import { AppQueryProvider } from "@/lib/query/client";
 import { SentryErrorBoundary } from "@/lib/sentry/ErrorBoundary";
 import { initSentry } from "@/lib/sentry/init";
 import { suppressClerkDevKeysWarning } from "@/lib/suppress-clerk-dev-warning";
+import { suppressNestableDragMeasureLayoutWarning } from "@/lib/suppress-nestable-drag-measure-layout-warning";
 
 import "../global.css";
 import "@/lib/i18n";
@@ -37,6 +38,7 @@ import "@/lib/i18n";
 bootLog("root_layout_module", "app/_layout.tsx evaluating");
 
 suppressClerkDevKeysWarning();
+suppressNestableDragMeasureLayoutWarning();
 initSentry();
 bootLog("root_layout_module", "initSentry done");
 

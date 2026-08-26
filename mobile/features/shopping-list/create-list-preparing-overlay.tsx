@@ -9,15 +9,12 @@ import {
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, spacing } from "@/design-system/tokens";
 
-type Props = {
-  visible: boolean;
-};
-
 /**
  * Fullscreen wait while POST create runs — same bones as list detail loading,
  * so the handoff to /list/:id feels continuous (not a spinner interstitial).
+ * Mount only while preparing; unmounting the Modal avoids Android ghost wash.
  */
-export function CreateListPreparingOverlay({ visible }: Props) {
+export function CreateListPreparingOverlay() {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
@@ -25,7 +22,7 @@ export function CreateListPreparingOverlay({ visible }: Props) {
 
   return (
     <Modal
-      visible={visible}
+      visible
       animationType="none"
       transparent={false}
       statusBarTranslucent

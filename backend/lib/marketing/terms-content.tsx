@@ -2,6 +2,10 @@ import Link from "next/link";
 
 import type { AppLocale } from "@/lib/marketing/locale";
 import { legalLocale, withLocale } from "@/lib/marketing/locale";
+import {
+  LegalProviderParagraphEn,
+  LegalProviderParagraphPl,
+} from "@/lib/marketing/legal-entity";
 import { getMessages } from "@/lib/marketing/messages";
 
 type Props = { locale: AppLocale };
@@ -17,17 +21,14 @@ export function TermsContent({ locale }: Props) {
     return (
       <article className="mkt-legal">
         <h1>Regulamin</h1>
-        <p className="mkt-meta">Ostatnia aktualizacja: 21 lipca 2026</p>
+        <p className="mkt-meta">Ostatnia aktualizacja: 26 sierpnia 2026</p>
 
         <p>
           Niniejszy regulamin określa zasady korzystania z aplikacji mobilnej
           Kangur oraz powiązanych usług online. Korzystając z Kangura,
           akceptujesz te warunki.
         </p>
-        <p>
-          Usługodawcą aplikacji Kangur jest Krzysztof Krawiec. Kontakt:{" "}
-          <a href="mailto:support@getkangur.com">support@getkangur.com</a>.
-        </p>
+        <LegalProviderParagraphPl />
 
         <h2>1. Usługa</h2>
         <p>
@@ -116,7 +117,7 @@ export function TermsContent({ locale }: Props) {
     <article className="mkt-legal">
       <h1>Terms of Use</h1>
       <p className="mkt-meta">
-        Last updated: 21 July 2026
+        Last updated: 26 August 2026
         {locale !== "en" ? <> · English</> : null}
       </p>
 
@@ -124,10 +125,7 @@ export function TermsContent({ locale }: Props) {
         These terms govern use of the Kangur mobile app and related online
         services. By using Kangur, you accept these terms.
       </p>
-      <p>
-        The Kangur service provider is Krzysztof Krawiec. Contact:{" "}
-        <a href="mailto:support@getkangur.com">support@getkangur.com</a>.
-      </p>
+      <LegalProviderParagraphEn />
 
       <h2>1. Service</h2>
       <p>

@@ -1,4 +1,4 @@
-import type { ItemStatus, ShoppingItem } from "@/features/shopping-item/schemas";
+import type { ItemStatus, ShoppingItem } from "../shopping-item/schemas";
 
 import type { SyncOperation } from "./types";
 
@@ -10,7 +10,7 @@ const OUTBOUND_STATES = new Set(["PENDING", "SYNCING", "FAILED"]);
  */
 export function overlayLocalOutboundStatuses(
   serverItems: ShoppingItem[],
-  outboundOps: SyncOperation[],
+  outboundOps: readonly SyncOperation[],
 ): ShoppingItem[] {
   const statusByItemId = new Map<string, ItemStatus>();
 
@@ -40,11 +40,23 @@ export function overlayLocalOutboundStatuses(
     }
   }
 
-  if (statusByItemId.size === 0) return serverItems;
+  if (statusByItemId.size === 0) return [...serverItems];
 
   return serverItems.map((item) => {
     const localStatus = statusByItemId.get(item.id);
     if (!localStatus || localStatus === item.status) return item;
     return { ...item, status: localStatus };
   });
+}
+
+/**
+ * Apply outbound SET_STATUS overlay to a single transport success payload.
+ * Prevents an older in-flight SET_STATUS response from reverting newer optimistic UI.
+ */
+export function materializeSuccessfulItem(
+  serverItem: ShoppingItem,
+  outboundOps: readonly SyncOperation[],
+): ShoppingItem {
+  const [overlaid] = overlayLocalOutboundStatuses([serverItem], outboundOps);
+  return overlaid ?? serverItem;
 }

@@ -7,6 +7,10 @@ import assert from "node:assert/strict";
 
 import { toProductIdentityKey } from "../../shared/history-product-identity";
 import {
+  formatDefaultShoppingListTitle,
+  SHOPPING_LIST_TITLE_MAX_LENGTH,
+} from "../../shared/shopping-list/default-list-title";
+import {
   mergeHistoryLists,
   type HistorySourceList,
 } from "../features/shopping-list/mergeHistoryLists";
@@ -102,3 +106,37 @@ assert.notEqual(toProductIdentityKey("ser"), toProductIdentityKey("serek"));
 }
 
 console.log("history-merge asserts OK");
+
+// Default list title (locale + date)
+{
+  const sampleDate = new Date("2024-05-23T12:00:00.000Z");
+  assert.equal(
+    formatDefaultShoppingListTitle("pl", sampleDate),
+    "Zakupy, Czwartek 23 Maj",
+  );
+  assert.equal(
+    formatDefaultShoppingListTitle("en", sampleDate),
+    "Shopping, Thursday 23 May",
+  );
+  assert.equal(
+    formatDefaultShoppingListTitle("de", sampleDate),
+    "Einkauf, Donnerstag 23 Mai",
+  );
+  assert.ok(
+    formatDefaultShoppingListTitle("pl", sampleDate).length <=
+      SHOPPING_LIST_TITLE_MAX_LENGTH,
+  );
+}
+
+{
+  const proposal = mergeHistoryLists(
+    [
+      list("a", "2026-01-03T00:00:00.000Z", [{ name: "mleko" }], true),
+      list("b", "2026-01-02T00:00:00.000Z", [{ name: "chleb" }]),
+    ],
+    "pl",
+  );
+  assert.match(proposal.shoppingContext.title, /^Zakupy, /);
+}
+
+console.log("default-list-title asserts OK");

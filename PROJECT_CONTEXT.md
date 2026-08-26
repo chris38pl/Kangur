@@ -608,7 +608,7 @@ Trigger → AuthZ (+ Premium jeśli trzeba) → Reserve AI Credits
 - Persist raw AI response (JSONB) w `AiProposalRun`.
 - Credits: reserve at ingest; abandon after success = spent.
 - History source selection: `preferredForAi` then fill to 5; no client picker.
-- Free AI uses (lifetime meter): default **15** (`AI_FREE_LIFETIME_CREDITS`, fallback legacy monthly env / 15). Flat cost **1** per AI action; history-merge **0**. UX: „darmowe użycia AI”, not „credits/lifetime”.
+- Free AI uses (lifetime meter): default **10** (`AI_FREE_LIFETIME_CREDITS`, fallback legacy monthly env / 10). Flat cost **1** per AI action; history-merge **0**. UX: „darmowe użycia AI”, not „credits/lifetime”.
 - Evals offline nie debitują credits / nie persystują DB.
 
 ---
@@ -749,7 +749,7 @@ Patrz §6.2 + M14 remaining + IAP + M15 + M20 wizja.
 
 ### 10.6 Open problems
 
-- Ujednolicić Free AI Credits (15 vs 30) — decyzja produktowa + env.
+- Ujednolicić Free AI Credits (10 vs 30) — decyzja: default **10** (`AI_FREE_LIFETIME_CREDITS`).
 - Ujednolicić AI Review default (always vs env off).
 - Play package id marketing vs native.
 - Kiedy wychodzić z pollingu (dane capacity).
@@ -885,7 +885,7 @@ Patrz §6.2 + M14 remaining + IAP + M15 + M20 wizja.
 
 ### 13.4 Things that should be periodically validated
 
-- Free credit allowance (15 vs 30) vs conversion i cost.  
+- Free credit allowance (default 10) vs conversion i cost.  
 - AI Review enablement rate vs support burden.  
 - Share of `other` categories po zmianach.  
 - Events RPS / headroom / polling cost.  
@@ -970,7 +970,7 @@ Te punkty **muszą** być świadomie rozstrzygane przy decyzjach; nie wolno „u
 
 | Temat | Dokumenty | Kod / as-built | Rekomendacja dla AI |
 |-------|-----------|----------------|---------------------|
-| Free AI uses | 15 lifetime (flat 1/action) | Default **15** (`AI_FREE_LIFETIME_CREDITS`) | Preferuj kod/env |
+| Free AI uses | 10 lifetime (flat 1/action) | Default **10** (`AI_FREE_LIFETIME_CREDITS`) | Preferuj kod/env |
 | AI Review | PRD/roadmap: always shown | `EXPO_PUBLIC_AI_REVIEW_ENABLED` default **false** (auto-apply) | Podawaj obie prawdy; nie zakładaj Review always-on bez sprawdzenia env |
 | Model nazwa AI run | Docs: `AiIngestRun` | Prisma: **`AiProposalRun`** | Używaj `AiProposalRun` |
 | Play package | Marketing/env example: `app.getkangur.mobile` | App: **`app.kangur`** / dev `app.kangur.dev` | Preferuj `app.config.ts` |

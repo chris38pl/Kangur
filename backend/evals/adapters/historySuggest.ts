@@ -3,12 +3,14 @@
  */
 
 import { applyCategoryCorrectionsToSuggestItems } from "@/features/ai/applyCategoryCorrections";
+import { applyCatalogMatchToSuggestItems } from "@/features/ai/applyCatalogMatch";
 import { SuggestFromHistoryProposalSchema } from "@/features/ai/schemas";
 import { selectHistorySourceListsFromFixtures } from "@/features/ai/selectHistorySourceLists";
 import {
   mergeHistoryLists,
   type HistorySourceList,
 } from "@/features/shopping-list/mergeHistoryLists";
+import { isAppLocale } from "@/lib/locale";
 import {
   HISTORY_PROPOSAL_TYPE,
   HISTORY_PROPOSAL_VERSION,
@@ -138,8 +140,14 @@ export const historySuggestAdapter: EvalAdapter = {
 
     const started = Date.now();
     try {
-      const merged = mergeHistoryLists(lists);
-      const items = applyCategoryCorrectionsToSuggestItems(merged.items);
+      const rawLocale = ctx.scenario.input.locale ?? "pl";
+      const locale = isAppLocale(rawLocale) ? rawLocale : "pl";
+      const merged = mergeHistoryLists(lists, locale);
+      const catalogMatched = applyCatalogMatchToSuggestItems(
+        merged.items,
+        locale,
+      );
+      const items = applyCategoryCorrectionsToSuggestItems(catalogMatched);
       const normalized = SuggestFromHistoryProposalSchema.parse({
         shoppingContext: merged.shoppingContext,
         items,

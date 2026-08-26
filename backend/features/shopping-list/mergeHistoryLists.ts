@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import { HISTORY_LIST_TAKE, MAX_HISTORY_MERGE_ITEMS } from "@shared/history-merge";
 import { toProductIdentityKey } from "@shared/history-product-identity";
+import { formatDefaultShoppingListTitle } from "@shared/shopping-list/default-list-title";
+import { type AppLocale, DEFAULT_LOCALE } from "@shared/locales";
 import {
   isShoppingCategory,
   type ShoppingCategory,
@@ -153,27 +155,13 @@ function pickCategory(occurrences: Occurrence[]): ShoppingCategory {
   return best;
 }
 
-function pickTitle(lists: HistorySourceList[]): string {
-  const preferred = lists
-    .filter((l) => l.preferredForAi)
-    .sort(
-      (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-    );
-  const source = preferred[0] ?? [...lists].sort(
-    (a, b) =>
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-  )[0];
-  const raw = source?.name?.trim() || "Zakupy";
-  return raw.slice(0, 32) || "Zakupy";
-}
-
 /**
  * Deterministic multi-list merge for create-from-history.
  * Identity ⟂ category. amounts/notes always null in v1.
  */
 export function mergeHistoryLists(
   lists: HistorySourceList[],
+  locale: AppLocale = DEFAULT_LOCALE,
 ): MergedHistoryProposal {
   const clusters = new Map<string, Cluster>();
 
@@ -245,7 +233,7 @@ export function mergeHistoryLists(
 
   return {
     shoppingContext: {
-      title: pickTitle(lists),
+      title: formatDefaultShoppingListTitle(locale),
       theme: "generic",
     },
     items: items.slice(0, MAX_HISTORY_MERGE_ITEMS),

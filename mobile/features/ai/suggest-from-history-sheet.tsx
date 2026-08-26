@@ -1,12 +1,12 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
   Pressable,
+  ScrollView,
   Text,
   View,
 } from "react-native";
-import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
@@ -19,12 +19,9 @@ import {
   typography,
 } from "@/design-system/tokens";
 import { SuggestFromHistorySkeleton } from "@/features/ai/suggest-from-history-skeleton";
-import { LoadingTransition } from "@/lib/motion";
-import {
-  SuggestSwipeRow,
-  type SuggestBucket,
-} from "@/features/ai/suggest-swipe-row";
 import type { SuggestFromHistoryItem } from "@/features/ai/schemas";
+import { getCategoryBadgeColors } from "@/features/shopping-item/category-badge-colors";
+import { LoadingTransition } from "@/lib/motion";
 
 type Props = {
   visible: boolean;
@@ -37,6 +34,8 @@ type Props = {
   onClose: () => void;
   onConfirm: (acceptedIds: string[]) => void;
 };
+
+const CHECKED = "#2F8F84";
 
 function formatLastSeen(
   iso: string,
@@ -53,23 +52,111 @@ function formatLastSeen(
   return t("ai.suggestLastSeenDays", { count: days });
 }
 
-function SectionTitle({
-  label,
-  color,
+function HistoryItemRow({
+  item,
+  included,
+  lastSeenLabel,
+  onToggle,
 }: {
-  label: string;
-  color: string;
+  item: SuggestFromHistoryItem;
+  included: boolean;
+  lastSeenLabel: string;
+  onToggle: () => void;
 }) {
+  const { t } = useTranslation();
+  const scheme = useColorScheme() ?? "light";
+  const theme = colors[scheme];
+  const badge = getCategoryBadgeColors(item.category);
+  const detailParts = [
+    item.amount?.trim(),
+    item.note?.trim(),
+    t("ai.suggestTimesSeen", { count: item.timesSeen }),
+    lastSeenLabel,
+  ].filter(Boolean);
+  const subtitle = detailParts.join(" · ");
+
   return (
-    <Text
+    <Pressable
+      onPress={onToggle}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: included }}
       style={{
-        ...typography.headline,
-        color,
-        marginBottom: spacing[3],
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing[3],
+        paddingVertical: spacing[4],
+        paddingHorizontal: spacing[4],
+        borderBottomWidth: 1,
+        borderBottomColor: theme.border,
+        opacity: included ? 1 : 0.55,
       }}
     >
-      {label}
-    </Text>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text
+          numberOfLines={2}
+          style={{
+            ...typography.headline,
+            fontSize: 16,
+            lineHeight: 22,
+            color: included ? theme.text : theme.textMuted,
+          }}
+        >
+          {item.name}
+        </Text>
+        {subtitle ? (
+          <Text
+            style={{
+              ...typography.caption,
+              color: theme.textMuted,
+              marginTop: 2,
+            }}
+            numberOfLines={2}
+          >
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
+
+      <View
+        style={{
+          paddingHorizontal: spacing[3],
+          paddingVertical: 4,
+          borderRadius: radius.full,
+          backgroundColor: badge.background,
+        }}
+      >
+        <Text
+          style={{
+            ...typography.caption,
+            fontSize: 12,
+            fontWeight: "600",
+            color: badge.text,
+          }}
+          numberOfLines={1}
+        >
+          {t(`categories.${item.category}`)}
+        </Text>
+      </View>
+
+      <View
+        style={{
+          width: 26,
+          height: 26,
+          borderRadius: 13,
+          backgroundColor: included ? CHECKED : theme.bg,
+          borderWidth: included ? 0 : 1.5,
+          borderColor: theme.border,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {included ? (
+          <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>
+            ✓
+          </Text>
+        ) : null}
+      </View>
+    </Pressable>
   );
 }
 
@@ -87,96 +174,21 @@ export function SuggestFromHistorySheet({
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
 
-  /**
-   * Ordered bucket membership. All items start in proposals (source order).
-   * Newly accepted / rejected items are prepended so they appear at the top.
-   */
-  const [orders, setOrders] = useState<Record<SuggestBucket, string[]>>({
-    accepted: [],
-    proposals: items.map((item) => item.proposalRowId),
-    rejected: [],
-  });
   const itemKey = items.map((i) => i.proposalRowId).join("|");
   const [prevItemKey, setPrevItemKey] = useState(itemKey);
-  const itemsById = useMemo(() => {
-    const map = new Map<string, SuggestFromHistoryItem>();
-    for (const item of items) map.set(item.proposalRowId, item);
-    return map;
-  }, [items]);
+  const [excluded, setExcluded] = useState<Set<string>>(() => new Set());
 
   if (itemKey !== prevItemKey) {
     setPrevItemKey(itemKey);
-    setOrders({
-      accepted: [],
-      proposals: items.map((item) => item.proposalRowId),
-      rejected: [],
-    });
+    setExcluded(new Set());
   }
 
-  const resolve = useCallback(
-    (ids: string[]) =>
-      ids
-        .map((id) => itemsById.get(id))
-        .filter((item): item is SuggestFromHistoryItem => item != null),
-    [itemsById],
+  const includedItems = useMemo(
+    () => items.filter((item) => !excluded.has(item.proposalRowId)),
+    [excluded, items],
   );
 
-  const accepted = useMemo(
-    () => resolve(orders.accepted),
-    [orders.accepted, resolve],
-  );
-  const proposals = useMemo(
-    () => resolve(orders.proposals),
-    [orders.proposals, resolve],
-  );
-  const rejected = useMemo(
-    () => resolve(orders.rejected),
-    [orders.rejected, resolve],
-  );
-
-  const moveTo = useCallback(
-    (item: SuggestFromHistoryItem, bucket: SuggestBucket) => {
-      const id = item.proposalRowId;
-      setOrders((prev) => {
-        const next: Record<SuggestBucket, string[]> = {
-          accepted: prev.accepted.filter((rowId) => rowId !== id),
-          proposals: prev.proposals.filter((rowId) => rowId !== id),
-          rejected: prev.rejected.filter((rowId) => rowId !== id),
-        };
-        // Accepted / rejected: newest first. Proposals: restore at top for visibility.
-        next[bucket] = [id, ...next[bucket]];
-        return next;
-      });
-    },
-    [],
-  );
-
-  const onAccept = useCallback(
-    (item: SuggestFromHistoryItem) => moveTo(item, "accepted"),
-    [moveTo],
-  );
-  const onReject = useCallback(
-    (item: SuggestFromHistoryItem) => moveTo(item, "rejected"),
-    [moveTo],
-  );
-  const onRestore = useCallback(
-    (item: SuggestFromHistoryItem) => moveTo(item, "proposals"),
-    [moveTo],
-  );
-
-  const canConfirm = !loading && accepted.length > 0 && !busy;
-
-  const renderRow = (item: SuggestFromHistoryItem, bucket: SuggestBucket) => (
-    <SuggestSwipeRow
-      key={`${bucket}-${item.proposalRowId}`}
-      item={item}
-      bucket={bucket}
-      onAccept={onAccept}
-      onReject={onReject}
-      onRestore={onRestore}
-      lastSeenLabel={formatLastSeen(item.lastSeenAt, t)}
-    />
-  );
+  const canConfirm = !loading && includedItems.length > 0 && !busy;
 
   return (
     <Modal
@@ -186,212 +198,211 @@ export function SuggestFromHistorySheet({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={{ flex: 1, justifyContent: "flex-end" }}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("workspace.cancel")}
-            onPress={onClose}
-            disabled={busy}
-            style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              bottom: 0,
-              left: 0,
-              backgroundColor: "rgba(31, 43, 69, 0.32)",
-            }}
-          />
+      <View style={{ flex: 1, justifyContent: "flex-end" }}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("workspace.cancel")}
+          onPress={onClose}
+          disabled={busy}
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            backgroundColor: "rgba(31, 43, 69, 0.32)",
+          }}
+        />
 
+        <View
+          style={{
+            backgroundColor: theme.bg,
+            borderTopLeftRadius: radius.sheet,
+            borderTopRightRadius: radius.sheet,
+            maxHeight: "92%",
+            ...shadows.soft,
+          }}
+        >
           <View
             style={{
-              backgroundColor: theme.bg,
-              borderTopLeftRadius: radius.sheet,
-              borderTopRightRadius: radius.sheet,
-              maxHeight: "92%",
-              ...shadows.soft,
+              paddingHorizontal: spacing[6],
+              paddingTop: spacing[5],
+              paddingBottom: spacing[3],
+              borderBottomWidth: 1,
+              borderBottomColor: theme.border,
             }}
           >
-            <View
+            <Pressable
+              onPress={onClose}
+              hitSlop={12}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityLabel={t("workspace.cancel")}
               style={{
-                paddingHorizontal: spacing[6],
-                paddingTop: spacing[5],
-                paddingBottom: spacing[3],
-                borderBottomWidth: 1,
-                borderBottomColor: theme.border,
+                alignSelf: "flex-end",
+                width: 36,
+                height: 36,
+                borderRadius: radius.full,
+                backgroundColor: theme.section,
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: busy ? 0.5 : 1,
               }}
             >
-              <Pressable
-                onPress={onClose}
-                hitSlop={12}
-                disabled={busy}
-                accessibilityRole="button"
-                accessibilityLabel={t("workspace.cancel")}
-                style={{
-                  alignSelf: "flex-end",
-                  width: 36,
-                  height: 36,
-                  borderRadius: radius.full,
-                  backgroundColor: theme.section,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  opacity: busy ? 0.5 : 1,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 18,
-                    lineHeight: 20,
-                    color: theme.textMuted,
-                    fontWeight: "600",
-                  }}
-                >
-                  ×
-                </Text>
-              </Pressable>
-              <Text style={{ ...typography.title, color: theme.text }}>
-                {t("ai.suggestReviewTitle")}
-              </Text>
               <Text
                 style={{
-                  ...typography.body,
-                  color: theme.textBody,
+                  fontSize: 18,
+                  lineHeight: 20,
+                  color: theme.textMuted,
+                  fontWeight: "600",
+                }}
+              >
+                ×
+              </Text>
+            </Pressable>
+            <Text style={{ ...typography.title, color: theme.text }}>
+              {t("ai.suggestReviewTitle")}
+            </Text>
+            <Text
+              style={{
+                ...typography.body,
+                color: theme.textBody,
+                marginTop: spacing[2],
+              }}
+            >
+              {loading ? t("ai.suggestLoadingSubtitle") : title}
+            </Text>
+            {!loading ? (
+              <Text
+                style={{
+                  ...typography.caption,
+                  color: theme.textMuted,
                   marginTop: spacing[2],
                 }}
               >
-                {loading ? t("ai.suggestLoadingSubtitle") : title}
+                {t("ai.suggestUncheckHint")}
               </Text>
-              {!loading ? (
-                <Text
-                  style={{
-                    ...typography.caption,
-                    color: theme.textMuted,
-                    marginTop: spacing[2],
-                  }}
-                >
-                  {t("ai.suggestSwipeTip")}
-                </Text>
-              ) : null}
-            </View>
+            ) : null}
+          </View>
 
-            <ScrollView
-              bounces
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{
-                paddingHorizontal: spacing[6],
-                paddingTop: spacing[4],
-                paddingBottom: spacing[4],
+          <ScrollView
+            bounces
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              paddingHorizontal: spacing[6],
+              paddingTop: spacing[4],
+              paddingBottom: spacing[4],
+            }}
+          >
+            <Text
+              style={{
+                ...typography.caption,
+                fontWeight: "700",
+                letterSpacing: 0.4,
+                color: theme.textMuted,
+                marginBottom: spacing[3],
               }}
             >
-              <SectionTitle
-                label={
-                  loading
-                    ? t("ai.suggestProposals", { count: 0 })
-                    : t("ai.suggestProposals", { count: proposals.length })
-                }
-                color={theme.text}
-              />
+              {loading
+                ? t("ai.suggestProductsSection").toUpperCase()
+                : t("ai.suggestProductsSectionWithCount", {
+                    count: items.length,
+                  }).toUpperCase()}
+            </Text>
 
-              <LoadingTransition
-                variant="inline"
-                loading={loading}
-                skeleton={<SuggestFromHistorySkeleton />}
-              >
-              {proposals.length === 0 ? (
+            <LoadingTransition
+              variant="inline"
+              loading={loading}
+              skeleton={<SuggestFromHistorySkeleton />}
+            >
+              {items.length === 0 ? (
                 <Text
                   style={{
                     ...typography.caption,
                     color: theme.textMuted,
-                    marginBottom: spacing[2],
                   }}
                 >
                   {t("ai.suggestProposalsEmpty")}
                 </Text>
               ) : (
-                proposals.map((item) => renderRow(item, "proposals"))
-              )}
-              </LoadingTransition>
-
-              <View style={{ marginTop: spacing[5] }}>
-                <SectionTitle
-                  label={t("ai.suggestAccepted", { count: accepted.length })}
-                  color={theme.text}
-                />
-              </View>
-
-              {loading || accepted.length === 0 ? (
-                <Text
+                <View
                   style={{
-                    ...typography.caption,
-                    color: theme.textMuted,
-                    marginBottom: spacing[4],
+                    backgroundColor: theme.surface,
+                    borderRadius: radius.xl,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    overflow: "hidden",
                   }}
                 >
-                  {t("ai.suggestAcceptedEmpty")}
-                </Text>
-              ) : (
-                accepted.map((item) => renderRow(item, "accepted"))
-              )}
-
-              {!loading && rejected.length > 0 ? (
-                <View style={{ marginTop: spacing[5] }}>
-                  <SectionTitle
-                    label={t("ai.suggestRejected", {
-                      count: rejected.length,
-                    })}
-                    color={theme.text}
-                  />
-                  {rejected.map((item) => renderRow(item, "rejected"))}
+                  {items.map((item) => (
+                    <HistoryItemRow
+                      key={item.proposalRowId}
+                      item={item}
+                      included={!excluded.has(item.proposalRowId)}
+                      lastSeenLabel={formatLastSeen(item.lastSeenAt, t)}
+                      onToggle={() => {
+                        setExcluded((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(item.proposalRowId)) {
+                            next.delete(item.proposalRowId);
+                          } else {
+                            next.add(item.proposalRowId);
+                          }
+                          return next;
+                        });
+                      }}
+                    />
+                  ))}
                 </View>
-              ) : null}
-            </ScrollView>
+              )}
+            </LoadingTransition>
+          </ScrollView>
 
-            <View
+          <View
+            style={{
+              paddingHorizontal: spacing[6],
+              paddingTop: spacing[3],
+              paddingBottom:
+                Math.max(insets.bottom, spacing[4]) + spacing[2],
+              borderTopWidth: 1,
+              borderTopColor: theme.border,
+            }}
+          >
+            <Pressable
+              disabled={!canConfirm}
+              onPress={() =>
+                onConfirm(includedItems.map((item) => item.proposalRowId))
+              }
               style={{
-                paddingHorizontal: spacing[6],
-                paddingTop: spacing[3],
-                paddingBottom:
-                  Math.max(insets.bottom, spacing[4]) + spacing[2],
-                borderTopWidth: 1,
-                borderTopColor: theme.border,
+                backgroundColor: canConfirm ? theme.primary : theme.section,
+                borderRadius: radius.xl,
+                paddingVertical: spacing[4],
+                alignItems: "center",
+                opacity: canConfirm ? 1 : 0.55,
               }}
             >
-              <Pressable
-                disabled={!canConfirm}
-                onPress={() =>
-                  onConfirm(accepted.map((item) => item.proposalRowId))
-                }
-                style={{
-                  backgroundColor: canConfirm ? theme.primary : theme.section,
-                  borderRadius: radius.xl,
-                  paddingVertical: spacing[4],
-                  alignItems: "center",
-                  opacity: canConfirm ? 1 : 0.55,
-                }}
-              >
-                {busy ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text
-                    style={{
-                      ...typography.headline,
-                      color: canConfirm ? "#fff" : theme.textMuted,
-                      fontWeight: "700",
-                    }}
-                  >
-                    {loading
-                      ? t("ai.suggestLoadingCta")
-                      : t("ai.suggestAddProducts", {
-                          count: accepted.length,
-                        })}
-                  </Text>
-                )}
-              </Pressable>
-            </View>
+              {busy ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text
+                  style={{
+                    ...typography.headline,
+                    color: canConfirm ? "#fff" : theme.textMuted,
+                    fontWeight: "700",
+                  }}
+                >
+                  {loading
+                    ? t("ai.suggestLoadingCta")
+                    : t("ai.suggestAddProducts", {
+                        count: includedItems.length,
+                      })}
+                </Text>
+              )}
+            </Pressable>
           </View>
         </View>
-      </GestureHandlerRootView>
+      </View>
     </Modal>
   );
 }

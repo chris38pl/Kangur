@@ -1,5 +1,7 @@
 import { Prisma } from "@prisma/client";
 
+import { resolveShoppingListTitle } from "@shared/shopping-list/default-list-title";
+
 import { authorize } from "@/lib/authorize";
 import {
   conflict,
@@ -18,6 +20,7 @@ import {
   historyMergeApplied,
   historyMergeCancelled,
 } from "./historyMergeAnalytics";
+import { resolveWorkspaceOutputLanguage } from "./outputLanguage";
 import { SuggestFromHistoryProposalSchema } from "./schemas";
 
 const DEFAULT_EMOJI = "🛒";
@@ -83,7 +86,14 @@ export async function applySuggestFromHistory(input: {
     throw validationError("At least one accepted item is required.");
   }
 
-  const title = proposal.shoppingContext.title.trim().slice(0, 64) || "Zakupy";
+  const outputLanguage = await resolveWorkspaceOutputLanguage(
+    input.workspaceId,
+    input.userId,
+  );
+  const title = resolveShoppingListTitle(
+    proposal.shoppingContext.title,
+    outputLanguage,
+  );
 
   try {
     const result = await prisma.$transaction(async (tx) => {

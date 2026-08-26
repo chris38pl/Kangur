@@ -136,6 +136,13 @@ export function useUpdateShoppingList(listId: string | null) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
+  const shoppingListKeys = (id: string) =>
+    [
+      ["shopping-list", id] as const,
+      ["shopping-list", id, "allow-archived"] as const,
+      ["shopping-list", id, "active"] as const,
+    ] as const;
+
   return useMutation({
     mutationFn: async (input: {
       name?: string;
@@ -150,28 +157,55 @@ export function useUpdateShoppingList(listId: string | null) {
       return updateShoppingList(token, listId, input);
     },
     onMutate: async (input) => {
-      if (!listId || input.categoryOrder === undefined) return undefined;
+      if (!listId) return undefined;
+      const patching =
+        input.name !== undefined ||
+        input.emoji !== undefined ||
+        input.preferredForAi !== undefined ||
+        input.categoryOrder !== undefined;
+      if (!patching) return undefined;
+
       await queryClient.cancelQueries({ queryKey: ["shopping-list", listId] });
-      const previous = queryClient.getQueryData<ShoppingList>([
-        "shopping-list",
-        listId,
-      ]);
-      if (previous) {
-        queryClient.setQueryData<ShoppingList>(["shopping-list", listId], {
+      const keys = shoppingListKeys(listId);
+      const previousByKey = keys.map(
+        (key) =>
+          [key, queryClient.getQueryData<ShoppingList>([...key])] as const,
+      );
+
+      for (const key of keys) {
+        const previous = queryClient.getQueryData<ShoppingList>([...key]);
+        if (!previous) continue;
+        queryClient.setQueryData<ShoppingList>([...key], {
           ...previous,
-          categoryOrder: resolveShoppingCategoryOrder(input.categoryOrder),
+          ...(input.name !== undefined
+            ? { name: input.name.trim(), isUntitled: false }
+            : {}),
+          ...(input.emoji !== undefined ? { emoji: input.emoji } : {}),
+          ...(input.preferredForAi !== undefined
+            ? { preferredForAi: input.preferredForAi }
+            : {}),
+          ...(input.categoryOrder !== undefined
+            ? {
+                categoryOrder: resolveShoppingCategoryOrder(input.categoryOrder),
+              }
+            : {}),
         });
       }
       // Never invalidate shopping-items on aisle reorder (SSoT inbound / no flicker).
-      return { previous };
+      return { previousByKey };
     },
-    onError: (_error, input, context) => {
-      if (listId && input.categoryOrder !== undefined && context?.previous) {
-        queryClient.setQueryData(["shopping-list", listId], context.previous);
+    onError: (_error, _input, context) => {
+      if (!context?.previousByKey) return;
+      for (const [key, previous] of context.previousByKey) {
+        if (previous) {
+          queryClient.setQueryData([...key], previous);
+        }
       }
     },
     onSuccess: async (updated) => {
-      queryClient.setQueryData(["shopping-list", updated.id], updated);
+      for (const key of shoppingListKeys(updated.id)) {
+        queryClient.setQueryData([...key], updated);
+      }
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["shopping-lists", updated.workspaceId],

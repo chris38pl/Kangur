@@ -38,8 +38,15 @@ import { FeedbackSheet } from "@/components/feedback-sheet";
 import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
 import { primaryButtonStyle } from "@/design-system/shopping-density";
-import { colors, radius, shadows, spacing, typography } from "@/design-system/tokens";
-import { AiPhaseCrossfade, LoadingTransition, ToastMotion } from "@/lib/motion";
+import { brand, colors, radius, spacing, typography } from "@/design-system/tokens";
+import { AiPhaseCrossfade, LoadingTransition, useReducedMotion } from "@/lib/motion";
+import { motionEasing, resolveDuration } from "@/design-system/motion";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { applyAi, ingestAi } from "@/features/ai/api";
 import { buildScreenshotIngestFormData } from "@/features/ai/buildScreenshotIngestFormData";
 import { MealProposalComposer } from "@/features/ai/meal-proposal-composer";
@@ -48,10 +55,26 @@ import type { ProposalOperation } from "@/features/ai/schemas";
 import { useSpeechDictation } from "@/features/ai/use-speech-dictation";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { perfEnd, perfStart } from "@/lib/performance";
+import {
+  bumpAiCreditsOptimistic,
+  invalidateAiCredits,
+} from "@/features/billing/ai-credits-query";
 import { useAiCredits } from "@/features/billing/useAiCredits";
 import { PremiumHintRow } from "@/features/billing/premium-hint-row";
 import { CategoryChips } from "@/features/shopping-item/category-chips";
 import { getCategoryBadgeColors } from "@/features/shopping-item/category-badge-colors";
+import { ProductNameFieldWithClear, ProductNameSuggestions } from "@/features/shopping-item/product-name-suggestions";
+import {
+  ItemsSortToggle,
+  CategorySortIcon,
+  DateSortIcon,
+  type ItemsSortMode,
+} from "@/features/shopping-item/items-sort-toggle";
+import {
+  resolveCatalogLabel,
+  type CatalogProduct,
+} from "@shared/product-catalog";
+import { resolveAppLocale } from "@/lib/i18n";
 import {
   ListStatusFilterChips,
   type ListStatusFilter,
@@ -88,16 +111,13 @@ import { completeCreateListHandoff } from "@/features/shopping-list/create-list-
 import {
   takePendingScrollToItems,
 } from "@/features/shopping-list/pending-scroll-to-items";
+import { takePendingAiImportToast } from "@/features/shopping-list/pending-ai-import-toast";
 import {
   clearListProvisional,
   isListProvisional,
 } from "@/features/shopping-list/provisional-list";
 import { RenameListSheet } from "@/features/shopping-list/rename-list-sheet";
-import {
-  CategoryOrderEditRow,
-  CategoryOrderHint,
-} from "@/features/shopping-list/category-order-ui";
-import { CategoryReorderList } from "@/features/shopping-list/category-reorder-list";
+import { ListEditCategoryOrderSection } from "@/features/shopping-list/list-edit-category-order-section";
 import {
   resolveListLifecycleStatus,
   type ListLifecycleStatus,
@@ -159,7 +179,7 @@ function buildApplyOperations(operations: ProposalOperation[]) {
 }
 
 export default function ShoppingListScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const insets = useSafeAreaInsets();
@@ -183,20 +203,46 @@ export default function ShoppingListScreen() {
   const [note, setNote] = useState("");
   const [category, setCategory] = useState<ShoppingCategory>("other");
   const [categoryChipsKey, setCategoryChipsKey] = useState(0);
-  const [itemAddedToast, setItemAddedToast] = useState<{
-    name: string;
-    category: ShoppingCategory;
-    amount?: string;
-    note?: string;
-    nonce: number;
-  } | null>(null);
-  const [itemAddedToastRendered, setItemAddedToastRendered] = useState<{
-    name: string;
-    category: ShoppingCategory;
-    amount?: string;
-    note?: string;
-    nonce: number;
-  } | null>(null);
+  type FooterToast =
+    | {
+        kind: "added" | "updated" | "removed";
+        name: string;
+        category: ShoppingCategory;
+        amount?: string;
+        note?: string;
+        nonce: number;
+      }
+    | {
+        kind: "sort";
+        sortMode: ItemsSortMode;
+        nonce: number;
+      }
+    | {
+        kind: "ai-import";
+        count: number;
+        nonce: number;
+      };
+  const [itemFooterToast, setItemFooterToast] = useState<FooterToast | null>(
+    null,
+  );
+  const [itemFooterToastRendered, setItemFooterToastRendered] =
+    useState<FooterToast | null>(null);
+
+  const showItemFooterToast = useCallback(
+    (input: Omit<Extract<FooterToast, { kind: "added" | "updated" | "removed" }>, "nonce">) => {
+      setItemFooterToast({ ...input, nonce: Date.now() });
+    },
+    [],
+  );
+
+  const showSortFooterToast = useCallback((sortMode: ItemsSortMode) => {
+    setItemFooterToast({ kind: "sort", sortMode, nonce: Date.now() });
+  }, []);
+
+  const showAiImportFooterToast = useCallback((count: number) => {
+    if (count < 1) return;
+    setItemFooterToast({ kind: "ai-import", count, nonce: Date.now() });
+  }, []);
   const [aiText, setAiText] = useState("");
   const {
     isAvailable: isDictateAvailable,
@@ -214,12 +260,16 @@ export default function ShoppingListScreen() {
   const [manualAddOpen, setManualAddOpen] = useState(false);
   const [aiSectionOpen, setAiSectionOpen] = useState(false);
   const [mealSectionOpen, setMealSectionOpen] = useState(false);
-  const [categoryOrderOpen, setCategoryOrderOpen] = useState(true);
+  const [itemsSortMode, setItemsSortMode] =
+    useState<ItemsSortMode>("category");
+  const [nameFieldFocused, setNameFieldFocused] = useState(false);
+  const nameBlurHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [finishedFeedback, setFinishedFeedback] = useState<
     "restored" | "limit" | null
   >(null);
-  const categoryOrderDefaultApplied = useRef(false);
   const [removeItemTarget, setRemoveItemTarget] = useState<ShoppingItem | null>(
     null,
   );
@@ -232,12 +282,6 @@ export default function ShoppingListScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const scrollYRef = useRef(0);
   const itemsSectionRef = useRef<View>(null);
-  const categoryAnchorRefs = useRef<
-    Partial<Record<SharedShoppingCategory, View | null>>
-  >({});
-  const pendingScrollToCategoryRef = useRef<SharedShoppingCategory | null>(
-    null,
-  );
   const aiSectionRef = useRef<View>(null);
   const mealSectionRef = useRef<View>(null);
   const manualAddSectionRef = useRef<View>(null);
@@ -252,16 +296,83 @@ export default function ShoppingListScreen() {
     setMealGenerating(generating);
   }, []);
 
-  useEffect(() => {
-    if (!itemAddedToast) return;
-    queueMicrotask(() => setItemAddedToastRendered(itemAddedToast));
-  }, [itemAddedToast]);
+  const reduceMotion = useReducedMotion();
+  const footerSlideWidth = useSharedValue(320);
+  const ctaTranslateX = useSharedValue(0);
+  const toastTranslateX = useSharedValue(0);
 
   useEffect(() => {
-    if (!itemAddedToast) return;
-    const handle = setTimeout(() => setItemAddedToast(null), 2800);
+    if (!itemFooterToast) return;
+    queueMicrotask(() => {
+      const width = Math.max(footerSlideWidth.value, 1);
+      // Start off-screen left before first paint of the toast.
+      toastTranslateX.value = reduceMotion ? 0 : -width;
+      setItemFooterToastRendered(itemFooterToast);
+    });
+  }, [itemFooterToast, footerSlideWidth, toastTranslateX, reduceMotion]);
+
+  useEffect(() => {
+    if (!itemFooterToast) return;
+    const handle = setTimeout(() => setItemFooterToast(null), 2800);
     return () => clearTimeout(handle);
-  }, [itemAddedToast?.nonce, itemAddedToast]);
+  }, [itemFooterToast?.nonce, itemFooterToast]);
+
+  useEffect(() => {
+    if (!itemFooterToastRendered) return;
+
+    const width = Math.max(footerSlideWidth.value, 1);
+    const duration = resolveDuration("emphasis", { reduceMotion });
+    const easing = motionEasing.outCubic;
+
+    if (itemFooterToast != null) {
+      // CTA slides out to the right; toast slides in from the left.
+      if (reduceMotion) {
+        ctaTranslateX.value = width;
+        toastTranslateX.value = 0;
+        return;
+      }
+      toastTranslateX.value = -width;
+      ctaTranslateX.value = withTiming(width, { duration, easing });
+      toastTranslateX.value = withTiming(0, { duration, easing });
+      return;
+    }
+
+    // Toast slides out to the right; CTA returns from the left.
+    const clearRendered = () => setItemFooterToastRendered(null);
+    if (reduceMotion) {
+      ctaTranslateX.value = 0;
+      toastTranslateX.value = width;
+      clearRendered();
+      return;
+    }
+    ctaTranslateX.value = -width;
+    toastTranslateX.value = withTiming(width, { duration, easing });
+    ctaTranslateX.value = withTiming(0, { duration, easing }, (finished) => {
+      if (finished) runOnJS(clearRendered)();
+    });
+  }, [
+    itemFooterToast,
+    itemFooterToastRendered,
+    reduceMotion,
+    footerSlideWidth,
+    ctaTranslateX,
+    toastTranslateX,
+  ]);
+
+  const startShoppingCtaAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: ctaTranslateX.value }],
+  }));
+  const itemFooterToastAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: toastTranslateX.value }],
+  }));
+
+  useEffect(() => {
+    return () => {
+      if (nameBlurHideTimerRef.current) {
+        clearTimeout(nameBlurHideTimerRef.current);
+      }
+    };
+  }, []);
 
   const cancelSmoothScroll = useCallback(() => {
     if (scrollAnimFrameRef.current != null) {
@@ -322,42 +433,6 @@ export default function ShoppingListScreen() {
     })();
   }, [measureViewY, smoothScrollToY]);
 
-  const scrollToCategoryInItems = useCallback(
-    (category: SharedShoppingCategory) => {
-      const scroll = scrollRef.current;
-      const anchor = categoryAnchorRefs.current[category];
-      if (!scroll || !anchor) {
-        scrollItemsSectionToTop();
-        return;
-      }
-
-      void (async () => {
-        const scrollTop = await measureViewY(scroll);
-        const anchorTop = await measureViewY(anchor);
-        const delta = anchorTop - scrollTop;
-        // Slight offset so the category header sits below the sticky top chrome.
-        smoothScrollToY(Math.max(0, scrollYRef.current + delta - 8), 550);
-      })();
-    },
-    [measureViewY, scrollItemsSectionToTop, smoothScrollToY],
-  );
-
-  const focusCategoryInItems = useCallback(
-    (category: SharedShoppingCategory) => {
-      const needsFilterReset = statusFilter !== "all";
-      if (needsFilterReset) {
-        pendingScrollToCategoryRef.current = category;
-        setStatusFilter("all");
-        return;
-      }
-      // Layout may still be settling after expand / reorder.
-      requestAnimationFrame(() => {
-        setTimeout(() => scrollToCategoryInItems(category), 40);
-      });
-    },
-    [scrollToCategoryInItems, statusFilter],
-  );
-
   /**
    * Pin the focused composer section (AI / recipe / manual add) to the top of the
    * scroll viewport so fields and the section CTA stay visible above the keyboard.
@@ -413,8 +488,24 @@ export default function ShoppingListScreen() {
 
   /** Queue scroll; actual scroll waits until products are rendered. */
   const requestScrollToItems = useCallback(() => {
+    // AI-driven adds: keep aisle grouping as the default view.
+    setItemsSortMode("category");
     pendingScrollToItemsRef.current = true;
   }, []);
+
+  const onManualItemAdded = useCallback(() => {
+    // Manual add: show newest activity first so the new row is on top.
+    setItemsSortMode("date");
+  }, []);
+
+  const onItemsSortModeChange = useCallback(
+    (mode: ItemsSortMode) => {
+      if (mode === itemsSortMode) return;
+      setItemsSortMode(mode);
+      showSortFooterToast(mode);
+    },
+    [itemsSortMode, showSortFooterToast],
+  );
 
   const onListScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -455,15 +546,18 @@ export default function ShoppingListScreen() {
   });
 
   const isFinishedList = listQuery.data?.status === "archived";
+  const composerSectionsDisabled = isFinishedList;
 
   useEffect(() => {
-    if (categoryOrderDefaultApplied.current) return;
-    if (!listQuery.data) return;
-    categoryOrderDefaultApplied.current = true;
-    if (listQuery.data.status === "archived") {
-      setCategoryOrderOpen(false);
-    }
-  }, [listQuery.data]);
+    if (!composerSectionsDisabled) return;
+    // Defer so we don't sync-setState inside the effect body (react-hooks/set-state-in-effect).
+    queueMicrotask(() => {
+      setAiSectionOpen(false);
+      setMealSectionOpen(false);
+      setManualAddOpen(false);
+      stopDictate();
+    });
+  }, [composerSectionsDisabled, stopDictate]);
 
   const sessionsQuery = useResumableSessions(Boolean(isSignedIn));
   const listLifecycleStatus = useMemo((): ListLifecycleStatus | null => {
@@ -552,7 +646,7 @@ export default function ShoppingListScreen() {
       setSentryRequestId(null);
       aiRequestIdRef.current = null;
     },
-    onSuccess: (_result, variables) => {
+    onSuccess: (result, variables) => {
       perfEnd("ai.apply", {
         id: typeof listId === "string" ? listId : undefined,
         labels: {
@@ -630,7 +724,8 @@ export default function ShoppingListScreen() {
           queryKey: ["shopping-lists", workspaceId],
         });
       }
-      if (acceptedCount >= 1) {
+      if (result.applied >= 1) {
+        showAiImportFooterToast(result.applied);
         requestScrollToItems();
       }
     },
@@ -718,6 +813,12 @@ export default function ShoppingListScreen() {
       });
     },
     onSuccess: (result) => {
+      const workspaceIdForCredits = listQuery.data?.workspaceId;
+      if (workspaceIdForCredits) {
+        bumpAiCreditsOptimistic(queryClient, workspaceIdForCredits);
+        invalidateAiCredits(queryClient, workspaceIdForCredits);
+      }
+
       const title =
         result.proposal.shoppingContext?.title?.trim().slice(0, 32) ?? "";
 
@@ -977,12 +1078,28 @@ export default function ShoppingListScreen() {
     return () => task.cancel();
   }, [listId, isPending]);
 
-  // Meal proposal (and other off-screen AI apply) → scroll to items on return.
+  // Meal proposal (and other off-screen AI apply) → scroll + toast on return.
   useEffect(() => {
     if (!listQuery.isSuccess || typeof listId !== "string") return;
-    if (!takePendingScrollToItems(listId)) return;
-    requestScrollToItems();
-  }, [listQuery.isSuccess, listId, itemsQuery.isSuccess, requestScrollToItems]);
+    const importCount = takePendingAiImportToast(listId);
+    const shouldScroll = takePendingScrollToItems(listId);
+    if (importCount == null && !shouldScroll) return;
+    // Defer so we don't sync-setState inside the effect body (react-hooks/set-state-in-effect).
+    queueMicrotask(() => {
+      if (importCount != null) {
+        showAiImportFooterToast(importCount);
+      }
+      if (shouldScroll) {
+        requestScrollToItems();
+      }
+    });
+  }, [
+    listQuery.isSuccess,
+    listId,
+    itemsQuery.isSuccess,
+    requestScrollToItems,
+    showAiImportFooterToast,
+  ]);
 
   const fastPathReady =
     reviewOperations.length > 0 &&
@@ -992,10 +1109,23 @@ export default function ShoppingListScreen() {
   const categoryOrder = resolveShoppingCategoryOrder(
     listQuery.data?.categoryOrder,
   );
-  const activeItems = (itemsQuery.data ?? [])
-    .filter((item) => item.status !== "removed")
-    .slice()
-    .sort((a, b) => {
+  const activeItems = useMemo(() => {
+    const items = (itemsQuery.data ?? []).filter(
+      (item) => item.status !== "removed",
+    );
+    return items.slice().sort((a, b) => {
+      if (itemsSortMode === "date") {
+        const aTime = Math.max(
+          Date.parse(a.updatedAt) || 0,
+          Date.parse(a.createdAt) || 0,
+        );
+        const bTime = Math.max(
+          Date.parse(b.updatedAt) || 0,
+          Date.parse(b.createdAt) || 0,
+        );
+        if (bTime !== aTime) return bTime - aTime;
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      }
       const aIndex = categoryOrder.indexOf(a.category);
       const bIndex = categoryOrder.indexOf(b.category);
       const byCategory =
@@ -1004,6 +1134,7 @@ export default function ShoppingListScreen() {
       if (byCategory !== 0) return byCategory;
       return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
     });
+  }, [itemsQuery.data, categoryOrder, itemsSortMode]);
   const itemCount = activeItems.length;
 
   // Scroll only after products replaced the empty state (avoids scroll→empty→jump).
@@ -1037,15 +1168,6 @@ export default function ShoppingListScreen() {
     statusFilter === "all"
       ? activeItems
       : activeItems.filter((item) => item.status === statusFilter);
-
-  // After resetting status filter to "all", scroll to the requested category.
-  useEffect(() => {
-    const category = pendingScrollToCategoryRef.current;
-    if (!category || statusFilter !== "all") return;
-    pendingScrollToCategoryRef.current = null;
-    const timer = setTimeout(() => scrollToCategoryInItems(category), 80);
-    return () => clearTimeout(timer);
-  }, [statusFilter, filteredItems.length, scrollToCategoryInItems]);
 
   const categoriesOnList = useMemo(() => {
     const seen = new Set<SharedShoppingCategory>();
@@ -1147,6 +1269,51 @@ export default function ShoppingListScreen() {
   const scrollBottomPad = hideStickyForComposer
     ? keyboardHeight + Math.max(insets.bottom, spacing[2]) + spacing[8]
     : footerPad + spacing[4];
+  const footerToastAccent =
+    itemFooterToastRendered?.kind === "removed" ? theme.danger : theme.primary;
+  const footerToastIsSort = itemFooterToastRendered?.kind === "sort";
+  const footerToastIsAiImport = itemFooterToastRendered?.kind === "ai-import";
+  const footerToastLabelKey = footerToastIsSort
+    ? "list.sortChangedToastLabel"
+    : footerToastIsAiImport
+      ? "list.aiImportToastLabel"
+      : itemFooterToastRendered?.kind === "added"
+        ? "list.itemAddedToastLabel"
+        : itemFooterToastRendered?.kind === "updated"
+          ? "list.itemUpdatedToastLabel"
+          : "list.itemRemovedToastLabel";
+  const footerToastSubtitleKey = footerToastIsSort
+    ? itemFooterToastRendered.sortMode === "category"
+      ? "list.sortChangedCategoryToast"
+      : "list.sortChangedDateToast"
+    : footerToastIsAiImport
+      ? "list.aiImportToast"
+      : null;
+  const footerToastA11yKey = footerToastIsSort
+    ? itemFooterToastRendered.sortMode === "category"
+      ? "list.sortChangedCategoryToastA11y"
+      : "list.sortChangedDateToastA11y"
+    : footerToastIsAiImport
+      ? "list.aiImportToastA11y"
+      : itemFooterToastRendered?.kind === "added"
+        ? "list.itemAddedToast"
+        : itemFooterToastRendered?.kind === "updated"
+          ? "list.itemUpdatedToast"
+          : "list.itemRemovedToast";
+  const footerToastMark =
+    itemFooterToastRendered?.kind === "removed" ? "✕" : "✓";
+  const sortFooterToast =
+    itemFooterToastRendered?.kind === "sort" ? itemFooterToastRendered : null;
+  const aiImportFooterToast =
+    itemFooterToastRendered?.kind === "ai-import"
+      ? itemFooterToastRendered
+      : null;
+  const itemActionFooterToast =
+    itemFooterToastRendered &&
+    itemFooterToastRendered.kind !== "sort" &&
+    itemFooterToastRendered.kind !== "ai-import"
+      ? itemFooterToastRendered
+      : null;
 
   return (
     <>
@@ -1294,16 +1461,25 @@ export default function ShoppingListScreen() {
           </View>
         ) : (
           <>
-            <View ref={aiSectionRef} collapsable={false}>
+            <View
+              ref={aiSectionRef}
+              collapsable={false}
+              style={{ opacity: composerSectionsDisabled ? 0.45 : 1 }}
+            >
               <Pressable
+                disabled={composerSectionsDisabled}
                 onPress={() => {
+                  if (composerSectionsDisabled) return;
                   setAiSectionOpen((open) => {
                     if (open) stopDictate();
                     return !open;
                   });
                 }}
                 accessibilityRole="button"
-                accessibilityState={{ expanded: aiSectionOpen }}
+                accessibilityState={{
+                  expanded: composerSectionsDisabled ? false : aiSectionOpen,
+                  disabled: composerSectionsDisabled,
+                }}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -1314,7 +1490,10 @@ export default function ShoppingListScreen() {
                 <Text
                   style={{
                     ...typography.headline,
-                    color: aiSectionOpen ? theme.text : theme.textMuted,
+                    color:
+                      composerSectionsDisabled || !aiSectionOpen
+                        ? theme.textMuted
+                        : theme.text,
                     flex: 1,
                     paddingRight: spacing[3],
                   }}
@@ -1323,17 +1502,20 @@ export default function ShoppingListScreen() {
                 </Text>
                 <Text
                   style={{
-                    color: aiSectionOpen ? theme.text : theme.textMuted,
+                    color:
+                      composerSectionsDisabled || !aiSectionOpen
+                        ? theme.textMuted
+                        : theme.text,
                     fontSize: 22,
                     lineHeight: 26,
                     fontWeight: "600",
                   }}
                 >
-                  {aiSectionOpen ? "▾" : "▸"}
+                  {composerSectionsDisabled || !aiSectionOpen ? "▸" : "▾"}
                 </Text>
               </Pressable>
 
-              {aiSectionOpen ? (
+              {aiSectionOpen && !composerSectionsDisabled ? (
                 <View>
                   <Text
                     style={{
@@ -1532,12 +1714,22 @@ export default function ShoppingListScreen() {
               <View
                 ref={mealSectionRef}
                 collapsable={false}
-                style={{ marginTop: spacing[6] }}
+                style={{
+                  marginTop: spacing[6],
+                  opacity: composerSectionsDisabled ? 0.45 : 1,
+                }}
               >
                 <Pressable
-                  onPress={() => setMealSectionOpen((open) => !open)}
+                  disabled={composerSectionsDisabled}
+                  onPress={() => {
+                    if (composerSectionsDisabled) return;
+                    setMealSectionOpen((open) => !open);
+                  }}
                   accessibilityRole="button"
-                  accessibilityState={{ expanded: mealSectionOpen }}
+                  accessibilityState={{
+                    expanded: composerSectionsDisabled ? false : mealSectionOpen,
+                    disabled: composerSectionsDisabled,
+                  }}
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -1548,7 +1740,10 @@ export default function ShoppingListScreen() {
                   <Text
                     style={{
                       ...typography.headline,
-                      color: mealSectionOpen ? theme.text : theme.textMuted,
+                      color:
+                        composerSectionsDisabled || !mealSectionOpen
+                          ? theme.textMuted
+                          : theme.text,
                       flex: 1,
                       paddingRight: spacing[3],
                     }}
@@ -1557,17 +1752,21 @@ export default function ShoppingListScreen() {
                   </Text>
                   <Text
                     style={{
-                      color: mealSectionOpen ? theme.text : theme.textMuted,
+                      color:
+                        composerSectionsDisabled || !mealSectionOpen
+                          ? theme.textMuted
+                          : theme.text,
                       fontSize: 22,
                       lineHeight: 26,
                       fontWeight: "600",
                     }}
                   >
-                    {mealSectionOpen ? "▾" : "▸"}
+                    {composerSectionsDisabled || !mealSectionOpen ? "▸" : "▾"}
                   </Text>
                 </Pressable>
 
                 {mealSectionOpen &&
+                !composerSectionsDisabled &&
                 typeof listId === "string" &&
                 listQuery.data?.workspaceId ? (
                   <MealProposalComposer
@@ -1585,12 +1784,22 @@ export default function ShoppingListScreen() {
             <View
               ref={manualAddSectionRef}
               collapsable={false}
-              style={{ marginTop: spacing[6] }}
+              style={{
+                marginTop: spacing[6],
+                opacity: composerSectionsDisabled ? 0.45 : 1,
+              }}
             >
               <Pressable
-                onPress={() => setManualAddOpen((open) => !open)}
+                disabled={composerSectionsDisabled}
+                onPress={() => {
+                  if (composerSectionsDisabled) return;
+                  setManualAddOpen((open) => !open);
+                }}
                 accessibilityRole="button"
-                accessibilityState={{ expanded: manualAddOpen }}
+                accessibilityState={{
+                  expanded: composerSectionsDisabled ? false : manualAddOpen,
+                  disabled: composerSectionsDisabled,
+                }}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -1601,78 +1810,170 @@ export default function ShoppingListScreen() {
                 <Text
                   style={{
                     ...typography.headline,
-                    color: manualAddOpen ? theme.text : theme.textMuted,
+                    color:
+                      composerSectionsDisabled || !manualAddOpen
+                        ? theme.textMuted
+                        : theme.text,
                   }}
                 >
                   {t("list.addLabel")}
                 </Text>
                 <Text
                   style={{
-                    color: manualAddOpen ? theme.text : theme.textMuted,
+                    color:
+                      composerSectionsDisabled || !manualAddOpen
+                        ? theme.textMuted
+                        : theme.text,
                     fontSize: 22,
                     lineHeight: 26,
                     fontWeight: "600",
                   }}
                 >
-                  {manualAddOpen ? "▾" : "▸"}
+                  {composerSectionsDisabled || !manualAddOpen ? "▸" : "▾"}
                 </Text>
               </Pressable>
 
-              {manualAddOpen ? (
+              {manualAddOpen && !composerSectionsDisabled ? (
                 <View>
-                  <TextInput
-                    value={name}
-                    onChangeText={setName}
-                    onFocus={() => onComposerFieldFocus("manual")}
-                    onBlur={onComposerFieldBlur}
-                    placeholder={t("list.namePlaceholder")}
-                    placeholderTextColor={theme.textMuted}
-                    style={{
-                      marginTop: spacing[3],
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                      backgroundColor: theme.surface,
-                      borderRadius: radius.md,
-                      padding: spacing[4],
-                      color: theme.text,
+                  <ProductNameFieldWithClear
+                    query={name}
+                    focused={nameFieldFocused}
+                    onClear={() => setName("")}
+                    style={{ marginTop: spacing[3] }}
+                  >
+                    {(clearVisible) => (
+                      <TextInput
+                        value={name}
+                        onChangeText={setName}
+                        onFocus={() => {
+                          if (nameBlurHideTimerRef.current) {
+                            clearTimeout(nameBlurHideTimerRef.current);
+                            nameBlurHideTimerRef.current = null;
+                          }
+                          setNameFieldFocused(true);
+                          onComposerFieldFocus("manual");
+                        }}
+                        onBlur={() => {
+                          onComposerFieldBlur();
+                          // Delay hide so suggestion / clear taps can complete.
+                          nameBlurHideTimerRef.current = setTimeout(() => {
+                            setNameFieldFocused(false);
+                            nameBlurHideTimerRef.current = null;
+                          }, 180);
+                        }}
+                        placeholder={t("list.namePlaceholder")}
+                        placeholderTextColor={theme.textMuted}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.surface,
+                          borderRadius: radius.md,
+                          padding: spacing[4],
+                          paddingRight: clearVisible
+                            ? spacing[4] + 36
+                            : spacing[4],
+                          color: theme.text,
+                        }}
+                      />
+                    )}
+                  </ProductNameFieldWithClear>
+
+                  <ProductNameSuggestions
+                    query={name}
+                    visible={nameFieldFocused && !createItem.isPending}
+                    onSelect={(product: CatalogProduct) => {
+                      if (createItem.isPending) return;
+                      if (nameBlurHideTimerRef.current) {
+                        clearTimeout(nameBlurHideTimerRef.current);
+                        nameBlurHideTimerRef.current = null;
+                      }
+                      setNameFieldFocused(false);
+                      Keyboard.dismiss();
+                      const locale = resolveAppLocale(i18n.language);
+                      const addedName = resolveCatalogLabel(product, locale);
+                      const addedAmount = amount.trim();
+                      const addedNote = note.trim();
+                      const addedCategory = product.category as ShoppingCategory;
+                      setName(addedName);
+                      createItem.mutate(
+                        {
+                          clientId: createClientId(),
+                          name: addedName,
+                          ...(addedAmount ? { amount: addedAmount } : {}),
+                          ...(addedNote ? { note: addedNote } : {}),
+                          category: addedCategory,
+                        },
+                        {
+                          onSuccess: () => {
+                            onManualItemAdded();
+                            setName("");
+                            setAmount("");
+                            setNote("");
+                            setCategory("other");
+                            setCategoryChipsKey((key) => key + 1);
+                            showItemFooterToast({
+                              kind: "added",
+                              name: addedName,
+                              category: addedCategory,
+                              ...(addedAmount ? { amount: addedAmount } : {}),
+                              ...(addedNote ? { note: addedNote } : {}),
+                            });
+                            if (typeof listId === "string") {
+                              clearListProvisional(listId);
+                            }
+                          },
+                        },
+                      );
                     }}
                   />
 
-                  <TextInput
-                    value={amount}
-                    onChangeText={setAmount}
-                    onFocus={() => onComposerFieldFocus("manual")}
-                    onBlur={onComposerFieldBlur}
-                    placeholder={t("list.amountPlaceholder")}
-                    placeholderTextColor={theme.textMuted}
+                  <View
                     style={{
+                      flexDirection: "row",
+                      alignItems: "stretch",
+                      gap: spacing[2],
                       marginTop: spacing[2],
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                      backgroundColor: theme.surface,
-                      borderRadius: radius.md,
-                      padding: spacing[4],
-                      color: theme.text,
                     }}
-                  />
-
-                  <TextInput
-                    value={note}
-                    onChangeText={setNote}
-                    onFocus={() => onComposerFieldFocus("manual")}
-                    onBlur={onComposerFieldBlur}
-                    placeholder={t("list.notePlaceholder")}
-                    placeholderTextColor={theme.textMuted}
-                    style={{
-                      marginTop: spacing[2],
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                      backgroundColor: theme.surface,
-                      borderRadius: radius.md,
-                      padding: spacing[4],
-                      color: theme.text,
-                    }}
-                  />
+                  >
+                    <TextInput
+                      value={amount}
+                      onChangeText={setAmount}
+                      onFocus={() => onComposerFieldFocus("manual")}
+                      onBlur={onComposerFieldBlur}
+                      placeholder={t("list.amountPlaceholderShort")}
+                      placeholderTextColor={theme.textMuted}
+                      style={{
+                        flexGrow: 35,
+                        flexShrink: 1,
+                        flexBasis: 0,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                        backgroundColor: theme.surface,
+                        borderRadius: radius.md,
+                        padding: spacing[4],
+                        color: theme.text,
+                      }}
+                    />
+                    <TextInput
+                      value={note}
+                      onChangeText={setNote}
+                      onFocus={() => onComposerFieldFocus("manual")}
+                      onBlur={onComposerFieldBlur}
+                      placeholder={t("list.notePlaceholderShort")}
+                      placeholderTextColor={theme.textMuted}
+                      style={{
+                        flexGrow: 65,
+                        flexShrink: 1,
+                        flexBasis: 0,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                        backgroundColor: theme.surface,
+                        borderRadius: radius.md,
+                        padding: spacing[4],
+                        color: theme.text,
+                      }}
+                    />
+                  </View>
 
                   <View style={{ marginTop: spacing[5] }}>
                     <CategoryChips
@@ -1700,17 +2001,18 @@ export default function ShoppingListScreen() {
                         },
                         {
                           onSuccess: () => {
+                            onManualItemAdded();
                             setName("");
                             setAmount("");
                             setNote("");
                             setCategory("other");
                             setCategoryChipsKey((key) => key + 1);
-                            setItemAddedToast({
+                            showItemFooterToast({
+                              kind: "added",
                               name: addedName,
                               category: addedCategory,
                               ...(addedAmount ? { amount: addedAmount } : {}),
                               ...(addedNote ? { note: addedNote } : {}),
-                              nonce: Date.now(),
                             });
                             if (typeof listId === "string") {
                               clearListProvisional(listId);
@@ -1729,7 +2031,9 @@ export default function ShoppingListScreen() {
                     }}
                   >
                     <Text style={{ ...typography.label, color: "#fff" }}>
-                      {t("list.addItem")}
+                      {createItem.isPending
+                        ? t("list.addingItem")
+                        : t("list.addItem")}
                     </Text>
                   </Pressable>
                 </View>
@@ -1939,180 +2243,126 @@ export default function ShoppingListScreen() {
               </View>
             ) : null}
 
-            {categoriesOnList.length > 1 ? (
-              <View style={{ marginTop: spacing[8] }}>
-                <Pressable
-                  onPress={() => setCategoryOrderOpen((open) => !open)}
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: categoryOrderOpen }}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    minHeight: 44,
-                  }}
-                >
-                  <Text
-                    style={{
-                      ...typography.headline,
-                      color: categoryOrderOpen ? theme.text : theme.textMuted,
-                      flex: 1,
-                      paddingRight: spacing[3],
-                    }}
-                  >
-                    {t("list.categoryOrderTitle")}
-                  </Text>
-                  <Text
-                    style={{
-                      color: categoryOrderOpen ? theme.text : theme.textMuted,
-                      fontSize: 22,
-                      lineHeight: 26,
-                      fontWeight: "600",
-                    }}
-                  >
-                    {categoryOrderOpen ? "▾" : "▸"}
-                  </Text>
-                </Pressable>
-                {categoryOrderOpen ? (
-                  <View>
-                    <CategoryOrderHint>
-                      {t(
-                        Platform.OS === "web"
-                          ? "list.categoryOrderHintWeb"
-                          : "list.categoryOrderHint",
-                      )}
-                    </CategoryOrderHint>
-                    <CategoryReorderList
-                      data={categoriesOnList}
-                      keyExtractor={(item) => item}
-                      onReorder={onCategoryReorder}
-                      renderItem={({ item, drag, isActive, moveUp, moveDown }) => (
-                        <CategoryOrderEditRow
-                          icon={getShoppingCategoryIcon(item)}
-                          label={t(`categories.${item}`)}
-                          subtitle={t("list.itemCount", {
-                            count: categoryItemCounts.get(item) ?? 0,
-                          })}
-                          onLongPress={drag}
-                          onPress={() => focusCategoryInItems(item)}
-                          readOnly={isFinishedList}
-                          isActive={isActive}
-                          moveUp={isFinishedList ? undefined : moveUp}
-                          moveDown={isFinishedList ? undefined : moveDown}
-                        />
-                      )}
-                    />
-                  </View>
-                ) : null}
-              </View>
-            ) : null}
-
-            <View ref={itemsSectionRef} collapsable={false}>
-              <Text
+            <View
+              ref={itemsSectionRef}
+              collapsable={false}
+              style={{ marginTop: spacing[8] }}
+            >
+              <View
                 style={{
-                  ...typography.headline,
-                  color: theme.text,
-                  marginTop: spacing[8],
+                  flexDirection: "row",
+                  alignItems: "center",
+                  minHeight: 44,
+                  gap: spacing[2],
                 }}
               >
-                {t("list.itemsOnList")}
-              </Text>
-            </View>
-
-            {itemCount > 0 ? (
-              <View style={{ marginTop: spacing[3] }}>
-                <ListStatusFilterChips
-                  value={statusFilter}
-                  onChange={setStatusFilter}
-                  counts={statusFilterCounts}
-                />
-              </View>
-            ) : null}
-
-            <View style={{ marginTop: spacing[3] }}>
-              {itemCount > 0 ? (
-                filteredItems.length > 0 ? (
-                  filteredItems.map((item, index) => {
-                    const prev = filteredItems[index - 1];
-                    const isCategoryStart =
-                      !prev || prev.category !== item.category;
-                    return (
-                      <View
-                        key={item.id}
-                        ref={
-                          isCategoryStart
-                            ? (node) => {
-                                categoryAnchorRefs.current[item.category] =
-                                  node;
-                              }
-                            : undefined
-                        }
-                        collapsable={isCategoryStart ? false : undefined}
-                      >
-                        <ListItemRow
-                          item={item}
-                          showDivider={index < filteredItems.length - 1}
-                          onMenuPress={
-                            isFinishedList
-                              ? undefined
-                              : () => openItemMenu(item)
-                          }
-                        />
-                      </View>
-                    );
-                  })
-                ) : (
-                  <Text
-                    style={{
-                      ...typography.body,
-                      color: theme.textMuted,
-                      textAlign: "center",
-                      paddingVertical: spacing[6],
-                    }}
-                  >
-                    {t("list.filterEmpty")}
-                  </Text>
-                )
-              ) : (
-                <View
+                <Text
                   style={{
-                    alignItems: "center",
-                    paddingVertical: spacing[8],
-                    paddingHorizontal: spacing[4],
+                    ...typography.headline,
+                    color: theme.text,
+                    flex: 1,
+                    paddingRight: spacing[2],
                   }}
                 >
-                  <Image
-                    source={brandAssets.listEmpty}
-                    style={{
-                      width: 180,
-                      height: 180,
-                      marginBottom: spacing[4],
-                      resizeMode: "contain",
-                    }}
-                    accessibilityLabel={t("list.emptyTitle")}
-                  />
-                  <Text
-                    style={{
-                      ...typography.headline,
-                      color: theme.text,
-                      textAlign: "center",
-                    }}
-                  >
-                    {t("list.emptyTitle")}
-                  </Text>
-                  <Text
-                    style={{
-                      ...typography.body,
-                      color: theme.textMuted,
-                      textAlign: "center",
-                      marginTop: spacing[2],
-                    }}
-                  >
-                    {t("list.emptySubtitle")}
-                  </Text>
-                </View>
-              )}
+                  {t("list.itemsOnList")}
+                </Text>
+                <ItemsSortToggle
+                  value={itemsSortMode}
+                  onChange={onItemsSortModeChange}
+                />
+              </View>
+
+              <View>
+                  {itemCount > 0 ? (
+                    <View style={{ marginTop: spacing[3] }}>
+                      <ListStatusFilterChips
+                        value={statusFilter}
+                        onChange={setStatusFilter}
+                        counts={statusFilterCounts}
+                      />
+                    </View>
+                  ) : null}
+
+                  <View style={{ marginTop: spacing[3] }}>
+                    {itemCount > 0 ? (
+                      filteredItems.length > 0 ? (
+                        filteredItems.map((item, index) => (
+                          <ListItemRow
+                            key={item.id}
+                            item={item}
+                            showDivider={index < filteredItems.length - 1}
+                            onMenuPress={
+                              isFinishedList
+                                ? undefined
+                                : () => openItemMenu(item)
+                            }
+                          />
+                        ))
+                      ) : (
+                        <Text
+                          style={{
+                            ...typography.body,
+                            color: theme.textMuted,
+                            textAlign: "center",
+                            paddingVertical: spacing[6],
+                          }}
+                        >
+                          {t("list.filterEmpty")}
+                        </Text>
+                      )
+                    ) : (
+                      <View
+                        style={{
+                          alignItems: "center",
+                          paddingVertical: spacing[8],
+                          paddingHorizontal: spacing[4],
+                        }}
+                      >
+                        <Image
+                          source={brandAssets.listEmpty}
+                          style={{
+                            width: 180,
+                            height: 180,
+                            marginBottom: spacing[4],
+                            resizeMode: "contain",
+                          }}
+                          accessibilityLabel={t("list.emptyTitle")}
+                        />
+                        <Text
+                          style={{
+                            ...typography.headline,
+                            color: theme.text,
+                            textAlign: "center",
+                          }}
+                        >
+                          {t("list.emptyTitle")}
+                        </Text>
+                        <Text
+                          style={{
+                            ...typography.body,
+                            color: theme.textMuted,
+                            textAlign: "center",
+                            marginTop: spacing[2],
+                          }}
+                        >
+                          {t("list.emptySubtitle")}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+              </View>
             </View>
+
+            <ListEditCategoryOrderSection
+              categories={categoriesOnList}
+              categoryItemCounts={categoryItemCounts}
+              readOnly={isFinishedList}
+              startCollapsed={isFinishedList}
+              onReorder={onCategoryReorder}
+              onDragActiveChange={(dragging) => {
+                if (dragging) cancelSmoothScroll();
+              }}
+            />
 
             <View style={{ marginTop: spacing[8] }}>
               <CreateListOptionRow
@@ -2173,222 +2423,274 @@ export default function ShoppingListScreen() {
               keyboardHeight,
           }}
         >
-          <Pressable
-            onPress={() => {
-              if (isFinishedList) return;
-              if (typeof listId === "string" && itemCount > 0) {
-                openTask(`/list/${listId}/shop`);
-              }
-            }}
-            disabled={
-              isFinishedList ||
-              itemCount === 0 ||
-              mealGenerating ||
-              ingestMutation.isPending ||
-              applyMutation.isPending
-            }
-            accessibilityRole="button"
-            accessibilityState={{
-              disabled:
-                isFinishedList ||
-                itemCount === 0 ||
-                mealGenerating ||
-                ingestMutation.isPending ||
-                applyMutation.isPending,
-            }}
-            accessibilityLabel={
-              mealGenerating ||
-              ingestMutation.isPending ||
-              applyMutation.isPending
-                ? t("ai.mealProposalGenerating")
-                : t("shoppingMode.startShopping")
-            }
-            style={{
-              ...primaryButtonStyle(theme),
-              borderRadius: radius.full,
-              minHeight: 56,
-              opacity:
-                isFinishedList ||
-                itemCount === 0 ||
-                mealGenerating ||
-                ingestMutation.isPending ||
-                applyMutation.isPending
-                  ? 0.45
-                  : 1,
-            }}
-          >
-            {mealGenerating ||
-            ingestMutation.isPending ||
-            applyMutation.isPending ? (
-              <AiPhaseCrossfade
-                phase={
-                  mealGenerating
-                    ? "meal"
-                    : aiPhase === "uploading"
-                      ? "uploading"
-                      : aiPhase === "applying"
-                        ? "applying"
-                        : "analyzing"
-                }
-              >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: spacing[2],
-                }}
-              >
-                <ActivityIndicator color={theme.onPrimary} />
-                <Text style={{ ...typography.label, color: theme.onPrimary }}>
-                  {mealGenerating
-                    ? t("ai.mealProposalGenerating")
-                    : aiPhase === "uploading"
-                      ? t("ai.phaseUploading")
-                      : aiPhase === "applying"
-                        ? t("ai.phaseApplying")
-                        : t("ai.phaseAnalyzing")}
-                </Text>
-              </View>
-              </AiPhaseCrossfade>
-            ) : (
-              <Text style={{ ...typography.label, color: theme.onPrimary }}>
-                {t("shoppingMode.startShopping")}
-              </Text>
-            )}
-          </Pressable>
-        </View>
-        ) : null}
-
-        {itemAddedToastRendered ? (
           <View
-            pointerEvents="box-none"
-            style={{
-              position: "absolute",
-              left: spacing[4],
-              right: spacing[4],
-              bottom: hideStickyForComposer
-                ? keyboardHeight + Math.max(insets.bottom, spacing[2]) + spacing[3]
-                : footerPad + spacing[2],
-              zIndex: 50,
+            style={{ height: 56, justifyContent: "center", overflow: "hidden" }}
+            onLayout={(event) => {
+              const next = event.nativeEvent.layout.width;
+              if (next > 0) footerSlideWidth.value = next;
             }}
           >
-            <ToastMotion
-              visible={itemAddedToast != null}
-              onExited={() => {
-                if (!itemAddedToast) setItemAddedToastRendered(null);
-              }}
+            <Animated.View
+              pointerEvents={
+                itemFooterToastRendered != null ? "none" : "auto"
+              }
+              style={[
+                startShoppingCtaAnimStyle,
+                itemFooterToastRendered != null
+                  ? {
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                    }
+                  : null,
+              ]}
             >
               <Pressable
-                onPress={() => setItemAddedToast(null)}
+                onPress={() => {
+                  if (isFinishedList) return;
+                  if (typeof listId === "string" && itemCount > 0) {
+                    openTask(`/list/${listId}/shop`);
+                  }
+                }}
+                disabled={
+                  isFinishedList ||
+                  itemCount === 0 ||
+                  mealGenerating ||
+                  ingestMutation.isPending ||
+                  applyMutation.isPending
+                }
                 accessibilityRole="button"
-                accessibilityLabel={[
-                  t("list.itemAddedToast", {
-                    name: itemAddedToastRendered.name,
-                  }),
-                  t(`categories.${itemAddedToastRendered.category}`),
-                  [itemAddedToastRendered.amount, itemAddedToastRendered.note]
-                    .filter(Boolean)
-                    .join(" · ") || null,
-                ]
-                  .filter(Boolean)
-                  .join(". ")}
+                accessibilityState={{
+                  disabled:
+                    isFinishedList ||
+                    itemCount === 0 ||
+                    mealGenerating ||
+                    ingestMutation.isPending ||
+                    applyMutation.isPending,
+                }}
+                accessibilityLabel={
+                  mealGenerating ||
+                  ingestMutation.isPending ||
+                  applyMutation.isPending
+                    ? t("ai.mealProposalGenerating")
+                    : t("shoppingMode.startShopping")
+                }
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: spacing[3],
-                  backgroundColor: theme.surface,
-                  borderRadius: radius.xl,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  paddingVertical: spacing[3],
-                  paddingHorizontal: spacing[3],
-                  ...shadows.soft,
+                  ...primaryButtonStyle(theme),
+                  borderRadius: radius.full,
+                  minHeight: 56,
+                  opacity:
+                    isFinishedList ||
+                    itemCount === 0 ||
+                    mealGenerating ||
+                    ingestMutation.isPending ||
+                    applyMutation.isPending
+                      ? 0.45
+                      : 1,
                 }}
               >
-                <View
+                {mealGenerating ||
+                ingestMutation.isPending ||
+                applyMutation.isPending ? (
+                  <AiPhaseCrossfade
+                    phase={
+                      mealGenerating
+                        ? "meal"
+                        : aiPhase === "uploading"
+                          ? "uploading"
+                          : aiPhase === "applying"
+                            ? "applying"
+                            : "analyzing"
+                    }
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: spacing[2],
+                      }}
+                    >
+                      <ActivityIndicator color={theme.onPrimary} />
+                      <Text
+                        style={{ ...typography.label, color: theme.onPrimary }}
+                      >
+                        {mealGenerating
+                          ? t("ai.mealProposalGenerating")
+                          : aiPhase === "uploading"
+                            ? t("ai.phaseUploading")
+                            : aiPhase === "applying"
+                              ? t("ai.phaseApplying")
+                              : t("ai.phaseAnalyzing")}
+                      </Text>
+                    </View>
+                  </AiPhaseCrossfade>
+                ) : (
+                  <Text style={{ ...typography.label, color: theme.onPrimary }}>
+                    {t("shoppingMode.startShopping")}
+                  </Text>
+                )}
+              </Pressable>
+            </Animated.View>
+
+            {itemFooterToastRendered ? (
+              <Animated.View
+                pointerEvents="auto"
+                style={[
+                  itemFooterToastAnimStyle,
+                  {
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                  },
+                ]}
+              >
+                <Pressable
+                  onPress={() => setItemFooterToast(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    sortFooterToast
+                      ? t(footerToastA11yKey)
+                      : aiImportFooterToast
+                        ? t(footerToastA11yKey, {
+                            count: aiImportFooterToast.count,
+                          })
+                      : itemActionFooterToast
+                        ? [
+                            t(footerToastA11yKey, {
+                              name: itemActionFooterToast.name,
+                            }),
+                            t(`categories.${itemActionFooterToast.category}`),
+                            [
+                              itemActionFooterToast.amount,
+                              itemActionFooterToast.note,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ") || null,
+                          ]
+                            .filter(Boolean)
+                            .join(". ")
+                        : ""
+                  }
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: radius.lg,
-                    backgroundColor: getCategoryBadgeColors(
-                      itemAddedToastRendered.category,
-                    ).background,
+                    flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
+                    gap: spacing[3],
+                    height: 56,
+                    maxHeight: 56,
+                    backgroundColor: theme.surface,
+                    borderRadius: radius.xl,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    paddingVertical: spacing[2],
+                    paddingHorizontal: spacing[3],
+                    // No elevation/shadow here: parent uses overflow:"hidden" for the
+                    // L→R slide, which clips shadows into harsh side bands on Android.
                   }}
                 >
-                  <Text style={{ fontSize: 22 }}>
-                    {getShoppingCategoryIcon(itemAddedToastRendered.category)}
-                  </Text>
-                </View>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: radius.lg,
+                      backgroundColor: sortFooterToast || aiImportFooterToast
+                        ? brand.accent
+                        : getCategoryBadgeColors(
+                            itemActionFooterToast?.category ?? "other",
+                          ).background,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {sortFooterToast ? (
+                      sortFooterToast.sortMode === "category" ? (
+                        <CategorySortIcon color={brand.primary} size={20} />
+                      ) : (
+                        <DateSortIcon color={brand.primary} size={20} />
+                      )
+                    ) : aiImportFooterToast ? (
+                      <Text style={{ fontSize: 20 }}>✨</Text>
+                    ) : itemActionFooterToast ? (
+                      <Text style={{ fontSize: 20 }}>
+                        {getShoppingCategoryIcon(itemActionFooterToast.category)}
+                      </Text>
+                    ) : null}
+                  </View>
 
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text
+                  <View
                     style={{
-                      ...typography.caption,
-                      color: theme.primary,
-                      fontWeight: "700",
+                      flex: 1,
+                      minWidth: 0,
+                      justifyContent: "center",
                     }}
-                    numberOfLines={1}
                   >
-                    {t("list.itemAddedToastLabel")}
-                  </Text>
-                  <Text
-                    style={{
-                      ...typography.label,
-                      color: theme.text,
-                      marginTop: 1,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {itemAddedToastRendered.name}
-                  </Text>
-                  {itemAddedToastRendered.amount ||
-                  itemAddedToastRendered.note ? (
                     <Text
                       style={{
                         ...typography.caption,
-                        color: theme.textMuted,
-                        marginTop: 2,
+                        color: footerToastAccent,
+                        fontWeight: "700",
+                        lineHeight: 16,
                       }}
                       numberOfLines={1}
                     >
-                      {[
-                        itemAddedToastRendered.amount,
-                        itemAddedToastRendered.note,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
+                      {t(footerToastLabelKey)}
                     </Text>
-                  ) : null}
-                </View>
+                    <Text
+                      style={{
+                        ...typography.label,
+                        color: theme.text,
+                        marginTop: 1,
+                        lineHeight: 20,
+                      }}
+                      numberOfLines={1}
+                    >
+                      {sortFooterToast && footerToastSubtitleKey
+                        ? t(footerToastSubtitleKey)
+                        : aiImportFooterToast && footerToastSubtitleKey
+                          ? t(footerToastSubtitleKey, {
+                              count: aiImportFooterToast.count,
+                            })
+                        : itemActionFooterToast
+                          ? [
+                              itemActionFooterToast.name,
+                              itemActionFooterToast.amount,
+                              itemActionFooterToast.note,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")
+                          : ""}
+                    </Text>
+                  </View>
 
-                <View
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: radius.full,
-                    backgroundColor: `${theme.primary}18`,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Text
+                  <View
                     style={{
-                      color: theme.primary,
-                      fontSize: 12,
-                      fontWeight: "700",
-                      lineHeight: 14,
+                      width: 24,
+                      height: 24,
+                      borderRadius: radius.full,
+                      backgroundColor: `${footerToastAccent}18`,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
                     }}
                   >
-                    ✓
-                  </Text>
-                </View>
-              </Pressable>
-            </ToastMotion>
+                    <Text
+                      style={{
+                        color: footerToastAccent,
+                        fontSize: 12,
+                        fontWeight: "700",
+                        lineHeight: 14,
+                      }}
+                    >
+                      {footerToastMark}
+                    </Text>
+                  </View>
+                </Pressable>
+              </Animated.View>
+            ) : null}
           </View>
+        </View>
         ) : null}
       </View>
 
@@ -2415,13 +2717,26 @@ export default function ShoppingListScreen() {
         onClose={() => setEditingItem(null)}
         onSave={(input) => {
           if (!editingItem) return;
-          updateItem.mutate({
-            itemId: editingItem.id,
-            name: input.name,
-            amount: input.amount,
-            note: input.note,
-            category: input.category,
-          });
+          updateItem.mutate(
+            {
+              itemId: editingItem.id,
+              name: input.name,
+              amount: input.amount,
+              note: input.note,
+              category: input.category,
+            },
+            {
+              onSuccess: () => {
+                showItemFooterToast({
+                  kind: "updated",
+                  name: input.name,
+                  category: input.category,
+                  ...(input.amount ? { amount: input.amount } : {}),
+                  ...(input.note ? { note: input.note } : {}),
+                });
+              },
+            },
+          );
         }}
         onDelete={() => {
           if (!editingItem) return;
@@ -2438,10 +2753,23 @@ export default function ShoppingListScreen() {
         primaryLabel={t("list.removeItemConfirm")}
         onPrimary={() => {
           if (!removeItemTarget) return;
-          const itemId = removeItemTarget.id;
+          const removed = removeItemTarget;
           setRemoveItemTarget(null);
           setEditingItem(null);
-          updateItem.mutate({ itemId, status: "removed" });
+          updateItem.mutate(
+            { itemId: removed.id, status: "removed" },
+            {
+              onSuccess: () => {
+                showItemFooterToast({
+                  kind: "removed",
+                  name: removed.name,
+                  category: removed.category,
+                  ...(removed.amount ? { amount: removed.amount } : {}),
+                  ...(removed.note ? { note: removed.note } : {}),
+                });
+              },
+            },
+          );
         }}
         secondaryLabel={t("list.deleteCancel")}
         onSecondary={() => setRemoveItemTarget(null)}

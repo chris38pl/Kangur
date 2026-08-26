@@ -5,13 +5,13 @@ import { getWorkspaceEntitlement } from "@/lib/premium";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Flat cost: 1 use per AI action. History-merge is free (not an AI meter).
+ * Flat cost: 1 use per metered action (ingest, meal, history-merge).
  */
 export const AI_CREDIT_COSTS: Record<AiProposalSource, number> = {
   text: 1,
   clipboard: 1,
   screenshot: 1,
-  history: 0,
+  history: 1,
   meal: 1,
 };
 
@@ -23,14 +23,14 @@ export const AI_USAGE_LIFETIME_PERIOD_START = new Date(0);
 
 /**
  * Free plan lifetime AI-use limit (backend meter; UX says "uses").
- * Prefers AI_FREE_LIFETIME_CREDITS, then legacy AI_FREE_MONTHLY_CREDITS, else 15.
+ * Prefers AI_FREE_LIFETIME_CREDITS, then legacy AI_FREE_MONTHLY_CREDITS, else 10.
  */
 export function getFreeLifetimeLimit(): number {
   const raw =
     process.env.AI_FREE_LIFETIME_CREDITS?.trim() ||
     process.env.AI_FREE_MONTHLY_CREDITS?.trim();
-  const parsed = raw ? Number.parseInt(raw, 10) : 15;
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 15;
+  const parsed = raw ? Number.parseInt(raw, 10) : 10;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
 }
 
 /** @deprecated Prefer getFreeLifetimeLimit — Free uses no longer reset monthly. */

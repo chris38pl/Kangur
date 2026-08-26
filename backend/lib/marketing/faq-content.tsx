@@ -244,7 +244,7 @@ export function FaqContent({ locale }: Props) {
             q: "Jakie są limity w darmowej wersji?",
             a: (
               <>
-                Darmowe konto obejmuje 15 użyć funkcji AI. Limit nie odnawia
+                Darmowe konto obejmuje 10 użyć funkcji AI. Limit nie odnawia
                 się co miesiąc. Masz też ograniczoną historię list (ostatnie 20
                 zakończonych). Premium daje nieograniczony dostęp do funkcji AI
                 (fair use) oraz pełniejszą historię. Tworzenie listy z
@@ -376,7 +376,7 @@ export function FaqContent({ locale }: Props) {
             q: "What are the limits on the free plan?",
             a: (
               <>
-                Free includes 15 uses of AI features. The limit does not renew
+                Free includes 10 uses of AI features. The limit does not renew
                 each month. You also get limited list history (last 20 finished
                 lists). Premium unlocks unlimited AI features (fair use) and
                 fuller history. Building a list from previous shopping is

@@ -24,6 +24,7 @@ import type { MealProposalOperation } from "@/features/ai/schemas";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { getCategoryBadgeColors } from "@/features/shopping-item/category-badge-colors";
 import { setPendingScrollToItems } from "@/features/shopping-list/pending-scroll-to-items";
+import { setPendingAiImportToast } from "@/features/shopping-list/pending-ai-import-toast";
 import { Analytics } from "@/lib/analytics";
 import { ApiClientError } from "@/lib/api/client";
 import { navigateBack, replaceDetails } from "@/lib/navigation";
@@ -218,6 +219,7 @@ export function MealProposalReviewScreen({ listId }: Props) {
         queryKey: ["shopping-list", listId],
       });
       if (result.applied > 0) {
+        setPendingAiImportToast(listId, result.applied);
         setPendingScrollToItems(listId);
       }
       replaceDetails(`/list/${listId}` as never);

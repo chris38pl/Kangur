@@ -3,16 +3,22 @@ import type { QueryClient } from "@tanstack/react-query";
 import {
   shoppingItemsQueryKey,
   shoppingItemsQueryPrefix,
-} from "@/features/shopping-item/query-keys";
-import type { ShoppingItem } from "@/features/shopping-item/schemas";
+} from "../shopping-item/query-keys";
+import type { ShoppingItem } from "../shopping-item/schemas";
 
-import { overlayLocalOutboundStatuses } from "./overlay-local-ops";
+import {
+  materializeSuccessfulItem,
+  overlayLocalOutboundStatuses,
+} from "./overlay-local-ops";
+import { resolveServerUpdate } from "./resolve-server-update";
 import type { SyncOperation } from "./types";
 
 export type SyncOperationResult =
   | { status: "success"; item?: ShoppingItem }
   | { status: "failed"; error: unknown; httpStatus?: number };
 // later: conflict | skipped | cancelled | noop
+
+export { resolveServerUpdate } from "./resolve-server-update";
 
 /**
  * Adapter between DataSyncEngine and app cache.
@@ -23,6 +29,8 @@ export interface SyncCacheAdapter {
   applyOperationResult(
     operation: SyncOperation,
     result: SyncOperationResult,
+    /** Current outbound ops for this list - used to keep newer local SET_STATUS. */
+    outboundOps?: readonly SyncOperation[],
   ): void;
   /**
    * Inbound GET path: merge server list with outbound local ops, then write cache.
@@ -35,23 +43,6 @@ export interface SyncCacheAdapter {
   ): ShoppingItem[];
   /** Request React Query to re-run shopping-items queryFn (which reconciles). */
   invalidateShoppingItems(listId: string): void;
-}
-
-/**
- * Conflict resolution: server wins only when strictly newer than cache.
- * Equal timestamps keep the local (optimistic) row.
- */
-export function resolveServerUpdate(
-  cache: ShoppingItem | undefined,
-  server: ShoppingItem,
-): ShoppingItem {
-  const serverTs = Date.parse(server.updatedAt);
-  const cacheTs = cache ? Date.parse(cache.updatedAt) : NaN;
-  if (!Number.isFinite(serverTs)) return cache ?? server;
-  if (!cache || !Number.isFinite(cacheTs) || serverTs > cacheTs) {
-    return { ...cache, ...server };
-  }
-  return cache;
 }
 
 /** Active-list cache key — must match {@link useShoppingItems} default scope. */
@@ -70,6 +61,7 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
   applyOperationResult(
     operation: SyncOperation,
     result: SyncOperationResult,
+    outboundOps: readonly SyncOperation[] = [],
   ): void {
     if (result.status === "failed") {
       // Leave optimistic UI; Engine marks op FAILED for retry.
@@ -80,7 +72,10 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
       case "SET_STATUS":
       case "EDIT_ITEM": {
         if (!result.item) return;
-        this.reconcileItem(operation.listId, result.item);
+        // Overlay keeps a newer PENDING/SYNCING SET_STATUS when this success
+        // is from an older in-flight op (rapid taps / swipe then undo).
+        const item = materializeSuccessfulItem(result.item, outboundOps);
+        this.reconcileItem(operation.listId, item);
         return;
       }
       case "ADD_ITEM": {

@@ -1,0 +1,60 @@
+{
+  "version": "1.0.4",
+  "releaseDate": "2026-08-26",
+  "highlight": true,
+  "title": {
+    "pl": "Szybsze dodawanie i wygodniejsze zakupy",
+    "en": "Faster adding and smoother shopping"
+  },
+  "changes": [
+    {
+      "type": "feature",
+      "text": {
+        "pl": "Przy ręcznym dodawaniu Kangur podpowiada popularne produkty - wystarczy wpisać początek nazwy i stuknąć, żeby dodać",
+        "en": "When adding by hand, Kangur suggests common products - type a few letters and tap to add"
+      }
+    },
+    {
+      "type": "feature",
+      "text": {
+        "pl": "W sklepie możesz kupować po kategoriach albo z jednej pełnej listy - przełącznik jest obok tytułu sekcji",
+        "en": "In the store you can shop by aisle or from one full list - the switch sits next to the section title"
+      }
+    },
+    {
+      "type": "improvement",
+      "text": {
+        "pl": "Na liście od razu widać, czy czekasz, robisz zakupy, czy lista jest zakończona - także na ekranie głównym i w historii",
+        "en": "You can see at a glance if a list is waiting, in progress, or finished - on Home and in History too"
+      }
+    },
+    {
+      "type": "improvement",
+      "text": {
+        "pl": "Zakończoną listę otwierasz w podglądzie - łatwo przywrócisz ją albo zrobisz kolejne zakupy na tej podstawie",
+        "en": "Finished lists open in preview - restore them or shop again from what you already had"
+      }
+    },
+    {
+      "type": "improvement",
+      "text": {
+        "pl": "Lista z poprzednich zakupów: zaznaczasz lub odznaczasz produkty na raz, zamiast przesuwać każdy osobno",
+        "en": "Lists from previous shopping: tick or untick products in one go, instead of swiping each one"
+      }
+    },
+    {
+      "type": "improvement",
+      "text": {
+        "pl": "W edycji listy możesz ułożyć pozycje wg półki albo wg tego, kiedy je dodałeś - nowy produkt ląduje na górze",
+        "en": "In list edit you can sort by shelf or by when you added things - a new item lands at the top"
+      }
+    },
+    {
+      "type": "improvement",
+      "text": {
+        "pl": "Po dodaniu, zmianie lub usunięciu pozycji Kangur krótko potwierdza to na dole ekranu, przy przycisku startu zakupów",
+        "en": "After you add, change, or remove an item, Kangur briefly confirms it at the bottom, by the start-shopping button"
+      }
+    }
+  ]
+}

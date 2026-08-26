@@ -54,6 +54,12 @@ export async function updateShoppingList(input: {
       ? undefined
       : resolveShoppingCategoryOrder(input.categoryOrder);
 
+  const onlyPreferredForAi =
+    input.preferredForAi !== undefined &&
+    name === undefined &&
+    input.emoji === undefined &&
+    categoryOrder === undefined;
+
   const updated = await prisma.shoppingList.update({
     where: { id: list.id },
     data: {
@@ -63,6 +69,8 @@ export async function updateShoppingList(input: {
         ? { preferredForAi: input.preferredForAi }
         : {}),
       ...(categoryOrder !== undefined ? { categoryOrder } : {}),
+      // Starring for AI history is metadata — not a list edit.
+      ...(onlyPreferredForAi ? { updatedAt: list.updatedAt } : {}),
     },
   });
 

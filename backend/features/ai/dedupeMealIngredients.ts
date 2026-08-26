@@ -1,4 +1,5 @@
 import type { AiOutputLanguage } from "./outputLanguage";
+import { formatDefaultShoppingListTitle } from "@shared/shopping-list/default-list-title";
 import type {
   MealProposal,
   MealProposalAiResponse,
@@ -31,19 +32,10 @@ const MEAL_NOTE_LOCALE: Record<
   be: { for: "для", and: "і" },
 };
 
-/** Fallback list title when meal titles are empty (matches AI_PROMPTS). */
-const SHOPPING_TITLE_FALLBACK: Record<AiOutputLanguage, string> = {
-  pl: "Zakupy",
-  en: "Shopping",
-  de: "Einkauf",
-  fr: "Courses",
-  es: "Compra",
-  it: "Spesa",
-  cs: "Nákup",
-  ru: "Покупки",
-  uk: "Покупки",
-  be: "Пакупкі",
-};
+/** Fallback list title when meal titles are empty. */
+function shoppingTitleFallback(language: AiOutputLanguage): string {
+  return formatDefaultShoppingListTitle(language);
+}
 
 function normalizeName(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, " ");
@@ -192,7 +184,7 @@ export function dedupeMealIngredients(
 
   return {
     shoppingContext: {
-      title: title || SHOPPING_TITLE_FALLBACK[outputLanguage],
+      title: title || shoppingTitleFallback(outputLanguage),
       theme: "generic",
     },
     meals,

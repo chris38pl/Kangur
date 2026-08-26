@@ -156,9 +156,8 @@ type EditRowProps = {
   label: string;
   /** Caption under the label (e.g. item count). */
   subtitle?: string;
-  onLongPress: () => void;
-  /** Tap the row body to focus this category in the product list. */
-  onPress?: () => void;
+  /** Native: start drag from handle (same as shopping mode). */
+  onDrag: () => void;
   /** Hide drag / arrow controls (e.g. finished list preview). */
   readOnly?: boolean;
   isActive?: boolean;
@@ -166,13 +165,12 @@ type EditRowProps = {
   moveDown?: () => void;
 };
 
-/** Lighter aisle row for list edit reorder. */
+/** Lighter aisle row for list edit reorder (gesture layout mirrors ShoppingCategoryCard). */
 export function CategoryOrderEditRow({
   icon,
   label,
   subtitle,
-  onLongPress,
-  onPress,
+  onDrag,
   readOnly,
   isActive,
   moveUp,
@@ -225,39 +223,22 @@ export function CategoryOrderEditRow({
         backgroundColor: isActive ? theme.section : theme.surface,
       }}
     >
-      {onPress ? (
-        <Pressable
-          onPress={onPress}
-          accessibilityRole="button"
-          accessibilityLabel={label}
-          style={{
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: spacing[3],
-            minWidth: 0,
-          }}
-        >
-          {labelBlock}
-        </Pressable>
-      ) : (
-        <View
-          style={{
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: spacing[3],
-            minWidth: 0,
-          }}
-        >
-          {labelBlock}
-        </View>
-      )}
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: spacing[3],
+          minWidth: 0,
+        }}
+      >
+        {labelBlock}
+      </View>
       {readOnly ? null : webControls ? (
-        <CategoryReorderWebControls moveUp={moveUp} moveDown={moveDown} />
-      ) : (
-        <CategoryDragHandle onLongPress={onLongPress} />
-      )}
+          <CategoryReorderWebControls moveUp={moveUp} moveDown={moveDown} />
+        ) : (
+          <CategoryDragHandle onLongPress={onDrag} disabled={isActive} />
+        )}
     </View>
   );
 }

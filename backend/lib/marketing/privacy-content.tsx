@@ -2,6 +2,10 @@ import Link from "next/link";
 
 import type { AppLocale } from "@/lib/marketing/locale";
 import { legalLocale, withLocale } from "@/lib/marketing/locale";
+import {
+  LegalControllerParagraphEn,
+  LegalControllerParagraphPl,
+} from "@/lib/marketing/legal-entity";
 import { getMessages } from "@/lib/marketing/messages";
 
 type Props = { locale: AppLocale };
@@ -17,7 +21,7 @@ export function PrivacyContent({ locale }: Props) {
     return (
       <article className="mkt-legal">
         <h1>Polityka prywatności</h1>
-        <p className="mkt-meta">Ostatnia aktualizacja: 21 lipca 2026</p>
+        <p className="mkt-meta">Ostatnia aktualizacja: 26 sierpnia 2026</p>
 
         <p>
           Niniejsza polityka opisuje, jak Kangur („my”, „aplikacja”) przetwarza
@@ -27,12 +31,7 @@ export function PrivacyContent({ locale }: Props) {
         </p>
 
         <h2>1. Administrator</h2>
-        <p>
-          Administratorem danych jest Krzysztof Krawiec. Kontakt:{" "}
-          <a href="mailto:support@getkangur.com">support@getkangur.com</a>.
-          Możesz też napisać przez stronę{" "}
-          <Link href={contactHref}>Kontakt</Link>.
-        </p>
+        <LegalControllerParagraphPl contactHref={contactHref} />
 
         <h2>2. Jakie dane zbieramy</h2>
         <ul>
@@ -152,7 +151,7 @@ export function PrivacyContent({ locale }: Props) {
     <article className="mkt-legal">
       <h1>Privacy Policy</h1>
       <p className="mkt-meta">
-        Last updated: 21 July 2026
+        Last updated: 26 August 2026
         {locale !== "en" ? <> · English</> : null}
       </p>
 
@@ -163,12 +162,10 @@ export function PrivacyContent({ locale }: Props) {
       </p>
 
       <h2>1. Controller</h2>
-      <p>
-        The data controller is Krzysztof Krawiec. Contact:{" "}
-        <a href="mailto:support@getkangur.com">support@getkangur.com</a>. You
-        can also reach us via the{" "}
-        <Link href={contactHref}>{ui.nav.contact}</Link> page.
-      </p>
+      <LegalControllerParagraphEn
+        contactHref={contactHref}
+        contactLabel={ui.nav.contact}
+      />
 
       <h2>2. Data we collect</h2>
       <ul>

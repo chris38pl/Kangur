@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Keyboard,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -54,9 +55,14 @@ export function EditItemSheet({
     item?.category ?? "other",
   );
 
+  const focusName = () => {
+    nameRef.current?.focus();
+  };
+
   useEffect(() => {
     if (!visible) return;
-    const timer = setTimeout(() => nameRef.current?.focus(), 350);
+    // Focus ASAP so Android keyboard rises with the sheet (no delayed second jump).
+    const timer = setTimeout(focusName, Platform.OS === "android" ? 16 : 30);
     return () => clearTimeout(timer);
   }, [visible]);
 
@@ -95,6 +101,7 @@ export function EditItemSheet({
       transparent
       statusBarTranslucent
       onRequestClose={close}
+      onShow={focusName}
     >
       <View style={{ flex: 1, justifyContent: "flex-end" }}>
         <Pressable
@@ -138,6 +145,8 @@ export function EditItemSheet({
               ref={nameRef}
               value={name}
               onChangeText={setName}
+              autoFocus
+              showSoftInputOnFocus
               placeholder={t("list.namePlaceholder")}
               placeholderTextColor={theme.textMuted}
               returnKeyType="next"

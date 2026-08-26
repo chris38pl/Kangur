@@ -1057,18 +1057,23 @@ export function PremiumScreen() {
   const params = useLocalSearchParams<{
     workspaceId?: string | string[];
     checkout?: string | string[];
+    startCheckout?: string | string[];
   }>();
 
   const workspacesQuery = useWorkspaces();
   const caps = BillingService.capabilities();
   const useStorePrice = caps.priceSource === "store";
-  const priceQuery = usePremiumPrice(!useStorePrice);
+  // Always fetch backend price — Android DEV (app.kangur.dev) often has no Play
+  // products, so store displayPrice stays empty without this fallback.
+  const priceQuery = usePremiumPrice(true);
   const { activeWorkspace, setActiveId, hydrated } = useActiveWorkspace(
     workspacesQuery.data,
   );
 
   const paramWorkspaceId = paramOne(params.workspaceId);
   const checkout = paramOne(params.checkout);
+  const startCheckout = paramOne(params.startCheckout);
+  const autoCheckoutStartedRef = useRef(false);
 
   const workspace = useMemo(() => {
     if (paramWorkspaceId && workspacesQuery.data) {
@@ -1360,6 +1365,23 @@ export function PremiumScreen() {
     }
   };
 
+  // From insufficient-credits gate: open Premium and start the same flow as
+  // tapping “Try Premium for free”.
+  useEffect(() => {
+    if (startCheckout !== "1") return;
+    if (autoCheckoutStartedRef.current) return;
+    if (!hydrated || !workspace || !canManage) return;
+    if (workspace.plan === "premium") return;
+    autoCheckoutStartedRef.current = true;
+    router.setParams({ startCheckout: undefined });
+    // Defer so we don't sync-setState inside the effect body (react-hooks/set-state-in-effect).
+    queueMicrotask(() => {
+      void onCheckout();
+    });
+    // onCheckout is intentionally omitted — fire once when workspace is ready.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-start once
+  }, [startCheckout, hydrated, workspace, canManage, router]);
+
   const onCheckPremiumStatus = async () => {
     if (!workspace || !canManage) return;
     setBusy(true);
@@ -1418,15 +1440,21 @@ export function PremiumScreen() {
   const primaryProduct =
     storeProducts.find((p) => p.productId === DEFAULT_PREMIUM_PRODUCT) ??
     storeProducts[0];
-  const displayPrice = useStorePrice
-    ? primaryProduct?.displayPrice || null
-    : (priceQuery.data?.formatted ?? null);
-  const displayInterval = useStorePrice
-    ? primaryProduct?.billingInterval ?? "month"
-    : (priceQuery.data?.interval ?? null);
-  const priceLoading = useStorePrice
-    ? productsLoading
-    : priceQuery.isPending;
+  const storeFormatted =
+    useStorePrice && primaryProduct?.displayPrice
+      ? primaryProduct.displayPrice
+      : null;
+  const displayPrice =
+    storeFormatted || priceQuery.data?.formatted || null;
+  const displayInterval =
+    (useStorePrice && primaryProduct?.billingInterval
+      ? primaryProduct.billingInterval
+      : null) ||
+    priceQuery.data?.interval ||
+    null;
+  const priceLoading =
+    !displayPrice &&
+    ((useStorePrice && productsLoading) || priceQuery.isPending);
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>

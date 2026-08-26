@@ -25,6 +25,7 @@ import {
 } from "@/features/ai/api";
 import { SuggestFromHistorySheet } from "@/features/ai/suggest-from-history-sheet";
 import type { SuggestFromHistoryResponse } from "@/features/ai/schemas";
+import { invalidateAiCredits, bumpAiCreditsOptimistic } from "@/features/billing/ai-credits-query";
 import { shoppingItemsQueryKey } from "@/features/shopping-item/query-keys";
 import {
   CreateListSheet,
@@ -49,6 +50,10 @@ import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { Analytics } from "@/lib/analytics";
 import { oncePerUser } from "@/lib/analytics/once";
 import { ApiClientError } from "@/lib/api/client";
+import {
+  getCreditShortage,
+  isInsufficientCreditsError,
+} from "@/lib/ai/insufficientCredits";
 import { finishTaskAndOpen, openDetails } from "@/lib/navigation";
 import {
   isHistorySuggestionsEnabled,
@@ -80,6 +85,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const {
     showError,
+    showInsufficientCredits,
     visible: appResultVisible,
   } = useAppResult();
   const workspacesQuery = useWorkspaces();
@@ -152,10 +158,23 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         }
         return;
       }
+      bumpAiCreditsOptimistic(queryClient, activeWorkspace.id);
+      void invalidateAiCredits(queryClient, activeWorkspace.id);
       setSuggestRun(result);
     } catch (error) {
       if (suggestRequestIdRef.current !== requestId) return;
       setSuggestRun(null);
+      if (isInsufficientCreditsError(error)) {
+        const shortage = getCreditShortage(error) ?? {
+          needed: 1,
+          remaining: 0,
+        };
+        showInsufficientCredits({
+          ...shortage,
+          description: t("ai.insufficientCreditsBody"),
+        });
+        return;
+      }
       if (error instanceof ApiClientError) {
         if (error.code === "NOT_FOUND" || error.status === 404) {
           showError({
@@ -186,7 +205,15 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         setSuggestLoading(false);
       }
     }
-  }, [activeWorkspace, getToken, hydrated, showError, t]);
+  }, [
+    activeWorkspace,
+    getToken,
+    hydrated,
+    queryClient,
+    showError,
+    showInsufficientCredits,
+    t,
+  ]);
 
   const confirmSuggest = useCallback(
     async (acceptedIds: string[]) => {
@@ -217,9 +244,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
           queryClient.invalidateQueries({
             queryKey: ["shopping-items", result.list.id],
           }),
-          queryClient.invalidateQueries({
-            queryKey: ["ai-credits", activeWorkspace.id],
-          }),
+          invalidateAiCredits(queryClient, activeWorkspace.id),
         ]);
 
         finishTaskAndOpen(`/list/${result.list.id}` as never);
@@ -372,6 +397,10 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
           emoji,
         });
         markListProvisional(list.id);
+        queryClient.setQueryData(
+          ["shopping-list", list.id, "allow-archived"],
+          list,
+        );
         queryClient.setQueryData(["shopping-list", list.id, "active"], list);
         queryClient.setQueryData(shoppingItemsQueryKey(list.id, "active"), []);
 
@@ -465,17 +494,19 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         }}
         onBack={() => setPhotoSourceOpen(false)}
       />
-      <CreateListPreparingOverlay visible={creatingOverlay} />
-      <SuggestFromHistorySheet
-        // Hide while global result Modal is up (nested Modals often stay underneath).
-        visible={(suggestLoading || Boolean(suggestRun)) && !appResultVisible}
-        loading={suggestLoading}
-        busy={applyBusy}
-        title={suggestRun?.proposal.shoppingContext.title ?? ""}
-        items={suggestRun?.proposal.items ?? []}
-        onClose={() => void closeSuggest()}
-        onConfirm={(ids) => void confirmSuggest(ids)}
-      />
+      {creatingOverlay ? <CreateListPreparingOverlay /> : null}
+      {suggestLoading || suggestRun ? (
+        <SuggestFromHistorySheet
+          // Hide while global result Modal is up (nested Modals often stay underneath).
+          visible={!appResultVisible}
+          loading={suggestLoading}
+          busy={applyBusy}
+          title={suggestRun?.proposal.shoppingContext.title ?? ""}
+          items={suggestRun?.proposal.items ?? []}
+          onClose={() => void closeSuggest()}
+          onConfirm={(ids) => void confirmSuggest(ids)}
+        />
+      ) : null}
       <FeedbackSheet
         visible={clipboardEmptyOpen}
         image={brandAssets.listEmpty}

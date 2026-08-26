@@ -1,7 +1,10 @@
 export { DataSyncEngine } from "./engine";
 export type { EnqueueInput } from "./engine";
 export { compressOperations } from "./compress";
-export { overlayLocalOutboundStatuses } from "./overlay-local-ops";
+export {
+  materializeSuccessfulItem,
+  overlayLocalOutboundStatuses,
+} from "./overlay-local-ops";
 export type {
   SyncOperation,
   SyncOpAction,

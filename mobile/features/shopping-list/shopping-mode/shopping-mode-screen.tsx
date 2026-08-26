@@ -6,7 +6,14 @@ import {
 } from "@shared/shopping-categories";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,8 +28,12 @@ import { LoadingTransition } from "@/lib/motion";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { OfflineStatusBanner } from "@/features/offline/OfflineStatusBanner";
 import { startShoppingSession } from "@/features/notifications/api";
+import { ListItemRow } from "@/features/shopping-item/list-item-row";
 import { shoppingItemsQueryKey } from "@/features/shopping-item/query-keys";
-import type { ShoppingItem } from "@/features/shopping-item/schemas";
+import type {
+  ItemStatus,
+  ShoppingItem,
+} from "@/features/shopping-item/schemas";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
 import { CategoryOrderHint } from "@/features/shopping-list/category-order-ui";
 import { CategoryReorderList } from "@/features/shopping-list/category-reorder-list";
@@ -48,15 +59,59 @@ import {
   getListShoppingProgress,
   type CategoryProgress,
 } from "./category-progress";
+import { ShoppingBrowseModeToggle } from "./shopping-browse-mode-toggle";
 import { ShoppingCategoryCard } from "./shopping-category-card";
 import { ShoppingFab } from "./shopping-fab";
 import { ShoppingListSummaryCard } from "./shopping-list-summary-card";
 import { useShoppingModeExitGuard } from "./shopping-mode-exit-guard";
 import { leaveShoppingTask } from "./shopping-task-intent";
+import { useShoppingBrowseMode } from "./useShoppingBrowseMode";
 
 type Props = {
   listId: string;
 };
+
+function nextCycleStatus(
+  status: ItemStatus,
+): "pending" | "bought" | "unavailable" {
+  if (status === "pending") return "bought";
+  if (status === "bought") return "unavailable";
+  return "pending";
+}
+
+function SectionTitleRow({
+  title,
+  trailing,
+}: {
+  title: string;
+  trailing?: ReactNode;
+}) {
+  const scheme = useColorScheme() ?? "light";
+  const theme = colors[scheme];
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: spacing[3],
+        marginBottom: spacing[3],
+      }}
+    >
+      <Text
+        style={{
+          ...typography.headline,
+          color: theme.text,
+          flexShrink: 1,
+        }}
+      >
+        {title}
+      </Text>
+      {trailing}
+    </View>
+  );
+}
 
 function SectionTitle({ children }: { children: string }) {
   const scheme = useColorScheme() ?? "light";
@@ -88,6 +143,7 @@ export function ShoppingModeScreen({ listId }: Props) {
   const itemsQuery = useShoppingItems(listId);
   const membersQuery = useWorkspaceMembers(listQuery.data?.workspaceId ?? null);
   const session = useShoppingSession(listId);
+  const { mode: browseMode, setMode: setBrowseMode } = useShoppingBrowseMode();
   const [addOpen, setAddOpen] = useState(false);
   const [fabVisible, setFabVisible] = useState(true);
   const lastScrollY = useRef(0);
@@ -186,6 +242,48 @@ export function ShoppingModeScreen({ listId }: Props) {
 
   const listProgress = useMemo(() => getListShoppingProgress(items), [items]);
 
+  const flatSortedItems = useMemo(() => {
+    const categoryOrder = resolveShoppingCategoryOrder(listCategoryOrder);
+    return items
+      .filter((item) => item.status !== "removed")
+      .slice()
+      .sort((a, b) => {
+        const aIndex = categoryOrder.indexOf(a.category);
+        const bIndex = categoryOrder.indexOf(b.category);
+        const byCat =
+          (aIndex === -1 ? categoryOrder.length : aIndex) -
+          (bIndex === -1 ? categoryOrder.length : bIndex);
+        if (byCat !== 0) return byCat;
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      });
+  }, [items, listCategoryOrder]);
+
+  const patchCacheStatus = useCallback(
+    (itemId: string, status: ShoppingItem["status"]) => {
+      queryClient.setQueryData<ShoppingItem[]>(
+        shoppingItemsQueryKey(listId, "active"),
+        (prev) =>
+          prev?.map((i) => (i.id === itemId ? { ...i, status } : i)) ?? prev,
+      );
+    },
+    [listId, queryClient],
+  );
+
+  const cycleItemStatus = useCallback(
+    async (item: ShoppingItem) => {
+      const cached = queryClient.getQueryData<ShoppingItem[]>(
+        shoppingItemsQueryKey(listId, "active"),
+      );
+      const latest =
+        cached?.find((row) => row.id === item.id) ?? item;
+      const next = nextCycleStatus(latest.status);
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      patchCacheStatus(item.id, next);
+      await session.setItemStatus(item.id, next);
+    },
+    [listId, patchCacheStatus, queryClient, session],
+  );
+
   const relativeLabels = useMemo(
     () => ({
       justNow: t("home.updatedJustNow"),
@@ -223,6 +321,32 @@ export function ShoppingModeScreen({ listId }: Props) {
 
   const isPending = listQuery.isPending || itemsQuery.isPending;
   const showFinishCta = !isPending && categories.length === 0;
+  const hasTrackedItems = flatSortedItems.length > 0;
+  const showBrowseSection =
+    browseMode === "list" ? hasTrackedItems : categories.length > 0;
+
+  const backToEditLink = (
+    <Pressable
+      onPress={goBackToEdit}
+      accessibilityRole="button"
+      accessibilityLabel={t("shoppingMode.backToEditList")}
+      style={{
+        marginTop: spacing[4],
+        paddingVertical: spacing[3],
+        alignItems: "center",
+      }}
+    >
+      <Text
+        style={{
+          ...typography.label,
+          fontWeight: "500",
+          color: theme.textMuted,
+        }}
+      >
+        {t("shoppingMode.backToEditList")}
+      </Text>
+    </Pressable>
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.section }}>
@@ -301,9 +425,28 @@ export function ShoppingModeScreen({ listId }: Props) {
             paddingBottom: spacing[2] + insets.bottom,
           }}
         />
+        {!isPending ? (
+          <View
+            style={{
+              paddingHorizontal: spacing[6],
+              paddingTop: spacing[6],
+              backgroundColor: theme.section,
+            }}
+          >
+            <ShoppingListSummaryCard
+              title={listQuery.data?.name ?? t("shoppingMode.title")}
+              updatedLabel={updatedLabel}
+              bought={listProgress.bought}
+              total={listProgress.total}
+              progress={listProgress.progress}
+              members={membersQuery.data ?? []}
+            />
+          </View>
+        ) : null}
         <NestableScreenScroll
           contentContainerStyle={{
-            padding: spacing[6],
+            paddingHorizontal: spacing[6],
+            paddingTop: isPending ? spacing[6] : 0,
             paddingBottom: 100 + insets.bottom,
           }}
           onScroll={(e) => {
@@ -319,101 +462,100 @@ export function ShoppingModeScreen({ listId }: Props) {
             loading={isPending}
             skeleton={<ShoppingModeSkeleton />}
           >
-              <ShoppingListSummaryCard
-                title={listQuery.data?.name ?? t("shoppingMode.title")}
-                updatedLabel={updatedLabel}
-                bought={listProgress.bought}
-                total={listProgress.total}
-                progress={listProgress.progress}
-                members={membersQuery.data ?? []}
-              />
-
-              {categories.length > 0 ? (
+              {showBrowseSection ? (
                 <View style={{ marginBottom: spacing[2] }}>
-                  <SectionTitle>
-                    {t("shoppingMode.categoriesSection")}
-                  </SectionTitle>
-                  <CategoryOrderHint>
-                    {t("shoppingMode.tapCategoryHint")}
-                  </CategoryOrderHint>
-                  <CategoryOrderHint>
-                    {t(
-                      Platform.OS === "web"
-                        ? "shoppingMode.categoryOrderHintWeb"
-                        : "shoppingMode.categoryOrderHint",
+                  <SectionTitleRow
+                    title={t(
+                      browseMode === "list"
+                        ? "shoppingMode.listSection"
+                        : "shoppingMode.categoriesSection",
                     )}
-                  </CategoryOrderHint>
-                  <CategoryReorderList
-                    data={categories}
-                    keyExtractor={(item) => item.category}
-                    onReorder={onReorderCategories}
-                    renderItem={({
-                      item,
-                      drag,
-                      isActive,
-                      moveUp,
-                      moveDown,
-                    }) => (
-                      <ShoppingCategoryCard
-                        cat={item}
-                        variant="active"
-                        onPress={openCategory}
-                        onDrag={drag}
-                        isDragging={isActive}
-                        moveUp={moveUp}
-                        moveDown={moveDown}
+                    trailing={
+                      <ShoppingBrowseModeToggle
+                        mode={browseMode}
+                        onChange={setBrowseMode}
                       />
-                    )}
+                    }
                   />
-                  <Pressable
-                    onPress={goBackToEdit}
-                    accessibilityRole="button"
-                    accessibilityLabel={t("shoppingMode.backToEditList")}
-                    style={{
-                      marginTop: spacing[4],
-                      paddingVertical: spacing[3],
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        ...typography.label,
-                        fontWeight: "500",
-                        color: theme.textMuted,
-                      }}
-                    >
-                      {t("shoppingMode.backToEditList")}
-                    </Text>
-                  </Pressable>
+
+                  {browseMode === "list" ? (
+                    <>
+                      <CategoryOrderHint>
+                        {t("shoppingMode.listTapHint")}
+                      </CategoryOrderHint>
+                      {flatSortedItems.map((item, index) => (
+                        <ListItemRow
+                          key={item.id}
+                          item={item}
+                          showDivider={index < flatSortedItems.length - 1}
+                          onPress={() => void cycleItemStatus(item)}
+                        />
+                      ))}
+                      {backToEditLink}
+                    </>
+                  ) : (
+                    <>
+                      <CategoryOrderHint>
+                        {t("shoppingMode.tapCategoryHint")}
+                      </CategoryOrderHint>
+                      <CategoryOrderHint>
+                        {t(
+                          Platform.OS === "web"
+                            ? "shoppingMode.categoryOrderHintWeb"
+                            : "shoppingMode.categoryOrderHint",
+                        )}
+                      </CategoryOrderHint>
+                      <CategoryReorderList
+                        data={categories}
+                        keyExtractor={(item) => item.category}
+                        onReorder={onReorderCategories}
+                        renderItem={({
+                          item,
+                          drag,
+                          isActive,
+                          moveUp,
+                          moveDown,
+                        }) => (
+                          <ShoppingCategoryCard
+                            cat={item}
+                            variant="active"
+                            onPress={openCategory}
+                            onDrag={drag}
+                            isDragging={isActive}
+                            moveUp={moveUp}
+                            moveDown={moveDown}
+                          />
+                        )}
+                      />
+                      {backToEditLink}
+                    </>
+                  )}
                 </View>
               ) : (
-                <Pressable
-                  onPress={goBackToEdit}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("shoppingMode.backToEditList")}
-                  style={{
-                    marginTop: spacing[4],
-                    marginBottom: spacing[2],
-                    paddingVertical: spacing[3],
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      ...typography.label,
-                      fontWeight: "500",
-                      color: theme.textMuted,
-                    }}
-                  >
-                    {t("shoppingMode.backToEditList")}
-                  </Text>
-                </Pressable>
+                <View style={{ marginBottom: spacing[2] }}>
+                  {hasTrackedItems ? (
+                    <SectionTitleRow
+                      title={t(
+                        browseMode === "list"
+                          ? "shoppingMode.listSection"
+                          : "shoppingMode.categoriesSection",
+                      )}
+                      trailing={
+                        <ShoppingBrowseModeToggle
+                          mode={browseMode}
+                          onChange={setBrowseMode}
+                        />
+                      }
+                    />
+                  ) : null}
+                  {backToEditLink}
+                </View>
               )}
 
-              {completedCategories.length > 0 ? (
+              {browseMode === "aisles" && completedCategories.length > 0 ? (
                 <View
                   style={{
-                    marginTop: categories.length > 0 ? spacing[4] : 0,
+                    marginTop: showBrowseSection ? spacing[4] : 0,
                   }}
                 >
                   <SectionTitle>

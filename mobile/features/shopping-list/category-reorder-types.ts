@@ -17,4 +17,7 @@ export type CategoryReorderListProps<T> = {
   keyExtractor: (item: T) => string;
   onReorder: (data: T[]) => void;
   renderItem: (args: CategoryReorderRenderArgs<T>) => ReactElement;
+  /** Native: freeze parent data updates while dragging. */
+  onDragBegin?: () => void;
+  onDragEnd?: () => void;
 };

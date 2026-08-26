@@ -16,30 +16,37 @@ function SuggestItemRowSkeleton() {
         flexDirection: "row",
         alignItems: "center",
         gap: spacing[3],
-        paddingHorizontal: spacing[3],
-        paddingVertical: spacing[3],
-        marginBottom: spacing[2],
-        borderRadius: radius.xl,
-        borderWidth: 1,
-        borderColor: theme.border,
-        backgroundColor: theme.bg,
+        paddingVertical: spacing[4],
+        paddingHorizontal: spacing[4],
+        borderBottomWidth: 1,
+        borderBottomColor: theme.border,
       }}
     >
-      <SkeletonBone width={28} height={28} borderRadius={radius.md} />
       <View style={{ flex: 1, gap: 6 }}>
         <SkeletonBone width="62%" height={15} borderRadius={6} />
-        <SkeletonBone width="44%" height={11} borderRadius={6} />
+        <SkeletonBone width="78%" height={11} borderRadius={6} />
       </View>
-      <SkeletonBone width={36} height={12} borderRadius={4} />
       <SkeletonBone width={52} height={22} borderRadius={radius.full} />
+      <SkeletonBone width={26} height={26} borderRadius={13} />
     </View>
   );
 }
 
 /** Static skeleton rows shown while history AI generates proposals. */
 export function SuggestFromHistorySkeleton() {
+  const scheme = useColorScheme() ?? "light";
+  const theme = colors[scheme];
+
   return (
-    <View>
+    <View
+      style={{
+        backgroundColor: theme.surface,
+        borderRadius: radius.xl,
+        borderWidth: 1,
+        borderColor: theme.border,
+        overflow: "hidden",
+      }}
+    >
       {Array.from({ length: ROW_COUNT }, (_, index) => (
         <SuggestItemRowSkeleton key={index} />
       ))}

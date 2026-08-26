@@ -223,11 +223,18 @@ class DataSyncEngineImpl {
           await this.queue.update(id, { state });
         }
       },
-      onOpSuccess: (op, item) => {
-        this.syncCache?.applyOperationResult(op, {
-          status: "success",
-          item: item ?? undefined,
-        });
+      onOpSuccess: async (op, item) => {
+        // Pass live outbound ops so an older SET_STATUS success cannot revert
+        // a newer PENDING/SYNCING status already chosen by the user.
+        const outboundOps = await this.queue.getAll(op.listId);
+        this.syncCache?.applyOperationResult(
+          op,
+          {
+            status: "success",
+            item: item ?? undefined,
+          },
+          outboundOps,
+        );
       },
       onOpFailed: (op, error) => {
         const httpStatus =

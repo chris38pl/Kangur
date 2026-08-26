@@ -13,6 +13,8 @@ type Props = {
   showDivider?: boolean;
   /** Omit for read-only rows (e.g. History preview). */
   onMenuPress?: () => void;
+  /** Whole-row tap (e.g. shopping list browse mode status cycle). */
+  onPress?: () => void;
 };
 
 function CheckMark({ color, size = 7 }: { color: string; size?: number }) {
@@ -106,7 +108,12 @@ function CategoryStatusBadge({
   );
 }
 
-export function ListItemRow({ item, showDivider = true, onMenuPress }: Props) {
+export function ListItemRow({
+  item,
+  showDivider = true,
+  onMenuPress,
+  onPress,
+}: Props) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
@@ -115,118 +122,130 @@ export function ListItemRow({ item, showDivider = true, onMenuPress }: Props) {
   const unavailable = item.status === "unavailable";
   const dimmed = bought || unavailable;
 
-  return (
-    <View>
+  const row = (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing[3],
+        paddingVertical: spacing[3],
+      }}
+    >
       <View
         style={{
-          flexDirection: "row",
+          width: 28,
+          height: 28,
           alignItems: "center",
-          gap: spacing[3],
-          paddingVertical: spacing[3],
+          justifyContent: "center",
         }}
       >
-        <View
+        <Text style={{ fontSize: 22, opacity: dimmed ? 0.45 : 1 }}>
+          {getShoppingCategoryIcon(item.category)}
+        </Text>
+        {bought || unavailable ? (
+          <CategoryStatusBadge status={bought ? "bought" : "unavailable"} />
+        ) : null}
+      </View>
+
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text
+          numberOfLines={2}
           style={{
-            width: 28,
-            height: 28,
+            ...typography.headline,
+            color: dimmed ? theme.textMuted : theme.text,
+            textDecorationLine: bought ? "line-through" : "none",
+          }}
+        >
+          {item.name}
+        </Text>
+        {item.note ? (
+          <Text
+            numberOfLines={2}
+            style={{
+              ...typography.caption,
+              color: theme.textMuted,
+              marginTop: 2,
+            }}
+          >
+            {item.note}
+          </Text>
+        ) : null}
+      </View>
+
+      {item.amount ? (
+        <Text
+          style={{
+            ...typography.caption,
+            color: theme.textMuted,
+            flexShrink: 0,
+          }}
+        >
+          {item.amount}
+        </Text>
+      ) : null}
+
+      <View
+        style={{
+          backgroundColor: badge.background,
+          borderRadius: radius.full,
+          paddingHorizontal: spacing[2] + 2,
+          paddingVertical: spacing[1],
+          flexShrink: 0,
+          opacity: dimmed ? 0.7 : 1,
+        }}
+      >
+        <Text
+          style={{
+            ...typography.caption,
+            fontWeight: "600",
+            color: badge.text,
+          }}
+        >
+          {t(`categories.${item.category}`)}
+        </Text>
+      </View>
+
+      {onMenuPress ? (
+        <Pressable
+          onPress={onMenuPress}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={t("list.itemMenu")}
+          style={{
+            width: 32,
+            height: 32,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Text style={{ fontSize: 22, opacity: dimmed ? 0.45 : 1 }}>
-            {getShoppingCategoryIcon(item.category)}
-          </Text>
-          {bought || unavailable ? (
-            <CategoryStatusBadge
-              status={bought ? "bought" : "unavailable"}
-            />
-          ) : null}
-        </View>
-
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text
-            numberOfLines={2}
-            style={{
-              ...typography.headline,
-              color: dimmed ? theme.textMuted : theme.text,
-              textDecorationLine: bought ? "line-through" : "none",
-            }}
-          >
-            {item.name}
-          </Text>
-          {item.note ? (
-            <Text
-              numberOfLines={2}
-              style={{
-                ...typography.caption,
-                color: theme.textMuted,
-                marginTop: 2,
-              }}
-            >
-              {item.note}
-            </Text>
-          ) : null}
-        </View>
-
-        {item.amount ? (
           <Text
             style={{
-              ...typography.caption,
+              fontSize: 22,
+              lineHeight: 22,
               color: theme.textMuted,
-              flexShrink: 0,
-            }}
-          >
-            {item.amount}
-          </Text>
-        ) : null}
-
-        <View
-          style={{
-            backgroundColor: badge.background,
-            borderRadius: radius.full,
-            paddingHorizontal: spacing[2] + 2,
-            paddingVertical: spacing[1],
-            flexShrink: 0,
-            opacity: dimmed ? 0.7 : 1,
-          }}
-        >
-          <Text
-            style={{
-              ...typography.caption,
               fontWeight: "600",
-              color: badge.text,
             }}
           >
-            {t(`categories.${item.category}`)}
+            ⋯
           </Text>
-        </View>
+        </Pressable>
+      ) : null}
+    </View>
+  );
 
-        {onMenuPress ? (
-          <Pressable
-            onPress={onMenuPress}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel={t("list.itemMenu")}
-            style={{
-              width: 32,
-              height: 32,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 22,
-                lineHeight: 22,
-                color: theme.textMuted,
-                fontWeight: "600",
-              }}
-            >
-              ⋯
-            </Text>
-          </Pressable>
-        ) : null}
-      </View>
+  return (
+    <View>
+      {onPress ? (
+        <Pressable
+          onPress={onPress}
+          accessibilityRole="button"
+          accessibilityLabel={item.name}
+        >
+          {row}
+        </Pressable>
+      ) : (
+        row
+      )}
 
       {showDivider ? (
         <View style={{ height: 1, backgroundColor: theme.border }} />

@@ -152,7 +152,10 @@ export function AppResultProvider({ children }: { children: ReactNode }) {
           if (next) {
             next();
           } else {
-            router.push("/premium");
+            router.push({
+              pathname: "/premium",
+              params: { startCheckout: "1" },
+            });
           }
         }}
         onBack={() => {

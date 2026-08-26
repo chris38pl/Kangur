@@ -6,6 +6,7 @@ import type { AiOutputLanguage } from "./outputLanguage";
 import { AI_NAMING_RULES, AI_PROMPTS } from "./outputLanguage";
 import { buildCategoryRulesBlock } from "./categoryRules";
 import { applyCategoryCorrectionsToMealAi } from "./applyCategoryCorrections";
+import { applyCatalogMatchToMealAi } from "./applyCatalogMatch";
 import { MealProposalAiResponseSchema } from "./schemas";
 
 type ExistingItem = {
@@ -166,7 +167,10 @@ export async function buildMealProposal(input: {
     timing: result.timing,
     usage: result.usage,
     ai: applyCategoryCorrectionsToMealAi(
-      MealProposalAiResponseSchema.parse(result.structuredOutput),
+      applyCatalogMatchToMealAi(
+        MealProposalAiResponseSchema.parse(result.structuredOutput),
+        input.outputLanguage,
+      ),
     ),
   };
 }

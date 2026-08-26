@@ -20,6 +20,7 @@
     "typecheck": "tsc --noEmit",
     "test:auth-boot": "node --test --experimental-strip-types features/auth/canLoadWorkspaces.test.ts",
     "test:http-anomaly": "node --test --experimental-strip-types lib/api/http-anomaly.test.ts",
+    "test:status-race": "node --test --experimental-strip-types features/data-sync-engine/status-race.test.ts",
     "prebuild": "expo prebuild",
     "eas:login": "eas login",
     "eas:build:android": "eas build --platform android --profile development"

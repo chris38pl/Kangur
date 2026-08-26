@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,6 +16,10 @@ import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { createMealProposal } from "@/features/ai/api";
 import { setPendingMealProposal } from "@/features/ai/pending-meal-proposal";
+import {
+  bumpAiCreditsOptimistic,
+  invalidateAiCredits,
+} from "@/features/billing/ai-credits-query";
 import {
   getCreditShortage,
   isInsufficientCreditsError,
@@ -55,6 +59,7 @@ export function MealProposalComposer({
   const { t } = useTranslation();
   const { getToken } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { showInsufficientCredits } = useAppResult();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
@@ -68,6 +73,8 @@ export function MealProposalComposer({
       return createMealProposal(token, listId, dishes);
     },
     onSuccess: (response) => {
+      bumpAiCreditsOptimistic(queryClient, workspaceId);
+      invalidateAiCredits(queryClient, workspaceId);
       setPendingMealProposal({ listId, workspaceId, response, mealIndex: 0 });
       setDraft("");
       setDishes([]);

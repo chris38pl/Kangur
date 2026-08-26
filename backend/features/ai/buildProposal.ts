@@ -1,5 +1,9 @@
 import { SHOPPING_CATEGORIES } from "@shared/shopping-categories";
 import { SHOPPING_LIST_THEMES } from "@shared/shopping-themes";
+import {
+  formatDefaultShoppingListTitle,
+  resolveShoppingListTitle,
+} from "@shared/shopping-list/default-list-title";
 
 import { getAiOrchestrator } from "@/lib/ai";
 
@@ -8,6 +12,7 @@ import { AI_NAMING_RULES, AI_PROMPTS } from "./outputLanguage";
 import { buildCategoryRulesBlock } from "./categoryRules";
 import { buildItemIdentificationBlock } from "./itemIdentificationRules";
 import { applyCategoryCorrectionsToProposal } from "./applyCategoryCorrections";
+import { applyCatalogMatchToProposal } from "./applyCatalogMatch";
 import { AiProposalSchema } from "./schemas";
 
 type ExistingItem = {
@@ -78,8 +83,7 @@ function languageBlock(language: AiOutputLanguage): string {
 }
 
 function listTitleFallback(language: AiOutputLanguage): string {
-  const terms = AI_PROMPTS[language].exampleShoppingTerms;
-  return terms?.[terms.length - 1] ?? "Shopping";
+  return formatDefaultShoppingListTitle(language);
 }
 
 function shoppingContextBlock(language: AiOutputLanguage): string {
@@ -175,6 +179,21 @@ function clampShoppingContextTitle(structured: unknown): unknown {
   };
 }
 
+function resolveProposalShoppingTitle(
+  proposal: ReturnType<typeof AiProposalSchema.parse>,
+  language: AiOutputLanguage,
+) {
+  const title = resolveShoppingListTitle(proposal.shoppingContext.title, language);
+  if (title === proposal.shoppingContext.title) return proposal;
+  return {
+    ...proposal,
+    shoppingContext: {
+      ...proposal.shoppingContext,
+      title,
+    },
+  };
+}
+
 export async function buildProposalFromText(input: {
   sourceLabel: "text" | "clipboard";
   rawInput: string;
@@ -218,7 +237,13 @@ export async function buildProposalFromText(input: {
     timing: result.timing,
     usage: result.usage,
     proposal: applyCategoryCorrectionsToProposal(
-      AiProposalSchema.parse(clampShoppingContextTitle(result.structuredOutput)),
+      applyCatalogMatchToProposal(
+        resolveProposalShoppingTitle(
+          AiProposalSchema.parse(clampShoppingContextTitle(result.structuredOutput)),
+          input.outputLanguage,
+        ),
+        input.outputLanguage,
+      ),
     ),
   };
 }
@@ -274,7 +299,13 @@ export async function buildProposalFromScreenshot(input: {
     timing: result.timing,
     usage: result.usage,
     proposal: applyCategoryCorrectionsToProposal(
-      AiProposalSchema.parse(clampShoppingContextTitle(result.structuredOutput)),
+      applyCatalogMatchToProposal(
+        resolveProposalShoppingTitle(
+          AiProposalSchema.parse(clampShoppingContextTitle(result.structuredOutput)),
+          input.outputLanguage,
+        ),
+        input.outputLanguage,
+      ),
     ),
   };
 }
