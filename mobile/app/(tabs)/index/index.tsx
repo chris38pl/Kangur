@@ -32,6 +32,7 @@ import { useNotifications, useNotificationPreferences } from "@/features/notific
 import { refreshNotifications } from "@/features/notifications/refreshNotifications";
 import { perfEnd, perfStart } from "@/lib/performance";
 import { useResumableSessions } from "@/features/shopping-list/session/useResumableSessions";
+import { refreshWorkspaceListIndexIfStale } from "@/features/shopping-list/refresh-workspace-list-index";
 import { useShoppingLists } from "@/features/shopping-list/useShoppingLists";
 import { useAiCredits } from "@/features/billing/useAiCredits";
 import { refreshAiCredits } from "@/features/billing/ai-credits-query";
@@ -411,11 +412,11 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       void refreshAiCredits(queryClient, workspaceId);
+      // Quiet index refresh when cache is older than a few seconds.
+      // No pull spinner. Fresh seeds (just created) stay until a mutation refetch.
+      refreshWorkspaceListIndexIfStale(queryClient, workspaceId);
     }, [queryClient, workspaceId]),
   );
-
-  // Heavy queries: no forced focus refetch (staleTime + pull-to-refresh + mutation invalidation).
-  // Light paths may still refresh on focus elsewhere; do not set refetchOnWindowFocus globally.
 
   useFocusEffect(
     useCallback(() => {

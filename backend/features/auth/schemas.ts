@@ -17,6 +17,7 @@ export const ApiErrorSchema = z
       "CONFLICT",
       "INSUFFICIENT_CREDITS",
       "HISTORY_LIMIT_EXCEEDED",
+      "HISTORY_ALREADY_ON_LIST",
       "PREMIUM_REQUIRED",
       "AI_UNAVAILABLE",
       "RATE_LIMITED",

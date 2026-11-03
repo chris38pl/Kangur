@@ -107,7 +107,9 @@ function buildStatusFilter(
  */
 export async function selectHistorySourceLists(
   workspaceId: string,
+  options?: { excludeListId?: string },
 ): Promise<HistorySourceList[]> {
+  const excludeListId = options?.excludeListId;
   const freeArchivedIds = await freeArchivedEligibleIds(workspaceId);
   const statusFilter = buildStatusFilter(freeArchivedIds);
 
@@ -118,7 +120,11 @@ export async function selectHistorySourceLists(
   };
 
   const preferred = await prisma.shoppingList.findMany({
-    where: { ...baseWhere, preferredForAi: true },
+    where: {
+      ...baseWhere,
+      preferredForAi: true,
+      ...(excludeListId ? { id: { not: excludeListId } } : {}),
+    },
     include: listItemsInclude,
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
     take: HISTORY_LIST_TAKE,
@@ -126,15 +132,17 @@ export async function selectHistorySourceLists(
 
   const selected: DbList[] = [...preferred];
   const remaining = HISTORY_LIST_TAKE - selected.length;
+  const excludedIds = [
+    ...selected.map((list) => list.id),
+    ...(excludeListId ? [excludeListId] : []),
+  ];
 
   if (remaining > 0) {
     const fill = await prisma.shoppingList.findMany({
       where: {
         ...baseWhere,
         preferredForAi: false,
-        ...(selected.length > 0
-          ? { id: { notIn: selected.map((l) => l.id) } }
-          : {}),
+        ...(excludedIds.length > 0 ? { id: { notIn: excludedIds } } : {}),
       },
       include: listItemsInclude,
       orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],

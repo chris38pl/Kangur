@@ -42,6 +42,7 @@ import { DeleteListDialog } from "@/features/shopping-list/delete-list-dialog";
 import { updateShoppingList } from "@/features/shopping-list/api";
 import { listLifecycleAccentColor } from "@/features/shopping-list/list-lifecycle-status";
 import type { ShoppingList } from "@/features/shopping-list/schemas";
+import { refreshWorkspaceListIndexIfStale } from "@/features/shopping-list/refresh-workspace-list-index";
 import { useResumableSessions } from "@/features/shopping-list/session/useResumableSessions";
 import {
   useArchiveShoppingList,
@@ -504,7 +505,7 @@ export function HistoryScreen() {
   const workspaceId = queryWorkspaceId;
   const queryClient = useQueryClient();
 
-  // No mount/focus refetch here — keep cached lists visible; user pull refreshes.
+  // No mount refetch - keep cached rows on first paint. Focus uses a quiet refresh.
   const listQueryOpts = {
     refetchOnMount: false as const,
     refetchOnWindowFocus: false as const,
@@ -797,8 +798,10 @@ export function HistoryScreen() {
   useFocusEffect(
     useCallback(() => {
       historyOpened();
-      // Heavy list/history queries: no forced focus refetch (pull-to-refresh + invalidation).
-    }, []),
+      // Quiet index refresh when cache is older than a few seconds.
+      // refetchOnMount stays false so the first paint keeps cached rows.
+      refreshWorkspaceListIndexIfStale(queryClient, workspaceId);
+    }, [queryClient, workspaceId]),
   );
 
   const handleLimitError = (err: unknown) => {

@@ -1,7 +1,17 @@
 import { useAuth } from "@clerk/clerk-expo";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 
 import { DataSyncEngine } from "@/features/data-sync-engine";
+import {
+  patchShoppingListItemCount,
+  resolveWorkspaceIdForList,
+  scheduleRefreshWorkspaceListIndex,
+} from "@/features/shopping-list/refresh-workspace-list-index";
 
 import {
   createShoppingItem,
@@ -12,7 +22,22 @@ import {
   shoppingItemsQueryKey,
   shoppingItemsQueryPrefix,
 } from "./query-keys";
-import type { ItemStatus, ShoppingCategory } from "./schemas";
+import type { ItemStatus, ShoppingCategory, ShoppingItem } from "./schemas";
+
+function cachedItemStatus(
+  queryClient: QueryClient,
+  listId: string,
+  itemId: string,
+): ItemStatus | undefined {
+  for (const scope of ["active", "archived"] as const) {
+    const items = queryClient.getQueryData<ShoppingItem[]>(
+      shoppingItemsQueryKey(listId, scope),
+    );
+    const found = items?.find((item) => item.id === itemId);
+    if (found) return found.status;
+  }
+  return undefined;
+}
 
 export function useShoppingItems(
   listId: string | null,
@@ -60,11 +85,27 @@ export function useCreateShoppingItem(listId: string | null) {
       }
       return createShoppingItem(token, listId, input);
     },
-    onSuccess: async () => {
+    onMutate: () => {
+      if (!listId) return undefined;
+      const workspaceId = resolveWorkspaceIdForList(queryClient, listId);
+      if (workspaceId) {
+        patchShoppingListItemCount(queryClient, workspaceId, listId, 1);
+      }
+      return { workspaceId, bumped: Boolean(workspaceId) };
+    },
+    onError: (_error, _input, context) => {
+      if (!listId || !context?.bumped || !context.workspaceId) return;
+      patchShoppingListItemCount(queryClient, context.workspaceId, listId, -1);
+    },
+    onSuccess: async (_item, _input, context) => {
       if (!listId) return;
       await queryClient.invalidateQueries({
         queryKey: shoppingItemsQueryPrefix(listId),
       });
+      scheduleRefreshWorkspaceListIndex(
+        queryClient,
+        context?.workspaceId ?? resolveWorkspaceIdForList(queryClient, listId),
+      );
     },
   });
 }
@@ -88,11 +129,38 @@ export function useUpdateShoppingItem(listId: string | null) {
       }
       return updateShoppingItem(token, input.itemId, input);
     },
-    onSuccess: async () => {
+    onMutate: (input) => {
+      if (!listId || input.status !== "removed") return undefined;
+      const alreadyRemoved =
+        cachedItemStatus(queryClient, listId, input.itemId) === "removed";
+      const workspaceId = resolveWorkspaceIdForList(queryClient, listId);
+      const bumped = !alreadyRemoved && Boolean(workspaceId);
+      if (bumped && workspaceId) {
+        patchShoppingListItemCount(queryClient, workspaceId, listId, -1);
+      }
+      return { workspaceId, bumped };
+    },
+    onError: (_error, input, context) => {
+      if (
+        !listId ||
+        input.status !== "removed" ||
+        !context?.bumped ||
+        !context.workspaceId
+      ) {
+        return;
+      }
+      patchShoppingListItemCount(queryClient, context.workspaceId, listId, 1);
+    },
+    onSuccess: async (_item, input, context) => {
       if (!listId) return;
       await queryClient.invalidateQueries({
         queryKey: shoppingItemsQueryPrefix(listId),
       });
+      if (input.status !== "removed") return;
+      scheduleRefreshWorkspaceListIndex(
+        queryClient,
+        context?.workspaceId ?? resolveWorkspaceIdForList(queryClient, listId),
+      );
     },
   });
 }

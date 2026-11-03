@@ -1,14 +1,35 @@
 import { NextResponse } from "next/server";
 
-import { SuggestFromHistoryResponseSchema } from "@/features/ai/schemas";
+import {
+  SuggestFromHistoryBodySchema,
+  SuggestFromHistoryResponseSchema,
+} from "@/features/ai/schemas";
 import { suggestFromHistory } from "@/features/ai/suggestFromHistory";
-import { ApiError } from "@/lib/auth/errors";
+import { ApiError, validationError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
 import { assertRateLimit } from "@/lib/rateLimit";
 
 type RouteContext = {
   params: Promise<{ workspaceId: string }>;
 };
+
+async function readOptionalListId(request: Request): Promise<string | undefined> {
+  const raw = await request.text();
+  if (!raw.trim()) return undefined;
+
+  let json: unknown;
+  try {
+    json = JSON.parse(raw) as unknown;
+  } catch {
+    throw validationError("Invalid request body.");
+  }
+
+  const parsed = SuggestFromHistoryBodySchema.safeParse(json);
+  if (!parsed.success) {
+    throw validationError("Invalid request body.");
+  }
+  return parsed.data.listId;
+}
 
 export async function POST(request: Request, context: RouteContext) {
   try {
@@ -17,9 +38,11 @@ export async function POST(request: Request, context: RouteContext) {
 
     assertRateLimit("ai", `${user.id}:${workspaceId}`);
 
+    const listId = await readOptionalListId(request);
     const result = await suggestFromHistory({
       workspaceId,
       userId: user.id,
+      listId,
     });
 
     return NextResponse.json(SuggestFromHistoryResponseSchema.parse(result));

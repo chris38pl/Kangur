@@ -136,6 +136,7 @@
               "CONFLICT",
               "INSUFFICIENT_CREDITS",
               "HISTORY_LIMIT_EXCEEDED",
+              "HISTORY_ALREADY_ON_LIST",
               "PREMIUM_REQUIRED",
               "AI_UNAVAILABLE",
               "RATE_LIMITED"
@@ -2127,6 +2128,15 @@
           "timesSeen",
           "lastSeenAt"
         ]
+      },
+      "SuggestFromHistoryBody": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       },
       "ApplySuggestFromHistoryResponse": {
         "type": "object",
@@ -5905,6 +5915,17 @@
             "in": "path"
           }
         ],
+        "requestBody": {
+          "required": false,
+          "description": "Omit to create a new list. Pass listId to append onto an active list in this workspace.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestFromHistoryBody"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "History-merge proposal created",
@@ -5927,7 +5948,17 @@
             }
           },
           "404": {
-            "description": "No eligible source lists with products",
+            "description": "No eligible source lists with products, or target list not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Every suggested product is already on the target list (HISTORY_ALREADY_ON_LIST)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5941,7 +5972,7 @@
     },
     "/api/v1/workspaces/{workspaceId}/ai/suggest-from-history/apply": {
       "post": {
-        "summary": "Create a list from accepted history-suggestion items",
+        "summary": "Create a list from accepted history items, or append them when the run targets an existing list",
         "tags": [
           "AI"
         ],
@@ -5971,7 +6002,7 @@
         },
         "responses": {
           "200": {
-            "description": "List created and items applied",
+            "description": "Items applied to a new or existing list",
             "content": {
               "application/json": {
                 "schema": {
@@ -5991,7 +6022,7 @@
             }
           },
           "409": {
-            "description": "Run already applied or abandoned",
+            "description": "Run already applied or abandoned, or every accepted product is already on the target list",
             "content": {
               "application/json": {
                 "schema": {

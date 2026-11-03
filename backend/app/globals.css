@@ -345,6 +345,12 @@ a:hover {
   white-space: nowrap;
 }
 
+.mkt-footer-entity {
+  margin: 12px auto 0;
+  max-width: 46rem;
+  line-height: 1.45;
+}
+
 /* -- Home hero -- */
 
 .mkt-hero-section {
@@ -671,6 +677,14 @@ a:hover {
 
 .mkt-contact-info a:hover {
   text-decoration: underline;
+}
+
+.mkt-contact-info p.mkt-contact-entity {
+  margin: 8px 0 0;
+  max-width: 28rem;
+  color: var(--kangur-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
 }
 
 .mkt-contact-visual {

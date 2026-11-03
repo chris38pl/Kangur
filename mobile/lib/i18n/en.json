@@ -270,6 +270,7 @@
   "ai": {
     "title": "AI import",
     "quickAddTitle": "Create list with AI ✨",
+    "addWithAiTitle": "Add with AI ✨",
     "quickAddSubtitle": "Enter products separated by commas, and AI will organize them for you.",
     "textPlaceholder": "e.g. milk, eggs, bananas, chicken, rice, olive oil...",
     "dictateStart": "Dictate with microphone",
@@ -331,6 +332,8 @@
     "unavailableBody": "Kangur couldn't process your list right now. Please try again in a moment.",
     "suggestUnavailable": "Could not build a list from history. Please try again.",
     "suggestNoHistory": "You don't have any shopping lists with products yet.",
+    "historyAlreadyOnListTitle": "Nothing new to add",
+    "historyAlreadyOnListBody": "Everything from your previous lists is already on this list.",
     "suggestInsufficientCredits": "You've used all free AI uses for this action.",
     "suggestFeatureDisabled": "This feature is currently disabled.",
     "suggestAlreadyApplied": "This suggestion was already used.",
@@ -360,6 +363,7 @@
     "mealProposalBackToList": "Back to list",
     "mealProposalGenerating": "Generating…",
     "mealProposalSectionTitle": "Create list from a recipe with AI ✨",
+    "addFromRecipeTitle": "Add from a recipe with AI ✨",
     "mealProposalUncheckHint": "Uncheck ingredients you already have at home."
   },
   "categories": {

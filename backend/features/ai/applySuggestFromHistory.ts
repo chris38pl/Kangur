@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, type ShoppingList } from "@prisma/client";
 
 import { resolveShoppingListTitle } from "@shared/shopping-list/default-list-title";
 
@@ -6,6 +6,7 @@ import { authorize } from "@/lib/authorize";
 import {
   conflict,
   forbidden,
+  historyAlreadyOnList,
   notFound,
   validationError,
 } from "@/lib/auth/errors";
@@ -20,6 +21,7 @@ import {
   historyMergeApplied,
   historyMergeCancelled,
 } from "./historyMergeAnalytics";
+import { excludeItemsAlreadyOnList } from "./excludeItemsAlreadyOnList";
 import { resolveWorkspaceOutputLanguage } from "./outputLanguage";
 import { SuggestFromHistoryProposalSchema } from "./schemas";
 
@@ -109,42 +111,103 @@ export async function applySuggestFromHistory(input: {
         throw conflict("AI run is no longer proposed.");
       }
 
-      const list = await tx.shoppingList.create({
-        data: {
-          workspaceId: input.workspaceId,
-          name: title,
-          emoji: DEFAULT_EMOJI,
-          isUntitled: false,
-          status: "active",
-          createdByUserId: input.userId,
-        },
-      });
+      const appending = Boolean(run.listId);
+      let list: ShoppingList;
+      let appliedCount = uniqueAccepted.length;
 
-      await tx.shoppingItem.createMany({
-        data: uniqueAccepted.map((item, index) => ({
+      if (run.listId) {
+        const existing = await tx.shoppingList.findFirst({
+          where: {
+            id: run.listId,
+            workspaceId: input.workspaceId,
+            status: "active",
+          },
+        });
+        if (!existing) {
+          throw notFound("List not found.");
+        }
+
+        const currentItems = await tx.shoppingItem.findMany({
+          where: { listId: existing.id, status: { not: "removed" } },
+          select: { name: true },
+        });
+        const toInsert = excludeItemsAlreadyOnList(
+          uniqueAccepted,
+          currentItems.map((item) => item.name),
+        );
+        if (toInsert.length === 0) {
+          throw historyAlreadyOnList();
+        }
+
+        const last = await tx.shoppingItem.findFirst({
+          where: { listId: existing.id },
+          orderBy: [{ sortOrder: "desc" }, { createdAt: "desc" }],
+          select: { sortOrder: true },
+        });
+        let nextSort = (last?.sortOrder ?? -1) + 1;
+
+        await tx.shoppingItem.createMany({
+          data: toInsert.map((item) => {
+            const sortOrder = nextSort;
+            nextSort += 1;
+            return {
+              listId: existing.id,
+              name: item.name,
+              normalizedName: item.name.trim().toLowerCase(),
+              amount: item.amount,
+              note: item.note,
+              category: item.category,
+              status: "pending" as const,
+              sortOrder,
+              addedByUserId: input.userId,
+              updatedByUserId: input.userId,
+            };
+          }),
+        });
+
+        list = await tx.shoppingList.update({
+          where: { id: existing.id },
+          data: { updatedAt: new Date() },
+        });
+        appliedCount = toInsert.length;
+      } else {
+        list = await tx.shoppingList.create({
+          data: {
+            workspaceId: input.workspaceId,
+            name: title,
+            emoji: DEFAULT_EMOJI,
+            isUntitled: false,
+            status: "active",
+            createdByUserId: input.userId,
+          },
+        });
+
+        await tx.shoppingItem.createMany({
+          data: uniqueAccepted.map((item, index) => ({
+            listId: list.id,
+            name: item.name,
+            normalizedName: item.name.trim().toLowerCase(),
+            amount: item.amount,
+            note: item.note,
+            category: item.category,
+            status: "pending" as const,
+            sortOrder: index,
+            addedByUserId: input.userId,
+            updatedByUserId: input.userId,
+          })),
+        });
+
+        await tx.aiProposalRun.update({
+          where: { id: run.id },
+          data: { listId: list.id },
+        });
+
+        await appendShoppingEvent(tx, {
           listId: list.id,
-          name: item.name,
-          normalizedName: item.name.trim().toLowerCase(),
-          amount: item.amount,
-          note: item.note,
-          category: item.category,
-          status: "pending" as const,
-          sortOrder: index,
-          addedByUserId: input.userId,
-          updatedByUserId: input.userId,
-        })),
-      });
-
-      await tx.aiProposalRun.update({
-        where: { id: run.id },
-        data: { listId: list.id },
-      });
-
-      await appendShoppingEvent(tx, {
-        listId: list.id,
-        actorUserId: input.userId,
-        type: "list_created",
-      });
+          actorUserId: input.userId,
+          type: "list_created",
+        });
+      }
 
       await appendShoppingEvent(tx, {
         listId: list.id,
@@ -152,7 +215,7 @@ export async function applySuggestFromHistory(input: {
         type: "ai_applied",
         payload: {
           runId: run.id,
-          appliedOperations: uniqueAccepted.length,
+          appliedOperations: appliedCount,
           proposalType: HISTORY_PROPOSAL_TYPE,
         },
       });
@@ -164,6 +227,7 @@ export async function applySuggestFromHistory(input: {
       });
 
       return {
+        createdNewList: !appending,
         list: toShoppingListDto({
           ...list,
           itemCount: items.length,
@@ -173,15 +237,16 @@ export async function applySuggestFromHistory(input: {
             category: item.category,
           })),
         }),
-        applied: uniqueAccepted.length,
+        applied: appliedCount,
       };
     });
 
-    // Side-effect notifications after COMMIT
-    await maybePublishShoppingListCreated({
-      listId: result.list.id,
-      actorUserId: input.userId,
-    });
+    if (result.createdNewList) {
+      await maybePublishShoppingListCreated({
+        listId: result.list.id,
+        actorUserId: input.userId,
+      });
+    }
 
     historyMergeApplied({
       workspaceId: input.workspaceId,

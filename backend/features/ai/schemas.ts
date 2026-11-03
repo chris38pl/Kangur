@@ -79,6 +79,12 @@ export const SuggestFromHistoryProposalSchema = z
   })
   .openapi("SuggestFromHistoryProposal");
 
+export const SuggestFromHistoryBodySchema = z
+  .object({
+    listId: z.string().min(1).optional(),
+  })
+  .openapi("SuggestFromHistoryBody");
+
 export const SuggestFromHistoryResponseSchema = z
   .object({
     runId: z.string(),

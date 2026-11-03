@@ -8,6 +8,7 @@ export type ApiErrorCode =
   | "CONFLICT"
   | "INSUFFICIENT_CREDITS"
   | "HISTORY_LIMIT_EXCEEDED"
+  | "HISTORY_ALREADY_ON_LIST"
   | "PREMIUM_REQUIRED"
   | "AI_UNAVAILABLE"
   | "RATE_LIMITED";
@@ -77,6 +78,13 @@ export function conflict(
   details?: Record<string, unknown>,
 ): ApiError {
   return new ApiError("CONFLICT", message, 409, details);
+}
+
+/** Append-from-history: every merged product is already on the target list. */
+export function historyAlreadyOnList(
+  message = "Everything from previous lists is already on this list.",
+): ApiError {
+  return new ApiError("HISTORY_ALREADY_ON_LIST", message, 409);
 }
 
 /** Free plan history depth exceeded - resource exists; upgrade for older lists. */

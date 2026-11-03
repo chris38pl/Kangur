@@ -1,6 +1,11 @@
 import type { QueryClient } from "@tanstack/react-query";
 
 import {
+  patchShoppingListItemCount,
+  resolveWorkspaceIdForList,
+  scheduleRefreshWorkspaceListIndex,
+} from "../shopping-list/refresh-workspace-list-index";
+import {
   shoppingItemsQueryKey,
   shoppingItemsQueryPrefix,
 } from "../shopping-item/query-keys";
@@ -84,12 +89,14 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
           operation.payload.clientId ?? operation.itemId ?? "",
         );
         this.replaceOptimisticItem(operation.listId, clientId, result.item);
+        this.touchListIndex(operation.listId, 1);
         return;
       }
       case "REMOVE_ITEM": {
         const itemId = operation.itemId;
         if (!itemId) return;
         this.removeActiveItem(operation.listId, itemId);
+        this.touchListIndex(operation.listId, -1);
         return;
       }
       case "ARCHIVE_LIST":
@@ -108,6 +115,13 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
     // Return reconciled rows; React Query queryFn (or caller) owns the write.
     void listId;
     return overlayLocalOutboundStatuses(serverItems, outboundOps);
+  }
+
+  /** Home counts non-removed items. Shopping-mode adds/removes go through the engine, not useCreateShoppingItem. */
+  private touchListIndex(listId: string, delta: number): void {
+    const workspaceId = resolveWorkspaceIdForList(this.queryClient, listId);
+    patchShoppingListItemCount(this.queryClient, workspaceId, listId, delta);
+    scheduleRefreshWorkspaceListIndex(this.queryClient, workspaceId);
   }
 
   invalidateShoppingItems(listId: string): void {

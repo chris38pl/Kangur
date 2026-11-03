@@ -7,6 +7,7 @@ import {
   isAppLocale,
   type AppLocale,
 } from "@/lib/marketing/locale";
+import { LegalEntityLine } from "@/lib/marketing/legal-entity";
 import { getMessages } from "@/lib/marketing/messages";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -102,6 +103,9 @@ export default async function ContactPage({ params }: Props) {
             <div>
               <strong>{c.emailLabel}</strong>
               <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+              <p className="mkt-contact-entity">
+                <LegalEntityLine locale={locale} />
+              </p>
             </div>
           </li>
           <li>

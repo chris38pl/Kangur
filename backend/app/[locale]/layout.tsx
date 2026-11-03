@@ -11,6 +11,7 @@ import {
   withLocale,
   type AppLocale,
 } from "@/lib/marketing/locale";
+import { LegalEntityLine } from "@/lib/marketing/legal-entity";
 import { getMessages } from "@/lib/marketing/messages";
 
 export function generateStaticParams() {
@@ -98,6 +99,9 @@ export default async function LocaleLayout({
             {t.nav.copyright}. {t.nav.rightsReserved}.
           </span>
         </nav>
+        <p className="mkt-footer-entity">
+          <LegalEntityLine locale={locale} />
+        </p>
       </footer>
     </div>
   );

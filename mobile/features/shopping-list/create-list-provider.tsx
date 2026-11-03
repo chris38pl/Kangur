@@ -18,14 +18,8 @@ import { AppResultScreen } from "@/components/AppResultScreen";
 import { useAppResult } from "@/components/AppResultProvider";
 import { FeedbackSheet } from "@/components/feedback-sheet";
 import { brandAssets } from "@/design-system/brand-assets";
-import {
-  abandonSuggestFromHistory,
-  applySuggestFromHistory,
-  suggestFromHistory,
-} from "@/features/ai/api";
 import { SuggestFromHistorySheet } from "@/features/ai/suggest-from-history-sheet";
-import type { SuggestFromHistoryResponse } from "@/features/ai/schemas";
-import { invalidateAiCredits, bumpAiCreditsOptimistic } from "@/features/billing/ai-credits-query";
+import { useSuggestFromHistory } from "@/features/ai/use-suggest-from-history";
 import { shoppingItemsQueryKey } from "@/features/shopping-item/query-keys";
 import {
   CreateListSheet,
@@ -49,12 +43,7 @@ import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { Analytics } from "@/lib/analytics";
 import { oncePerUser } from "@/lib/analytics/once";
-import { ApiClientError } from "@/lib/api/client";
-import {
-  getCreditShortage,
-  isInsufficientCreditsError,
-} from "@/lib/ai/insufficientCredits";
-import { finishTaskAndOpen, openDetails } from "@/lib/navigation";
+import { openDetails } from "@/lib/navigation";
 import {
   isHistorySuggestionsEnabled,
   isMealProposalEnabled,
@@ -85,7 +74,6 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const {
     showError,
-    showInsufficientCredits,
     visible: appResultVisible,
   } = useAppResult();
   const workspacesQuery = useWorkspaces();
@@ -96,196 +84,20 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
   const [clipboardEmptyOpen, setClipboardEmptyOpen] = useState(false);
   const [photoSourceOpen, setPhotoSourceOpen] = useState(false);
   const createInFlightRef = useRef(false);
-  const [suggestLoading, setSuggestLoading] = useState(false);
-  const [applyBusy, setApplyBusy] = useState(false);
-  const [suggestRun, setSuggestRun] =
-    useState<SuggestFromHistoryResponse | null>(null);
-  const suggestRequestIdRef = useRef(0);
+  const {
+    loading: historyLoading,
+    busy: historyBusy,
+    run: historyRun,
+    start: startHistorySuggest,
+    close: closeHistorySuggest,
+    confirm: confirmHistorySuggest,
+  } = useSuggestFromHistory({
+    workspaceId: activeWorkspace?.id ?? null,
+  });
 
   const openCreateList = useCallback(() => {
     setSheetOpen(true);
   }, []);
-
-  const closeSuggest = useCallback(async () => {
-    suggestRequestIdRef.current += 1;
-    if (suggestLoading) {
-      setSuggestLoading(false);
-      setSuggestRun(null);
-      return;
-    }
-    const run = suggestRun;
-    const workspaceId = activeWorkspace?.id;
-    setSuggestRun(null);
-    if (!run || !workspaceId) return;
-    try {
-      const token = await getToken();
-      if (!token) return;
-      await abandonSuggestFromHistory(token, workspaceId, run.runId);
-    } catch {
-      // Best-effort abandon
-    }
-  }, [activeWorkspace?.id, getToken, suggestLoading, suggestRun]);
-
-  const runFromHistory = useCallback(async () => {
-    if (!activeWorkspace || !hydrated) return;
-    if (!isHistorySuggestionsEnabled()) {
-      showError({
-        title: t("ai.suggestErrorTitle"),
-        description: t("ai.suggestFeatureDisabled"),
-      });
-      return;
-    }
-
-    const requestId = ++suggestRequestIdRef.current;
-    setSheetOpen(false);
-    setSuggestRun(null);
-    setSuggestLoading(true);
-    try {
-      const token = await getToken();
-      if (!token) throw new Error("Missing auth token");
-
-      const result = await suggestFromHistory(token, activeWorkspace.id);
-      if (suggestRequestIdRef.current !== requestId) {
-        // User cancelled - abandon the orphaned run.
-        try {
-          await abandonSuggestFromHistory(
-            token,
-            activeWorkspace.id,
-            result.runId,
-          );
-        } catch {
-          // best-effort
-        }
-        return;
-      }
-      bumpAiCreditsOptimistic(queryClient, activeWorkspace.id);
-      void invalidateAiCredits(queryClient, activeWorkspace.id);
-      setSuggestRun(result);
-    } catch (error) {
-      if (suggestRequestIdRef.current !== requestId) return;
-      setSuggestRun(null);
-      if (isInsufficientCreditsError(error)) {
-        const shortage = getCreditShortage(error) ?? {
-          needed: 1,
-          remaining: 0,
-        };
-        showInsufficientCredits({
-          ...shortage,
-          description: t("ai.insufficientCreditsBody"),
-        });
-        return;
-      }
-      if (error instanceof ApiClientError) {
-        if (error.code === "NOT_FOUND" || error.status === 404) {
-          showError({
-            title: t("ai.suggestErrorTitle"),
-            description: t("ai.suggestNoHistory"),
-          });
-          return;
-        }
-        if (error.code === "FORBIDDEN" || error.status === 403) {
-          showError({
-            title: t("ai.suggestErrorTitle"),
-            description: t("ai.suggestFeatureDisabled"),
-          });
-          return;
-        }
-      }
-      showError({
-        title: t("ai.suggestErrorTitle"),
-        description: t("ai.suggestUnavailable"),
-        primaryLabel: t("common.tryAgain"),
-        secondaryLabel: t("common.return"),
-        onPrimary: () => {
-          void runFromHistory();
-        },
-      });
-    } finally {
-      if (suggestRequestIdRef.current === requestId) {
-        setSuggestLoading(false);
-      }
-    }
-  }, [
-    activeWorkspace,
-    getToken,
-    hydrated,
-    queryClient,
-    showError,
-    showInsufficientCredits,
-    t,
-  ]);
-
-  const confirmSuggest = useCallback(
-    async (acceptedIds: string[]) => {
-      if (!activeWorkspace || !suggestRun || acceptedIds.length === 0) return;
-      setApplyBusy(true);
-      try {
-        const token = await getToken();
-        if (!token) throw new Error("Missing auth token");
-
-        const result = await applySuggestFromHistory(
-          token,
-          activeWorkspace.id,
-          {
-            runId: suggestRun.runId,
-            acceptedProposalRowIds: acceptedIds,
-          },
-        );
-
-        setSuggestRun(null);
-
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: ["shopping-lists", activeWorkspace.id],
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["shopping-lists-history", activeWorkspace.id],
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["shopping-items", result.list.id],
-          }),
-          invalidateAiCredits(queryClient, activeWorkspace.id),
-        ]);
-
-        finishTaskAndOpen(`/list/${result.list.id}` as never);
-      } catch (error) {
-        if (error instanceof ApiClientError) {
-          if (error.code === "CONFLICT" || error.status === 409) {
-            setSuggestRun(null);
-            showError({
-              title: t("ai.suggestErrorTitle"),
-              description: t("ai.suggestAlreadyApplied"),
-            });
-            return;
-          }
-          if (error.code === "NOT_FOUND" || error.status === 404) {
-            showError({
-              title: t("ai.suggestErrorTitle"),
-              description: t("ai.suggestApplyNotFound"),
-              secondaryLabel: t("common.return"),
-              primaryLabel: t("common.tryAgain"),
-              onPrimary: () => {
-                void confirmSuggest(acceptedIds);
-              },
-            });
-            return;
-          }
-        }
-        showError({
-          title: t("ai.suggestErrorTitle"),
-          description: t("ai.suggestApplyFailed"),
-          secondaryLabel: t("common.return"),
-          primaryLabel: t("common.tryAgain"),
-          onPrimary: () => {
-            void confirmSuggest(acceptedIds);
-          },
-        });
-      } finally {
-        setApplyBusy(false);
-      }
-    },
-    [activeWorkspace, getToken, queryClient, showError, suggestRun, t],
-  );
 
   const createAndOpen = useCallback(
     async (
@@ -297,7 +109,12 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
       if (createInFlightRef.current) return;
 
       if (path === "fromHistory") {
-        await runFromHistory();
+        if (!isHistorySuggestionsEnabled()) {
+          await startHistorySuggest();
+          return;
+        }
+        setSheetOpen(false);
+        await startHistorySuggest();
         return;
       }
 
@@ -451,7 +268,7 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
       getToken,
       hydrated,
       queryClient,
-      runFromHistory,
+      startHistorySuggest,
       showError,
       t,
     ],
@@ -495,16 +312,16 @@ export function CreateListProvider({ children }: { children: ReactNode }) {
         onBack={() => setPhotoSourceOpen(false)}
       />
       {creatingOverlay ? <CreateListPreparingOverlay /> : null}
-      {suggestLoading || suggestRun ? (
+      {historyLoading || historyRun ? (
         <SuggestFromHistorySheet
           // Hide while global result Modal is up (nested Modals often stay underneath).
           visible={!appResultVisible}
-          loading={suggestLoading}
-          busy={applyBusy}
-          title={suggestRun?.proposal.shoppingContext.title ?? ""}
-          items={suggestRun?.proposal.items ?? []}
-          onClose={() => void closeSuggest()}
-          onConfirm={(ids) => void confirmSuggest(ids)}
+          loading={historyLoading}
+          busy={historyBusy}
+          title={historyRun?.proposal.shoppingContext.title ?? ""}
+          items={historyRun?.proposal.items ?? []}
+          onClose={() => void closeHistorySuggest()}
+          onConfirm={(ids) => void confirmHistorySuggest(ids)}
         />
       ) : null}
       <FeedbackSheet

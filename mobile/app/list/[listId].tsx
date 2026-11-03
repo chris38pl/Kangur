@@ -8,6 +8,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
+import { openSettings } from "expo-linking";
 import { Stack, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
@@ -33,6 +34,7 @@ import {
   ListDetailSkeleton,
   ListHeaderTitleSkeleton,
 } from "@/components/skeleton";
+import { AppResultScreen } from "@/components/AppResultScreen";
 import { useAppResult } from "@/components/AppResultProvider";
 import { FeedbackSheet } from "@/components/feedback-sheet";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -53,6 +55,8 @@ import { MealProposalComposer } from "@/features/ai/meal-proposal-composer";
 import { MicIcon } from "@/features/ai/mic-icon";
 import type { ProposalOperation } from "@/features/ai/schemas";
 import { useSpeechDictation } from "@/features/ai/use-speech-dictation";
+import { useSuggestFromHistory } from "@/features/ai/use-suggest-from-history";
+import { SuggestFromHistorySheet } from "@/features/ai/suggest-from-history-sheet";
 import { BackIcon } from "@/features/auth/auth-icons";
 import { perfEnd, perfStart } from "@/lib/performance";
 import {
@@ -124,6 +128,11 @@ import {
 } from "@/features/shopping-list/list-lifecycle-status";
 import { ListStatusBadge } from "@/features/shopping-list/list-status-badge";
 import { NestableScreenScroll } from "@/features/shopping-list/nestable-screen-scroll";
+import {
+  patchShoppingListItemCount,
+  refreshWorkspaceListIndex,
+  resolveWorkspaceIdForList,
+} from "@/features/shopping-list/refresh-workspace-list-index";
 import { useResumableSessions } from "@/features/shopping-list/session/useResumableSessions";
 import {
   useArchiveShoppingList,
@@ -143,7 +152,10 @@ import { goRoot, navigateBack, openTask } from "@/lib/navigation";
 import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
 import { setSentryRequestId } from "@/lib/sentry/init";
 import type { AiImportSource } from "@shared/analytics/events";
-import { isMealProposalEnabled } from "@/lib/featureGates";
+import {
+  isHistorySuggestionsEnabled,
+  isMealProposalEnabled,
+} from "@/lib/featureGates";
 
 function buildApplyOperations(operations: ProposalOperation[]) {
   return operations.map((operation) => {
@@ -260,6 +272,7 @@ export default function ShoppingListScreen() {
   const [manualAddOpen, setManualAddOpen] = useState(false);
   const [aiSectionOpen, setAiSectionOpen] = useState(false);
   const [mealSectionOpen, setMealSectionOpen] = useState(false);
+  const [photoSourceOpen, setPhotoSourceOpen] = useState(false);
   const [itemsSortMode, setItemsSortMode] =
     useState<ItemsSortMode>("category");
   const [nameFieldFocused, setNameFieldFocused] = useState(false);
@@ -545,6 +558,15 @@ export default function ShoppingListScreen() {
     },
   });
 
+  const historySuggest = useSuggestFromHistory({
+    workspaceId: listQuery.data?.workspaceId ?? null,
+    appendToListId: typeof listId === "string" ? listId : undefined,
+    onApplied: ({ applied }) => {
+      showAiImportFooterToast(applied);
+      requestScrollToItems();
+    },
+  });
+
   const isFinishedList = listQuery.data?.status === "archived";
   const composerSectionsDisabled = isFinishedList;
 
@@ -655,7 +677,14 @@ export default function ShoppingListScreen() {
         },
       });
       setAiPhase("idle");
-      const workspaceId = listQuery.data?.workspaceId;
+      const workspaceId =
+        typeof listId === "string"
+          ? resolveWorkspaceIdForList(
+              queryClient,
+              listId,
+              listQuery.data?.workspaceId,
+            )
+          : null;
       const acceptedCount = variables.operations.filter(
         (op) => op.op !== "ignore",
       ).length;
@@ -720,9 +749,15 @@ export default function ShoppingListScreen() {
         void queryClient.invalidateQueries({
           queryKey: ["shopping-items", listId],
         });
-        void queryClient.invalidateQueries({
-          queryKey: ["shopping-lists", workspaceId],
-        });
+        if (result.applied > 0) {
+          patchShoppingListItemCount(
+            queryClient,
+            workspaceId,
+            listId,
+            result.applied,
+          );
+        }
+        void refreshWorkspaceListIndex(queryClient, workspaceId);
       }
       if (result.applied >= 1) {
         showAiImportFooterToast(result.applied);
@@ -1023,6 +1058,45 @@ export default function ShoppingListScreen() {
         onSecondary: () => goRoot(),
       });
     }
+  };
+
+  const pickListImage = async (imageSource: "camera" | "library") => {
+    const permission =
+      imageSource === "camera"
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      showError({
+        title: t("feedback.permissionTitle"),
+        description: t("feedback.permissionBody"),
+        primaryLabel: t("feedback.openSettings"),
+        onPrimary: () => {
+          void openSettings();
+        },
+        secondaryLabel: t("common.cancel"),
+      });
+      return;
+    }
+
+    const result =
+      imageSource === "camera"
+        ? await ImagePicker.launchCameraAsync({
+            mediaTypes: ["images"],
+            quality: 0.55,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["images"],
+            quality: 0.55,
+          });
+    if (result.canceled) return;
+    const asset = result.assets[0];
+    if (!asset) return;
+    await startScreenshotIngest({
+      uri: asset.uri,
+      fileName: asset.fileName,
+      mimeType: asset.mimeType,
+    });
   };
 
   // Deep-link from create sheet: pending import (picked before list create) or ?import=
@@ -1498,7 +1572,7 @@ export default function ShoppingListScreen() {
                     paddingRight: spacing[3],
                   }}
                 >
-                  {t("ai.quickAddTitle")}
+                  {t("ai.addWithAiTitle")}
                 </Text>
                 <Text
                   style={{
@@ -1682,7 +1756,7 @@ export default function ShoppingListScreen() {
                     disabled={
                       ingestMutation.isPending || applyMutation.isPending
                     }
-                    onPress={() => void startScreenshotIngest()}
+                    onPress={() => setPhotoSourceOpen(true)}
                   />
                   <CreateListOptionRow
                     icon="🛒"
@@ -1693,6 +1767,20 @@ export default function ShoppingListScreen() {
                     }
                     onPress={() => void startClipboardIngest()}
                   />
+                  {isHistorySuggestionsEnabled() ? (
+                    <CreateListOptionRow
+                      icon="✨"
+                      title={t("home.createFromHistory")}
+                      subtitle={t("home.createFromHistoryHint")}
+                      disabled={
+                        ingestMutation.isPending ||
+                        applyMutation.isPending ||
+                        historySuggest.loading ||
+                        historySuggest.busy
+                      }
+                      onPress={() => void historySuggest.start()}
+                    />
+                  ) : null}
 
                   {creditsQuery.data && !creditsQuery.data.unlimited ? (
                     <View style={{ marginTop: spacing[2] }}>
@@ -1748,7 +1836,7 @@ export default function ShoppingListScreen() {
                       paddingRight: spacing[3],
                     }}
                   >
-                    {t("ai.mealProposalSectionTitle")}
+                    {t("ai.addFromRecipeTitle")}
                   </Text>
                   <Text
                     style={{
@@ -2824,6 +2912,37 @@ export default function ShoppingListScreen() {
         onCancel={() => setDeleteOpen(false)}
         onConfirm={performDeleteList}
       />
+
+      <AppResultScreen
+        visible={photoSourceOpen}
+        variant="info"
+        image={brandAssets.createListMascot}
+        title={t("feedback.addPhoto")}
+        description={t("home.createImageHint")}
+        primaryLabel={t("feedback.takePhoto")}
+        onPrimary={() => {
+          setPhotoSourceOpen(false);
+          void pickListImage("camera");
+        }}
+        secondaryLabel={t("feedback.chooseGallery")}
+        onSecondary={() => {
+          setPhotoSourceOpen(false);
+          void pickListImage("library");
+        }}
+        onBack={() => setPhotoSourceOpen(false)}
+      />
+
+      {historySuggest.loading || historySuggest.run ? (
+        <SuggestFromHistorySheet
+          visible={!historySuggest.resultVisible}
+          loading={historySuggest.loading}
+          busy={historySuggest.busy}
+          title={historySuggest.run?.proposal.shoppingContext.title ?? ""}
+          items={historySuggest.run?.proposal.items ?? []}
+          onClose={() => void historySuggest.close()}
+          onConfirm={(ids) => void historySuggest.confirm(ids)}
+        />
+      ) : null}
     </>
   );
 }

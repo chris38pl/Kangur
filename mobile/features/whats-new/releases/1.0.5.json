@@ -1,0 +1,25 @@
+{
+  "version": "1.0.5",
+  "releaseDate": "2026-11-03",
+  "highlight": true,
+  "title": {
+    "pl": "Listy od razu na ekranie głównym",
+    "en": "Lists show up on Home right away"
+  },
+  "changes": [
+    {
+      "type": "fix",
+      "text": {
+        "pl": "Nowa lista pojawia się na ekranie głównym bez odświeżania, także gdy doda ją ktoś ze wspólnego workspace",
+        "en": "A new list shows on Home without a refresh, including when someone in a shared workspace adds it"
+      }
+    },
+    {
+      "type": "feature",
+      "text": {
+        "pl": "Do gotowej listy dopiszesz produkty z przepisu, ze zdjęcia i z poprzednich list. Propozycje z historii pomijają to, co już na niej jest",
+        "en": "Add products to an existing list from a recipe, a photo, or previous lists. History suggestions skip products already on it"
+      }
+    }
+  ]
+}

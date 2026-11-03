@@ -17,6 +17,7 @@ import { colors } from "@/design-system/tokens";
 import { AppUpdateGate } from "@/features/app-update/AppUpdateGate";
 import { useDataSyncEngineBootstrap } from "@/features/data-sync-engine/useBootstrap";
 import { NotificationSyncTrigger } from "@/features/notifications/NotificationSyncTrigger";
+import { WorkspaceListIndexSync } from "@/features/shopping-list/workspace-list-index-sync";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { AppStartupController } from "@/features/startup/AppStartupController";
 import { WhatsNewGate } from "@/features/whats-new/WhatsNewGate";
@@ -88,6 +89,7 @@ function ClerkEffects({ children }: { children: ReactNode }) {
   return (
     <>
       <NotificationSyncTrigger enabled={Boolean(isSignedIn)} />
+      <WorkspaceListIndexSync enabled={Boolean(isSignedIn)} />
       {children}
     </>
   );

@@ -31,6 +31,7 @@ import {
   ApplyAiProposalResponseSchema,
   ApplySuggestFromHistoryBodySchema,
   ApplySuggestFromHistoryResponseSchema,
+  SuggestFromHistoryBodySchema,
   SuggestFromHistoryResponseSchema,
 } from "@/features/ai/schemas";
 import {
@@ -1869,6 +1870,16 @@ registry.registerPath({
     params: z.object({
       workspaceId: z.string(),
     }),
+    body: {
+      required: false,
+      description:
+        "Omit to create a new list. Pass listId to append onto an active list in this workspace.",
+      content: {
+        "application/json": {
+          schema: SuggestFromHistoryBodySchema,
+        },
+      },
+    },
   },
   responses: {
     200: {
@@ -1888,7 +1899,16 @@ registry.registerPath({
       },
     },
     404: {
-      description: "No eligible source lists with products",
+      description: "No eligible source lists with products, or target list not found",
+      content: {
+        "application/json": {
+          schema: ApiErrorSchema,
+        },
+      },
+    },
+    409: {
+      description:
+        "Every suggested product is already on the target list (HISTORY_ALREADY_ON_LIST)",
       content: {
         "application/json": {
           schema: ApiErrorSchema,
@@ -1901,7 +1921,8 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/api/v1/workspaces/{workspaceId}/ai/suggest-from-history/apply",
-  summary: "Create a list from accepted history-suggestion items",
+  summary:
+    "Create a list from accepted history items, or append them when the run targets an existing list",
   tags: ["AI"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -1918,7 +1939,7 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: "List created and items applied",
+      description: "Items applied to a new or existing list",
       content: {
         "application/json": {
           schema: ApplySuggestFromHistoryResponseSchema,
@@ -1934,7 +1955,8 @@ registry.registerPath({
       },
     },
     409: {
-      description: "Run already applied or abandoned",
+      description:
+        "Run already applied or abandoned, or every accepted product is already on the target list",
       content: {
         "application/json": {
           schema: ApiErrorSchema,

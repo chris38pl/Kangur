@@ -270,6 +270,7 @@
   "ai": {
     "title": "Importación con IA",
     "quickAddTitle": "Crear lista con IA ✨",
+    "addWithAiTitle": "Añadir con IA ✨",
     "quickAddSubtitle": "Introduce productos separados por comas y la IA los organizará por ti.",
     "textPlaceholder": "p. ej. leche, huevos, plátanos, pollo, arroz, aceite de oliva...",
     "dictateStart": "Dictar con el micrófono",
@@ -316,6 +317,8 @@
     "unavailableBody": "Kangur no pudo procesar tu lista ahora. Inténtalo de nuevo en un momento.",
     "suggestUnavailable": "No se pudo crear la lista desde el historial. Inténtalo de nuevo.",
     "suggestNoHistory": "You don't have any finished shopping lists yet.",
+    "historyAlreadyOnListTitle": "Nada nuevo que añadir",
+    "historyAlreadyOnListBody": "Todo lo de las listas anteriores ya está en esta lista.",
     "suggestInsufficientCredits": "Has usado todos los usos de IA gratis para esta acción.",
     "suggestFeatureDisabled": "Esta función está desactivada actualmente.",
     "suggestAlreadyApplied": "Esta sugerencia ya se usó.",
@@ -360,6 +363,7 @@
     "mealProposalCreditsError": "Has usado todos los usos de IA gratis. Premium desbloquea propuestas de comidas ilimitadas.",
     "mealProposalGenerating": "Generando…",
     "mealProposalSectionTitle": "Crear lista desde una receta con IA ✨",
+    "addFromRecipeTitle": "Añadir desde una receta con IA ✨",
     "mealProposalUncheckHint": "Desmarca los ingredientes que ya tienes en casa."
   },
   "categories": {

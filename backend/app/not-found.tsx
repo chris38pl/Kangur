@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { LegalEntityLine } from "@/lib/marketing/legal-entity";
 import { DEFAULT_LOCALE, withLocale } from "@/lib/marketing/locale";
 import { getMessages } from "@/lib/marketing/messages";
 
@@ -32,6 +33,9 @@ export default function NotFound() {
             {t.nav.copyright}. {t.nav.rightsReserved}.
           </span>
         </nav>
+        <p className="mkt-footer-entity">
+          <LegalEntityLine locale={DEFAULT_LOCALE} />
+        </p>
       </footer>
     </div>
   );

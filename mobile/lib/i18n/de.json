@@ -270,6 +270,7 @@
   "ai": {
     "title": "KI-Import",
     "quickAddTitle": "Liste mit KI erstellen ✨",
+    "addWithAiTitle": "Mit KI hinzufügen ✨",
     "quickAddSubtitle": "Gib Produkte durch Kommas getrennt ein, und die KI ordnet sie für dich.",
     "textPlaceholder": "z. B. Milch, Eier, Bananen, Hähnchen, Reis, Olivenöl...",
     "dictateStart": "Per Mikrofon diktieren",
@@ -316,6 +317,8 @@
     "unavailableBody": "Kangur konnte deine Liste gerade nicht verarbeiten. Bitte versuche es gleich noch einmal.",
     "suggestUnavailable": "Liste aus dem Verlauf konnte nicht erstellt werden. Bitte erneut versuchen.",
     "suggestNoHistory": "You don't have any finished shopping lists yet.",
+    "historyAlreadyOnListTitle": "Nichts Neues zum Hinzufügen",
+    "historyAlreadyOnListBody": "Alles aus vorherigen Listen ist schon auf dieser Liste.",
     "suggestInsufficientCredits": "Du hast alle kostenlosen AI-Nutzungen für diese Aktion verbraucht.",
     "suggestFeatureDisabled": "Diese Funktion ist derzeit deaktiviert.",
     "suggestAlreadyApplied": "Dieser Vorschlag wurde bereits verwendet.",
@@ -360,6 +363,7 @@
     "mealProposalCreditsError": "Du hast alle kostenlosen AI-Nutzungen verbraucht. Premium schaltet unbegrenzte Mahlzeiten-Vorschläge frei.",
     "mealProposalGenerating": "Generieren…",
     "mealProposalSectionTitle": "Liste aus Rezept mit KI erstellen ✨",
+    "addFromRecipeTitle": "Aus einem Rezept mit KI hinzufügen ✨",
     "mealProposalUncheckHint": "Entferne die Markierung bei Zutaten, die du schon hast."
   },
   "categories": {

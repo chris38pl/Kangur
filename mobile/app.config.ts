@@ -26,7 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: isDevApp ? "Kangur DEV" : "Kangur",
     slug: "kangur",
     owner: "chris38pl",
-    version: "1.0.4",
+    version: "1.0.5",
     orientation: "portrait",
     icon: isDevApp
       ? "./assets/images/icon-dev.png"

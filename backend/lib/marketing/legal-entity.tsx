@@ -6,10 +6,27 @@ export const LEGAL_ENTITY = {
   firmName: "Krzysztof Krawiec Software",
   nip: "9721382309",
   regon: "545425000",
-  addressPl: "Sielawy 23e/19, 61-619 Poznań",
-  addressEn: "Sielawy 23e/19, 61-619 Poznań, Poland",
+  addressPl: "ul. Sielawy 23e/19, 61-619 Poznań",
+  addressEn: "ul. Sielawy 23e/19, 61-619 Poznań, Poland",
   supportEmail: "support@getkangur.com",
 } as const;
+
+export function LegalEntityLine({ locale }: { locale: string }) {
+  const address =
+    locale === "pl" ? LEGAL_ENTITY.addressPl : LEGAL_ENTITY.addressEn;
+
+  return (
+    <>
+      {LEGAL_ENTITY.firmName}
+      {" · "}
+      NIP {LEGAL_ENTITY.nip}
+      {" · "}
+      REGON {LEGAL_ENTITY.regon}
+      {" · "}
+      {address}
+    </>
+  );
+}
 
 function SupportMailto() {
   return (

@@ -286,6 +286,7 @@
   "ai": {
     "title": "Import AI",
     "quickAddTitle": "Utwórz listę z AI ✨",
+    "addWithAiTitle": "Dodaj z AI ✨",
     "quickAddSubtitle": "Wpisz produkty oddzielone przecinkami, a AI uporządkuje je za Ciebie.",
     "textPlaceholder": "np. mleko, jajka, banany, kurczak, ryż, oliwa...",
     "dictateStart": "Dyktuj mikrofonem",
@@ -361,6 +362,8 @@
     "unavailableBody": "Kangur nie mógł teraz przetworzyć Twojej listy. Spróbuj ponownie za chwilę.",
     "suggestUnavailable": "Nie udało się złożyć listy z historii. Spróbuj ponownie.",
     "suggestNoHistory": "Nie masz jeszcze list zakupów z produktami.",
+    "historyAlreadyOnListTitle": "Nic nowego do dodania",
+    "historyAlreadyOnListBody": "Wszystko z poprzednich list jest już na tej liście.",
     "suggestInsufficientCredits": "Wykorzystałeś wszystkie darmowe użycia AI dla tej akcji.",
     "suggestFeatureDisabled": "Ta funkcja jest obecnie wyłączona.",
     "suggestAlreadyApplied": "Ta propozycja została już użyta.",
@@ -392,6 +395,7 @@
     "mealProposalMissing": "Nie znaleziono propozycji dania.",
     "mealProposalBackToList": "Wróć do listy",
     "mealProposalSectionTitle": "Utwórz listę z przepisu z AI ✨",
+    "addFromRecipeTitle": "Dodaj z przepisu z AI ✨",
     "mealProposalUncheckHint": "Odznacz składniki, które już masz w domu."
   },
   "categories": {

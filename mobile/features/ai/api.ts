@@ -116,10 +116,15 @@ export async function applyAi(
 export async function suggestFromHistory(
   token: string,
   workspaceId: string,
+  body?: { listId: string },
 ): Promise<SuggestFromHistoryResponse> {
   const data = await apiFetch<unknown>(
     `/api/v1/workspaces/${workspaceId}/ai/suggest-from-history`,
-    { token, method: "POST" },
+    {
+      token,
+      method: "POST",
+      ...(body ? { body } : {}),
+    },
   );
   return SuggestFromHistoryResponseSchema.parse(data);
 }
