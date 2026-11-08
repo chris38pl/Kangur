@@ -66,6 +66,8 @@ type ApiFetchOptions = {
   deviceLocale?: string | null;
   method?: string;
   body?: unknown;
+  /** Abort the request when boot must not wait forever. */
+  timeoutMs?: number;
 };
 
 export async function apiFetch<T>(
@@ -112,12 +114,18 @@ export async function apiFetch<T>(
     body: options.body,
   });
 
+  const controller = new AbortController();
+  const timeout =
+    options.timeoutMs && options.timeoutMs > 0
+      ? setTimeout(() => controller.abort(), options.timeoutMs)
+      : undefined;
   let res: Response;
   try {
     res = await fetch(url, {
       method,
       headers,
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
     });
   } catch (err) {
     httpLogNetworkError({
@@ -127,6 +135,8 @@ export async function apiFetch<T>(
       error: err instanceof Error ? err.message : "Network request failed",
     });
     throw new ApiClientError("NETWORK_ERROR", "Network request failed.");
+  } finally {
+    if (timeout) clearTimeout(timeout);
   }
 
   const durationMs = Date.now() - started;

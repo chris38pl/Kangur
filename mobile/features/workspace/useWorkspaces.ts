@@ -8,6 +8,7 @@ import {
 } from "@/features/platform-workspaces/admin-browsing";
 import { getPlatformWorkspaceDetail } from "@/features/platform-workspaces/api";
 import { ApiClientError } from "@/lib/api/client";
+import { BOOT_REQUEST_TIMEOUT_MS, withTimeout } from "@/lib/boot/with-timeout";
 import { persistWorkspacesCache } from "@/lib/query/persist-bootstrap";
 
 import { listWorkspaces } from "./api";
@@ -22,9 +23,11 @@ export function useWorkspaces(enabled = true) {
     queryKey: ["workspaces"],
     enabled: enabled && Boolean(isSignedIn),
     queryFn: async () => {
-      const token = await getToken();
+      const token = await withTimeout(getToken(), BOOT_REQUEST_TIMEOUT_MS);
       if (!token) throw new Error("Missing Clerk token");
-      const data = await listWorkspaces(token);
+      const data = await listWorkspaces(token, {
+        timeoutMs: BOOT_REQUEST_TIMEOUT_MS,
+      });
       void persistWorkspacesCache(data);
       return data;
     },

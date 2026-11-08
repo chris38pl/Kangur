@@ -9,10 +9,11 @@ import {
 export async function listShoppingLists(
   token: string,
   workspaceId: string,
+  options?: { timeoutMs?: number },
 ): Promise<ShoppingList[]> {
   const data = await apiFetch<unknown>(
     `/api/v1/workspaces/${workspaceId}/lists`,
-    { token },
+    { token, timeoutMs: options?.timeoutMs },
   );
   return ShoppingListListSchema.parse(data).lists;
 }

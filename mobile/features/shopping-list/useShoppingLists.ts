@@ -11,6 +11,7 @@ import {
 } from "./api";
 import { markListProvisional } from "./provisional-list";
 import type { ShoppingList } from "./schemas";
+import { BOOT_REQUEST_TIMEOUT_MS, withTimeout } from "@/lib/boot/with-timeout";
 import { persistShoppingListsCache } from "@/lib/query/persist-bootstrap";
 
 type ListQueryOptions = {
@@ -32,11 +33,13 @@ export function useShoppingLists(
     refetchOnMount: options?.refetchOnMount,
     refetchOnWindowFocus: options?.refetchOnWindowFocus,
     queryFn: async () => {
-      const token = await getToken();
+      const token = await withTimeout(getToken(), BOOT_REQUEST_TIMEOUT_MS);
       if (!token || !workspaceId) {
         throw new Error("Missing auth token or workspace id");
       }
-      const data = await listShoppingLists(token, workspaceId);
+      const data = await listShoppingLists(token, workspaceId, {
+        timeoutMs: BOOT_REQUEST_TIMEOUT_MS,
+      });
       void persistShoppingListsCache(workspaceId, data);
       return data;
     },

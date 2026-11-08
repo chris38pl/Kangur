@@ -1,0 +1,18 @@
+{
+  "version": "1.0.6",
+  "releaseDate": "2026-11-08",
+  "highlight": true,
+  "title": {
+    "pl": "Ekran główny nie zostaje na ładowaniu",
+    "en": "Home no longer stays on the loading screen"
+  },
+  "changes": [
+    {
+      "type": "fix",
+      "text": {
+        "pl": "Po dłuższej przerwie ekran główny nie zostaje na ładowaniu. Gdy start się nie uda, można spróbować ponownie albo się wylogować.",
+        "en": "After a long break, Home no longer stays on the loading screen. If startup fails, you can retry or sign out."
+      }
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { z } from "zod";
 
 import { apiFetch } from "@/lib/api/client";
+import { BOOT_REQUEST_TIMEOUT_MS, withTimeout } from "@/lib/boot/with-timeout";
 import i18n from "@/lib/i18n";
 import { applyAppLocale } from "@/lib/i18n/apply-app-locale";
 import { resolveAppLocale } from "@/lib/i18n/locales";
@@ -36,13 +37,14 @@ export function useMe(enabled = true) {
     queryKey: ["me"],
     enabled: enabled && Boolean(isSignedIn),
     queryFn: async () => {
-      const token = await getToken();
+      const token = await withTimeout(getToken(), BOOT_REQUEST_TIMEOUT_MS);
       if (!token) {
         throw new Error("Missing Clerk token");
       }
       const data = await apiFetch<unknown>("/api/v1/me", {
         token,
         deviceLocale: preferredLocale(),
+        timeoutMs: BOOT_REQUEST_TIMEOUT_MS,
       });
       const parsed = MeSchema.parse(data);
       void persistMeCache(parsed);

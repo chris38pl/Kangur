@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Redirect, Tabs } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
@@ -10,6 +10,7 @@ import { useColorScheme } from "@/components/useColorScheme";
 import { KangurTabBar } from "@/components/tab-bar/kangur-tab-bar";
 import { colors, spacing, typography } from "@/design-system/tokens";
 import { canLoadWorkspaces } from "@/features/auth/canLoadWorkspaces";
+import { resetStuckSession } from "@/features/auth/reset-stuck-session";
 import { useMe } from "@/features/auth/useMe";
 import { clearLocalUserData } from "@/features/profile/clearLocalUserData";
 import { CreateListProvider, useCreateList } from "@/features/shopping-list/create-list-provider";
@@ -21,6 +22,7 @@ import { ApiClientError } from "@/lib/api/client";
 import { Analytics } from "@/lib/analytics";
 import { getAppBuildInfo } from "@/lib/app-build-info";
 import { bootLog } from "@/lib/boot-diagnostics";
+import { BOOT_REQUEST_TIMEOUT_MS } from "@/lib/boot/with-timeout";
 import { perfEnd, perfStart } from "@/lib/performance";
 import {
   primaryButtonStyle,
@@ -166,6 +168,44 @@ export default function TabLayout() {
     !me.isError &&
     !homeBootPending;
 
+  const awaitingBoot =
+    !homeReady && !me.isError && (!isLoaded || Boolean(isSignedIn));
+  const bootStartedAtRef = useRef<number | null>(null);
+  const [bootAttempt, setBootAttempt] = useState(0);
+  const [bootGaveUp, setBootGaveUp] = useState(false);
+
+  useEffect(() => {
+    if (!awaitingBoot) {
+      bootStartedAtRef.current = null;
+      setBootGaveUp(false);
+      return;
+    }
+    if (bootStartedAtRef.current == null) {
+      bootStartedAtRef.current = Date.now();
+    }
+    const remaining =
+      BOOT_REQUEST_TIMEOUT_MS - (Date.now() - bootStartedAtRef.current);
+    const timer = setTimeout(
+      () => setBootGaveUp(true),
+      Math.max(0, remaining),
+    );
+    return () => clearTimeout(timer);
+  }, [awaitingBoot, bootAttempt]);
+
+  const retryBoot = () => {
+    bootStartedAtRef.current = null;
+    setBootGaveUp(false);
+    setBootAttempt((attempt) => attempt + 1);
+    void me.refetch();
+    void workspacesQuery.refetch();
+    void listsQuery.refetch();
+  };
+
+  const signOutFromBoot = () => {
+    console.info("[auth]", "SignOut", { reason: "boot_failed" });
+    void resetStuckSession(queryClient, signOut);
+  };
+
   useEffect(() => {
     if (homeReady || me.isError) {
       notifyBootReady();
@@ -210,6 +250,53 @@ export default function TabLayout() {
       },
     );
   }, [homeReady, me.data, activeWorkspace]);
+
+  if (bootGaveUp && !homeReady) {
+    return (
+      <Screen
+        style={{
+          backgroundColor: theme.bg,
+          padding: spacing[6],
+          justifyContent: "center",
+        }}
+      >
+        <Text style={{ ...typography.title, color: theme.text }}>
+          {t("auth.meFailedTitle")}
+        </Text>
+        <Text
+          style={{
+            ...typography.body,
+            color: theme.textMuted,
+            marginTop: spacing[2],
+          }}
+        >
+          {t("auth.errors.NETWORK_ERROR")}
+        </Text>
+        <Pressable
+          onPress={retryBoot}
+          style={{
+            marginTop: spacing[6],
+            ...primaryButtonStyle(theme),
+          }}
+        >
+          <Text style={{ ...typography.label, color: theme.onPrimary }}>
+            {t("auth.retry")}
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={signOutFromBoot}
+          style={{
+            marginTop: spacing[3],
+            ...secondaryButtonStyle(theme),
+          }}
+        >
+          <Text style={{ ...typography.label, color: theme.primary }}>
+            {t("auth.signOut")}
+          </Text>
+        </Pressable>
+      </Screen>
+    );
+  }
 
   if (!isLoaded) {
     return <HomeSkeleton />;
@@ -266,13 +353,7 @@ export default function TabLayout() {
           </Text>
         </Pressable>
         <Pressable
-          onPress={() => {
-            console.info("[auth]", "SignOut", { reason: "me_failed" });
-            void (async () => {
-              await clearLocalUserData(queryClient);
-              await signOut();
-            })();
-          }}
+          onPress={signOutFromBoot}
           style={{
             marginTop: spacing[3],
             ...secondaryButtonStyle(theme),

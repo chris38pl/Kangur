@@ -16,8 +16,14 @@ import {
   type WorkspaceMember,
 } from "./schemas";
 
-export async function listWorkspaces(token: string): Promise<Workspace[]> {
-  const data = await apiFetch<unknown>("/api/v1/workspaces", { token });
+export async function listWorkspaces(
+  token: string,
+  options?: { timeoutMs?: number },
+): Promise<Workspace[]> {
+  const data = await apiFetch<unknown>("/api/v1/workspaces", {
+    token,
+    timeoutMs: options?.timeoutMs,
+  });
   return WorkspaceListSchema.parse(data).workspaces;
 }
 
