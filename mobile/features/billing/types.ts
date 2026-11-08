@@ -17,8 +17,11 @@ export type PurchaseState =
 
 export type StoreProof = {
   productId: ProductCatalogId;
+  /** Google purchase token, or the App Store transaction id when `transactionId` is set. */
   purchaseToken: string;
   packageName?: string;
+  /** App Store transaction id. The server stores originalTransactionId. */
+  transactionId?: string;
   raw?: Record<string, unknown>;
 };
 

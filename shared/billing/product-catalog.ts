@@ -131,6 +131,18 @@ export function resolveProductIdFromGoogleSku(
   return null;
 }
 
+/** Resolve catalog id from an App Store product id. */
+export function resolveProductIdFromAppleSku(
+  sku: string,
+): ProductCatalogId | null {
+  for (const id of PRODUCT_IDS) {
+    if (PRODUCT_CATALOG[id].providerConfig.apple.productId === sku) {
+      return id;
+    }
+  }
+  return null;
+}
+
 /** Client build channel → BillingRegistry.resolveCurrent */
 export type PlatformBillingChannel = "android" | "ios" | "web";
 

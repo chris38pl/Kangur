@@ -239,13 +239,18 @@ export const BillingService = {
     workspaceId: string,
     proof: StoreProof,
   ): Promise<BillingSyncResponse> {
+    const provider = MobileBillingRegistry.resolveCurrent().id;
+    const body =
+      provider === "apple"
+        ? { transactionId: proof.transactionId ?? proof.purchaseToken }
+        : {
+            purchaseToken: proof.purchaseToken,
+            ...(proof.packageName ? { packageName: proof.packageName } : {}),
+          };
     return verifyBillingPurchase(token, workspaceId, {
-      provider: MobileBillingRegistry.resolveCurrent().id,
+      provider,
       productId: proof.productId,
-      proof: {
-        purchaseToken: proof.purchaseToken,
-        packageName: proof.packageName,
-      },
+      proof: body,
     });
   },
 

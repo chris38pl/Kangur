@@ -23,6 +23,7 @@
     "vercel-build": "pnpm run build:vercel"
   },
   "dependencies": {
+    "@apple/app-store-server-library": "^3.1.0",
     "@asteasolutions/zod-to-openapi": "^9.0.0",
     "@clerk/backend": "^3.11.6",
     "@prisma/client": "^6.19.3",

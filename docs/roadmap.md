@@ -627,13 +627,13 @@ AI Generate from History requires an **active Premium workspace** *and* still go
 
 **Goal:** Provider-agnostic billing architecture so Android (Google Play), iOS (App Store), and Web (Stripe Checkout + Customer Portal + Invoices) share one entitlement model on Workspace.
 
-**Status:** in progress (Android IAP path; Apple stub)
+**Status:** in progress (Android IAP live; Apple IAP via App Store Server API)
 
 **Key split:**
 - **BillingProvider** + **BillingRegistry.resolve / resolveCurrent** — provider fixed by platform channel (not UI choice)
 - **ProductCatalog** + `providerConfig` — SSOT; ApplyPurchase + UpdateEntitlement; ProductRepository on mobile
 - **Subscription** = entitlement only; **BillingPurchase** + **BillingEvent** = payment proof / audit
-- Stripe = Web; Google Play = Android; Apple stub until IAP
+- Stripe = Web; Google Play = Android; Apple = App Store Server API + ASN V2
 - ADR: [docs/adr/0001-billing-platform.md](./adr/0001-billing-platform.md)
 
 **Depends on:** M13  
@@ -646,7 +646,7 @@ AI Generate from History requires an **active Premium workspace** *and* still go
 - [x] GooglePlayProvider (`subscriptionsv2`) + RTDN live (signal → get → Apply)
 - [x] `POST …/billing/verify` (provider-agnostic)
 - [x] Mobile ProductRepository / ProductCache / BillingService (Play on Android)
-- [ ] AppleProvider full purchase flows
+- [x] AppleProvider full purchase flows
 - [ ] Reconcile job (MVP+1)
 
 ---

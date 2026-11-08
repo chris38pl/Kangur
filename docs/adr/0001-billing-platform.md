@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (Android / Google Play first; Apple stub; Stripe Web)
+Accepted (Android / Google Play, Apple App Store Server API, Stripe Web)
 
 ## Context
 
@@ -65,4 +65,7 @@ Only `BillingRegistry.resolve(providerId)` and `resolveCurrent(channel)`. Platfo
   (`externalProductId`, `basePlanId`, optional `preferredOfferId` e.g. `free-trial`).
   Android purchases must pass the selected offer’s `offerToken` explicitly (expo-iap
   does not auto-pick free trial).
+- App Store Connect product id matches `providerConfig.apple.productId`
+  (`premium_monthly`). StoreKit applies the introductory offer when the Apple ID
+  is eligible. Server `externalId` is `originalTransactionId`.
 - Stripe remains Web-only rail; checkout/portal unchanged for web channel.

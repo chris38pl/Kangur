@@ -753,15 +753,23 @@ function PremiumCheckoutProgressView({
   );
 }
 
+const STORE_LEGAL_URLS = {
+  privacy: "https://getkangur.com/privacy",
+  terms: "https://getkangur.com/terms",
+} as const;
+
 function PremiumPurchaseView({
   busy,
   canManage,
   onCheckout,
   onCheckStatus,
+  onRestore,
   showCheckStatus,
   supportsPurchase,
   unavailableReason,
   showStripeHelper,
+  showStoreLegal,
+  hasIntroOffer,
   onOpenDebug,
   priceFormatted,
   priceInterval,
@@ -774,10 +782,14 @@ function PremiumPurchaseView({
   onCheckout: () => void;
   /** Manual status check — only when silent sync failed / inconsistency. */
   onCheckStatus?: () => void;
+  onRestore?: () => void;
   showCheckStatus?: boolean;
   supportsPurchase: boolean;
   unavailableReason?: "COMING_SOON" | "STORE_NOT_SUPPORTED" | null;
   showStripeHelper: boolean;
+  /** App Store 3.1.2 disclosure, also shown for Play. */
+  showStoreLegal: boolean;
+  hasIntroOffer: boolean;
   onOpenDebug?: () => void;
   priceFormatted: string | null;
   priceInterval: "day" | "week" | "month" | "year" | null;
@@ -933,6 +945,20 @@ function PremiumPurchaseView({
           </Text>
         )}
 
+        {showStoreLegal && priceFormatted ? (
+          <Text
+            style={{
+              ...typography.caption,
+              color: theme.textMuted,
+              textAlign: "center",
+            }}
+          >
+            {hasIntroOffer
+              ? t("billing.subscriptionDisclosureTrial", { price: priceFormatted })
+              : t("billing.subscriptionDisclosure", { price: priceFormatted })}
+          </Text>
+        ) : null}
+
         {canManage && supportsPurchase ? (
           <Pressable
             onPress={onCheckout}
@@ -1012,26 +1038,42 @@ function PremiumPurchaseView({
           </Pressable>
         ) : null}
 
-        <View
-          style={{
-            alignSelf: "center",
-            backgroundColor: TRIAL_BADGE_BG,
-            borderRadius: radius.full,
-            paddingVertical: spacing[2],
-            paddingHorizontal: spacing[4],
-          }}
-        >
-          <Text
+        {!showStoreLegal || hasIntroOffer ? (
+          <View
             style={{
-              ...typography.caption,
-              fontWeight: "600",
-              color: TRIAL_BADGE_TEXT,
-              textAlign: "center",
+              alignSelf: "center",
+              backgroundColor: TRIAL_BADGE_BG,
+              borderRadius: radius.full,
+              paddingVertical: spacing[2],
+              paddingHorizontal: spacing[4],
             }}
           >
-            {t("billing.trialBadge")}
-          </Text>
-        </View>
+            <Text
+              style={{
+                ...typography.caption,
+                fontWeight: "600",
+                color: TRIAL_BADGE_TEXT,
+                textAlign: "center",
+              }}
+            >
+              {t("billing.trialBadge")}
+            </Text>
+          </View>
+        ) : null}
+
+        {showStoreLegal && canManage && supportsPurchase && onRestore ? (
+          <Pressable
+            onPress={onRestore}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={t("billing.restorePurchases")}
+            style={{ alignItems: "center", paddingVertical: spacing[2] }}
+          >
+            <Text style={{ ...typography.label, color: brand.primary }}>
+              {t("billing.restorePurchases")}
+            </Text>
+          </Pressable>
+        ) : null}
 
         <Text
           style={{
@@ -1043,6 +1085,42 @@ function PremiumPurchaseView({
         >
           {t("billing.cancelAnytime")}
         </Text>
+
+        {showStoreLegal ? (
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: spacing[3],
+              marginBottom: spacing[1],
+            }}
+          >
+            <Pressable
+              onPress={() =>
+                void WebBrowser.openBrowserAsync(STORE_LEGAL_URLS.privacy)
+              }
+              accessibilityRole="link"
+              accessibilityLabel={t("billing.privacyPolicy")}
+            >
+              <Text style={{ ...typography.caption, color: brand.primary }}>
+                {t("billing.privacyPolicy")}
+              </Text>
+            </Pressable>
+            <Text style={{ ...typography.caption, color: theme.textMuted }}>·</Text>
+            <Pressable
+              onPress={() =>
+                void WebBrowser.openBrowserAsync(STORE_LEGAL_URLS.terms)
+              }
+              accessibilityRole="link"
+              accessibilityLabel={t("billing.termsOfUse")}
+            >
+              <Text style={{ ...typography.caption, color: brand.primary }}>
+                {t("billing.termsOfUse")}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -1437,6 +1515,31 @@ export function PremiumScreen() {
     }
   };
 
+  const onRestorePurchases = async () => {
+    if (!workspace || !canManage) return;
+    setBusy(true);
+    setPurchaseState("restoring");
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("Missing auth token");
+      const synced = await BillingService.restore(token, workspace.id);
+      await workspacesQuery.refetch();
+      if (synced.plan === "premium") {
+        setPurchaseState("active");
+      } else {
+        setPurchaseState("idle");
+        Alert.alert(t("billing.screenTitle"), t("billing.restoreNone"));
+      }
+    } catch (error) {
+      setPurchaseState("failed");
+      const message =
+        error instanceof Error ? error.message : t("billing.checkPremiumFailed");
+      Alert.alert(t("billing.screenTitle"), message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const primaryProduct =
     storeProducts.find((p) => p.productId === DEFAULT_PREMIUM_PRODUCT) ??
     storeProducts[0];
@@ -1532,6 +1635,9 @@ export function PremiumScreen() {
           supportsPurchase={caps.supportsPurchase}
           unavailableReason={BillingService.purchaseUnavailableReason()}
           showStripeHelper={caps.purchaseMode === "checkout_url"}
+          showStoreLegal={caps.purchaseMode === "native_iap"}
+          hasIntroOffer={Boolean(primaryProduct?.introductoryOffer)}
+          onRestore={() => void onRestorePurchases()}
           showVerifyingPaymentCta={
             caps.purchaseMode === "native_iap" &&
             (purchaseState === "pending" || purchaseState === "verifying")

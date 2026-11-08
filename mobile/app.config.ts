@@ -26,7 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: isDevApp ? "Kangur DEV" : "Kangur",
     slug: "kangur",
     owner: "chris38pl",
-    version: "1.0.6",
+    version: "1.0.7",
     orientation: "portrait",
     icon: isDevApp
       ? "./assets/images/icon-dev.png"
@@ -34,9 +34,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     scheme: isDevApp ? "kangur-dev" : "kangur",
     userInterfaceStyle: "light",
     ios: {
-      supportsTablet: true,
+      supportsTablet: false,
       bundleIdentifier: isDevApp ? "app.kangur.dev" : "app.kangur",
       usesAppleSignIn: true,
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
     android: {
       package: isDevApp ? "app.kangur.dev" : "app.kangur",

@@ -11,7 +11,7 @@ import { StripeMobileBillingProvider } from "./providers/stripe";
 
 /**
  * Client channel for BillingRegistry.
- * Android → google (Play). iOS → apple (stub). Web → stripe.
+ * Android → google (Play). iOS → apple (StoreKit). Web → stripe.
  */
 export function resolveClientBillingChannel(): PlatformBillingChannel {
   if (Platform.OS === "android") return "android";

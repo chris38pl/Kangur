@@ -350,17 +350,24 @@ export function SignUpScreen() {
           </Pressable>
 
           <Pressable
-            disabled
+            disabled={busy || !isLoaded}
+            onPress={() => void onOAuth("apple")}
             style={{
               ...pillSecondary,
               marginTop: spacing[3],
-              opacity: 0.45,
+              opacity: busy ? 0.7 : 1,
             }}
           >
-            <AppleIcon size={20} />
-            <Text style={{ ...typography.label, color: theme.text }}>
-              {t("auth.continueApple")}
-            </Text>
+            {busy ? (
+              <ActivityIndicator color={theme.primary} />
+            ) : (
+              <>
+                <AppleIcon size={20} />
+                <Text style={{ ...typography.label, color: theme.text }}>
+                  {t("auth.continueApple")}
+                </Text>
+              </>
+            )}
           </Pressable>
 
           <View

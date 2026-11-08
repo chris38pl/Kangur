@@ -7,6 +7,7 @@ export {
   getProduct,
   isProductCatalogId,
   listCatalogProductsSorted,
+  resolveProductIdFromAppleSku,
   resolveProductIdFromGoogleSku,
   resolveProductIdFromStripePriceId,
   type AppleProviderConfig,

@@ -257,9 +257,45 @@ Architecture: [docs/adr/0001-billing-platform.md](./adr/0001-billing-platform.md
 4. Set `GOOGLE_PLAY_PACKAGE_NAME=app.kangur` on staging/production API.
 5. **RTDN:** Pub/Sub topic → push to `https://staging-api.getkangur.com/api/v1/billing/webhook/google` (prod: `api.getkangur.com`).
 
-**Client:** Android uses Play Billing via `expo-iap` → `POST …/billing/verify` (`provider: google`). Web keeps Stripe Checkout. iOS purchase disabled (`supportsPurchase: false`) until Apple IAP.
+**Client:** Android uses Play Billing via `expo-iap` → `POST …/billing/verify` (`provider: google`). Web keeps Stripe Checkout. iOS uses StoreKit via `expo-iap` → `POST …/billing/verify` (`provider: apple`, proof `transactionId`).
 
 **Closed Testing checklist:** no Stripe on Android paywall; purchase→verify→ApplyPurchase→finish; restore after reinstall + Google account change; refund/grace/expiry via RTDN; Billing Debug via `ENABLE_BILLING_DEBUG` / `EXPO_PUBLIC_ENABLE_BILLING_DEBUG`.
+
+### 6.4c App Store Billing (iOS)
+
+Architecture: [docs/adr/0001-billing-platform.md](./adr/0001-billing-platform.md). Catalog SKU: `providerConfig.apple.productId` = `premium_monthly`.
+
+**App Store Connect (already created):**
+
+- Name: Kangur
+- Bundle ID: `app.kangur`
+- SKU: `kangur-ios-001`
+- Apple ID: `6832296080` (`APPLE_APP_APPLE_ID`, EAS `submit.ios.ascAppId`)
+
+**Subscription (create in ASC, attach to the first version):**
+
+| Catalog id | Product ID | Duration | Intro offer |
+|------------|------------|----------|-------------|
+| `PREMIUM_MONTHLY` | `premium_monthly` | 1 month | Free, 1 month, new subscribers |
+
+Price: nearest Apple price point to the live Play base plan `premium_monthly` / `monthly`. Family Sharing off. Yearly SKU is not in v1.
+
+**Server:** App Store Server API key (Issuer ID, Key ID, .p8) in `APPLE_ISSUER_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`, `APPLE_BUNDLE_ID=app.kangur`. Verify loads subscription status (Production, then Sandbox for TestFlight). `externalId` is `originalTransactionId`.
+
+**ASN V2** (App Information → App Store Server Notifications):
+
+| Environment | URL |
+|-------------|-----|
+| Production | `https://api.getkangur.com/api/v1/billing/webhook/apple` |
+| Sandbox | `https://staging-api.getkangur.com/api/v1/billing/webhook/apple` |
+
+**Client:** iPhone only (`supportsTablet: false`). `ITSAppUsesNonExemptEncryption` is false. Paywall shows price after trial, privacy and terms links, and Restore purchases. Introductory offers are applied by StoreKit (no offer signature). IAP products exist only for `app.kangur`, not `app.kangur.dev`.
+
+**Builds:** `eas build --platform ios --profile preview` (staging API) for internal TestFlight, then `production`. Submit with `ascAppId` `6832296080`. Release the approved version manually. Turn on the landing App Store button and `EXPO_PUBLIC_APP_STORE_URL` only after the listing is live.
+
+**Still done in Apple portals (not in git):** Paid Apps agreement, bank, tax, APNs .p8 into EAS, Sign in with Apple key into Clerk, subscription localization and review screenshot, App Privacy, screenshots, sandbox testers, TestFlight QA, App Review.
+
+**TestFlight checklist:** sandbox purchase → verify → Premium → finishTransaction; trial is `trialing`; cancel sheet does not grant Premium; restore after reinstall; second purchase on the same Apple ID does not get another free month; cancel keeps Premium until `expiresDate`, then ASN removes it; refund/revoke expires immediately; Manage opens App Store subscriptions. In sandbox a 1 month period renews in about 5 minutes.
 
 ### 6.5 OpenAI
 
@@ -381,6 +417,11 @@ Source of truth: [backend/.env.example](../backend/.env.example).
 | `RESEND_API_KEY` / `EMAIL_FROM` | optional | optional | preferred | Invites |
 | `GOOGLE_PLAY_PACKAGE_NAME` | `app.kangur` | same | same | Play package for Publisher API |
 | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | optional local | required for Android IAP | required | Service account JSON or base64 |
+| `APPLE_ISSUER_ID` | optional local | required for iOS IAP | required | App Store Connect API issuer |
+| `APPLE_KEY_ID` | optional local | required for iOS IAP | required | In-App Purchase key id |
+| `APPLE_PRIVATE_KEY` | optional local | required for iOS IAP | required | .p8 PEM or base64 |
+| `APPLE_BUNDLE_ID` | `app.kangur` | same | same | Store bundle |
+| `APPLE_APP_APPLE_ID` | `6832296080` | same | same | Numeric App Store app id |
 | `INVITE_ACCEPT_URL_BASE` | `kangur://invite` | same | same | |
 | `PLATFORM_ADMIN_EMAILS` | optional | optional | optional | Bootstrap admins |
 | `POSTHOG_KEY` / `POSTHOG_HOST` | optional | Closed Testing+ | required | Product analytics (noop if unset) |

@@ -1,0 +1,18 @@
+{
+  "version": "1.0.7",
+  "releaseDate": "2026-11-08",
+  "highlight": true,
+  "title": {
+    "pl": "Kangur na iPhonie",
+    "en": "Kangur on iPhone"
+  },
+  "changes": [
+    {
+      "type": "feature",
+      "text": {
+        "pl": "Premium na iPhonie kupisz w App Store. Pierwszy miesiąc jest gratis.",
+        "en": "Premium on iPhone is bought in the App Store. The first month is free."
+      }
+    }
+  ]
+}
