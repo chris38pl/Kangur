@@ -35,6 +35,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     userInterfaceStyle: "light",
     ios: {
       supportsTablet: false,
+      icon: isDevApp
+        ? "./assets/images/icon-dev.png"
+        : "./assets/images/icon-ios.png",
       bundleIdentifier: isDevApp ? "app.kangur.dev" : "app.kangur",
       usesAppleSignIn: true,
       infoPlist: {
