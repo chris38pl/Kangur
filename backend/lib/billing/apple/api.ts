@@ -101,6 +101,16 @@ export function isAppleTransactionMissing(error: unknown): boolean {
   );
 }
 
+/**
+ * Production StoreKit returns HTTP 401 for every lookup until the app is on
+ * the App Store. TestFlight transactions live in sandbox, so that 401 has to
+ * fall through instead of failing the purchase.
+ */
+function shouldTryNextAppleEnvironment(error: unknown): boolean {
+  if (isAppleTransactionMissing(error)) return true;
+  return error instanceof APIException && error.httpStatusCode === 401;
+}
+
 async function withEnvironment<T>(
   run: (environment: Environment) => Promise<T>,
 ): Promise<{ environment: Environment; value: T }> {
@@ -110,7 +120,7 @@ async function withEnvironment<T>(
       return { environment, value: await run(environment) };
     } catch (error) {
       lastError = error;
-      if (isAppleTransactionMissing(error)) continue;
+      if (shouldTryNextAppleEnvironment(error)) continue;
       throw error;
     }
   }
