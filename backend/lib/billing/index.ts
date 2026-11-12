@@ -14,6 +14,7 @@ export {
   applyPurchase,
   ensureSubscriptionShell,
   findWorkspaceIdByPurchaseToken,
+  getAppleOriginalTransactionIdForWorkspace,
   getGooglePurchaseTokenForWorkspace,
   getStripeCustomerIdForWorkspace,
   getStripeSubscriptionIdForWorkspace,

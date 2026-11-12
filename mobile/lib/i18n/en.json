@@ -560,7 +560,9 @@
     "memberCount_other": "{{count}} members",
     "join": "Join",
     "decline": "Decline",
-    "mismatchHint": "Sign in with the invited account and try again."
+    "mismatchHint": "Copy the address below and ask the owner to send the invite to that address.",
+    "mismatchCopy": "Copy address",
+    "mismatchCopied": "Address copied"
   },
   "billing": {
     "aiCredits": "Free AI uses",
@@ -603,6 +605,7 @@
     "subscriptionDisclosure": "{{price}} per month. The subscription renews until you cancel.",
     "restorePurchases": "Restore purchases",
     "restoreNone": "No active subscription was found for this account.",
+    "subscriptionLinkedElsewhere": "This Apple subscription is already linked to another workspace. One subscription works in one workspace only.",
     "privacyPolicy": "Privacy Policy",
     "termsOfUse": "Terms of Use",
     "priceYearlySuffix": " / year",

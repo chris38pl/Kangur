@@ -1,6 +1,7 @@
 import { getWorkspaceIconEmoji } from "@shared/workspace-icons";
 import { useAuth, useClerk } from "@clerk/clerk-expo";
 import { useQueryClient } from "@tanstack/react-query";
+import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -129,6 +130,7 @@ export function InviteAcceptScreen() {
   const { setActiveId } = useActiveWorkspace(workspacesQuery.data);
 
   const [state, setState] = useState<ViewState>({ kind: "loading" });
+  const [emailCopied, setEmailCopied] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -498,10 +500,30 @@ export function InviteAcceptScreen() {
             {t("invite.mismatchHint")}
           </Text>
           <Pressable
-            onPress={() => void switchAccount()}
+            onPress={() => {
+              const email = state.currentEmail.trim();
+              if (!email) return;
+              void Clipboard.setStringAsync(email).then(() => {
+                setEmailCopied(true);
+              });
+            }}
             style={{ ...pillPrimary, marginTop: spacing[6] }}
           >
             <Text style={{ ...typography.label, color: theme.onPrimary }}>
+              {emailCopied ? t("invite.mismatchCopied") : t("invite.mismatchCopy")}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => void switchAccount()}
+            style={{ marginTop: spacing[4] }}
+          >
+            <Text
+              style={{
+                ...typography.label,
+                color: theme.text,
+                textAlign: "center",
+              }}
+            >
               {t("invite.switchAccount")}
             </Text>
           </Pressable>

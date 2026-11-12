@@ -560,7 +560,9 @@
     "memberCount_other": "{{count}} membri",
     "join": "Unisciti",
     "decline": "Rifiuta",
-    "mismatchHint": "Accedi con l'account invitato e riprova."
+    "mismatchHint": "Copia l'indirizzo qui sotto e chiedi al proprietario di inviare l'invito a questo indirizzo.",
+    "mismatchCopy": "Copia indirizzo",
+    "mismatchCopied": "Indirizzo copiato"
   },
   "billing": {
     "aiCredits": "Usi AI gratuiti",
@@ -603,6 +605,7 @@
     "subscriptionDisclosure": "{{price}} al mese. L'abbonamento si rinnova fino alla disdetta.",
     "restorePurchases": "Ripristina acquisti",
     "restoreNone": "Nessun abbonamento attivo trovato per questo account.",
+    "subscriptionLinkedElsewhere": "Questo abbonamento Apple è già collegato a un altro spazio. Un abbonamento vale per un solo spazio.",
     "privacyPolicy": "Informativa sulla privacy",
     "termsOfUse": "Termini di utilizzo",
     "priceYearlySuffix": " / anno",

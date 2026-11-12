@@ -602,7 +602,9 @@
     "memberCount_other": "{{count}} členů",
     "join": "Připojit se",
     "decline": "Odmítnout",
-    "mismatchHint": "Přihlas se pozvaným účtem a zkus to znovu."
+    "mismatchHint": "Zkopíruj adresu níže a požádej vlastníka, aby poslal pozvánku na tuto adresu.",
+    "mismatchCopy": "Kopírovat adresu",
+    "mismatchCopied": "Adresa zkopírována"
   },
   "billing": {
     "aiCredits": "Bezplatná použití AI",
@@ -645,6 +647,7 @@
     "subscriptionDisclosure": "{{price}} měsíčně. Předplatné se obnovuje, dokud ho nezrušíte.",
     "restorePurchases": "Obnovit nákupy",
     "restoreNone": "Pro tento účet nebylo nalezeno aktivní předplatné.",
+    "subscriptionLinkedElsewhere": "Toto předplatné Apple je už přiřazené k jinému prostoru. Jedno předplatné platí jen pro jeden prostor.",
     "privacyPolicy": "Zásady ochrany osobních údajů",
     "termsOfUse": "Podmínky používání",
     "priceYearlySuffix": " / rok",

@@ -9,7 +9,10 @@ import {
   type ProductCatalogId,
 } from "@shared/billing";
 
+import { conflict } from "@/lib/auth/errors";
 import { prisma } from "@/lib/prisma";
+
+import { isStoreSubscriptionLinkedElsewhere } from "./linkedWorkspace";
 
 import {
   recordDuplicatePurchase,
@@ -89,6 +92,18 @@ export async function applyPurchase(
         },
       },
     });
+
+    if (
+      isStoreSubscriptionLinkedElsewhere(
+        existing?.workspaceId,
+        context.workspaceId,
+      )
+    ) {
+      throw conflict(
+        "This store subscription is already linked to another workspace.",
+        { reason: "subscription_linked_elsewhere" },
+      );
+    }
 
     if (
       existing &&

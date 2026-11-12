@@ -560,7 +560,9 @@
     "memberCount_other": "{{count}} Mitglieder",
     "join": "Beitreten",
     "decline": "Ablehnen",
-    "mismatchHint": "Melde dich mit dem eingeladenen Konto an und versuche es erneut."
+    "mismatchHint": "Kopiere die Adresse unten und bitte den Besitzer, die Einladung an diese Adresse zu senden.",
+    "mismatchCopy": "Adresse kopieren",
+    "mismatchCopied": "Adresse kopiert"
   },
   "billing": {
     "aiCredits": "Kostenlose AI-Nutzungen",
@@ -603,6 +605,7 @@
     "subscriptionDisclosure": "{{price}} pro Monat. Das Abo verlängert sich, bis du es kündigst.",
     "restorePurchases": "Käufe wiederherstellen",
     "restoreNone": "Für dieses Konto wurde kein aktives Abo gefunden.",
+    "subscriptionLinkedElsewhere": "Dieses Apple-Abo ist bereits einem anderen Bereich zugeordnet. Ein Abo gilt nur für einen Bereich.",
     "privacyPolicy": "Datenschutz",
     "termsOfUse": "Nutzungsbedingungen",
     "priceYearlySuffix": " / Jahr",

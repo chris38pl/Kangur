@@ -7,6 +7,7 @@ import type {
 } from "@shared/billing";
 import { DEFAULT_PREMIUM_PRODUCT } from "@shared/billing";
 
+import { ApiClientError } from "@/lib/api/client";
 import { Analytics } from "@/lib/analytics";
 
 import {
@@ -22,6 +23,14 @@ import type { BillingSyncResponse, BillingUrlResponse } from "./schemas";
 import type { ProviderResolveInfo, PurchaseState, StoreProof } from "./types";
 
 export type { PurchaseState };
+
+/** The store account already pays for Premium on a different workspace. */
+export function isSubscriptionLinkedElsewhere(error: unknown): boolean {
+  return (
+    error instanceof ApiClientError &&
+    error.details?.reason === "subscription_linked_elsewhere"
+  );
+}
 
 /** True when the user dismissed the store purchase UI (not a hard failure). */
 export function isBillingUserCancelled(error: unknown): boolean {
@@ -151,6 +160,20 @@ export const BillingService = {
     }
 
     try {
+      const existing = await this.claimExistingStoreSubscription(
+        token,
+        workspaceId,
+        productId,
+      );
+      if (existing) {
+        Analytics.track("billing_purchase_verified", {
+          workspace_id: workspaceId,
+          provider: provider.id,
+          product_id: productId,
+        });
+        return { mode: "native", sync: existing };
+      }
+
       const proof = await provider.purchase(productId);
       const sync = await this.verifyProof(token, workspaceId, proof);
       await provider.finishPurchase(proof);
@@ -220,8 +243,9 @@ export const BillingService = {
             await provider.finishPurchase(proof);
           }
           if (last) return last;
-        } catch {
-          // Play BillingClient down — still sync entitlement from backend.
+        } catch (err) {
+          if (isSubscriptionLinkedElsewhere(err)) throw err;
+          // Store client down. Still sync the purchase already saved here.
         }
       }
       return syncBillingEntitlement(token, workspaceId);
@@ -234,6 +258,42 @@ export const BillingService = {
       throw err;
     }
   },
+  async sync(
+    token: string,
+    workspaceId: string,
+  ): Promise<BillingSyncResponse> {
+    return syncBillingEntitlement(token, workspaceId);
+  },
+
+  /**
+   * If this store account already owns the product, attach it here when it
+   * is free, or refuse when another workspace already has it. Does not open
+   * the store sheet.
+   */
+  async claimExistingStoreSubscription(
+    token: string,
+    workspaceId: string,
+    productId: ProductCatalogId,
+  ): Promise<BillingSyncResponse | null> {
+    const provider = MobileBillingRegistry.resolveCurrent();
+    if (provider.capabilities().purchaseMode !== "native_iap") return null;
+    let proofs: StoreProof[] = [];
+    try {
+      proofs = (await provider.collectRestoreProofs()).filter(
+        (proof) => proof.productId === productId,
+      );
+    } catch {
+      return null;
+    }
+    if (proofs.length === 0) return null;
+    let last: BillingSyncResponse | null = null;
+    for (const proof of proofs) {
+      last = await this.verifyProof(token, workspaceId, proof);
+      await provider.finishPurchase(proof);
+    }
+    return last;
+  },
+
   async verifyProof(
     token: string,
     workspaceId: string,

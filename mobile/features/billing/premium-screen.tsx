@@ -30,7 +30,7 @@ import {
   typography,
 } from "@/design-system/tokens";
 import { BackIcon, LockFieldIcon } from "@/features/auth/auth-icons";
-import { BillingService, isBillingUserCancelled } from "@/features/billing/billing-service";
+import { BillingService, isBillingUserCancelled, isSubscriptionLinkedElsewhere } from "@/features/billing/billing-service";
 import type { PurchaseState } from "@/features/billing/types";
 import { PurchaseCancelledSheet } from "@/features/billing/purchase-cancelled-sheet";
 import { StripeTestCardHelper } from "@/features/billing/stripe-test-card-helper";
@@ -1319,7 +1319,7 @@ export function PremiumScreen() {
         try {
           const token = await getTokenRef.current();
           if (!token || cancelled) return;
-          await BillingService.restore(token, workspaceId);
+          await BillingService.sync(token, workspaceId);
           if (cancelled) return;
           await refetchWorkspacesRef.current();
           if (!cancelled) setShowCheckStatus(false);
@@ -1429,8 +1429,9 @@ export function PremiumScreen() {
         setPurchaseCancelledVisible(true);
       } else {
         setPurchaseState("failed");
-        const message =
-          error instanceof ApiClientError
+        const message = isSubscriptionLinkedElsewhere(error)
+          ? t("billing.subscriptionLinkedElsewhere")
+          : error instanceof ApiClientError
             ? error.message
             : error instanceof Error
               ? error.message
@@ -1532,8 +1533,11 @@ export function PremiumScreen() {
       }
     } catch (error) {
       setPurchaseState("failed");
-      const message =
-        error instanceof Error ? error.message : t("billing.checkPremiumFailed");
+      const message = isSubscriptionLinkedElsewhere(error)
+        ? t("billing.subscriptionLinkedElsewhere")
+        : error instanceof Error
+          ? error.message
+          : t("billing.checkPremiumFailed");
       Alert.alert(t("billing.screenTitle"), message);
     } finally {
       setBusy(false);

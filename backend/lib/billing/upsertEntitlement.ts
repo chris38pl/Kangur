@@ -105,6 +105,20 @@ export async function getGooglePurchaseTokenForWorkspace(
   return purchase?.externalId ?? null;
 }
 
+export async function getAppleOriginalTransactionIdForWorkspace(
+  workspaceId: string,
+): Promise<string | null> {
+  const purchase = await prisma.billingPurchase.findFirst({
+    where: {
+      workspaceId,
+      providerId: "apple",
+      status: { in: ["active", "trialing", "past_due", "cancelled"] },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+  return purchase?.externalId ?? null;
+}
+
 export async function resolveBillingOwnerUserId(
   workspaceId: string,
 ): Promise<string | null> {

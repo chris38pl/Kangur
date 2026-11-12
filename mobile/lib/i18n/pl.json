@@ -602,7 +602,9 @@
     "memberCount_other": "{{count}} członków",
     "join": "Dołącz",
     "decline": "Odrzuć",
-    "mismatchHint": "Zaloguj się właściwym kontem i spróbuj ponownie."
+    "mismatchHint": "Skopiuj adres poniżej i poproś właściciela, żeby wysłał zaproszenie na ten adres.",
+    "mismatchCopy": "Kopiuj adres",
+    "mismatchCopied": "Adres skopiowany"
   },
   "billing": {
     "aiCredits": "Darmowe użycia AI",
@@ -645,6 +647,7 @@
     "subscriptionDisclosure": "{{price}} miesięcznie. Subskrypcja odnawia się do anulowania.",
     "restorePurchases": "Przywróć zakupy",
     "restoreNone": "Nie znaleziono aktywnej subskrypcji na tym koncie.",
+    "subscriptionLinkedElsewhere": "Ta subskrypcja Apple jest już przypisana do innej przestrzeni. Jedna subskrypcja działa tylko w jednej przestrzeni.",
     "privacyPolicy": "Polityka prywatności",
     "termsOfUse": "Regulamin",
     "priceYearlySuffix": " / rok",
