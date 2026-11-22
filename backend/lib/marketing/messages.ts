@@ -92,7 +92,7 @@ export type MarketingMessages = {
 
 const en: MarketingMessages = {
   meta: {
-    homeTitle: "Kangur – Shared grocery lists with AI",
+    homeTitle: "Kangur - Shared grocery lists with AI",
     homeDescription:
       "Create lists from a photo, text, a recipe or past shopping. Shop aisle by aisle and share your lists with your household.",
     privacyTitle: "Privacy Policy | Kangur",
@@ -103,7 +103,7 @@ const en: MarketingMessages = {
       "Terms for using Kangur - service rules, accounts, Premium, and liability.",
     contactTitle: "Contact | Kangur",
     contactDescription:
-      "Questions, suggestions, or need help? Contact the Kangur team - we usually reply within 24–48 hours.",
+      "Questions, suggestions, or need help? Contact the Kangur team - we usually reply within 24-48 hours.",
     deleteTitle: "Delete Account | Kangur",
     deleteDescription:
       "How to delete your Kangur account in the app and what data is removed.",
@@ -153,7 +153,7 @@ const en: MarketingMessages = {
       "Have a question, suggestion, or need help? Write to us - we’ll reply as soon as we can.",
     emailLabel: "E-mail",
     responseTitle: "Response time",
-    responseBody: "We usually reply within 24–48 hours.",
+    responseBody: "We usually reply within 24-48 hours.",
     helpTitle: "We’re here to help",
     helpBody: "Write to us about anything - we’re here for you!",
     mascotAlt: "Kangur mascot with a phone",
@@ -209,7 +209,7 @@ const en: MarketingMessages = {
 
 const pl: MarketingMessages = {
   meta: {
-    homeTitle: "Kangur – Wspólne listy zakupów z AI",
+    homeTitle: "Kangur - Wspólne listy zakupów z AI",
     homeDescription:
       "Twórz listy ze zdjęcia, tekstu, przepisu albo poprzednich zakupów. Rób zakupy alejka po alejce i dziel listy z domownikami.",
     privacyTitle: "Polityka prywatności | Kangur",
@@ -220,7 +220,7 @@ const pl: MarketingMessages = {
       "Regulamin korzystania z aplikacji Kangur - zasady usługi, konta, Premium i odpowiedzialność.",
     contactTitle: "Kontakt | Kangur",
     contactDescription:
-      "Masz pytanie, sugestię lub potrzebujesz pomocy? Napisz do zespołu Kangur - zwykle odpowiadamy w ciągu 24–48 godzin.",
+      "Masz pytanie, sugestię lub potrzebujesz pomocy? Napisz do zespołu Kangur - zwykle odpowiadamy w ciągu 24-48 godzin.",
     deleteTitle: "Usunięcie konta | Kangur",
     deleteDescription:
       "Jak usunąć konto Kangur w aplikacji i jakie dane są usuwane.",
@@ -267,12 +267,12 @@ const pl: MarketingMessages = {
   contact: {
     title: "Kontakt",
     intro:
-      "Masz pytanie, sugestię lub potrzebujesz pomocy? Napisz do nas – odpowiemy najszybciej, jak to możliwe.",
+      "Masz pytanie, sugestię lub potrzebujesz pomocy? Napisz do nas - odpowiemy najszybciej, jak to możliwe.",
     emailLabel: "E-mail",
     responseTitle: "Czas odpowiedzi",
-    responseBody: "Zwykle odpowiadamy w ciągu 24–48 godzin.",
+    responseBody: "Zwykle odpowiadamy w ciągu 24-48 godzin.",
     helpTitle: "Jesteśmy tu, aby pomóc",
-    helpBody: "Napisz do nas w każdej sprawie – jesteśmy dla Ciebie!",
+    helpBody: "Napisz do nas w każdej sprawie - jesteśmy dla Ciebie!",
     mascotAlt: "Maskotka Kangur z telefonem",
   },
   faq: {
@@ -327,7 +327,7 @@ const pl: MarketingMessages = {
 const de: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Geteilte Einkaufslisten mit AI",
+    homeTitle: "Kangur - Geteilte Einkaufslisten mit AI",
     homeDescription:
       "Erstelle Listen aus Foto, Text, Rezept oder früheren Einkäufen. Kaufe Gang für Gang ein und teile Listen mit deinem Haushalt.",
     privacyTitle: "Datenschutz | Kangur",
@@ -386,7 +386,7 @@ const de: MarketingMessages = {
       "Hast du eine Frage, einen Vorschlag oder brauchst Hilfe? Schreib uns - wir antworten so schnell wie möglich.",
     emailLabel: "E-Mail",
     responseTitle: "Antwortzeit",
-    responseBody: "Wir antworten meist innerhalb von 24–48 Stunden.",
+    responseBody: "Wir antworten meist innerhalb von 24-48 Stunden.",
     helpTitle: "Wir sind für dich da",
     helpBody: "Schreib uns bei jedem Anliegen - wir helfen gerne!",
     mascotAlt: "Kangur-Maskottchen mit Telefon",
@@ -420,7 +420,7 @@ const de: MarketingMessages = {
 const fr: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Listes de courses avec l’IA",
+    homeTitle: "Kangur - Listes de courses avec l’IA",
     homeDescription:
       "Créez vos listes à partir d’une photo, d’un texte, d’une recette ou de vos courses passées. Faites les courses rayon par rayon, à plusieurs.",
     privacyTitle: "Confidentialité | Kangur",
@@ -479,7 +479,7 @@ const fr: MarketingMessages = {
       "Une question, une suggestion ou besoin d’aide ? Écrivez-nous - nous répondrons dès que possible.",
     emailLabel: "E-mail",
     responseTitle: "Délai de réponse",
-    responseBody: "Nous répondons généralement sous 24–48 heures.",
+    responseBody: "Nous répondons généralement sous 24-48 heures.",
     helpTitle: "Nous sommes là pour vous",
     helpBody: "Écrivez-nous pour tout sujet - nous sommes à votre écoute !",
     mascotAlt: "Mascotte Kangur avec un téléphone",
@@ -513,7 +513,7 @@ const fr: MarketingMessages = {
 const es: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Listas de la compra con IA",
+    homeTitle: "Kangur - Listas de la compra con IA",
     homeDescription:
       "Crea listas desde una foto, un texto, una receta o compras anteriores. Compra pasillo a pasillo y comparte las listas con tu familia.",
     privacyTitle: "Privacidad | Kangur",
@@ -572,7 +572,7 @@ const es: MarketingMessages = {
       "¿Tienes una pregunta, sugerencia o necesitas ayuda? Escríbenos - te responderemos lo antes posible.",
     emailLabel: "E-mail",
     responseTitle: "Tiempo de respuesta",
-    responseBody: "Solemos responder en 24–48 horas.",
+    responseBody: "Solemos responder en 24-48 horas.",
     helpTitle: "Estamos aquí para ayudar",
     helpBody: "Escríbenos por cualquier asunto - ¡estamos para ti!",
     mascotAlt: "Mascota Kangur con un teléfono",
@@ -606,7 +606,7 @@ const es: MarketingMessages = {
 const it: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Lista della spesa con l’AI",
+    homeTitle: "Kangur - Lista della spesa con l’AI",
     homeDescription:
       "Crea liste da una foto, un testo, una ricetta o dalle spese precedenti. Fai la spesa reparto per reparto e condividi le liste in famiglia.",
     privacyTitle: "Privacy | Kangur",
@@ -665,7 +665,7 @@ const it: MarketingMessages = {
       "Hai una domanda, un suggerimento o ti serve aiuto? Scrivici - risponderemo il prima possibile.",
     emailLabel: "E-mail",
     responseTitle: "Tempi di risposta",
-    responseBody: "Di solito rispondiamo entro 24–48 ore.",
+    responseBody: "Di solito rispondiamo entro 24-48 ore.",
     helpTitle: "Siamo qui per aiutarti",
     helpBody: "Scrivici per qualsiasi cosa - siamo al tuo fianco!",
     mascotAlt: "Mascotte Kangur con telefono",
@@ -699,7 +699,7 @@ const it: MarketingMessages = {
 const cs: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Sdílené nákupní seznamy s AI",
+    homeTitle: "Kangur - Sdílené nákupní seznamy s AI",
     homeDescription:
       "Vytvářejte seznamy z fotky, textu, receptu nebo předchozích nákupů. Nakupujte ulička po uličce a sdílejte seznamy s domácností.",
     privacyTitle: "Soukromí | Kangur",
@@ -758,7 +758,7 @@ const cs: MarketingMessages = {
       "Máte otázku, návrh nebo potřebujete pomoc? Napište nám - odpovíme co nejdříve.",
     emailLabel: "E-mail",
     responseTitle: "Doba odpovědi",
-    responseBody: "Obvykle odpovídáme do 24–48 hodin.",
+    responseBody: "Obvykle odpovídáme do 24-48 hodin.",
     helpTitle: "Jsme tu, abychom pomohli",
     helpBody: "Napište nám s čímkoli - jsme tu pro vás!",
     mascotAlt: "Maskot Kangur s telefonem",
@@ -792,7 +792,7 @@ const cs: MarketingMessages = {
 const ru: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Общие списки покупок с AI",
+    homeTitle: "Kangur - Общие списки покупок с AI",
     homeDescription:
       "Создавайте списки из фото, текста, рецепта или прошлых покупок. Покупайте отдел за отделом и делитесь списками с семьёй.",
     privacyTitle: "Конфиденциальность | Kangur",
@@ -827,7 +827,7 @@ const ru: MarketingMessages = {
     badge: "✨ Ваш умный помощник по покупкам",
     headlineBefore: "Помните вместе.",
     headlineAccent: "Не забывайте важное.",
-    lead: "Kangur — общий список покупок для всей семьи. Создавайте список как удобно, покупайте отдел за отделом, а все дома видят каждое изменение.",
+    lead: "Kangur - общий список покупок для всей семьи. Создавайте список как удобно, покупайте отдел за отделом, а все дома видят каждое изменение.",
     features: [
       "Список из фото, скриншота или рецепта",
       "По отделам магазина",
@@ -851,7 +851,7 @@ const ru: MarketingMessages = {
       "Есть вопрос, предложение или нужна помощь? Напишите нам - ответим как можно скорее.",
     emailLabel: "E-mail",
     responseTitle: "Время ответа",
-    responseBody: "Обычно отвечаем в течение 24–48 часов.",
+    responseBody: "Обычно отвечаем в течение 24-48 часов.",
     helpTitle: "Мы здесь, чтобы помочь",
     helpBody: "Пишите по любому вопросу - мы на связи!",
     mascotAlt: "Маскот Kangur с телефоном",
@@ -885,7 +885,7 @@ const ru: MarketingMessages = {
 const uk: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Спільні списки покупок з AI",
+    homeTitle: "Kangur - Спільні списки покупок з AI",
     homeDescription:
       "Створюйте списки з фото, тексту, рецепта або попередніх покупок. Купуйте відділ за відділом і діліться списками з родиною.",
     privacyTitle: "Конфіденційність | Kangur",
@@ -920,7 +920,7 @@ const uk: MarketingMessages = {
     badge: "✨ Ваш розумний помічник з покупок",
     headlineBefore: "Пам’ятайте разом.",
     headlineAccent: "Не забувайте важливе.",
-    lead: "Kangur — спільний список покупок для всієї родини. Створюйте список як зручно, купуйте відділ за відділом, а всі вдома бачать кожну зміну.",
+    lead: "Kangur - спільний список покупок для всієї родини. Створюйте список як зручно, купуйте відділ за відділом, а всі вдома бачать кожну зміну.",
     features: [
       "Список із фото, скриншота або рецепта",
       "За відділами магазину",
@@ -944,7 +944,7 @@ const uk: MarketingMessages = {
       "Є питання, пропозиція чи потрібна допомога? Напишіть нам - відповімо якнайшвидше.",
     emailLabel: "E-mail",
     responseTitle: "Час відповіді",
-    responseBody: "Зазвичай відповідаємо протягом 24–48 годин.",
+    responseBody: "Зазвичай відповідаємо протягом 24-48 годин.",
     helpTitle: "Ми тут, щоб допомогти",
     helpBody: "Пишіть з будь-якої справи - ми на зв’язку!",
     mascotAlt: "Маскот Kangur з телефоном",
@@ -978,7 +978,7 @@ const uk: MarketingMessages = {
 const be: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Агульныя спісы пакупак з AI",
+    homeTitle: "Kangur - Агульныя спісы пакупак з AI",
     homeDescription:
       "Стварайце спісы з фота, тэксту, рэцэпта або папярэдніх пакупак. Купляйце аддзел за аддзелам і дзяліцеся спісамі з сям’ёй.",
     privacyTitle: "Прыватнасць | Kangur",
@@ -1013,7 +1013,7 @@ const be: MarketingMessages = {
     badge: "✨ Ваш разумны памочнік па пакупках",
     headlineBefore: "Памятайце разам.",
     headlineAccent: "Не забывайце важнае.",
-    lead: "Kangur — агульны спіс пакупак для ўсёй сям’і. Стварайце спіс як зручна, купляйце аддзел за аддзелам, а ўсе дома бачаць кожную змену.",
+    lead: "Kangur - агульны спіс пакупак для ўсёй сям’і. Стварайце спіс як зручна, купляйце аддзел за аддзелам, а ўсе дома бачаць кожную змену.",
     features: [
       "Спіс з фота, скрыншота або рэцэпта",
       "Па аддзелах крамы",
@@ -1037,7 +1037,7 @@ const be: MarketingMessages = {
       "Ёсць пытанне, прапанова ці патрэбна дапамога? Напішыце нам - адкажам як мага хутчэй.",
     emailLabel: "E-mail",
     responseTitle: "Час адказу",
-    responseBody: "Звычайна адказваем на працягу 24–48 гадзін.",
+    responseBody: "Звычайна адказваем на працягу 24-48 гадзін.",
     helpTitle: "Мы тут, каб дапамагчы",
     helpBody: "Пішыце па любой справе - мы на сувязі!",
     mascotAlt: "Маскот Kangur з тэлефонам",

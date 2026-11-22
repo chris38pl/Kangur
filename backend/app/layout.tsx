@@ -14,7 +14,7 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-const defaultTitle = "Kangur – Shared grocery lists with AI";
+const defaultTitle = "Kangur - Shared grocery lists with AI";
 const defaultDescription =
   "Create lists from a photo, text, a recipe or past shopping. Shop aisle by aisle and share your lists with your household.";
 
