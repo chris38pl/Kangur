@@ -1,4 +1,5 @@
 import type { Href } from "expo-router";
+import { premiumHref } from "@/features/billing/premium-source";
 
 export type PlatformRole = "USER" | "ADMIN";
 
@@ -64,7 +65,7 @@ export const APP_MENU_SECTIONS: AppMenuSection[] = [
       {
         id: "subscription",
         labelKey: "appMenu.subscription",
-        href: "/premium",
+        href: premiumHref("menu"),
         visible: everyone,
       },
       {

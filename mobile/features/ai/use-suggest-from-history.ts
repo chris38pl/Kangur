@@ -25,6 +25,7 @@ import {
 import { ApiClientError } from "@/lib/api/client";
 import { isHistorySuggestionsEnabled } from "@/lib/featureGates";
 import { finishTaskAndOpen } from "@/lib/navigation";
+import { usePremiumOfferAfterWin } from "@/features/billing/use-premium-offer";
 
 type Options = {
   workspaceId: string | null | undefined;
@@ -179,6 +180,7 @@ export function useSuggestFromHistory({
     workspaceId,
   ]);
 
+  const offerPremium = usePremiumOfferAfterWin();
   const confirm = useCallback(
     async (acceptedIds: string[]) => {
       if (!workspaceId || !run || acceptedIds.length === 0) return;
@@ -230,6 +232,11 @@ export function useSuggestFromHistory({
         onAppliedRef.current?.({
           listId: result.list.id,
           applied: result.applied,
+        });
+        offerPremium({
+          workspaceId,
+          appliedCount: result.applied,
+          trigger: "history",
         });
       } catch (error) {
         if (
@@ -287,6 +294,7 @@ export function useSuggestFromHistory({
     [
       appendToListId,
       getToken,
+      offerPremium,
       queryClient,
       run,
       showAlreadyOnList,

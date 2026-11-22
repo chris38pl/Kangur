@@ -48,6 +48,7 @@ import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
 import { getAppBuildInfo } from "@/lib/app-build-info";
 import i18n, { localeMeta, resolveAppLocale } from "@/lib/i18n";
 import { goRoot } from "@/lib/navigation";
+import { premiumHref } from "@/features/billing/premium-source";
 
 function displayNameFromEmail(email: string | undefined): string {
   if (!email) return "Kangur";
@@ -506,7 +507,7 @@ export default function ProfileScreen() {
             icon={<ProfileIconCard color={theme.primary} />}
             title={t("profile.subscription")}
             showDivider
-            onPress={() => router.push("/premium")}
+            onPress={() => router.push(premiumHref("profile"))}
           />
           <ProfileMenuRow
             icon={<ProfileIconBell color={theme.primary} />}

@@ -1,7 +1,7 @@
 {
   "name": "Kangur",
   "short_name": "Kangur",
-  "description": "Inteligentna lista zakupów",
+  "description": "Wspólne listy zakupów z AI",
   "start_url": "/",
   "display": "browser",
   "background_color": "#FFFFFF",

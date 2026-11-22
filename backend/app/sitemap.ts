@@ -1,49 +1,37 @@
 import type { MetadataRoute } from "next";
 
-import { APP_LOCALE_IDS } from "@/lib/marketing/locale";
+import { withLocale } from "@/lib/marketing/locale";
+import {
+  MARKETING_PATHS,
+  contentLocales,
+  hreflangAlternates,
+} from "@/lib/marketing/seo";
+import { CONTENT_UPDATED_AT, absoluteUrl } from "@/lib/marketing/site";
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "http://localhost:3000";
-
-const paths = [
-  "",
-  "/faq",
-  "/privacy",
-  "/terms",
-  "/contact",
-  "/delete-account",
-] as const;
-
+/**
+ * Only final, indexable URLs: no locale-less redirects, and pages that exist only in
+ * pl + en are listed only in those two languages (other locales canonicalise to en).
+ */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
   const entries: MetadataRoute.Sitemap = [];
 
-  for (const locale of APP_LOCALE_IDS) {
-    for (const path of paths) {
+  for (const path of MARKETING_PATHS) {
+    const languages = Object.fromEntries(
+      Object.entries(hreflangAlternates(path)).map(([lang, href]) => [
+        lang,
+        absoluteUrl(href),
+      ]),
+    );
+
+    for (const locale of contentLocales(path)) {
       entries.push({
-        url: `${siteUrl}/${locale}${path}`,
-        lastModified,
-        changeFrequency: path === "" ? "weekly" : "monthly",
-        priority: path === "" ? 1 : 0.6,
+        url: absoluteUrl(withLocale(locale, path)),
+        lastModified: CONTENT_UPDATED_AT,
+        changeFrequency: path === "/" ? "weekly" : "monthly",
+        priority: path === "/" ? 1 : 0.6,
+        alternates: { languages },
       });
     }
-  }
-
-  // Stable unprefixed aliases (redirect to locale) - useful for store listings
-  for (const path of [
-    "/faq",
-    "/privacy",
-    "/terms",
-    "/contact",
-    "/delete-account",
-  ]) {
-    entries.push({
-      url: `${siteUrl}${path}`,
-      lastModified,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    });
   }
 
   return entries;

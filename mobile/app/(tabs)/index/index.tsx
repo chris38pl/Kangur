@@ -47,6 +47,7 @@ import {
   isMealProposalEnabled,
 } from "@/lib/featureGates";
 import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
+import { premiumHref } from "@/features/billing/premium-source";
 
 const QUICK_ACTION_GAP = spacing[2];
 const QUICK_ACTIONS_VISIBLE = 4;
@@ -676,7 +677,7 @@ export default function HomeScreen() {
             />
             {credits && !credits.unlimited ? (
               <Pressable
-                onPress={() => router.push("/premium")}
+                onPress={() => router.push(premiumHref("home_credits"))}
                 accessibilityRole="button"
                 accessibilityLabel={t("billing.upgradeCta")}
                 style={{

@@ -7,6 +7,7 @@ import {
   type AppLocale,
 } from "@/lib/marketing/locale";
 import { getMessages } from "@/lib/marketing/messages";
+import { buildMarketingMetadata } from "@/lib/marketing/seo";
 import { FaqContent } from "@/lib/marketing/faq-content";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -19,15 +20,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: raw } = await params;
   if (!isAppLocale(raw)) return {};
   const t = getMessages(raw);
-  return {
-    title: { absolute: t.meta.faqTitle },
+  return buildMarketingMetadata({
+    locale: raw,
+    path: "/faq",
+    title: t.meta.faqTitle,
     description: t.meta.faqDescription,
-    openGraph: {
-      title: t.meta.faqTitle,
-      description: t.meta.faqDescription,
-      images: [{ url: "/og.png", width: 1200, height: 630, alt: "Kangur" }],
-    },
-  };
+  });
 }
 
 export default async function FaqPage({ params }: Props) {

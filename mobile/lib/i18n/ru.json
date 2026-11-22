@@ -207,8 +207,8 @@
     "purchasedRestoreHint": "Нажмите, чтобы вернуть товар",
     "unavailable": "Нет в наличии",
     "undoSnackbar": "{{name}} обновлён",
-    "undoBought": "{{name}} куплен",
-    "undoUnavailable": "{{name}} нет в наличии",
+    "undoBought": "Куплено: {{name}}",
+    "undoUnavailable": "Нет в наличии: {{name}}",
     "addItem": "Добавить товар",
         "allDone": "Всё куплено",
     "finishShopping": "Завершить покупки",
@@ -223,7 +223,7 @@
     "backToCategories": "Назад к категориям",
     "finishTitle": "Итоги покупок",
     "finishedHeadline": "Покупки завершены!",
-    "finishedBy": "{{name}} завершил(а) покупки",
+    "finishedBy": "{{name}}: покупки завершены",
     "finishedToday": "Завершено сегодня, {{time}}",
     "finishedAt": "Завершено {{day}}, {{time}}",
     "shoppingTime": "Время покупок",
@@ -637,6 +637,12 @@
     "mismatchCopy": "Копировать адрес",
     "mismatchCopied": "Адрес скопирован"
   },
+  "invitePrompt": {
+    "title": "Ходите за покупками вдвоём?",
+    "body": "Пригласите кого-то из домашних и ведите общий список. Все сразу видят, что уже куплено.",
+    "cta": "Пригласить",
+    "later": "Не сейчас"
+  },
   "billing": {
     "aiCredits": "Бесплатные использования AI",
     "aiCreditsBalance": "Осталось {{remaining}} / {{limit}}",
@@ -757,6 +763,12 @@
     "debugRefreshProducts": "Обновить продукты",
     "debugExport": "Экспорт диагностики биллинга",
     "debugExported": "Диагностика скопирована в буфер обмена."
+  },
+  "premiumOffer": {
+    "title": "Список готов! 🎉",
+    "body": "Попробуйте Premium: AI без лимита и полная история покупок для всего пространства. Первый месяц бесплатно, отменить можно в любой момент.",
+    "cta": "Попробовать Premium",
+    "later": "Не сейчас"
   },
   "profile": {
     "title": "Профиль",

@@ -3,6 +3,8 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { headers } from "next/headers";
 
 import { DEFAULT_LOCALE, isAppLocale } from "@/lib/marketing/locale";
+import { ogImage } from "@/lib/marketing/seo";
+import { APP_STORE_ID, SITE_URL } from "@/lib/marketing/site";
 
 import "./globals.css";
 
@@ -12,42 +14,43 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "http://localhost:3000";
+const defaultTitle = "Kangur - Shared grocery lists with AI";
+const defaultDescription =
+  "Create lists from a photo, text, a recipe or past shopping. Shop aisle by aisle and share your lists with your household.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Kangur – Smart shopping list",
+    default: defaultTitle,
     template: "%s | Kangur",
   },
-  description:
-    "Kangur - shared smart shopping lists with AI. Download the app and shop with less friction.",
+  description: defaultDescription,
   applicationName: "Kangur",
   icons: {
+    // /favicon.ico comes from the app/favicon.ico file convention.
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   manifest: "/site.webmanifest",
+  // Safari on iPhone shows the native "Open in App Store" banner.
+  itunes: { appId: APP_STORE_ID },
   openGraph: {
     type: "website",
     siteName: "Kangur",
-    title: "Kangur – Smart shopping list",
-    description:
-      "Shared smart shopping lists with AI. Download Kangur and shop with less friction.",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Kangur" }],
+    title: defaultTitle,
+    description: defaultDescription,
+    images: [ogImage("en")],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kangur – Smart shopping list",
-    description:
-      "Shared smart shopping lists with AI. Download Kangur and shop with less friction.",
-    images: ["/og.png"],
+    title: defaultTitle,
+    description: defaultDescription,
+    images: [ogImage("en").url],
   },
 };
 

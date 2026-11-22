@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import { LanguageSwitcher } from "@/components/marketing/LanguageSwitcher";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { UtmCapture } from "@/components/marketing/UtmCapture";
 import {
   APP_LOCALE_IDS,
   isAppLocale,
@@ -50,6 +51,7 @@ export default async function LocaleLayout({
 
   return (
     <div className="mkt-shell">
+      <UtmCapture />
       <header className="mkt-header">
         <div className="mkt-header-inner">
           <Link href={withLocale(locale, "/")} className="mkt-logo">
@@ -70,7 +72,7 @@ export default async function LocaleLayout({
             <LanguageSwitcher locale={locale} label={t.nav.languageAria} />
             <a
               className="mkt-btn mkt-btn-nav"
-              href={withLocale(locale, "/#pobierz")}
+              href={`${withLocale(locale, "/")}#pobierz`}
             >
               {t.nav.download}
             </a>

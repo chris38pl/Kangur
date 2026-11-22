@@ -197,8 +197,8 @@
     "purchasedRestoreHint": "Tocca per ripristinare un prodotto",
     "unavailable": "Non disponibile",
     "undoSnackbar": "{{name}} aggiornato",
-    "undoBought": "{{name}} acquistato",
-    "undoUnavailable": "{{name}} non disponibile",
+    "undoBought": "Acquistato: {{name}}",
+    "undoUnavailable": "Non disponibile: {{name}}",
     "addItem": "Aggiungi articolo",
         "allDone": "Tutto acquistato",
     "finishShopping": "Termina la spesa",
@@ -213,7 +213,7 @@
     "backToCategories": "Torna alle categorie",
     "finishTitle": "Riepilogo spesa",
     "finishedHeadline": "Spesa completata!",
-    "finishedBy": "{{name}} ha terminato la spesa",
+    "finishedBy": "{{name}}: spesa terminata",
     "finishedToday": "Completata oggi, {{time}}",
     "finishedAt": "Completata {{day}}, {{time}}",
     "shoppingTime": "Tempo di spesa",
@@ -593,6 +593,12 @@
     "mismatchCopy": "Copia indirizzo",
     "mismatchCopied": "Indirizzo copiato"
   },
+  "invitePrompt": {
+    "title": "Fate la spesa in due?",
+    "body": "Invita qualcuno di casa e condividete la lista. Tutti vedono subito cosa è già stato comprato.",
+    "cta": "Invita qualcuno",
+    "later": "Non ora"
+  },
   "billing": {
     "aiCredits": "Usi AI gratuiti",
     "aiCreditsBalance": "{{remaining}} / {{limit}} rimasti",
@@ -711,6 +717,12 @@
     "debugRefreshProducts": "Aggiorna prodotti",
     "debugExport": "Esporta diagnostica fatturazione",
     "debugExported": "Diagnostica copiata negli appunti."
+  },
+  "premiumOffer": {
+    "title": "Lista pronta! 🎉",
+    "body": "Prova Premium: AI illimitata e cronologia completa della spesa per tutto lo spazio. Primo mese gratis, disdici quando vuoi.",
+    "cta": "Prova Premium",
+    "later": "Non ora"
   },
   "profile": {
     "title": "Profilo",
