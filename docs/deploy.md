@@ -291,7 +291,7 @@ Price: nearest Apple price point to the live Play base plan `premium_monthly` / 
 
 **Client:** iPhone only (`supportsTablet: false`). `ITSAppUsesNonExemptEncryption` is false. Paywall shows price after trial, privacy and terms links, and Restore purchases. Introductory offers are applied by StoreKit (no offer signature). IAP products exist only for `app.kangur`, not `app.kangur.dev`.
 
-**Builds:** `eas build --platform ios --profile preview` (staging API) for internal TestFlight, then `production`. Submit with `ascAppId` `6832296080`. Release the approved version manually. The listing is live in all countries since 2026-11-10; the landing App Store button links to `https://apps.apple.com/app/id6832296080` (override with `NEXT_PUBLIC_APP_STORE_URL`).
+**Builds:** `eas build --platform ios --profile preview` (staging API) for internal TestFlight, then `production`. Submit with `ascAppId` `6832296080`. Release the approved version manually. The listing is live in all countries since 2026-11-10; the landing App Store button links to `https://apps.apple.com/app/apple-store/id6832296080` (override with `NEXT_PUBLIC_APP_STORE_URL`) and adds the campaign: `pt=129764493&ct=<utm_source>-<utm_campaign>&mt=8` (`ct=landing` without UTM), see `backend/lib/marketing/store-links.ts`.
 
 **Still done in Apple portals (not in git):** Paid Apps agreement, bank, tax, APNs .p8 into EAS, Sign in with Apple key into Clerk, subscription localization and review screenshot, App Privacy, screenshots, sandbox testers, TestFlight QA, App Review.
 
@@ -397,8 +397,8 @@ Source of truth: [backend/.env.example](../backend/.env.example).
 | `APP_URL` | `http://localhost:3000` | `https://staging-api.getkangur.com` | `https://api.getkangur.com` | No trailing slash; API host (Stripe etc.) |
 | `NEXT_PUBLIC_APP_URL` | same | same | same | If needed by Next client |
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Preview URL / same as deploy | `https://www.getkangur.com` | Canonical marketing origin; `metadataBase`, canonical, hreflang, sitemap, OG |
-| `NEXT_PUBLIC_PLAY_STORE_URL` | Play listing URL | same | same | Home Google Play CTA (default `id=app.kangur`) |
-| `NEXT_PUBLIC_APP_STORE_URL` | optional | optional | optional | Home App Store CTA (default `https://apps.apple.com/app/id6832296080`) |
+| `NEXT_PUBLIC_PLAY_STORE_URL` | Play listing URL | same | same | Home Google Play CTA (default `id=app.kangur`); the page adds `referrer` with the visitor's utm_* |
+| `NEXT_PUBLIC_APP_STORE_URL` | optional | optional | optional | Home App Store CTA (default `https://apps.apple.com/app/apple-store/id6832296080`); the page adds `pt`/`ct`/`mt` |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | `contact@getkangur.com` | same | same | `/contact` general inbox |
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | `support@getkangur.com` | same | same | Support + delete-account |
 | `CORS_ALLOWED_ORIGINS` | Expo web origins | as needed | as needed | Comma-separated |

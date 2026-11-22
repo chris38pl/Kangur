@@ -26,10 +26,13 @@ export function absoluteUrl(path: string): string {
 /** Apple ID of the App Store listing (EAS `submit.ios.ascAppId`). Live in all countries since 2026-11-10. */
 export const APP_STORE_ID = "6832296080";
 
-/** Apple redirects this to the visitor's own storefront. */
+/**
+ * Base of the App Store link, in the form App Store Connect campaign links use.
+ * Apple redirects it to the visitor's own storefront; StoreButtons adds pt/ct/mt.
+ */
 export const APP_STORE_URL =
   process.env.NEXT_PUBLIC_APP_STORE_URL?.trim() ||
-  `https://apps.apple.com/app/id${APP_STORE_ID}`;
+  `https://apps.apple.com/app/apple-store/id${APP_STORE_ID}`;
 
 export const PLAY_STORE_URL =
   process.env.NEXT_PUBLIC_PLAY_STORE_URL?.trim() ||
