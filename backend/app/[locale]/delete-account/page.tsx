@@ -9,6 +9,7 @@ import {
   type AppLocale,
 } from "@/lib/marketing/locale";
 import { getMessages } from "@/lib/marketing/messages";
+import { buildMarketingMetadata } from "@/lib/marketing/seo";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -20,15 +21,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: raw } = await params;
   if (!isAppLocale(raw)) return {};
   const t = getMessages(raw);
-  return {
-    title: { absolute: t.meta.deleteTitle },
+  return buildMarketingMetadata({
+    locale: raw,
+    path: "/delete-account",
+    title: t.meta.deleteTitle,
     description: t.meta.deleteDescription,
-    openGraph: {
-      title: t.meta.deleteTitle,
-      description: t.meta.deleteDescription,
-      images: [{ url: "/og.png", width: 1200, height: 630, alt: "Kangur" }],
-    },
-  };
+  });
 }
 
 export default async function DeleteAccountPage({ params }: Props) {

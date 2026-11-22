@@ -175,7 +175,7 @@ Disable feature flag? (kill switch without full rollback)
 - **One project**
 - `main` → `api.getkangur.com` (Production env vars)
 - `staging` → `staging-api.getkangur.com` (Preview / Staging env vars - map branch `staging` to the staging domain)
-- Landing `getkangur.com` on production - same Next.js `backend/` deploy (`app/(marketing)/`); set `NEXT_PUBLIC_SITE_URL=https://getkangur.com`
+- Landing `getkangur.com` on production - same Next.js `backend/` deploy (`app/(marketing)/`); set `NEXT_PUBLIC_SITE_URL=https://www.getkangur.com` (Vercel 308-redirects the apex to www; the code also upgrades an apex value to www, see `backend/lib/marketing/site.ts`)
 - Root directory: `backend`
 - Build: `pnpm build:vercel` (see [`backend/vercel.json`](../backend/vercel.json) + `backend/package.json`)
   - `prisma migrate deploy` (needs `DIRECT_URL`)
@@ -291,7 +291,7 @@ Price: nearest Apple price point to the live Play base plan `premium_monthly` / 
 
 **Client:** iPhone only (`supportsTablet: false`). `ITSAppUsesNonExemptEncryption` is false. Paywall shows price after trial, privacy and terms links, and Restore purchases. Introductory offers are applied by StoreKit (no offer signature). IAP products exist only for `app.kangur`, not `app.kangur.dev`.
 
-**Builds:** `eas build --platform ios --profile preview` (staging API) for internal TestFlight, then `production`. Submit with `ascAppId` `6832296080`. Release the approved version manually. Turn on the landing App Store button and `EXPO_PUBLIC_APP_STORE_URL` only after the listing is live.
+**Builds:** `eas build --platform ios --profile preview` (staging API) for internal TestFlight, then `production`. Submit with `ascAppId` `6832296080`. Release the approved version manually. The listing is live in all countries since 2026-11-10; the landing App Store button links to `https://apps.apple.com/app/id6832296080` (override with `NEXT_PUBLIC_APP_STORE_URL`).
 
 **Still done in Apple portals (not in git):** Paid Apps agreement, bank, tax, APNs .p8 into EAS, Sign in with Apple key into Clerk, subscription localization and review screenshot, App Privacy, screenshots, sandbox testers, TestFlight QA, App Review.
 
@@ -396,8 +396,9 @@ Source of truth: [backend/.env.example](../backend/.env.example).
 |----------|-------|---------|------------|-------|
 | `APP_URL` | `http://localhost:3000` | `https://staging-api.getkangur.com` | `https://api.getkangur.com` | No trailing slash; API host (Stripe etc.) |
 | `NEXT_PUBLIC_APP_URL` | same | same | same | If needed by Next client |
-| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Preview URL / same as deploy | `https://getkangur.com` | Marketing apex; `metadataBase`, sitemap, OG |
-| `NEXT_PUBLIC_PLAY_STORE_URL` | Play listing URL | same | same | Home Google Play CTA |
+| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Preview URL / same as deploy | `https://www.getkangur.com` | Canonical marketing origin; `metadataBase`, canonical, hreflang, sitemap, OG |
+| `NEXT_PUBLIC_PLAY_STORE_URL` | Play listing URL | same | same | Home Google Play CTA (default `id=app.kangur`) |
+| `NEXT_PUBLIC_APP_STORE_URL` | optional | optional | optional | Home App Store CTA (default `https://apps.apple.com/app/id6832296080`) |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | `contact@getkangur.com` | same | same | `/contact` general inbox |
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | `support@getkangur.com` | same | same | Support + delete-account |
 | `CORS_ALLOWED_ORIGINS` | Expo web origins | as needed | as needed | Comma-separated |

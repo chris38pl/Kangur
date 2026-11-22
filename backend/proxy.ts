@@ -62,6 +62,7 @@ export function proxy(request: NextRequest) {
   const locale = resolveMarketingLocale({
     cookieLocale: request.cookies.get(MARKETING_LOCALE_COOKIE)?.value,
     acceptLanguage: request.headers.get("accept-language"),
+    userAgent: request.headers.get("user-agent"),
   });
 
   // Unprefixed /support → /{locale}/contact
