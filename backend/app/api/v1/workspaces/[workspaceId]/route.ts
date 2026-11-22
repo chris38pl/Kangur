@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { deleteWorkspace } from "@/features/workspace/deleteWorkspace";
 import { getWorkspace } from "@/features/workspace/getWorkspace";
 import {
   UpdateWorkspaceBodySchema,
@@ -60,6 +61,24 @@ export async function PATCH(request: Request, context: RouteContext) {
       );
     }
     console.error("[workspace]", "UpdateFailed", error);
+    return NextResponse.json(
+      { code: "INVALID_TOKEN", message: "Unable to authenticate request." },
+      { status: 401 },
+    );
+  }
+}
+
+export async function DELETE(request: Request, context: RouteContext) {
+  try {
+    const { workspaceId } = await context.params;
+    const { user } = await requireUser(request);
+    await deleteWorkspace(workspaceId, user.id);
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return NextResponse.json(error.toJSON(), { status: error.status });
+    }
+    console.error("[workspace]", "DeleteFailed", error);
     return NextResponse.json(
       { code: "INVALID_TOKEN", message: "Unable to authenticate request." },
       { status: 401 },
