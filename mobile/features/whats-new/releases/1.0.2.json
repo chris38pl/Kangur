@@ -10,8 +10,8 @@
     {
       "type": "improvement",
       "text": {
-        "pl": "Zakupy w sklepie są płynniejsze — nawet gdy sieć chwilowo znika, lista reaguje od razu",
-        "en": "Shopping in the store feels smoother — even if the signal drops for a moment, the list responds right away"
+        "pl": "Zakupy w sklepie są płynniejsze - nawet gdy sieć chwilowo znika, lista reaguje od razu",
+        "en": "Shopping in the store feels smoother - even if the signal drops for a moment, the list responds right away"
       }
     },
     {
@@ -24,36 +24,36 @@
     {
       "type": "improvement",
       "text": {
-        "pl": "Nowa lista otwiera się szybciej — od razu widzisz formularz, zamiast zbędnych ekranów po drodze",
-        "en": "Starting a new list feels quicker — you land on the form right away, without extra screens in between"
+        "pl": "Nowa lista otwiera się szybciej - od razu widzisz formularz, zamiast zbędnych ekranów po drodze",
+        "en": "Starting a new list feels quicker - you land on the form right away, without extra screens in between"
       }
     },
     {
       "type": "feature",
       "text": {
-        "pl": "Po aktualizacji Kangur krótko powie Ci, co nowego — wystarczy stuknąć, żeby przeczytać więcej",
-        "en": "After an update, Kangur briefly tells you what’s new — tap to read more"
+        "pl": "Po aktualizacji Kangur krótko powie Ci, co nowego - wystarczy stuknąć, żeby przeczytać więcej",
+        "en": "After an update, Kangur briefly tells you what’s new - tap to read more"
       }
     },
     {
       "type": "feature",
       "text": {
-        "pl": "Możesz łatwo przesłać nam opinię lub zgłosić problem prosto z aplikacji — także ze zdjęciem",
-        "en": "You can easily send us feedback or report a problem right from the app — including a photo"
+        "pl": "Możesz łatwo przesłać nam opinię lub zgłosić problem prosto z aplikacji - także ze zdjęciem",
+        "en": "You can easily send us feedback or report a problem right from the app - including a photo"
       }
     },
     {
       "type": "improvement",
       "text": {
-        "pl": "Kangur lepiej układa produkty do właściwych półek — także przyprawy, sosy i rzeczy ze spiżarni",
-        "en": "Kangur is better at putting products on the right shelves — including spices, sauces, and pantry items"
+        "pl": "Kangur lepiej układa produkty do właściwych półek - także przyprawy, sosy i rzeczy ze spiżarni",
+        "en": "Kangur is better at putting products on the right shelves - including spices, sauces, and pantry items"
       }
     },
     {
       "type": "improvement",
       "text": {
-        "pl": "Lista z poprzednich zakupów jest prostsza do przejrzenia — bez zgadywanych ilości i zbędnych wyjaśnień",
-        "en": "Lists from previous shopping are easier to review — no guessed quantities or extra explanations"
+        "pl": "Lista z poprzednich zakupów jest prostsza do przejrzenia - bez zgadywanych ilości i zbędnych wyjaśnień",
+        "en": "Lists from previous shopping are easier to review - no guessed quantities or extra explanations"
       }
     },
     {

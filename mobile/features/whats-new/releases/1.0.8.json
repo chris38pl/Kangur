@@ -1,0 +1,39 @@
+{
+  "version": "1.0.8",
+  "releaseDate": "2026-11-23",
+  "highlight": true,
+  "title": {
+    "pl": "Porządek w przestrzeniach",
+    "en": "Tidier spaces"
+  },
+  "changes": [
+    {
+      "type": "feature",
+      "text": {
+        "pl": "Właściciel może usunąć przestrzeń, a domownik ją opuścić. Znajdziesz to w zakładce Przestrzeń.",
+        "en": "Owners can delete a space and members can leave one, from the Spaces tab."
+      }
+    },
+    {
+      "type": "feature",
+      "text": {
+        "pl": "Po zakupach w pojedynkę Kangur podpowie, jak zaprosić domownika do wspólnej listy.",
+        "en": "After shopping alone, Kangur shows how to invite someone from home to a shared list."
+      }
+    },
+    {
+      "type": "fix",
+      "text": {
+        "pl": "Czytelniejsze teksty w trybie zakupów, np. „Kupione: Banany”, i poprawne daty w nazwach list.",
+        "en": "Clearer shopping mode messages, such as \"Bought: Bananas\", and correct dates in list names."
+      }
+    },
+    {
+      "type": "fix",
+      "text": {
+        "pl": "Na iPhonie systemowe okna, np. dostęp do zdjęć, są w języku aplikacji.",
+        "en": "On iPhone, system prompts such as photo access follow the app's language."
+      }
+    }
+  ]
+}
