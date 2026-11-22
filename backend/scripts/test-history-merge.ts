@@ -112,7 +112,7 @@ console.log("history-merge asserts OK");
   const sampleDate = new Date("2024-05-23T12:00:00.000Z");
   assert.equal(
     formatDefaultShoppingListTitle("pl", sampleDate),
-    "Zakupy, Czwartek 23 Maj",
+    "Zakupy, czwartek 23 maja",
   );
   assert.equal(
     formatDefaultShoppingListTitle("en", sampleDate),
@@ -120,7 +120,7 @@ console.log("history-merge asserts OK");
   );
   assert.equal(
     formatDefaultShoppingListTitle("de", sampleDate),
-    "Einkauf, Donnerstag 23 Mai",
+    "Einkauf, Donnerstag 23. Mai",
   );
   assert.ok(
     formatDefaultShoppingListTitle("pl", sampleDate).length <=

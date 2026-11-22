@@ -1,5 +1,5 @@
 import { getShoppingCategoryIcon } from "@shared/shopping-categories";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type ReactNode } from "react";
 import {
@@ -57,10 +57,13 @@ const TIME = "#E6A817";
 const UNAVAILABLE_BG = "#FDF2F2";
 const UNAVAILABLE_BADGE_BG = "#FCE4E4";
 
+/** First readable word of the e-mail local part: "jan.kowalski@x" gives "Jan". */
 function displayNameFromEmail(email: string): string {
   const local = email.split("@")[0]?.trim() || email;
   if (!local) return email;
-  return local.charAt(0).toUpperCase() + local.slice(1);
+  const word =
+    local.split(/[._+\-\d]+/).find((part) => part.length >= 2) ?? local;
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 function formatDurationMinutes(ms: number, t: TFunction) {
@@ -312,12 +315,15 @@ export function FinishSummaryScreen({
 
   const finishedAt = useMemo(() => new Date(), []);
 
+  const { user } = useUser();
   const actorName = useMemo(() => {
     if (actorDisplayName) return actorDisplayName;
+    const firstName = user?.firstName?.trim();
+    if (firstName) return firstName;
     const email = me.data?.email;
     if (!email) return t("shoppingMode.you");
     return displayNameFromEmail(email);
-  }, [actorDisplayName, me.data?.email, t]);
+  }, [actorDisplayName, user?.firstName, me.data?.email, t]);
 
   const { boughtItems, unavailableItems, remaining } = useMemo(() => {
     const items = (itemsQuery.data ?? []).filter((i) => i.status !== "removed");

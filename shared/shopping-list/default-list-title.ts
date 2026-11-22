@@ -16,30 +16,19 @@ export const SHOPPING_LIST_GENERIC_PREFIX: Record<AppLocale, string> = {
 
 export const SHOPPING_LIST_TITLE_MAX_LENGTH = 32;
 
-function capitalizeWord(word: string, localeTag: string): string {
-  const trimmed = word.trim();
-  if (!trimmed) return trimmed;
-  const [first, ...rest] = Array.from(trimmed);
-  return (
-    first!.toLocaleUpperCase(localeTag) + rest.join("")
-  );
-}
-
 function formatDatePart(
   date: Date,
   localeTag: string,
   options: Intl.DateTimeFormatOptions,
 ): string {
-  return new Intl.DateTimeFormat(localeTag, options).format(date);
-}
-
-function joinTitle(prefix: string, weekday: string, day: string, month: string): string {
-  return `${prefix}, ${weekday} ${day} ${month}`;
+  return new Intl.DateTimeFormat(localeTag, options).format(date).trim();
 }
 
 /**
- * Default list title: "{Shopping}, {Weekday} {day} {Month}" in the user's locale.
- * Example (pl): "Zakupy, Poniedziałek 23 Maj"
+ * Default list title: "{Shopping}, {weekday} {day month}" in the user's locale.
+ * Day and month are formatted together so each language gets its own grammar
+ * and casing, e.g. pl "Zakupy, środa 4 listopada", ru "Покупки, среда 4 ноября",
+ * de "Einkauf, Mittwoch 4. November".
  */
 export function formatDefaultShoppingListTitle(
   locale: AppLocale,
@@ -48,33 +37,24 @@ export function formatDefaultShoppingListTitle(
 ): string {
   const localeTag = intlLocaleTag(locale);
   const prefix = SHOPPING_LIST_GENERIC_PREFIX[locale];
-  const day = formatDatePart(date, localeTag, { day: "numeric" });
 
-  const weekdayLong = capitalizeWord(
-    formatDatePart(date, localeTag, { weekday: "long" }),
-    localeTag,
-  );
-  const monthLong = capitalizeWord(
-    formatDatePart(date, localeTag, { month: "long" }),
-    localeTag,
-  );
-
-  let title = joinTitle(prefix, weekdayLong, day, monthLong);
+  const weekdayLong = formatDatePart(date, localeTag, { weekday: "long" });
+  const dayMonthLong = formatDatePart(date, localeTag, {
+    day: "numeric",
+    month: "long",
+  });
+  let title = `${prefix}, ${weekdayLong} ${dayMonthLong}`;
   if (title.length <= maxLength) return title;
 
-  const weekdayShort = capitalizeWord(
-    formatDatePart(date, localeTag, { weekday: "short" }),
-    localeTag,
-  );
-  const monthShort = capitalizeWord(
-    formatDatePart(date, localeTag, { month: "short" }),
-    localeTag,
-  );
-
-  title = joinTitle(prefix, weekdayShort, day, monthShort);
+  const weekdayShort = formatDatePart(date, localeTag, { weekday: "short" });
+  const dayMonthShort = formatDatePart(date, localeTag, {
+    day: "numeric",
+    month: "short",
+  });
+  title = `${prefix}, ${weekdayShort} ${dayMonthShort}`;
   if (title.length <= maxLength) return title;
 
-  title = `${prefix}, ${day} ${monthShort}`;
+  title = `${prefix}, ${dayMonthShort}`;
   if (title.length <= maxLength) return title;
 
   return title.slice(0, maxLength).trimEnd() || prefix.slice(0, maxLength);
