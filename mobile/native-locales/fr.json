@@ -1,0 +1,8 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Kangur utilise l’appareil photo pour photographier vos listes de courses.",
+    "NSPhotoLibraryUsageDescription": "Kangur a besoin d’accéder à vos photos pour importer des listes de courses.",
+    "NSMicrophoneUsageDescription": "Kangur utilise le micro pour que vous puissiez dicter les produits de votre liste de courses.",
+    "NSSpeechRecognitionUsageDescription": "Kangur utilise la reconnaissance vocale pour que vous puissiez dicter les produits de votre liste de courses."
+  }
+}

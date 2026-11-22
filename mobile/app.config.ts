@@ -1,5 +1,24 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
+/**
+ * iOS reads the app's languages from the binary, not from our JS catalogs.
+ * Without this list the App Store shows "English" only and iOS keeps system
+ * UI (permission prompts, pickers, Sign in with Apple) in English.
+ *
+ * Same ids as shared/locales.ts, which the config loader cannot import;
+ * `pnpm test:locales` (backend) keeps the two in sync.
+ * `native-locales/{id}.json` holds the translated permission prompts; English
+ * stays in the plugin options below.
+ */
+const IOS_LANGUAGES = ["en", "pl", "de", "ru", "uk", "fr", "es", "it", "cs", "be"];
+
+const IOS_LOCALIZED_STRINGS = Object.fromEntries(
+  IOS_LANGUAGES.filter((id) => id !== "en").map((id) => [
+    id,
+    `./native-locales/${id}.json`,
+  ]),
+);
+
 function shortCommit(): string | undefined {
   const raw =
     process.env.EAS_BUILD_GIT_COMMIT_HASH?.trim() ||
@@ -44,6 +63,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         ITSAppUsesNonExemptEncryption: false,
       },
     },
+    locales: IOS_LOCALIZED_STRINGS,
     android: {
       package: isDevApp ? "app.kangur.dev" : "app.kangur",
       googleServicesFile: "./google-services.json",
@@ -84,7 +104,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           backgroundColor: "#FFFFFF",
         },
       ],
-      "expo-localization",
+      [
+        "expo-localization",
+        // iOS only: writes CFBundleLocalizations. Android per-app language
+        // would also change build.gradle and the manifest, so it stays off.
+        { supportedLocales: { ios: IOS_LANGUAGES } },
+      ],
       "expo-secure-store",
       "expo-notifications",
       "expo-iap",

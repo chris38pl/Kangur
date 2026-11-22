@@ -1,0 +1,8 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Kangur використовує камеру, щоб фотографувати списки покупок.",
+    "NSPhotoLibraryUsageDescription": "Застосунку Kangur потрібен доступ до фото, щоб імпортувати списки покупок.",
+    "NSMicrophoneUsageDescription": "Kangur використовує мікрофон для диктування товарів до списку покупок.",
+    "NSSpeechRecognitionUsageDescription": "Kangur використовує розпізнавання мовлення для диктування товарів до списку покупок."
+  }
+}

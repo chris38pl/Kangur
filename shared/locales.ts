@@ -6,8 +6,10 @@
  * 2. mobile/lib/i18n/{id}.json + entry in resources/index.ts
  * 3. backend/locales/{id}.json
  * 4. AI_LOCALE_BY_APP + AI_PROMPTS (if AI should speak that language)
- * 5. pnpm openapi:generate (backend)
- * 6. pnpm test:locales
+ * 5. IOS_LANGUAGES in mobile/app.config.ts + mobile/native-locales/{id}.json
+ *    (iOS permission prompts) - App Store "Languages" updates with the next build
+ * 6. pnpm openapi:generate (backend)
+ * 7. pnpm test:locales
  *
  * Adding a language must not require editing business handlers, pickers, or
  * `if (locale === …)` branches - extend SSOT and catalogs instead.
