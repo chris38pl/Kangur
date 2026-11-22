@@ -28,11 +28,30 @@ export function legalLocale(locale: AppLocale): LegalLocale {
   return locale === "pl" ? "pl" : "en";
 }
 
+/**
+ * Language for a locale-less URL (e.g. a bare getkangur.com link) when the visitor gives
+ * no usable signal. Link-preview bots (Messenger, WhatsApp, iMessage...) send no
+ * Accept-Language, or their own server's, never the sharer's. Kangur's main market is
+ * Poland, so those previews are Polish.
+ */
+export const MARKETING_FALLBACK_LOCALE: AppLocale = "pl";
+
+const LINK_PREVIEW_BOT =
+  /facebookexternalhit|facebookcatalog|facebot|meta-externalagent|whatsapp|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|skypeuripreview|viber|snapchat|pinterest|redditbot|vkshare|iframely|embedly/i;
+
+export function isLinkPreviewBot(userAgent: string | null | undefined): boolean {
+  return Boolean(userAgent && LINK_PREVIEW_BOT.test(userAgent));
+}
+
 export function resolveMarketingLocale(input: {
   cookieLocale?: string | null;
   acceptLanguage?: string | null;
+  userAgent?: string | null;
 }): AppLocale {
   if (isAppLocale(input.cookieLocale)) return input.cookieLocale;
+  if (isLinkPreviewBot(input.userAgent) || !input.acceptLanguage?.trim()) {
+    return MARKETING_FALLBACK_LOCALE;
+  }
   return resolvePreferredLocale({
     acceptLanguage: input.acceptLanguage,
     defaultLocale: DEFAULT_LOCALE,

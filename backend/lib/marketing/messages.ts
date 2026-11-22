@@ -37,8 +37,8 @@ export type MarketingMessages = {
     features: [string, string, string, string];
     playSmall: string;
     iosSmall: string;
-    iosNote: string;
-    iosDisabledTitle: string;
+    /** Under the store buttons. Claims only from the marketing fact bank. */
+    storesNote: string;
     heroAlt: string;
     highlightsAria: string;
     highlights: [
@@ -92,9 +92,9 @@ export type MarketingMessages = {
 
 const en: MarketingMessages = {
   meta: {
-    homeTitle: "Kangur – Smart shopping list",
+    homeTitle: "Kangur – Shared grocery lists with AI",
     homeDescription:
-      "Kangur helps you build shopping lists, reminds you what you need, and makes sure you forget nothing - every day.",
+      "Create lists from a photo, text, a recipe or past shopping. Shop aisle by aisle and share your lists with your household.",
     privacyTitle: "Privacy Policy | Kangur",
     privacyDescription:
       "Kangur privacy policy - what data we collect, why, and your rights.",
@@ -129,17 +129,16 @@ const en: MarketingMessages = {
     badge: "✨ Your smart shopping assistant",
     headlineBefore: "Remember together.",
     headlineAccent: "Don’t forget what matters.",
-    lead: "Kangur helps you create shopping lists, reminds you about the products you need, and makes sure you forget nothing - every day.",
+    lead: "Kangur is a shared shopping list for your whole household. Create a list the way that suits you, shop aisle by aisle, and everyone at home sees every change.",
     features: [
-      "Shared lists and live updates",
-      "Smart reminders",
-      "AI import - text, photos, screenshots",
-      "Works on every device",
+      "Lists from a photo, screenshot or recipe",
+      "Items sorted by store aisle",
+      "Shared lists with your household",
+      "Shop aisle by aisle, then get a summary",
     ],
     playSmall: "GET IT ON",
     iosSmall: "DOWNLOAD ON THE",
-    iosNote: "Coming soon to iOS",
-    iosDisabledTitle: "Coming soon",
+    storesNote: "For iPhone and Android. Start with 10 free AI uses.",
     heroAlt: "Kangur - the app and mascot with a shopping bag",
     highlightsAria: "Features",
     highlights: [
@@ -210,9 +209,9 @@ const en: MarketingMessages = {
 
 const pl: MarketingMessages = {
   meta: {
-    homeTitle: "Kangur – Inteligentna lista zakupów",
+    homeTitle: "Kangur – Wspólne listy zakupów z AI",
     homeDescription:
-      "Kangur pomaga tworzyć listy zakupów, przypomina o produktach i dba, by niczego nie zapomnieć - każdego dnia.",
+      "Twórz listy ze zdjęcia, tekstu, przepisu albo poprzednich zakupów. Rób zakupy alejka po alejce i dziel listy z domownikami.",
     privacyTitle: "Polityka prywatności | Kangur",
     privacyDescription:
       "Polityka prywatności aplikacji Kangur - jakie dane zbieramy, w jakim celu i jakie masz prawa.",
@@ -247,17 +246,16 @@ const pl: MarketingMessages = {
     badge: "✨ Twój inteligentny asystent zakupów",
     headlineBefore: "Pamiętaj razem.",
     headlineAccent: "Nie zapominaj o tym, co ważne.",
-    lead: "Kangur pomaga Ci tworzyć listy zakupów, przypomina o potrzebnych produktach i dba o to, by niczego nie zapomnieć – każdego dnia.",
+    lead: "Kangur to wspólna lista zakupów dla całego domu. Tworzysz listę tak, jak Ci wygodnie, robisz zakupy alejka po alejce, a domownicy widzą wszystkie zmiany.",
     features: [
-      "Wspólne listy i aktualizacje na żywo",
-      "Inteligentne przypomnienia",
-      "Import z AI – tekst, zdjęcia, zrzuty ekranu",
-      "Działa na wszystkich urządzeniach",
+      "Lista ze zdjęcia, zrzutu ekranu albo przepisu",
+      "Produkty ułożone według alejek w sklepie",
+      "Wspólne listy z domownikami",
+      "Zakupy alejka po alejce i podsumowanie",
     ],
     playSmall: "POBIERZ Z",
     iosSmall: "POBIERZ W",
-    iosNote: "Aplikacja już wkrótce na iOS",
-    iosDisabledTitle: "Wkrótce",
+    storesNote: "Na iPhone’a i Androida. Na start 10 darmowych użyć AI.",
     heroAlt: "Kangur - aplikacja i maskotka z torbą zakupów",
     highlightsAria: "Funkcje",
     highlights: [
@@ -329,9 +327,9 @@ const pl: MarketingMessages = {
 const de: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Intelligente Einkaufsliste",
+    homeTitle: "Kangur – Geteilte Einkaufslisten mit AI",
     homeDescription:
-      "Kangur hilft beim Erstellen von Einkaufslisten, erinnert an Produkte und sorgt dafür, dass nichts vergessen wird - jeden Tag.",
+      "Erstelle Listen aus Foto, Text, Rezept oder früheren Einkäufen. Kaufe Gang für Gang ein und teile Listen mit deinem Haushalt.",
     privacyTitle: "Datenschutz | Kangur",
     privacyDescription: en.meta.privacyDescription,
     termsTitle: "Nutzungsbedingungen | Kangur",
@@ -364,17 +362,16 @@ const de: MarketingMessages = {
     badge: "✨ Dein smarter Einkaufsassistent",
     headlineBefore: "Gemeinsam merken.",
     headlineAccent: "Vergiss nicht, was zählt.",
-    lead: "Kangur hilft dir, Einkaufslisten zu erstellen, erinnert an benötigte Produkte und sorgt dafür, dass nichts vergessen wird - jeden Tag.",
+    lead: "Kangur ist die gemeinsame Einkaufsliste für deinen ganzen Haushalt. Erstelle Listen, wie es dir passt, kaufe Gang für Gang ein, und alle zu Hause sehen jede Änderung.",
     features: [
-      "Gemeinsame Listen und Live-Updates",
-      "Intelligente Erinnerungen",
-      "KI-Import - Text, Fotos, Screenshots",
-      "Auf allen Geräten",
+      "Listen aus Foto, Screenshot oder Rezept",
+      "Sortiert nach Gängen im Laden",
+      "Gemeinsame Listen für den Haushalt",
+      "Gang für Gang einkaufen, mit Zusammenfassung",
     ],
     playSmall: "JETZT BEI",
     iosSmall: "LADEN IM",
-    iosNote: "Bald auch für iOS",
-    iosDisabledTitle: "Demnächst",
+    storesNote: "Für iPhone und Android. Zum Start 10 kostenlose AI-Nutzungen.",
     heroAlt: "Kangur - App und Maskottchen mit Einkaufstasche",
     highlightsAria: "Funktionen",
     highlights: [
@@ -423,9 +420,9 @@ const de: MarketingMessages = {
 const fr: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Liste de courses intelligente",
+    homeTitle: "Kangur – Listes de courses avec l’IA",
     homeDescription:
-      "Kangur aide à créer des listes, rappelle les produits nécessaires et évite les oublis - chaque jour.",
+      "Créez vos listes à partir d’une photo, d’un texte, d’une recette ou de vos courses passées. Faites les courses rayon par rayon, à plusieurs.",
     privacyTitle: "Confidentialité | Kangur",
     privacyDescription: en.meta.privacyDescription,
     termsTitle: "Conditions | Kangur",
@@ -458,17 +455,16 @@ const fr: MarketingMessages = {
     badge: "✨ Votre assistant shopping intelligent",
     headlineBefore: "Souvenez-vous ensemble.",
     headlineAccent: "N’oubliez pas l’essentiel.",
-    lead: "Kangur vous aide à créer des listes de courses, rappelle les produits nécessaires et veille à ce que rien ne soit oublié - chaque jour.",
+    lead: "Kangur est la liste de courses partagée de tout votre foyer. Créez la liste comme vous voulez, faites les courses rayon par rayon, et toute la maison voit chaque modification.",
     features: [
-      "Listes partagées et mises à jour en direct",
-      "Rappels intelligents",
-      "Import IA - texte, photos, captures",
-      "Sur tous les appareils",
+      "Listes à partir d’une photo, d’une capture ou d’une recette",
+      "Classée par rayon du magasin",
+      "Listes partagées avec tout le foyer",
+      "Les courses rayon par rayon, avec un résumé",
     ],
     playSmall: "DISPONIBLE SUR",
     iosSmall: "TÉLÉCHARGER DANS",
-    iosNote: "Bientôt sur iOS",
-    iosDisabledTitle: "Bientôt",
+    storesNote: "Pour iPhone et Android. Vous commencez avec 10 usages IA gratuits.",
     heroAlt: "Kangur - l’appli et la mascotte avec un sac de courses",
     highlightsAria: "Fonctions",
     highlights: [
@@ -517,9 +513,9 @@ const fr: MarketingMessages = {
 const es: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Lista de la compra inteligente",
+    homeTitle: "Kangur – Listas de la compra con IA",
     homeDescription:
-      "Kangur te ayuda a crear listas, recuerda productos y evita que olvides nada - cada día.",
+      "Crea listas desde una foto, un texto, una receta o compras anteriores. Compra pasillo a pasillo y comparte las listas con tu familia.",
     privacyTitle: "Privacidad | Kangur",
     privacyDescription: en.meta.privacyDescription,
     termsTitle: "Términos | Kangur",
@@ -552,17 +548,16 @@ const es: MarketingMessages = {
     badge: "✨ Tu asistente de compras inteligente",
     headlineBefore: "Recordad juntos.",
     headlineAccent: "No olvidéis lo importante.",
-    lead: "Kangur te ayuda a crear listas de la compra, recuerda los productos que necesitas y procura que no se te olvide nada - cada día.",
+    lead: "Kangur es la lista de la compra compartida para toda tu casa. Crea la lista como prefieras, compra pasillo a pasillo y todos en casa ven cada cambio.",
     features: [
-      "Listas compartidas y actualizaciones en vivo",
-      "Recordatorios inteligentes",
-      "Importación con IA - texto, fotos, capturas",
-      "En todos los dispositivos",
+      "Listas desde una foto, una captura o una receta",
+      "Ordenada por pasillos del súper",
+      "Listas compartidas con toda la casa",
+      "Compra pasillo a pasillo, con resumen al final",
     ],
     playSmall: "DISPONIBLE EN",
     iosSmall: "DESCARGAR EN",
-    iosNote: "Pronto en iOS",
-    iosDisabledTitle: "Próximamente",
+    storesNote: "Para iPhone y Android. Empiezas con 10 usos de IA gratis.",
     heroAlt: "Kangur - la app y la mascota con bolsa de la compra",
     highlightsAria: "Funciones",
     highlights: [
@@ -611,9 +606,9 @@ const es: MarketingMessages = {
 const it: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Lista della spesa intelligente",
+    homeTitle: "Kangur – Lista della spesa con l’AI",
     homeDescription:
-      "Kangur aiuta a creare liste, ricorda i prodotti e fa sì che non dimentichi nulla - ogni giorno.",
+      "Crea liste da una foto, un testo, una ricetta o dalle spese precedenti. Fai la spesa reparto per reparto e condividi le liste in famiglia.",
     privacyTitle: "Privacy | Kangur",
     privacyDescription: en.meta.privacyDescription,
     termsTitle: "Termini | Kangur",
@@ -646,17 +641,16 @@ const it: MarketingMessages = {
     badge: "✨ Il tuo assistente shopping intelligente",
     headlineBefore: "Ricordate insieme.",
     headlineAccent: "Non dimenticate l’essenziale.",
-    lead: "Kangur ti aiuta a creare liste della spesa, ricorda i prodotti necessari e fa sì che non dimentichi nulla - ogni giorno.",
+    lead: "Kangur è la lista della spesa condivisa per tutta la casa. Crei la lista come preferisci, fai la spesa reparto per reparto e tutti in casa vedono ogni modifica.",
     features: [
-      "Liste condivise e aggiornamenti in tempo reale",
-      "Promemoria intelligenti",
-      "Import AI - testo, foto, screenshot",
-      "Su tutti i dispositivi",
+      "Liste da una foto, uno screenshot o una ricetta",
+      "Ordinata per corsie del supermercato",
+      "Liste condivise con tutta la famiglia",
+      "La spesa reparto per reparto, con riepilogo",
     ],
     playSmall: "SCARICA SU",
     iosSmall: "SCARICA SU",
-    iosNote: "Presto su iOS",
-    iosDisabledTitle: "Presto",
+    storesNote: "Per iPhone e Android. Inizi con 10 usi AI gratuiti.",
     heroAlt: "Kangur - l’app e la mascotte con la borsa della spesa",
     highlightsAria: "Funzioni",
     highlights: [
@@ -705,9 +699,9 @@ const it: MarketingMessages = {
 const cs: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Chytrý nákupní seznam",
+    homeTitle: "Kangur – Sdílené nákupní seznamy s AI",
     homeDescription:
-      "Kangur pomáhá tvořit seznamy, připomíná produkty a hlídá, abyste na nic nezapomněli - každý den.",
+      "Vytvářejte seznamy z fotky, textu, receptu nebo předchozích nákupů. Nakupujte ulička po uličce a sdílejte seznamy s domácností.",
     privacyTitle: "Soukromí | Kangur",
     privacyDescription: en.meta.privacyDescription,
     termsTitle: "Podmínky | Kangur",
@@ -740,17 +734,16 @@ const cs: MarketingMessages = {
     badge: "✨ Váš chytrý nákupní asistent",
     headlineBefore: "Pamatujte spolu.",
     headlineAccent: "Nezapomeňte na to důležité.",
-    lead: "Kangur vám pomáhá tvořit nákupní seznamy, připomíná potřebné produkty a hlídá, abyste na nic nezapomněli - každý den.",
+    lead: "Kangur je společný nákupní seznam pro celou domácnost. Seznam vytvoříte, jak vám to vyhovuje, nakupujete ulička po uličce a všichni doma vidí každou změnu.",
     features: [
-      "Sdílené seznamy a živé aktualizace",
-      "Chytrá připomenutí",
-      "Import s AI - text, fotky, snímky",
-      "Na všech zařízeních",
+      "Seznam z fotky, snímku obrazovky nebo receptu",
+      "Seřazený podle uliček v obchodě",
+      "Společné seznamy pro celou domácnost",
+      "Nákup ulička po uličce se shrnutím",
     ],
     playSmall: "STÁHNOUT Z",
     iosSmall: "STÁHNOUT V",
-    iosNote: "Brzy na iOS",
-    iosDisabledTitle: "Již brzy",
+    storesNote: "Pro iPhone a Android. Na začátek 10 bezplatných použití AI.",
     heroAlt: "Kangur - aplikace a maskot s nákupní taškou",
     highlightsAria: "Funkce",
     highlights: [
@@ -799,9 +792,9 @@ const cs: MarketingMessages = {
 const ru: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Умный список покупок",
+    homeTitle: "Kangur – Общие списки покупок с AI",
     homeDescription:
-      "Kangur помогает составлять списки, напоминает о продуктах и следит, чтобы ничего не забыть - каждый день.",
+      "Создавайте списки из фото, текста, рецепта или прошлых покупок. Покупайте отдел за отделом и делитесь списками с семьёй.",
     privacyTitle: "Конфиденциальность | Kangur",
     privacyDescription: en.meta.privacyDescription,
     termsTitle: "Условия | Kangur",
@@ -834,17 +827,16 @@ const ru: MarketingMessages = {
     badge: "✨ Ваш умный помощник по покупкам",
     headlineBefore: "Помните вместе.",
     headlineAccent: "Не забывайте важное.",
-    lead: "Kangur помогает создавать списки покупок, напоминает о нужных продуктах и следит, чтобы ничего не забыть - каждый день.",
+    lead: "Kangur — общий список покупок для всей семьи. Создавайте список как удобно, покупайте отдел за отделом, а все дома видят каждое изменение.",
     features: [
-      "Общие списки и обновления в реальном времени",
-      "Умные напоминания",
-      "Импорт с ИИ - текст, фото, скриншоты",
-      "На всех устройствах",
+      "Список из фото, скриншота или рецепта",
+      "По отделам магазина",
+      "Общие списки для всей семьи",
+      "Покупки отдел за отделом и итог",
     ],
     playSmall: "СКАЧАТЬ В",
     iosSmall: "СКАЧАТЬ В",
-    iosNote: "Скоро на iOS",
-    iosDisabledTitle: "Скоро",
+    storesNote: "Для iPhone и Android. Для начала 10 бесплатных использований AI.",
     heroAlt: "Kangur - приложение и маскот с сумкой для покупок",
     highlightsAria: "Функции",
     highlights: [
@@ -893,9 +885,9 @@ const ru: MarketingMessages = {
 const uk: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Розумний список покупок",
+    homeTitle: "Kangur – Спільні списки покупок з AI",
     homeDescription:
-      "Kangur допомагає створювати списки, нагадує про продукти й стежить, щоб нічого не забути - щодня.",
+      "Створюйте списки з фото, тексту, рецепта або попередніх покупок. Купуйте відділ за відділом і діліться списками з родиною.",
     privacyTitle: "Конфіденційність | Kangur",
     privacyDescription: en.meta.privacyDescription,
     termsTitle: "Умови | Kangur",
@@ -928,17 +920,16 @@ const uk: MarketingMessages = {
     badge: "✨ Ваш розумний помічник з покупок",
     headlineBefore: "Пам’ятайте разом.",
     headlineAccent: "Не забувайте важливе.",
-    lead: "Kangur допомагає створювати списки покупок, нагадує про потрібні продукти й стежить, щоб нічого не забути - щодня.",
+    lead: "Kangur — спільний список покупок для всієї родини. Створюйте список як зручно, купуйте відділ за відділом, а всі вдома бачать кожну зміну.",
     features: [
-      "Спільні списки та оновлення наживо",
-      "Розумні нагадування",
-      "Імпорт з ШІ - текст, фото, знімки",
-      "На всіх пристроях",
+      "Список із фото, скриншота або рецепта",
+      "За відділами магазину",
+      "Спільні списки для всієї родини",
+      "Покупки відділ за відділом і підсумок",
     ],
     playSmall: "ЗАВАНТАЖИТИ З",
     iosSmall: "ЗАВАНТАЖИТИ В",
-    iosNote: "Незабаром на iOS",
-    iosDisabledTitle: "Незабаром",
+    storesNote: "Для iPhone і Android. Для початку 10 безкоштовних використань AI.",
     heroAlt: "Kangur - додаток і маскот із сумкою для покупок",
     highlightsAria: "Функції",
     highlights: [
@@ -987,9 +978,9 @@ const uk: MarketingMessages = {
 const be: MarketingMessages = {
   ...en,
   meta: {
-    homeTitle: "Kangur – Разумны спіс пакупак",
+    homeTitle: "Kangur – Агульныя спісы пакупак з AI",
     homeDescription:
-      "Kangur дапамагае складаць спісы, нагадвае пра прадукты і сочыць, каб нічога не забыць - кожны дзень.",
+      "Стварайце спісы з фота, тэксту, рэцэпта або папярэдніх пакупак. Купляйце аддзел за аддзелам і дзяліцеся спісамі з сям’ёй.",
     privacyTitle: "Прыватнасць | Kangur",
     privacyDescription: en.meta.privacyDescription,
     termsTitle: "Умовы | Kangur",
@@ -1022,17 +1013,16 @@ const be: MarketingMessages = {
     badge: "✨ Ваш разумны памочнік па пакупках",
     headlineBefore: "Памятайце разам.",
     headlineAccent: "Не забывайце важнае.",
-    lead: "Kangur дапамагае ствараць спісы пакупак, нагадвае пра патрэбныя прадукты і сочыць, каб нічога не забыць - кожны дзень.",
+    lead: "Kangur — агульны спіс пакупак для ўсёй сям’і. Стварайце спіс як зручна, купляйце аддзел за аддзелам, а ўсе дома бачаць кожную змену.",
     features: [
-      "Агульныя спісы і абнаўленні ў рэальным часе",
-      "Разумныя нагадванні",
-      "Імпарт з ШІ - тэкст, фота, скрыншоты",
-      "На ўсіх прыладах",
+      "Спіс з фота, скрыншота або рэцэпта",
+      "Па аддзелах крамы",
+      "Агульныя спісы для ўсёй сям’і",
+      "Пакупкі аддзел за аддзелам і вынікі",
     ],
     playSmall: "СПАМПАВАЦЬ З",
     iosSmall: "СПАМПАВАЦЬ У",
-    iosNote: "Хутка на iOS",
-    iosDisabledTitle: "Хутка",
+    storesNote: "Для iPhone і Android. Для пачатку 10 бясплатных выкарыстанняў AI.",
     heroAlt: "Kangur - праграма і маскот з торбай для пакупак",
     highlightsAria: "Функцыі",
     highlights: [

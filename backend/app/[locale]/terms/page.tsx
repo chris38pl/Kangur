@@ -7,6 +7,7 @@ import {
   type AppLocale,
 } from "@/lib/marketing/locale";
 import { getMessages } from "@/lib/marketing/messages";
+import { buildMarketingMetadata } from "@/lib/marketing/seo";
 import { TermsContent } from "@/lib/marketing/terms-content";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -19,15 +20,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: raw } = await params;
   if (!isAppLocale(raw)) return {};
   const t = getMessages(raw);
-  return {
-    title: { absolute: t.meta.termsTitle },
+  return buildMarketingMetadata({
+    locale: raw,
+    path: "/terms",
+    title: t.meta.termsTitle,
     description: t.meta.termsDescription,
-    openGraph: {
-      title: t.meta.termsTitle,
-      description: t.meta.termsDescription,
-      images: [{ url: "/og.png", width: 1200, height: 630, alt: "Kangur" }],
-    },
-  };
+  });
 }
 
 export default async function TermsPage({ params }: Props) {

@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import type { AppLocale } from "@/lib/marketing/locale";
 import { legalLocale, withLocale } from "@/lib/marketing/locale";
 import { getMessages } from "@/lib/marketing/messages";
+import { faqStructuredData } from "@/lib/marketing/structured-data";
+import { JsonLd } from "@/components/marketing/JsonLd";
 
 type Props = { locale: AppLocale };
 
@@ -436,6 +438,7 @@ export function FaqContent({ locale }: Props) {
 
   return (
     <section className="mkt-faq">
+      {locale === lang ? <JsonLd data={faqStructuredData(items, lang)} /> : null}
       <header className="mkt-faq-header">
         <h1>{faq.title}</h1>
         {locale !== "en" && lang === "en" ? (
