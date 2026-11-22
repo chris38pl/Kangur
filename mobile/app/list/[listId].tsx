@@ -116,6 +116,7 @@ import {
   takePendingScrollToItems,
 } from "@/features/shopping-list/pending-scroll-to-items";
 import { takePendingAiImportToast } from "@/features/shopping-list/pending-ai-import-toast";
+import { premiumHref } from "@/features/billing/premium-source";
 import {
   clearListProvisional,
   isListProvisional,
@@ -1789,7 +1790,7 @@ export default function ShoppingListScreen() {
                         badge={t("billing.creditsRemainingBadge", {
                           remaining: creditsQuery.data.remaining ?? 0,
                         })}
-                        onPress={() => router.push("/premium")}
+                        onPress={() => router.push(premiumHref("list_credits"))}
                         accessibilityLabel={t("billing.upgradeCta")}
                       />
                     </View>
@@ -2892,7 +2893,7 @@ export default function ShoppingListScreen() {
           const kind = finishedFeedback;
           setFinishedFeedback(null);
           if (kind === "limit") {
-            router.push("/premium");
+            router.push(premiumHref("list_limit"));
           }
         }}
         secondaryLabel={
