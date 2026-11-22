@@ -2,6 +2,7 @@ import {
   APIError,
   APIException,
   AppStoreServerAPIClient,
+  AutoRenewStatus,
   Environment,
   SignedDataVerifier,
   type JWSTransactionDecodedPayload,
@@ -205,6 +206,64 @@ export async function loadAppleSubscription(
   } catch (error) {
     if (isAppleTransactionMissing(error)) return null;
     throw error;
+  }
+}
+
+/** App Store status codes that never renew: 2 expired, 5 revoked. */
+const APPLE_ENDED_STATUSES = new Set([2, 5]);
+
+/**
+ * Whether the App Store will charge this subscription again.
+ *
+ * Our stored Apple status stays `active` after the user turns off auto-renew
+ * (mapAppleSubscription reads only the transaction), so money guards ask
+ * Apple directly. Returns `null` when Apple gives no answer; callers that
+ * protect against charges must treat `null` as "will renew".
+ */
+export async function loadAppleAutoRenewEnabled(
+  originalTransactionId: string,
+): Promise<boolean | null> {
+  try {
+    const found = await withEnvironment(async (environment) => {
+      const statusResponse = await clientFor(
+        environment,
+      ).getAllSubscriptionStatuses(originalTransactionId);
+      const items = (statusResponse.data ?? []).flatMap(
+        (group) => group.lastTransactions ?? [],
+      );
+      const item =
+        items.find(
+          (entry) => entry.originalTransactionId === originalTransactionId,
+        ) ?? items[0];
+      if (!item) {
+        throw new APIException(
+          404,
+          APIError.TRANSACTION_ID_NOT_FOUND,
+          "Apple subscription status had no transaction.",
+        );
+      }
+      return item;
+    });
+
+    const item = found.value;
+    if (typeof item.status === "number" && APPLE_ENDED_STATUSES.has(item.status)) {
+      return false;
+    }
+    if (!item.signedRenewalInfo) return null;
+
+    const renewal = await verifierFor(
+      found.environment,
+    ).verifyAndDecodeRenewalInfo(item.signedRenewalInfo);
+    if (renewal.autoRenewStatus === AutoRenewStatus.OFF) return false;
+    if (renewal.autoRenewStatus === AutoRenewStatus.ON) return true;
+    return null;
+  } catch (error) {
+    if (isAppleTransactionMissing(error)) return false;
+    console.warn("[billing]", "AppleAutoRenewLookupFailed", {
+      originalTransactionId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
   }
 }
 

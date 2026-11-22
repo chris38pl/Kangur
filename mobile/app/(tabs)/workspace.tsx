@@ -1,3 +1,4 @@
+import { useAuth } from "@clerk/clerk-expo";
 import { getWorkspaceIconEmoji } from "@shared/workspace-icons";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
@@ -19,9 +20,23 @@ import { BackIcon } from "@/features/auth/auth-icons";
 import { useMe } from "@/features/auth/useMe";
 import { CreateWorkspaceSheet } from "@/features/workspace/create-workspace-sheet";
 import { EditWorkspaceSheet } from "@/features/workspace/edit-workspace-sheet";
+import { openSubscriptionManagement } from "@/features/billing/open-subscription-management";
 import { PremiumUpgradeBanner } from "@/features/billing/premium-upgrade-banner";
+import { RemoveWorkspaceSheet } from "@/features/workspace/remove-workspace-sheet";
+import type { Workspace } from "@/features/workspace/schemas";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
+import { useRemoveWorkspace } from "@/features/workspace/useRemoveWorkspace";
 import { useUpdateWorkspace } from "@/features/workspace/useUpdateWorkspace";
+import { useAdminBrowsingWorkspaceId } from "@/features/platform-workspaces/admin-browsing";
+import {
+  canOfferRemoval,
+  describeRemovalFailure,
+  isOnlyWorkspace,
+  removalModeForRole,
+  type SubscriptionProvider,
+  type WorkspaceRemovalFailure,
+  type WorkspaceRemovalMode,
+} from "@/features/workspace/workspace-removal";
 import { useWorkspaceMembers } from "@/features/workspace/useWorkspaceMembers";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
 import { WorkspaceInviteSection } from "@/features/workspace/workspace-invite-section";
@@ -30,7 +45,12 @@ import { WorkspaceSummaryCard } from "@/features/workspace/workspace-summary-car
 import { WorkspaceSwitcher } from "@/features/workspace/workspace-switcher";
 import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 import { useTabBarClearance } from "@/hooks/useSafeAreaLayout";
-import { goRoot } from "@/lib/navigation";
+import { goRoot, showRootBackToast } from "@/lib/navigation";
+
+type RemovalTarget = {
+  workspace: Workspace;
+  mode: WorkspaceRemovalMode;
+};
 
 export default function WorkspaceScreen() {
   const { t } = useTranslation();
@@ -53,11 +73,76 @@ export default function WorkspaceScreen() {
   const meQuery = useMe(Boolean(activeWorkspace));
   const membersQuery = useWorkspaceMembers(activeWorkspace?.id ?? null);
   const updateWorkspaceMutation = useUpdateWorkspace();
+  const removeWorkspaceMutation = useRemoveWorkspace({ setActiveId });
+  const { getToken } = useAuth();
+  const { browsingId } = useAdminBrowsingWorkspaceId();
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  // Snapshot at open: the active workspace changes as soon as removal succeeds.
+  const [removal, setRemoval] = useState<RemovalTarget | null>(null);
+  const [removalFailure, setRemovalFailure] =
+    useState<WorkspaceRemovalFailure | null>(null);
 
   const goHome = () => {
     goRoot();
+  };
+
+  const closeRemoval = () => {
+    if (removeWorkspaceMutation.isPending) return;
+    setRemoval(null);
+    setRemovalFailure(null);
+  };
+
+  const openRemoval = (workspace: Workspace) => {
+    const mode = removalModeForRole(workspace.role);
+    // The server refuses this too; skip a confirm that cannot succeed.
+    setRemovalFailure(
+      mode === "delete" &&
+        isOnlyWorkspace(workspacesQuery.memberships, workspace.id)
+        ? { kind: "last_workspace" }
+        : null,
+    );
+    setRemoval({ workspace, mode });
+  };
+
+  const confirmRemoval = () => {
+    if (!removal) return;
+    const { workspace, mode } = removal;
+    setRemovalFailure(null);
+    removeWorkspaceMutation.mutate(
+      { workspaceId: workspace.id, mode },
+      {
+        onSuccess: ({ alreadyGone }) => {
+          setRemoval(null);
+          showRootBackToast(
+            alreadyGone
+              ? t("workspace.alreadyGoneToast")
+              : mode === "delete"
+                ? t("workspace.deletedToast", { name: workspace.name })
+                : t("workspace.leftToast", { name: workspace.name }),
+          );
+        },
+        onError: (error) => {
+          setRemovalFailure(describeRemovalFailure(error));
+        },
+      },
+    );
+  };
+
+  const manageSubscription = (provider: SubscriptionProvider | null) => {
+    const workspaceId = removal?.workspace.id;
+    setRemoval(null);
+    setRemovalFailure(null);
+    if (!provider || !workspaceId) {
+      router.push("/premium");
+      return;
+    }
+    void openSubscriptionManagement({ provider, workspaceId, getToken }).catch(
+      (error: unknown) => {
+        console.info("[workspace]", "ManageSubscriptionFailed", error);
+        router.push("/premium");
+      },
+    );
   };
 
   if (workspacesQuery.isPending || !hydrated) {
@@ -260,6 +345,34 @@ export default function WorkspaceScreen() {
           onSelect={(id) => void setActiveId(id)}
           onCreate={() => setCreateOpen(true)}
         />
+
+        {canOfferRemoval({
+          workspaceId: activeWorkspace.id,
+          browsingId,
+          memberships: workspacesQuery.memberships,
+        }) ? (
+          <Pressable
+            onPress={() => openRemoval(activeWorkspace)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              activeWorkspace.role === "owner"
+                ? t("workspace.deleteAction")
+                : t("workspace.leaveAction")
+            }
+            style={{
+              marginTop: spacing[8],
+              minHeight: 48,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ ...typography.label, color: theme.danger }}>
+              {activeWorkspace.role === "owner"
+                ? t("workspace.deleteAction")
+                : t("workspace.leaveAction")}
+            </Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
 
       <CreateWorkspaceSheet
@@ -287,6 +400,19 @@ export default function WorkspaceScreen() {
           );
         }}
       />
+
+      {removal ? (
+        <RemoveWorkspaceSheet
+          visible
+          mode={removal.mode}
+          workspace={removal.workspace}
+          busy={removeWorkspaceMutation.isPending}
+          failure={removalFailure}
+          onCancel={closeRemoval}
+          onConfirm={confirmRemoval}
+          onManageSubscription={manageSubscription}
+        />
+      ) : null}
     </Screen>
   );
 }

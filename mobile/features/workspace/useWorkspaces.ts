@@ -111,6 +111,8 @@ export function useWorkspaces(enabled = true) {
   return {
     ...membershipsQuery,
     data,
+    /** The user's own workspaces, without the platform-admin browsing overlay. */
+    memberships: membershipsQuery.data,
     isPending: membershipsQuery.isPending || overlayPending,
   };
 }

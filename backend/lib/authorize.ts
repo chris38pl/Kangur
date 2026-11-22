@@ -35,18 +35,28 @@ export type AuthorizeListResult = {
   membership: WorkspaceMember;
 };
 
+const SYNTHETIC_MEMBERSHIP_PREFIX = "platform-admin:";
+
 /** In-memory owner membership — never persisted; for platform ADMIN bypass only. */
 function syntheticOwnerMembership(
   workspaceId: string,
   userId: string,
 ): WorkspaceMember {
   return {
-    id: `platform-admin:${workspaceId}:${userId}`,
+    id: `${SYNTHETIC_MEMBERSHIP_PREFIX}${workspaceId}:${userId}`,
     workspaceId,
     userId,
     role: "owner",
     joinedAt: new Date(0),
   };
+}
+
+/**
+ * True when `authorize` let a platform admin in without a real membership.
+ * Actions that only the real owner may take (deleting the workspace) check it.
+ */
+export function isPlatformAdminBypass(membership: WorkspaceMember): boolean {
+  return membership.id.startsWith(SYNTHETIC_MEMBERSHIP_PREFIX);
 }
 
 async function platformAdminAuthorize(

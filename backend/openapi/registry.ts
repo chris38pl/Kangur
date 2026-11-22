@@ -395,6 +395,92 @@ registry.registerPath({
 });
 
 registry.registerPath({
+  method: "delete",
+  path: "/api/v1/workspaces/{workspaceId}",
+  summary: "Delete a workspace (owner only)",
+  description:
+    "Deletes the workspace with its lists, members, invitations and billing records. " +
+    "409 WORKSPACE_HAS_ACTIVE_SUBSCRIPTION while a paid subscription will renew " +
+    "(details.provider: apple | google | stripe | null, details.currentPeriodEnd, details.billingOwnerIsYou). " +
+    "A subscription already cancelled but still inside its paid period does not block; that period is lost. " +
+    "409 LAST_WORKSPACE when it is the caller's only workspace.",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+  },
+  responses: {
+    204: { description: "Workspace deleted" },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    403: {
+      description: "Caller is not the owner",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    404: {
+      description: "Not found or not a member",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    409: {
+      description:
+        "WORKSPACE_HAS_ACTIVE_SUBSCRIPTION or LAST_WORKSPACE",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/workspaces/{workspaceId}/leave",
+  summary: "Leave a workspace (non-owners)",
+  description:
+    "Removes the caller's membership. If it was their last workspace, a default " +
+    "workspace is created in the same request. 409 OWNER_CANNOT_LEAVE for the owner. " +
+    "409 WORKSPACE_HAS_ACTIVE_SUBSCRIPTION when the caller pays for a subscription " +
+    "of this workspace that will renew.",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+  },
+  responses: {
+    204: { description: "Left the workspace" },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    404: {
+      description: "Not found or not a member",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    409: {
+      description: "OWNER_CANNOT_LEAVE or WORKSPACE_HAS_ACTIVE_SUBSCRIPTION",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
   method: "get",
   path: "/api/v1/workspaces/{workspaceId}/members",
   summary: "List members of a workspace",

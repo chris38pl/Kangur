@@ -62,6 +62,28 @@ export async function updateWorkspace(
   return WorkspaceSchema.parse(data);
 }
 
+/** Owner only. 409 WORKSPACE_HAS_ACTIVE_SUBSCRIPTION / LAST_WORKSPACE. */
+export async function deleteWorkspace(
+  token: string,
+  workspaceId: string,
+): Promise<void> {
+  await apiFetch(`/api/v1/workspaces/${workspaceId}`, {
+    token,
+    method: "DELETE",
+  });
+}
+
+/** Non-owners. 409 OWNER_CANNOT_LEAVE / WORKSPACE_HAS_ACTIVE_SUBSCRIPTION. */
+export async function leaveWorkspace(
+  token: string,
+  workspaceId: string,
+): Promise<void> {
+  await apiFetch(`/api/v1/workspaces/${workspaceId}/leave`, {
+    token,
+    method: "POST",
+  });
+}
+
 export async function listWorkspaceMembers(
   token: string,
   workspaceId: string,

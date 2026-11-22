@@ -11,7 +11,10 @@ export type ApiErrorCode =
   | "HISTORY_ALREADY_ON_LIST"
   | "PREMIUM_REQUIRED"
   | "AI_UNAVAILABLE"
-  | "RATE_LIMITED";
+  | "RATE_LIMITED"
+  | "WORKSPACE_HAS_ACTIVE_SUBSCRIPTION"
+  | "LAST_WORKSPACE"
+  | "OWNER_CANNOT_LEAVE";
 
 export class ApiError extends Error {
   readonly code: ApiErrorCode;
@@ -113,4 +116,31 @@ export function rateLimited(
   message = "Too many requests. Please try again shortly.",
 ): ApiError {
   return new ApiError("RATE_LIMITED", message, 429);
+}
+
+/** Workspace delete/leave: a paid subscription will renew unless cancelled. */
+export function workspaceHasActiveSubscription(
+  message: string,
+  details: Record<string, unknown>,
+): ApiError {
+  return new ApiError(
+    "WORKSPACE_HAS_ACTIVE_SUBSCRIPTION",
+    message,
+    409,
+    details,
+  );
+}
+
+/** Workspace delete: every user keeps at least one workspace. */
+export function lastWorkspace(
+  message = "You cannot delete your only workspace.",
+): ApiError {
+  return new ApiError("LAST_WORKSPACE", message, 409);
+}
+
+/** Workspace leave: the owner deletes the workspace instead. */
+export function ownerCannotLeave(
+  message = "The owner cannot leave the workspace.",
+): ApiError {
+  return new ApiError("OWNER_CANNOT_LEAVE", message, 409);
 }
