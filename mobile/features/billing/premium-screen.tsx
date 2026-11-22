@@ -1136,6 +1136,7 @@ export function PremiumScreen() {
     workspaceId?: string | string[];
     checkout?: string | string[];
     startCheckout?: string | string[];
+    source?: string | string[];
   }>();
 
   const workspacesQuery = useWorkspaces();
@@ -1151,6 +1152,7 @@ export function PremiumScreen() {
   const paramWorkspaceId = paramOne(params.workspaceId);
   const checkout = paramOne(params.checkout);
   const startCheckout = paramOne(params.startCheckout);
+  const paywallSource = paramOne(params.source) ?? "unknown";
   const autoCheckoutStartedRef = useRef(false);
 
   const workspace = useMemo(() => {
@@ -1312,6 +1314,7 @@ export function PremiumScreen() {
           Analytics.track("paywall_viewed", {
             workspace_id: workspaceId,
             surface: "premium_screen",
+            source: paywallSource,
           });
         }
         // Silent restore/sync for owners/admins — no loader, no toast on no-op.
@@ -1331,7 +1334,7 @@ export function PremiumScreen() {
       return () => {
         cancelled = true;
       };
-    }, [canManage]),
+    }, [canManage, paywallSource]),
   );
 
   const isPremium = workspace?.plan === "premium";

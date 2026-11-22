@@ -207,8 +207,8 @@
     "purchasedRestoreHint": "Націсні, каб вярнуць тавар",
     "unavailable": "Няма ў наяўнасці",
     "undoSnackbar": "{{name}} абноўлена",
-    "undoBought": "{{name}} куплена",
-    "undoUnavailable": "{{name}} няма ў наяўнасці",
+    "undoBought": "Куплена: {{name}}",
+    "undoUnavailable": "Няма ў наяўнасці: {{name}}",
     "addItem": "Дадаць тавар",
         "allDone": "Усё куплена",
     "finishShopping": "Завяршыць пакупкі",
@@ -223,7 +223,7 @@
     "backToCategories": "Назад да катэгорый",
     "finishTitle": "Падсумак пакупак",
     "finishedHeadline": "Пакупкі завершаны!",
-    "finishedBy": "{{name}} заверш(іў/іла) пакупкі",
+    "finishedBy": "{{name}}: пакупкі завершаны",
     "finishedToday": "Завершана сёння, {{time}}",
     "finishedAt": "Завершана {{day}}, {{time}}",
     "shoppingTime": "Час пакупак",
@@ -606,6 +606,12 @@
     "mismatchCopy": "Капіраваць адрас",
     "mismatchCopied": "Адрас скапіраваны"
   },
+  "invitePrompt": {
+    "title": "Купляеце ўдвух?",
+    "body": "Запрасіце кагосьці з дамашніх і вядзіце агульны спіс. Усе адразу бачаць, што ўжо куплена.",
+    "cta": "Запрасіць",
+    "later": "Не зараз"
+  },
   "billing": {
     "aiCredits": "Бясплатныя выкарыстанні AI",
     "aiCreditsBalance": "Засталося {{remaining}} / {{limit}}",
@@ -726,6 +732,12 @@
     "debugRefreshProducts": "Абнавіць прадукты",
     "debugExport": "Экспартаваць дыягностыку білінгу",
     "debugExported": "Дыягностыку скапіявана ў буфер абмену."
+  },
+  "premiumOffer": {
+    "title": "Спіс гатовы! 🎉",
+    "body": "Паспрабуйце Premium: AI без ліміту і поўная гісторыя пакупак для ўсёй прасторы. Першы месяц бясплатна, адмяніць можна ў любы момант.",
+    "cta": "Паспрабаваць Premium",
+    "later": "Не зараз"
   },
   "profile": {
     "title": "Профіль",

@@ -95,6 +95,7 @@ export async function verifyAndApplyPurchase(input: {
 
   const provider = BillingRegistry.resolve(input.provider);
   const started = Date.now();
+  const before = await getWorkspaceEntitlement(input.workspaceId);
 
   const snapshot = await provider.verifyPurchase({
     workspaceId: input.workspaceId,
@@ -146,6 +147,19 @@ export async function verifyAndApplyPurchase(input: {
   );
 
   const entitlement = await getWorkspaceEntitlement(input.workspaceId);
+  if (!before.isPremium && entitlement.isPremium) {
+    // Buyer as distinct id, so the trial joins the same person's app funnel.
+    Analytics.track(
+      "subscription_activated",
+      {
+        workspace_id: input.workspaceId,
+        provider: input.provider,
+        product_id: result.productId,
+        status: entitlement.status,
+      },
+      input.userId,
+    );
+  }
   return {
     plan: entitlement.plan,
     status: entitlement.status,

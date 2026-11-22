@@ -1,7 +1,9 @@
 import { getShoppingCategoryIcon } from "@shared/shopping-categories";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -36,6 +38,9 @@ import { intlLocaleTag } from "@/lib/i18n/locales";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
 import { useShoppingSession } from "@/features/shopping-list/session/useShoppingSession";
 import { useShoppingList } from "@/features/shopping-list/useShoppingLists";
+import { useWorkspaces } from "@/features/workspace/useWorkspaces";
+import { Analytics } from "@/lib/analytics";
+import { InviteHouseholdCard } from "./invite-household-card";
 import { navigateBack } from "@/lib/navigation";
 import {
   completeShoppingTask,
@@ -57,10 +62,13 @@ const TIME = "#E6A817";
 const UNAVAILABLE_BG = "#FDF2F2";
 const UNAVAILABLE_BADGE_BG = "#FCE4E4";
 
+/** First readable word of the e-mail local part: "jan.kowalski@x" gives "Jan". */
 function displayNameFromEmail(email: string): string {
   const local = email.split("@")[0]?.trim() || email;
   if (!local) return email;
-  return local.charAt(0).toUpperCase() + local.slice(1);
+  const word =
+    local.split(/[._+\-\d]+/).find((part) => part.length >= 2) ?? local;
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 function formatDurationMinutes(ms: number, t: TFunction) {
@@ -312,12 +320,15 @@ export function FinishSummaryScreen({
 
   const finishedAt = useMemo(() => new Date(), []);
 
+  const { user } = useUser();
   const actorName = useMemo(() => {
     if (actorDisplayName) return actorDisplayName;
+    const firstName = user?.firstName?.trim();
+    if (firstName) return firstName;
     const email = me.data?.email;
     if (!email) return t("shoppingMode.you");
     return displayNameFromEmail(email);
-  }, [actorDisplayName, me.data?.email, t]);
+  }, [actorDisplayName, user?.firstName, me.data?.email, t]);
 
   const { boughtItems, unavailableItems, remaining } = useMemo(() => {
     const items = (itemsQuery.data ?? []).filter((i) => i.status !== "removed");
@@ -338,6 +349,49 @@ export function FinishSummaryScreen({
       : finishedAt;
     return formatDurationMinutes(finishedAt.getTime() - started.getTime(), t);
   }, [viewer, sessionSnapshot, finishedAt, t]);
+
+  const summaryWorkspaceId = listQuery.data?.workspaceId;
+  const workspacesQuery = useWorkspaces(!viewer);
+  const summaryWorkspace = workspacesQuery.data?.find(
+    (w) => w.id === summaryWorkspaceId,
+  );
+  const inviteKey = summaryWorkspaceId
+    ? `kangur.invitePrompt.done.${summaryWorkspaceId}`
+    : null;
+  const [invitePromptDone, setInvitePromptDone] = useState<boolean | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!inviteKey) return;
+    let cancelled = false;
+    AsyncStorage.getItem(inviteKey)
+      .then((value) => {
+        if (!cancelled) setInvitePromptDone(value != null);
+      })
+      .catch(() => {
+        if (!cancelled) setInvitePromptDone(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [inviteKey]);
+  const showInvitePrompt =
+    !viewer &&
+    invitePromptDone === false &&
+    summaryWorkspace != null &&
+    summaryWorkspace.memberCount === 1 &&
+    (summaryWorkspace.role === "owner" || summaryWorkspace.role === "admin");
+  useEffect(() => {
+    if (showInvitePrompt && summaryWorkspaceId) {
+      Analytics.track("invite_prompt_shown", {
+        workspace_id: summaryWorkspaceId,
+      });
+    }
+  }, [showInvitePrompt, summaryWorkspaceId]);
+  const closeInvitePrompt = () => {
+    setInvitePromptDone(true);
+    if (inviteKey) void AsyncStorage.setItem(inviteKey, "1");
+  };
 
   const visibleBought = showAllBought
     ? boughtItems
@@ -361,6 +415,7 @@ export function FinishSummaryScreen({
         itemCount,
         durationSec,
         unavailableCount: unavailableItems.length,
+        boughtCount: boughtItems.length,
         getToken,
         queryClient,
       });
@@ -658,6 +713,28 @@ export function FinishSummaryScreen({
           >
             {t("shoppingMode.summaryRemaining", { count: remaining })}
           </Text>
+        ) : null}
+
+        {showInvitePrompt && summaryWorkspaceId ? (
+          <InviteHouseholdCard
+            busy={finish.isPending}
+            onInvite={() => {
+              Analytics.track("invite_prompt_accepted", {
+                workspace_id: summaryWorkspaceId,
+              });
+              closeInvitePrompt();
+              // Finish the trip first, then open the tab with the invite form.
+              void finish.mutateAsync().then(() => {
+                setTimeout(() => router.push("/(tabs)/workspace" as never), 0);
+              });
+            }}
+            onDismiss={() => {
+              Analytics.track("invite_prompt_dismissed", {
+                workspace_id: summaryWorkspaceId,
+              });
+              closeInvitePrompt();
+            }}
+          />
         ) : null}
 
         <View style={{ marginTop: spacing[6] }}>

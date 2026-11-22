@@ -116,6 +116,7 @@ import {
   takePendingScrollToItems,
 } from "@/features/shopping-list/pending-scroll-to-items";
 import { takePendingAiImportToast } from "@/features/shopping-list/pending-ai-import-toast";
+import { premiumHref } from "@/features/billing/premium-source";
 import {
   clearListProvisional,
   isListProvisional,
@@ -147,6 +148,7 @@ import {
 import { Analytics } from "@/lib/analytics";
 import { oncePerUser } from "@/lib/analytics/once";
 import { createRequestId } from "@/lib/analytics/requestId";
+import { usePremiumOfferAfterWin } from "@/features/billing/use-premium-offer";
 import { ApiClientError } from "@/lib/api/client";
 import { goRoot, navigateBack, openTask } from "@/lib/navigation";
 import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
@@ -622,6 +624,7 @@ export default function ShoppingListScreen() {
   const restoreMutation = useRestoreHistoryList(
     listQuery.data?.workspaceId ?? null,
   );
+  const offerPremium = usePremiumOfferAfterWin();
   const applyMutation = useMutation({
     mutationFn: async (input: {
       runId: string;
@@ -762,6 +765,11 @@ export default function ShoppingListScreen() {
       if (result.applied >= 1) {
         showAiImportFooterToast(result.applied);
         requestScrollToItems();
+        offerPremium({
+          workspaceId,
+          appliedCount: result.applied,
+          trigger: "ai_import",
+        });
       }
     },
   });
@@ -1789,7 +1797,7 @@ export default function ShoppingListScreen() {
                         badge={t("billing.creditsRemainingBadge", {
                           remaining: creditsQuery.data.remaining ?? 0,
                         })}
-                        onPress={() => router.push("/premium")}
+                        onPress={() => router.push(premiumHref("list_credits"))}
                         accessibilityLabel={t("billing.upgradeCta")}
                       />
                     </View>
@@ -2892,7 +2900,7 @@ export default function ShoppingListScreen() {
           const kind = finishedFeedback;
           setFinishedFeedback(null);
           if (kind === "limit") {
-            router.push("/premium");
+            router.push(premiumHref("list_limit"));
           }
         }}
         secondaryLabel={

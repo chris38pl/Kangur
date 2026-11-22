@@ -57,9 +57,18 @@ export type EventPropsMap = {
   history_merge_cancelled: WorkspaceIdProps & { run_id: string };
   invitation_sent: WorkspaceIdProps;
   invitation_accepted: WorkspaceIdProps;
-  paywall_viewed: WorkspaceIdProps & { surface?: string };
+  /** `source` says which entry point opened the paywall (see PremiumSource). */
+  paywall_viewed: WorkspaceIdProps & { surface?: string; source?: string };
   checkout_started: WorkspaceIdProps;
-  subscription_activated: WorkspaceIdProps;
+  /**
+   * Free → Premium transition of a workspace (trial or paid), emitted once by
+   * the purchase verifier with the buyer as distinct id.
+   */
+  subscription_activated: WorkspaceIdProps & {
+    provider?: string;
+    product_id?: string;
+    status?: string;
+  };
   subscription_cancelled: WorkspaceIdProps;
   subscription_expired: WorkspaceIdProps;
   billing_provider_resolved: {
@@ -138,6 +147,26 @@ export type EventPropsMap = {
     step: "email" | "code" | "password" | "resend" | "oauth";
     clerk_code?: string;
   };
+  /** Android Play install referrer, read once per install. */
+  install_attributed: {
+    referrer_present: boolean;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_content?: string;
+    utm_term?: string;
+    $set_once?: Record<string, string>;
+  };
+  /** Trial offer after the first successful AI import (marketing start). */
+  premium_offer_shown: WorkspaceIdProps & { trigger: string };
+  premium_offer_accepted: WorkspaceIdProps & { trigger: string };
+  premium_offer_dismissed: WorkspaceIdProps & { trigger: string };
+  /** "Invite a household member" card after the first finished shopping. */
+  invite_prompt_shown: WorkspaceIdProps;
+  invite_prompt_accepted: WorkspaceIdProps;
+  invite_prompt_dismissed: WorkspaceIdProps;
+  /** System store review sheet requested (the OS decides whether it shows). */
+  review_prompt_requested: { finished_count: number; bought_count: number };
   // Future (M20–M22) — names reserved; do not emit until owned in matrix + UI
   recipe_discovery_opened: Record<string, never>;
   recipe_card_liked: { card_index: number };

@@ -197,8 +197,8 @@
     "purchasedRestoreHint": "Appuyez pour restaurer un produit",
     "unavailable": "Indisponible",
     "undoSnackbar": "{{name}} mis à jour",
-    "undoBought": "{{name}} acheté",
-    "undoUnavailable": "{{name}} indisponible",
+    "undoBought": "Acheté : {{name}}",
+    "undoUnavailable": "Indisponible : {{name}}",
     "addItem": "Ajouter un article",
         "allDone": "Tout est acheté",
     "finishShopping": "Terminer les courses",
@@ -213,7 +213,7 @@
     "backToCategories": "Retour aux catégories",
     "finishTitle": "Récapitulatif des courses",
     "finishedHeadline": "Courses terminées !",
-    "finishedBy": "{{name}} a terminé les courses",
+    "finishedBy": "{{name}} : courses terminées",
     "finishedToday": "Terminé aujourd'hui, {{time}}",
     "finishedAt": "Terminé {{day}}, {{time}}",
     "shoppingTime": "Durée des courses",
@@ -564,6 +564,12 @@
     "mismatchCopy": "Copier l'adresse",
     "mismatchCopied": "Adresse copiée"
   },
+  "invitePrompt": {
+    "title": "Vous faites les courses à deux ?",
+    "body": "Invitez un membre du foyer et partagez la liste. Chacun voit tout de suite ce qui est déjà acheté.",
+    "cta": "Inviter quelqu'un",
+    "later": "Pas maintenant"
+  },
   "billing": {
     "aiCredits": "Usages IA gratuits",
     "aiCreditsBalance": "{{remaining}} / {{limit}} restants",
@@ -682,6 +688,12 @@
     "debugRefreshProducts": "Actualiser les produits",
     "debugExport": "Exporter le diagnostic facturation",
     "debugExported": "Diagnostic copié dans le presse-papiers."
+  },
+  "premiumOffer": {
+    "title": "Votre liste est prête ! 🎉",
+    "body": "Essayez Premium : IA illimitée et tout l'historique des courses pour tout votre espace. Premier mois offert, résiliable à tout moment.",
+    "cta": "Essayer Premium",
+    "later": "Pas maintenant"
   },
   "profile": {
     "title": "Profil",

@@ -15,6 +15,7 @@ import {
   type AppResultVariant,
 } from "@/components/AppResultScreen";
 import { InsufficientCreditsScreen } from "@/components/InsufficientCreditsScreen";
+import { premiumHref } from "@/features/billing/premium-source";
 import type { CreditShortage } from "@/lib/ai/insufficientCredits";
 
 export type ShowAppResultOptions = {
@@ -152,10 +153,9 @@ export function AppResultProvider({ children }: { children: ReactNode }) {
           if (next) {
             next();
           } else {
-            router.push({
-              pathname: "/premium",
-              params: { startCheckout: "1" },
-            });
+            router.push(
+              premiumHref("credits_exhausted", { startCheckout: "1" }),
+            );
           }
         }}
         onBack={() => {

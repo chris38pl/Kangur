@@ -474,8 +474,16 @@ export function ShoppingCategoryScreen({
                 }}
               >
                 <Text style={{ ...typography.headline, color: theme.text }}>
-                  {t("shoppingMode.purchased")}
-                  {categoryDone ? ` (${doneItems.length})` : ""}
+                  {[
+                    purchased.length > 0
+                      ? `${t("shoppingMode.purchased")}${categoryDone ? ` (${purchased.length})` : ""}`
+                      : null,
+                    unavailable.length > 0
+                      ? `${t("shoppingMode.unavailable")}${categoryDone ? ` (${unavailable.length})` : ""}`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </Text>
                 <Text style={{ ...typography.label, color: theme.textMuted }}>
                   {purchasedExpanded ? "▾" : "▸"}

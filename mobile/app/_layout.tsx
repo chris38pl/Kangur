@@ -26,6 +26,7 @@ import {
   checkRequiredPublicEnv,
   hideNativeSplashLogged,
 } from "@/lib/boot-diagnostics";
+import { captureInstallReferrerOnce } from "@/lib/analytics/install-referrer";
 import { getPostHog, isAnalyticsEnabled } from "@/lib/analytics/posthog";
 import { AppQueryProvider } from "@/lib/query/client";
 import { SentryErrorBoundary } from "@/lib/sentry/ErrorBoundary";
@@ -102,6 +103,7 @@ function PostHogBootProbe() {
     if (enabled) {
       const client = getPostHog();
       bootLog("posthog", `getPostHog client=${client ? "ok" : "null"}`);
+      void captureInstallReferrerOnce();
     }
   }, []);
   return null;

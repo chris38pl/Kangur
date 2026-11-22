@@ -75,6 +75,7 @@ import {
   useRepeatHistoryList,
   useRestoreHistoryList,
 } from "./useHistoryLists";
+import { premiumHref } from "@/features/billing/premium-source";
 
 type ListsSegment = "all" | "shopping" | "waiting" | "finished";
 
@@ -1121,7 +1122,7 @@ export function HistoryScreen() {
             <PremiumHintRow
               title={t("billing.hintHistoryDepthLine1")}
               subtitle={t("billing.hintHistoryDepthLine2")}
-              onPress={() => router.push("/premium")}
+              onPress={() => router.push(premiumHref("history_hint"))}
               accessibilityLabel={t("billing.upgradeCta")}
             />
           </View>
@@ -1244,7 +1245,7 @@ export function HistoryScreen() {
           const kind = feedback?.kind;
           setFeedback(null);
           if (kind === "limit") {
-            router.push("/premium");
+            router.push(premiumHref("history_limit"));
           }
         }}
         secondaryLabel={
