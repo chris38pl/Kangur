@@ -1,0 +1,8 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Kangur používá fotoaparát k focení nákupních seznamů.",
+    "NSPhotoLibraryUsageDescription": "Kangur potřebuje přístup k fotkám, aby z nich mohl importovat nákupní seznamy.",
+    "NSMicrophoneUsageDescription": "Kangur používá mikrofon k diktování produktů do nákupního seznamu.",
+    "NSSpeechRecognitionUsageDescription": "Kangur používá rozpoznávání řeči k diktování produktů do nákupního seznamu."
+  }
+}

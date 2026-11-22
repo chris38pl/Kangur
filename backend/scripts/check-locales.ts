@@ -3,7 +3,7 @@
  * Pure Node (no Prisma / path-alias imports) so CI stays light.
  * Run: pnpm test:locales (from backend/)
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 const ROOT = path.resolve(__dirname, "../..");
@@ -12,6 +12,9 @@ const MOBILE_I18N = path.join(ROOT, "mobile/lib/i18n");
 const BACKEND_LOCALES = path.join(ROOT, "backend/locales");
 const AI_SOURCE = path.join(ROOT, "backend/features/ai/outputLanguage.ts");
 const RESOURCES = path.join(MOBILE_I18N, "resources/index.ts");
+/** iOS permission prompts; one file per non-default locale (see app.config.ts). */
+const MOBILE_NATIVE_LOCALES = path.join(ROOT, "mobile/native-locales");
+const MOBILE_APP_CONFIG = path.join(ROOT, "mobile/app.config.ts");
 
 function flattenKeys(node: unknown, prefix = ""): string[] {
   if (node == null || typeof node !== "object") return [];
@@ -109,6 +112,83 @@ function extractObjectKeys(src: string, constName: string): string[] {
   return keys;
 }
 
+/**
+ * iOS languages in the binary: IOS_LANGUAGES in mobile/app.config.ts must list
+ * every locale, and mobile/native-locales must hold exactly the non-default
+ * ones, each with the same permission prompts.
+ */
+function checkNativeLocales(
+  localeIds: string[],
+  defaultLocale: string,
+  errors: string[],
+) {
+  const configMatch = /const IOS_LANGUAGES = \[([^\]]*)\]/.exec(
+    readFileSync(MOBILE_APP_CONFIG, "utf8"),
+  );
+  if (!configMatch) {
+    errors.push("mobile/app.config.ts: IOS_LANGUAGES not found");
+  } else {
+    const iosIds = [...configMatch[1]!.matchAll(/"([a-z]{2})"/g)].map(
+      (m) => m[1]!,
+    );
+    if ([...iosIds].sort().join() !== [...localeIds].sort().join()) {
+      errors.push(
+        `mobile/app.config.ts: IOS_LANGUAGES (${iosIds.join(", ")}) must match shared/locales.ts (${localeIds.join(", ")})`,
+      );
+    }
+  }
+
+  if (!existsSync(MOBILE_NATIVE_LOCALES)) {
+    errors.push("mobile/native-locales missing");
+    return;
+  }
+  const expectedIds = localeIds.filter((id) => id !== defaultLocale);
+  const fileIds = readdirSync(MOBILE_NATIVE_LOCALES)
+    .filter((file) => file.endsWith(".json"))
+    .map((file) => file.slice(0, -".json".length));
+
+  for (const id of fileIds) {
+    if (!expectedIds.includes(id)) {
+      errors.push(
+        `mobile/native-locales/${id}.json: not a non-default locale in shared/locales.ts`,
+      );
+    }
+  }
+
+  let referenceKeys: string[] | null = null;
+  let referenceId = "";
+  for (const id of expectedIds) {
+    const filePath = path.join(MOBILE_NATIVE_LOCALES, `${id}.json`);
+    if (!existsSync(filePath)) {
+      errors.push(`mobile/native-locales missing: ${id}.json`);
+      continue;
+    }
+    const json = loadJson(filePath) as { ios?: Record<string, unknown> };
+    const iosStrings = json.ios ?? {};
+    const keys = Object.keys(iosStrings).sort();
+    if (keys.length === 0) {
+      errors.push(`mobile/native-locales/${id}.json: no "ios" strings`);
+      continue;
+    }
+    for (const [key, value] of Object.entries(iosStrings)) {
+      // Expo writes values into InfoPlist.strings without escaping.
+      if (typeof value !== "string" || value.trim() === "" || value.includes('"')) {
+        errors.push(
+          `mobile/native-locales/${id}.json: "${key}" must be a non-empty string without double quotes`,
+        );
+      }
+    }
+    if (referenceKeys === null) {
+      referenceKeys = keys;
+      referenceId = id;
+    } else if (keys.join() !== referenceKeys.join()) {
+      errors.push(
+        `mobile/native-locales/${id}.json: keys differ from ${referenceId}.json`,
+      );
+    }
+  }
+}
+
 function main() {
   const errors: string[] = [];
   const localesSrc = readFileSync(SHARED_LOCALES, "utf8");
@@ -200,6 +280,8 @@ function main() {
       }
     }
   }
+
+  checkNativeLocales(localeIds, defaultLocale, errors);
 
   if (errors.length > 0) {
     console.error("Locale completeness check failed:\n");
