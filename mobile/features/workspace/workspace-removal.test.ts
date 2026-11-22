@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  canOfferRemoval,
   describeRemovalFailure,
   isOnlyWorkspace,
   pickNextWorkspaceId,
@@ -92,4 +93,53 @@ test("query keys for the removed workspace are found", () => {
   assert.equal(queryKeyMentionsWorkspace(["workspace-members", "a"], "a"), true);
   assert.equal(queryKeyMentionsWorkspace(["shopping-lists", "b"], "a"), false);
   assert.equal(queryKeyMentionsWorkspace(["workspaces"], "a"), false);
+});
+
+test("removal is hidden while an admin browses someone else's workspace", () => {
+  assert.equal(
+    canOfferRemoval({
+      workspaceId: "theirs",
+      browsingId: "theirs",
+      memberships: [{ id: "mine" }],
+    }),
+    false,
+  );
+  // Memberships not loaded yet: stay hidden rather than guess.
+  assert.equal(
+    canOfferRemoval({
+      workspaceId: "theirs",
+      browsingId: "theirs",
+      memberships: undefined,
+    }),
+    false,
+  );
+});
+
+test("removal is offered for the user's own workspaces", () => {
+  assert.equal(
+    canOfferRemoval({
+      workspaceId: "mine",
+      browsingId: null,
+      memberships: [{ id: "mine" }],
+    }),
+    true,
+  );
+  // Browsing id left over for another workspace does not matter here.
+  assert.equal(
+    canOfferRemoval({
+      workspaceId: "mine",
+      browsingId: "theirs",
+      memberships: [{ id: "mine" }],
+    }),
+    true,
+  );
+  // An admin who is also a real member keeps the action.
+  assert.equal(
+    canOfferRemoval({
+      workspaceId: "shared",
+      browsingId: "shared",
+      memberships: [{ id: "mine" }, { id: "shared" }],
+    }),
+    true,
+  );
 });

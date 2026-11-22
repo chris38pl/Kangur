@@ -80,6 +80,22 @@ export function isOnlyWorkspace(
   return pickNextWorkspaceId(workspaces, workspaceId) === null;
 }
 
+/**
+ * False while a platform admin browses a workspace they are not a member of.
+ * The server refuses both actions there (delete 403, leave 404), and a 404
+ * would read as "already gone" and switch the app away.
+ *
+ * @param memberships The user's own workspaces, without the admin overlay.
+ */
+export function canOfferRemoval(input: {
+  workspaceId: string;
+  browsingId: string | null;
+  memberships: readonly { id: string }[] | undefined;
+}): boolean {
+  if (input.browsingId !== input.workspaceId) return true;
+  return input.memberships?.some((w) => w.id === input.workspaceId) ?? false;
+}
+
 /** True when a React Query key belongs to the removed workspace. */
 export function queryKeyMentionsWorkspace(
   queryKey: readonly unknown[],

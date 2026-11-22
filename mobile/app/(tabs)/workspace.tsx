@@ -27,7 +27,9 @@ import type { Workspace } from "@/features/workspace/schemas";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useRemoveWorkspace } from "@/features/workspace/useRemoveWorkspace";
 import { useUpdateWorkspace } from "@/features/workspace/useUpdateWorkspace";
+import { useAdminBrowsingWorkspaceId } from "@/features/platform-workspaces/admin-browsing";
 import {
+  canOfferRemoval,
   describeRemovalFailure,
   isOnlyWorkspace,
   removalModeForRole,
@@ -73,6 +75,7 @@ export default function WorkspaceScreen() {
   const updateWorkspaceMutation = useUpdateWorkspace();
   const removeWorkspaceMutation = useRemoveWorkspace({ setActiveId });
   const { getToken } = useAuth();
+  const { browsingId } = useAdminBrowsingWorkspaceId();
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   // Snapshot at open: the active workspace changes as soon as removal succeeds.
@@ -94,7 +97,8 @@ export default function WorkspaceScreen() {
     const mode = removalModeForRole(workspace.role);
     // The server refuses this too; skip a confirm that cannot succeed.
     setRemovalFailure(
-      mode === "delete" && isOnlyWorkspace(workspacesQuery.data, workspace.id)
+      mode === "delete" &&
+        isOnlyWorkspace(workspacesQuery.memberships, workspace.id)
         ? { kind: "last_workspace" }
         : null,
     );
@@ -342,27 +346,33 @@ export default function WorkspaceScreen() {
           onCreate={() => setCreateOpen(true)}
         />
 
-        <Pressable
-          onPress={() => openRemoval(activeWorkspace)}
-          accessibilityRole="button"
-          accessibilityLabel={
-            activeWorkspace.role === "owner"
-              ? t("workspace.deleteAction")
-              : t("workspace.leaveAction")
-          }
-          style={{
-            marginTop: spacing[8],
-            minHeight: 48,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ ...typography.label, color: theme.danger }}>
-            {activeWorkspace.role === "owner"
-              ? t("workspace.deleteAction")
-              : t("workspace.leaveAction")}
-          </Text>
-        </Pressable>
+        {canOfferRemoval({
+          workspaceId: activeWorkspace.id,
+          browsingId,
+          memberships: workspacesQuery.memberships,
+        }) ? (
+          <Pressable
+            onPress={() => openRemoval(activeWorkspace)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              activeWorkspace.role === "owner"
+                ? t("workspace.deleteAction")
+                : t("workspace.leaveAction")
+            }
+            style={{
+              marginTop: spacing[8],
+              minHeight: 48,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ ...typography.label, color: theme.danger }}>
+              {activeWorkspace.role === "owner"
+                ? t("workspace.deleteAction")
+                : t("workspace.leaveAction")}
+            </Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
 
       <CreateWorkspaceSheet
