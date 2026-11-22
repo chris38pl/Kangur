@@ -174,10 +174,17 @@ export default function TabLayout() {
   const [bootAttempt, setBootAttempt] = useState(0);
   const [bootGaveUp, setBootGaveUp] = useState(false);
 
+  // Boot settled: forget an earlier give-up so the next boot gets a full timeout.
+  // Adjusted during render, not in the effect below (react-hooks/set-state-in-effect).
+  const [wasAwaitingBoot, setWasAwaitingBoot] = useState(awaitingBoot);
+  if (wasAwaitingBoot !== awaitingBoot) {
+    setWasAwaitingBoot(awaitingBoot);
+    if (!awaitingBoot) setBootGaveUp(false);
+  }
+
   useEffect(() => {
     if (!awaitingBoot) {
       bootStartedAtRef.current = null;
-      setBootGaveUp(false);
       return;
     }
     if (bootStartedAtRef.current == null) {
