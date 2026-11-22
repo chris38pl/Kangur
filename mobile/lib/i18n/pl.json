@@ -606,6 +606,12 @@
     "mismatchCopy": "Kopiuj adres",
     "mismatchCopied": "Adres skopiowany"
   },
+  "invitePrompt": {
+    "title": "Zakupy robicie we dwoje?",
+    "body": "Zaproś domownika, a lista będzie wspólna. Każdy od razu widzi, co już kupione.",
+    "cta": "Zaproś domownika",
+    "later": "Nie teraz"
+  },
   "billing": {
     "aiCredits": "Darmowe użycia AI",
     "aiCreditsBalance": "Pozostało {{remaining}} / {{limit}}",
@@ -726,6 +732,12 @@
     "debugRefreshProducts": "Odśwież produkty",
     "debugExport": "Eksportuj diagnostykę billing",
     "debugExported": "Diagnostyka skopiowana do schowka."
+  },
+  "premiumOffer": {
+    "title": "Lista gotowa! 🎉",
+    "body": "Wypróbuj Premium: AI bez limitu i pełna historia zakupów dla całej przestrzeni. Pierwszy miesiąc za darmo, anulujesz w każdej chwili.",
+    "cta": "Wypróbuj Premium",
+    "later": "Nie teraz"
   },
   "profile": {
     "title": "Profil",

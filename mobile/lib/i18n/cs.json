@@ -606,6 +606,12 @@
     "mismatchCopy": "Kopírovat adresu",
     "mismatchCopied": "Adresa zkopírována"
   },
+  "invitePrompt": {
+    "title": "Nakupujete ve dvou?",
+    "body": "Pozvěte někoho z domácnosti a sdílejte seznam. Každý hned vidí, co už je koupeno.",
+    "cta": "Pozvat někoho",
+    "later": "Teď ne"
+  },
   "billing": {
     "aiCredits": "Bezplatná použití AI",
     "aiCreditsBalance": "Zbývá {{remaining}} / {{limit}}",
@@ -726,6 +732,12 @@
     "debugRefreshProducts": "Obnovit produkty",
     "debugExport": "Exportovat billing diagnostiku",
     "debugExported": "Diagnostika zkopírována do schránky."
+  },
+  "premiumOffer": {
+    "title": "Seznam je hotový! 🎉",
+    "body": "Vyzkoušejte Premium: AI bez limitu a celou historii nákupů pro celý prostor. První měsíc zdarma, zrušit můžete kdykoli.",
+    "cta": "Vyzkoušet Premium",
+    "later": "Teď ne"
   },
   "profile": {
     "title": "Profil",

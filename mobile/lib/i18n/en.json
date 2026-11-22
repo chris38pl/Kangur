@@ -564,6 +564,12 @@
     "mismatchCopy": "Copy address",
     "mismatchCopied": "Address copied"
   },
+  "invitePrompt": {
+    "title": "Shopping for two?",
+    "body": "Invite someone from home and share the list. Everyone sees right away what is already bought.",
+    "cta": "Invite someone",
+    "later": "Not now"
+  },
   "billing": {
     "aiCredits": "Free AI uses",
     "aiCreditsBalance": "{{remaining}} / {{limit}} left",
@@ -682,6 +688,12 @@
     "debugRefreshProducts": "Force refresh products",
     "debugExport": "Export billing diagnostics",
     "debugExported": "Diagnostics copied to clipboard."
+  },
+  "premiumOffer": {
+    "title": "Your list is ready! 🎉",
+    "body": "Try Premium: unlimited AI and full shopping history for your whole space. First month free, cancel anytime.",
+    "cta": "Try Premium",
+    "later": "Not now"
   },
   "profile": {
     "title": "Profile",

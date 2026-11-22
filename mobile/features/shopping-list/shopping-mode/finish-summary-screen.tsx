@@ -1,7 +1,9 @@
 import { getShoppingCategoryIcon } from "@shared/shopping-categories";
 import { useAuth, useUser } from "@clerk/clerk-expo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -36,6 +38,9 @@ import { intlLocaleTag } from "@/lib/i18n/locales";
 import { useShoppingItems } from "@/features/shopping-item/useShoppingItems";
 import { useShoppingSession } from "@/features/shopping-list/session/useShoppingSession";
 import { useShoppingList } from "@/features/shopping-list/useShoppingLists";
+import { useWorkspaces } from "@/features/workspace/useWorkspaces";
+import { Analytics } from "@/lib/analytics";
+import { InviteHouseholdCard } from "./invite-household-card";
 import { navigateBack } from "@/lib/navigation";
 import {
   completeShoppingTask,
@@ -345,6 +350,49 @@ export function FinishSummaryScreen({
     return formatDurationMinutes(finishedAt.getTime() - started.getTime(), t);
   }, [viewer, sessionSnapshot, finishedAt, t]);
 
+  const summaryWorkspaceId = listQuery.data?.workspaceId;
+  const workspacesQuery = useWorkspaces(!viewer);
+  const summaryWorkspace = workspacesQuery.data?.find(
+    (w) => w.id === summaryWorkspaceId,
+  );
+  const inviteKey = summaryWorkspaceId
+    ? `kangur.invitePrompt.done.${summaryWorkspaceId}`
+    : null;
+  const [invitePromptDone, setInvitePromptDone] = useState<boolean | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!inviteKey) return;
+    let cancelled = false;
+    AsyncStorage.getItem(inviteKey)
+      .then((value) => {
+        if (!cancelled) setInvitePromptDone(value != null);
+      })
+      .catch(() => {
+        if (!cancelled) setInvitePromptDone(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [inviteKey]);
+  const showInvitePrompt =
+    !viewer &&
+    invitePromptDone === false &&
+    summaryWorkspace != null &&
+    summaryWorkspace.memberCount === 1 &&
+    (summaryWorkspace.role === "owner" || summaryWorkspace.role === "admin");
+  useEffect(() => {
+    if (showInvitePrompt && summaryWorkspaceId) {
+      Analytics.track("invite_prompt_shown", {
+        workspace_id: summaryWorkspaceId,
+      });
+    }
+  }, [showInvitePrompt, summaryWorkspaceId]);
+  const closeInvitePrompt = () => {
+    setInvitePromptDone(true);
+    if (inviteKey) void AsyncStorage.setItem(inviteKey, "1");
+  };
+
   const visibleBought = showAllBought
     ? boughtItems
     : boughtItems.slice(0, BOUGHT_PREVIEW);
@@ -367,6 +415,7 @@ export function FinishSummaryScreen({
         itemCount,
         durationSec,
         unavailableCount: unavailableItems.length,
+        boughtCount: boughtItems.length,
         getToken,
         queryClient,
       });
@@ -664,6 +713,28 @@ export function FinishSummaryScreen({
           >
             {t("shoppingMode.summaryRemaining", { count: remaining })}
           </Text>
+        ) : null}
+
+        {showInvitePrompt && summaryWorkspaceId ? (
+          <InviteHouseholdCard
+            busy={finish.isPending}
+            onInvite={() => {
+              Analytics.track("invite_prompt_accepted", {
+                workspace_id: summaryWorkspaceId,
+              });
+              closeInvitePrompt();
+              // Finish the trip first, then open the tab with the invite form.
+              void finish.mutateAsync().then(() => {
+                setTimeout(() => router.push("/(tabs)/workspace" as never), 0);
+              });
+            }}
+            onDismiss={() => {
+              Analytics.track("invite_prompt_dismissed", {
+                workspace_id: summaryWorkspaceId,
+              });
+              closeInvitePrompt();
+            }}
+          />
         ) : null}
 
         <View style={{ marginTop: spacing[6] }}>

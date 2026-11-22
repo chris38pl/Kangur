@@ -564,6 +564,12 @@
     "mismatchCopy": "Copia indirizzo",
     "mismatchCopied": "Indirizzo copiato"
   },
+  "invitePrompt": {
+    "title": "Fate la spesa in due?",
+    "body": "Invita qualcuno di casa e condividete la lista. Tutti vedono subito cosa è già stato comprato.",
+    "cta": "Invita qualcuno",
+    "later": "Non ora"
+  },
   "billing": {
     "aiCredits": "Usi AI gratuiti",
     "aiCreditsBalance": "{{remaining}} / {{limit}} rimasti",
@@ -682,6 +688,12 @@
     "debugRefreshProducts": "Aggiorna prodotti",
     "debugExport": "Esporta diagnostica fatturazione",
     "debugExported": "Diagnostica copiata negli appunti."
+  },
+  "premiumOffer": {
+    "title": "Lista pronta! 🎉",
+    "body": "Prova Premium: AI illimitata e cronologia completa della spesa per tutto lo spazio. Primo mese gratis, disdici quando vuoi.",
+    "cta": "Prova Premium",
+    "later": "Non ora"
   },
   "profile": {
     "title": "Profilo",

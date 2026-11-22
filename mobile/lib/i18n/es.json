@@ -564,6 +564,12 @@
     "mismatchCopy": "Copiar dirección",
     "mismatchCopied": "Dirección copiada"
   },
+  "invitePrompt": {
+    "title": "¿Hacéis la compra entre dos?",
+    "body": "Invita a alguien de casa y compartid la lista. Todos ven al momento lo que ya está comprado.",
+    "cta": "Invitar a alguien",
+    "later": "Ahora no"
+  },
   "billing": {
     "aiCredits": "Usos de IA gratis",
     "aiCreditsBalance": "{{remaining}} / {{limit}} restantes",
@@ -682,6 +688,12 @@
     "debugRefreshProducts": "Forzar actualización de productos",
     "debugExport": "Exportar diagnóstico de facturación",
     "debugExported": "Diagnóstico copiado al portapapeles."
+  },
+  "premiumOffer": {
+    "title": "¡Lista hecha! 🎉",
+    "body": "Prueba Premium: IA ilimitada e historial completo de compras para todo tu espacio. Primer mes gratis, cancela cuando quieras.",
+    "cta": "Probar Premium",
+    "later": "Ahora no"
   },
   "profile": {
     "title": "Perfil",

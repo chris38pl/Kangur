@@ -9,6 +9,8 @@ export const FeatureFlags = {
   mealProposal: "meal_proposal",
   shoppingV2: "shopping_v2",
   premiumPaywall: "premium_paywall",
+  /** Trial offer after the first successful AI import. Default on. */
+  premiumOffer: "premium_offer",
   appleSignIn: "apple_sign_in",
 } as const;
 

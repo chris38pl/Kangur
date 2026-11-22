@@ -32,6 +32,7 @@ import { setPendingAiImportToast } from "@/features/shopping-list/pending-ai-imp
 import { Analytics } from "@/lib/analytics";
 import { ApiClientError } from "@/lib/api/client";
 import { navigateBack, replaceDetails } from "@/lib/navigation";
+import { usePremiumOfferAfterWin } from "@/features/billing/use-premium-offer";
 
 type Props = { listId: string };
 
@@ -168,6 +169,7 @@ export function MealProposalReviewScreen({ listId }: Props) {
     (op) => !excluded.has(op.proposalRowId),
   ).length;
 
+  const offerPremium = usePremiumOfferAfterWin();
   const finishMutation = useMutation({
     mutationFn: async (input: {
       acceptedRowIds: string[];
@@ -221,6 +223,11 @@ export function MealProposalReviewScreen({ listId }: Props) {
           result.applied,
         );
         void refreshWorkspaceListIndex(queryClient, workspaceId);
+        offerPremium({
+          workspaceId,
+          appliedCount: result.applied,
+          trigger: "meal",
+        });
       }
       clearPendingMealProposal();
       void queryClient.invalidateQueries({

@@ -564,6 +564,12 @@
     "mismatchCopy": "Copier l'adresse",
     "mismatchCopied": "Adresse copiée"
   },
+  "invitePrompt": {
+    "title": "Vous faites les courses à deux ?",
+    "body": "Invitez un membre du foyer et partagez la liste. Chacun voit tout de suite ce qui est déjà acheté.",
+    "cta": "Inviter quelqu'un",
+    "later": "Pas maintenant"
+  },
   "billing": {
     "aiCredits": "Usages IA gratuits",
     "aiCreditsBalance": "{{remaining}} / {{limit}} restants",
@@ -682,6 +688,12 @@
     "debugRefreshProducts": "Actualiser les produits",
     "debugExport": "Exporter le diagnostic facturation",
     "debugExported": "Diagnostic copié dans le presse-papiers."
+  },
+  "premiumOffer": {
+    "title": "Votre liste est prête ! 🎉",
+    "body": "Essayez Premium : IA illimitée et tout l'historique des courses pour tout votre espace. Premier mois offert, résiliable à tout moment.",
+    "cta": "Essayer Premium",
+    "later": "Pas maintenant"
   },
   "profile": {
     "title": "Profil",

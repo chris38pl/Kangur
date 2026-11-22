@@ -564,6 +564,12 @@
     "mismatchCopy": "Adresse kopieren",
     "mismatchCopied": "Adresse kopiert"
   },
+  "invitePrompt": {
+    "title": "Kauft ihr zu zweit ein?",
+    "body": "Lade jemanden aus deinem Haushalt ein und teilt die Liste. Alle sehen sofort, was schon gekauft ist.",
+    "cta": "Jemanden einladen",
+    "later": "Nicht jetzt"
+  },
   "billing": {
     "aiCredits": "Kostenlose AI-Nutzungen",
     "aiCreditsBalance": "{{remaining}} / {{limit}} übrig",
@@ -682,6 +688,12 @@
     "debugRefreshProducts": "Produkte aktualisieren",
     "debugExport": "Billing-Diagnose exportieren",
     "debugExported": "Diagnose in Zwischenablage kopiert."
+  },
+  "premiumOffer": {
+    "title": "Deine Liste ist fertig! 🎉",
+    "body": "Teste Premium: unbegrenzte AI und der ganze Einkaufsverlauf für deinen gesamten Bereich. Erster Monat gratis, jederzeit kündbar.",
+    "cta": "Premium testen",
+    "later": "Nicht jetzt"
   },
   "profile": {
     "title": "Profil",

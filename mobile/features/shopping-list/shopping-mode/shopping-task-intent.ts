@@ -6,12 +6,16 @@ import { finishShoppingSession } from "@/features/notifications/api";
 import { ShoppingSession } from "@/features/shopping-list/session/shopping-session";
 import { Analytics } from "@/lib/analytics";
 import { finishTask } from "@/lib/navigation";
+
+import { recordFinishedTripAndMaybeAskForReview } from "./review-prompt";
 type CompleteArgs = {
   listId: string;
   workspaceId?: string;
   itemCount: number;
   durationSec: number;
   unavailableCount: number;
+  /** Products marked bought on this trip (review prompt threshold). */
+  boughtCount?: number;
   getToken: () => Promise<string | null>;
   queryClient: QueryClient;
 };
@@ -75,6 +79,9 @@ export async function completeShoppingTask(args: CompleteArgs): Promise<void> {
   });
   await ShoppingSession.clearEnded(listId);
   finishTask();
+  void recordFinishedTripAndMaybeAskForReview(
+    args.boughtCount ?? Math.max(0, itemCount - unavailableCount),
+  );
 }
 
 /**
