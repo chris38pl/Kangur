@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-import { authorize } from "@/lib/authorize";
+import { authorize, isPlatformAdminBypass } from "@/lib/authorize";
 import { prisma } from "@/lib/prisma";
 
 import {
@@ -21,7 +21,12 @@ export async function deleteWorkspace(
   workspaceId: string,
   userId: string,
 ): Promise<void> {
-  const { membership } = await authorize(workspaceId, userId);
+  const { membership: authorized } = await authorize(workspaceId, userId);
+  // Platform admins browse as a synthetic owner; deleting stays with the real
+  // owner here (admins have DELETE /api/v1/platform/workspaces/{id}).
+  const membership = isPlatformAdminBypass(authorized)
+    ? { ...authorized, role: "member" as const }
+    : authorized;
 
   const countOtherMemberships = (db: Prisma.TransactionClient | typeof prisma) =>
     db.workspaceMember.count({
