@@ -29,6 +29,13 @@ function setLocaleCookie(response: NextResponse, locale: string) {
   return response;
 }
 
+/** Keeps the query string (utm_* from campaign links) across the locale redirect. */
+function redirectUrl(request: NextRequest, path: string): URL {
+  const url = new URL(path, request.url);
+  url.search = request.nextUrl.search;
+  return url;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const origin = request.headers.get("origin");
@@ -68,7 +75,7 @@ export function proxy(request: NextRequest) {
   // Unprefixed /support → /{locale}/contact
   if (pathname === "/support" || pathname === "/support/") {
     const response = NextResponse.redirect(
-      new URL(withLocale(locale, "/contact"), request.url),
+      redirectUrl(request, withLocale(locale, "/contact")),
       308,
     );
     setLocaleCookie(response, locale);
@@ -77,7 +84,7 @@ export function proxy(request: NextRequest) {
 
   const targetPath =
     pathname === "/" ? withLocale(locale, "/") : withLocale(locale, pathname);
-  const response = NextResponse.redirect(new URL(targetPath, request.url));
+  const response = NextResponse.redirect(redirectUrl(request, targetPath));
   setLocaleCookie(response, locale);
   return response;
 }

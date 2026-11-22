@@ -2,6 +2,15 @@
 
 import { useSyncExternalStore } from "react";
 
+import {
+  UTM_STORAGE_KEY,
+  appStoreLink,
+  hasUtm,
+  parseStoredUtm,
+  playStoreLink,
+  readUtm,
+} from "@/lib/marketing/store-links";
+
 type Platform = "ios" | "android";
 
 function detectPlatform(): Platform | null {
@@ -18,6 +27,20 @@ function detectPlatform(): Platform | null {
 }
 
 const noSubscribe = () => () => {};
+
+/**
+ * The campaign as a stable string (useSyncExternalStore compares snapshots):
+ * utm_* from this URL, else the one remembered by UtmCapture.
+ */
+function readCampaignSnapshot(): string {
+  const fromUrl = readUtm(window.location.search);
+  if (hasUtm(fromUrl)) return JSON.stringify(fromUrl);
+  try {
+    return window.sessionStorage.getItem(UTM_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
 
 function GooglePlayIcon() {
   return (
@@ -56,6 +79,8 @@ function AppleIcon() {
 /**
  * App Store and Google Play buttons. The visitor's own store comes first: iPhone/iPad
  * → App Store, Android → Google Play. Server HTML and desktop keep Google Play first.
+ * Links carry the campaign: Apple `pt`/`ct`, Google Play `referrer` with utm_*.
+ * Server HTML uses the no-UTM campaign ("landing"); the client swaps in the real one.
  */
 export function StoreButtons({
   id,
@@ -75,12 +100,18 @@ export function StoreButtons({
     detectPlatform,
     () => null,
   );
+  const campaign = useSyncExternalStore(
+    noSubscribe,
+    readCampaignSnapshot,
+    () => "",
+  );
+  const utm = parseStoredUtm(campaign);
 
   return (
     <div className="mkt-stores" id={id} data-platform={platform ?? undefined}>
       <a
         className="mkt-store-btn mkt-store-play"
-        href={playStoreUrl}
+        href={playStoreLink(playStoreUrl, utm)}
         target="_blank"
         rel="noopener"
       >
@@ -92,7 +123,7 @@ export function StoreButtons({
       </a>
       <a
         className="mkt-store-btn mkt-store-ios"
-        href={appStoreUrl}
+        href={appStoreLink(appStoreUrl, utm)}
         target="_blank"
         rel="noopener"
       >
