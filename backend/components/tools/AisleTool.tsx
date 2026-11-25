@@ -3,6 +3,7 @@
 import {
   useDeferredValue,
   useEffect,
+  useEffectEvent,
   useId,
   useLayoutEffect,
   useMemo,
@@ -123,6 +124,17 @@ export function AisleTool({
     setText(early);
     // Only once, on arrival.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Safari may put the old text back into the field when React has already filled it.
+  const settle = useEffectEvent(() => {
+    const field = fieldRef.current;
+    if (field && field.value !== text) field.value = text;
+  });
+  useEffect(() => {
+    const onShow = () => settle();
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
   }, []);
 
   // A list from the computer, with the aisles set there.
