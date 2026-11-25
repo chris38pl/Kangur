@@ -9,9 +9,14 @@ const MARK = "#k=";
 /** Far more than fits a code. Somebody has to have written it by hand. */
 const LONGEST = 6000;
 
+const isEmpty = (value: unknown) =>
+  typeof value === "object" && value !== null && Object.keys(value).length === 0;
+
+/** Empty parts stay behind: the shorter the code, the easier it is to scan. */
 export function packList(list: Record<string, unknown>): string {
+  const parts = Object.fromEntries(Object.entries(list).filter(([, value]) => !isEmpty(value)));
   let binary = "";
-  for (const byte of new TextEncoder().encode(JSON.stringify(list))) binary += String.fromCharCode(byte);
+  for (const byte of new TextEncoder().encode(JSON.stringify(parts))) binary += String.fromCharCode(byte);
   return MARK + btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 

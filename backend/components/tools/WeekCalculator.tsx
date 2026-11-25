@@ -106,6 +106,13 @@ export function WeekCalculator({ slots }: { slots: KangurSlots }) {
     groups.map((group) => ({ title: group.title, lines: group.lines.filter((line) => going.has(line.id)) })),
   );
   const ofTrip = (trip: Trip) => toBuy.filter((line) => line.when === trip).length;
+  const cooked =
+    plan.dinners === 0
+      ? "bez obiadów w domu"
+      : `z czego wyjdzie ${plural(plan.dinners, "obiad", "obiady", "obiadów")}`;
+  const summary = typesetPl(
+    `Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")} na ${plural(plan.people, "osobę", "osoby", "osób")}, ${cooked}.`,
+  );
 
   return (
     <>
@@ -211,13 +218,7 @@ export function WeekCalculator({ slots }: { slots: KangurSlots }) {
         chips={TRIPS.map(({ id, short }) => [short, ofTrip(id)] as const)
           .filter(([, count]) => count > 0)
           .map(([short, count]) => `${short}: ${count}`)}
-        summary={typesetPl(
-          `Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")} na ${plural(plan.people, "osobę", "osoby", "osób")}, ${
-            plan.dinners === 0
-              ? "bez obiadów w domu"
-              : `z czego wyjdzie ${plural(plan.dinners, "obiad", "obiady", "obiadów")}`
-          }.`,
-        )}
+        summary={[summary]}
         trips={trips}
         intro={HANDOFF.copy.trips[trips.length]}
         ticked={left > 0 && left < lines.length}

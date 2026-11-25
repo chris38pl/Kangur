@@ -45,7 +45,7 @@ import { packTicks, unpackTicks } from "@/lib/marketing/lists/handoff";
 import { strings } from "@/lib/marketing/lists/stored";
 import { useArrival } from "@/lib/marketing/lists/use-arrival";
 import { hasStored, readStored, useHydrated, useStored } from "@/lib/marketing/lists/use-stored";
-import { typesetPl } from "@/lib/marketing/typography";
+import { typesetCopy } from "@/lib/marketing/typography";
 
 import styles from "./Calculator.module.css";
 
@@ -383,14 +383,10 @@ export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
         <ToKangur
           line={count === 0 ? "Oto cztery dni bez sklepu." : plan.people === 1 ? "Oto Twoje dania." : "Oto Wasze dania."}
           chips={ours}
-          summary={typesetPl(
-            [
-              bring.length > 0 ? `Przynoszą: ${bring.join(", ")}.` : "",
-              `Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")} na ${plural(guests, "osobę", "osoby", "osób")}.`,
-            ]
-              .filter(Boolean)
-              .join(" "),
-          )}
+          summary={typesetCopy([
+            ...(bring.length > 0 ? [`Przynoszą: ${bring.join(", ")}.`] : []),
+            `Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")} na ${plural(guests, "osobę", "osoby", "osób")}.`,
+          ])}
           trips={trips}
           whole={whole}
           intro={HANDOFF.copy.trips[trips.length]}

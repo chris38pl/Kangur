@@ -76,7 +76,7 @@ export function ToKangur({
   /** First line of the heading: "Oto Wasze dania." */
   line: string;
   chips: readonly string[];
-  summary: string;
+  summary: readonly string[];
   trips: readonly KangurPart[];
   /** Everything in one list, for those who do not want several. */
   whole?: KangurPart;
@@ -110,8 +110,8 @@ export function ToKangur({
       <div className={styles.head}>
         {slots.kangur}
         <div>
-          <div className={styles.arrived}>
-            <p role="status">{arrived ? HANDOFF.arrived : null}</p>
+          <div className={arrived ? styles.arrived : undefined}>
+            <p role="status">{arrived ? HANDOFF.arrived : null}</p>{" "}
             {arrived && onBack ? (
               <button type="button" className={styles.quiet} onClick={onBack}>
                 {HANDOFF.back}
@@ -126,7 +126,11 @@ export function ToKangur({
               ))}
             </ul>
           ) : null}
-          <p className={styles.summary}>{summary}</p>
+          {summary.map((sentence) => (
+            <p key={sentence} className={styles.summary}>
+              {sentence}
+            </p>
+          ))}
         </div>
       </div>
 
@@ -242,10 +246,10 @@ function CopyParts({
                 <button
                   type="button"
                   className={part === next ? `${styles.button} ${styles.primary}` : styles.button}
+                  aria-label={`${isCopied(part) ? HANDOFF.copy.done : HANDOFF.copy.part}: ${part.label}`}
                   onClick={() => void take(part)}
                 >
                   {isCopied(part) ? HANDOFF.copy.done : HANDOFF.copy.part}
-                  <span className="visually-hidden">: {part.label}</span>
                 </button>
               </li>
             ))}

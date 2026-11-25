@@ -423,7 +423,7 @@ export function AisleTool({
         <ToKangur
           line="Oto Twoje alejki."
           chips={groupsToBuy.map(({ aisle, lines }) => `${AISLE_ICONS[aisle]} ${AISLE_LABELS[aisle]} ${lines.length}`)}
-          summary={typesetPl(`Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")}.`)}
+          summary={[typesetPl(`Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")}.`)]}
           trips={trips}
           intro={HANDOFF.copy.parts}
           ticked={ticked > 0 && left > 0}

@@ -87,6 +87,7 @@ test("a list survives the way from a computer to a phone", () => {
   assert.match(hash, /^#k=[\w-]+$/);
   assert.deepEqual(unpackList(hash), list);
   assert.equal(packList({}), "#k=e30");
+  assert.equal(packList({ p: {}, d: [] }), "#k=e30");
   assert.deepEqual(unpackList("#k=e30"), {});
 });
 

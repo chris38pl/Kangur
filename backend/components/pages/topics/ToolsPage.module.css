@@ -160,6 +160,10 @@
   .after h2 {
     align-self: end;
   }
+
+  .after p:last-child {
+    margin-top: 10px;
+  }
 }
 
 @media (min-width: 760px) and (max-width: 939px) {

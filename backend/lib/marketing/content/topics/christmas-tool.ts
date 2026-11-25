@@ -146,7 +146,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Jak przenieść tę listę do Kangura?",
-          a: "Skopiuj ją i na ekranie Start w Kangurze stuknij „Schowek”. Przy komputerze zeskanuj kod, ta sama lista otworzy się w telefonie. Wczytanie to jedno z dziesięciu darmowych użyć AI.",
+          a: "Pod kalkulatorem czekają trzy listy, na trzy wyjścia do sklepu, albo jedna ze wszystkim. Skopiuj i na ekranie Start w Kangurze stuknij „Schowek”. Przy komputerze zeskanuj kod, ta sama lista otworzy się w telefonie. Każde wczytanie to jedno z dziesięciu darmowych użyć AI.",
         },
         {
           q: "Czy lista się zapisuje?",

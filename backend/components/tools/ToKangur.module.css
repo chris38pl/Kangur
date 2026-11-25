@@ -7,6 +7,8 @@
   padding: 26px var(--pad) 26px;
   border-radius: 30px;
   background: linear-gradient(165deg, #eaf8f3, #cdecdf);
+  /* A dish somebody typed in may be one long word. */
+  overflow-wrap: anywhere;
   scroll-margin-top: 62px;
 }
 
@@ -29,31 +31,29 @@
 }
 
 .arrived {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 14px;
+  margin-bottom: 12px;
+  padding-right: 92px;
+  line-height: 1.4;
 }
 
-.arrived p {
-  margin: 0 0 8px;
+.head [role="status"] {
+  display: inline;
   color: var(--kangur-primary-deep);
   font-weight: 700;
 }
 
-.arrived p:empty {
-  display: none;
-}
-
+/* A line of text, but as easy to hit as a button. */
 .arrived button {
-  margin: 0 0 8px;
+  min-height: 0;
+  margin: -10px 0;
+  padding: 10px 0;
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 18px 0 0;
+  margin: 18px 0 14px;
   padding: 0;
   list-style: none;
 }
@@ -70,7 +70,7 @@
 
 .summary {
   max-width: 40rem;
-  margin: 14px 0 0;
+  margin: 6px 0 0;
   color: var(--kangur-text);
   font-weight: 600;
 }
