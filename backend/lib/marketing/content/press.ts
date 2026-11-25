@@ -1,5 +1,14 @@
 import type { Lines } from "@/lib/marketing/content/home-types";
+import { CHRISTMAS } from "@/lib/marketing/lists/christmas";
 import { typesetCopy } from "@/lib/marketing/typography";
+
+type Idea = {
+  title: string;
+  body: string;
+  source: string;
+  /** Last day it makes sense. */
+  until?: string;
+};
 
 const COPY = {
   crumb: "Dla mediów",
@@ -35,6 +44,12 @@ const COPY = {
   ideasTitle: "Pomysły na tekst",
   ideas: [
     {
+      title: "Cztery dni bez sklepów",
+      body: "Od 24 do 27 grudnia 2026 duże sklepy będą zamknięte cztery dni z rzędu, pierwszy raz, odkąd Wigilia jest wolna. [[guideChristmas|Darmowy kalkulator]] liczy zakupy na tyle osób, ile siada do stołu, dzieli je na trzy terminy i układa wiadomość, kto co przynosi. Liczby można cytować, z linkiem.",
+      source: "[[https://zielonalinia.gov.pl/niedziele-handlowe-w-2026-r/|Zielona Linia]]",
+      until: CHRISTMAS.strip,
+    },
+    {
       title: "Lista przeniosła się do czatu",
       body: "W 2023 roku w 43% domów na zakupy zawsze albo prawie zawsze chodziło się z listą, siedem lat wcześniej w 31%. W 57% domów z co najmniej dwojgiem dorosłych codzienne zakupy robi się wspólnie albo raz robi je jedno, raz drugie (2026).",
       source: "[[https://www.cbos.pl/SPISKOM.POL/2023/K_126_23.PDF|CBOS 126/2023]], [[https://www.cbos.pl/PL/publikacje/news_tekst.php?nr=25/2026|CBOS News 25/2026]]",
@@ -49,7 +64,7 @@ const COPY = {
       body: "Od pierwszego opisu pomysłu do obu sklepów. Chętnie opowiemy, co poszło gładko, a co trzy razy od nowa, także o tym, gdzie AI wciąż myli się przy kartce z lodówki.",
       source: "",
     },
-  ],
+  ] as Idea[],
   filesTitle: "Grafiki do pobrania",
   filesIntro:
     "Można ich użyć w tekstach i filmach o Kangurze. Prosimy nie przerysowywać kangura i nie dopisywać niczego na ekranach aplikacji.",
@@ -71,4 +86,5 @@ export const PRESS_FILES = [
   { file: "/press/kangur-ekran-tryb-zakupow.png", label: "Ekran: tryb zakupów", info: "PNG, 1206 × 2622" },
   { file: "/press/kangur-ekran-z-przepisu.png", label: "Ekran: składniki z dania", info: "PNG, 1206 × 2622" },
   { file: "/press/kangur-ekran-podsumowanie.png", label: "Ekran: podsumowanie zakupów", info: "PNG, 1206 × 2622" },
+  { file: "/press/kangur-kalkulator-wigilia.png", label: "Strona: kalkulator na Wigilię", info: "PNG, 2400 × 1800" },
 ] as const;

@@ -55,24 +55,6 @@ export const SCREENS = {
       "width": 720,
       "height": 1565
     },
-    "sharedTomek": {
-      "avif": "/img/ekrany/pl/sharedTomek-360.ab06539d.avif 360w, /img/ekrany/pl/sharedTomek-720.a393bf45.avif 720w",
-      "src": "/img/ekrany/pl/sharedTomek-720.02cee187.webp",
-      "width": 720,
-      "height": 1565
-    },
-    "sharedOla": {
-      "avif": "/img/ekrany/pl/sharedOla-360.ab06539d.avif 360w, /img/ekrany/pl/sharedOla-720.a393bf45.avif 720w",
-      "src": "/img/ekrany/pl/sharedOla-720.02cee187.webp",
-      "width": 720,
-      "height": 1565
-    },
-    "ways": {
-      "avif": "/img/ekrany/pl/ways-360.5a825002.avif 360w, /img/ekrany/pl/ways-720.276c17d2.avif 720w",
-      "src": "/img/ekrany/pl/ways-720.da4ffd9f.webp",
-      "width": 720,
-      "height": 1565
-    },
     "start": {
       "avif": "/img/ekrany/pl/start-360.74671382.avif 360w, /img/ekrany/pl/start-720.5f31a73f.avif 720w",
       "src": "/img/ekrany/pl/start-720.71763583.webp",

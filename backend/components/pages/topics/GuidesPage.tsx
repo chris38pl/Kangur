@@ -1,16 +1,32 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { JsonLd } from "@/components/marketing/JsonLd";
 import { ClosingBand } from "@/components/site/ClosingBand";
 import { Pill } from "@/components/site/Headline";
 import { PageHero } from "@/components/site/PageHero";
+import { Picture } from "@/components/site/Picture";
 import { Sticker } from "@/components/site/Sticker";
 import prose from "@/components/site/prose.module.css";
 import { GUIDES } from "@/lib/marketing/content/topics/guides";
-import { routeHref } from "@/lib/marketing/routes";
+import { PRINTABLES } from "@/lib/marketing/druk.generated";
+import { routeHref, type MarketingRouteId } from "@/lib/marketing/routes";
 import { pageStructuredData } from "@/lib/marketing/structured-data";
 
 import styles from "./GuidesPage.module.css";
+
+/** The same Kangur who opens the page the card leads to. */
+const ART: Partial<Record<MarketingRouteId, ReactNode>> = {
+  guideChristmas: <Sticker name="z-torba" className={styles.art} />,
+  guideWeek: <Sticker name="z-koszykiem" className={`${styles.art} ${styles.whole}`} />,
+  aisleTool: <Sticker name="z-lista" className={styles.art} />,
+  guidePrint: (
+    <span className={`${styles.art} ${styles.sheets}`}>
+      <Picture image={PRINTABLES.wigilia.preview} alt="" />
+      <Picture image={PRINTABLES.alejki.preview} alt="" />
+    </span>
+  ),
+};
 
 export function GuidesPage() {
   const c = GUIDES;
@@ -39,6 +55,7 @@ export function GuidesPage() {
                   <Link href={routeHref(entry.id, "pl")}>{entry.label}</Link>
                 </h2>
                 <p>{entry.body}</p>
+                {ART[entry.id]}
               </li>
             ))}
           </ul>
