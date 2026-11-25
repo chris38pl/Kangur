@@ -37,7 +37,7 @@ One Vercel project can serve all of these via domain + env mapping. PR Preview d
 
 Search engines must see one stable page per address, so:
 
-- A URL without a prefix answers 200 in Polish. It redirects (307) only a human whose own choice (cookie `kangur_locale`, set by the language switcher) or browser asks for another language, and only where the path reads the same in every language. Crawlers are never redirected by language.
+- A URL without a prefix answers 200 in Polish. It redirects (307) only a human arriving from outside whose own choice (cookie `kangur_lang`, set by the language switcher) or browser asks for another language, and only where the path reads the same in every language. Crawlers and links clicked on the site are never redirected by language, and `/pl/…` always ends in Polish.
 - Every page is registered in `backend/lib/marketing/routes.ts`. Navigation, hreflang, sitemap, the proxy and the SEO guard all read it. Titles and descriptions: `page-meta.ts`.
 - Pages are prerendered and set no cookie, so the CDN keeps them. Do not read `headers()` or `cookies()` in `app/[locale]`, that would make the whole site dynamic again.
 - `pnpm test:marketing` covers every redirect. After a build, `pnpm test:seo` reads the HTML and fails on a page that stopped being static, a broken link, a wrong canonical or hreflang, a title Google would cut, an orphan page or a dash the house style forbids. Both run in CI.

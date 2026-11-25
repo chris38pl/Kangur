@@ -15,8 +15,11 @@ export {
   type AppLocale,
 } from "@shared/locales";
 
-/** Cookie remembering the language a visitor picked in the switcher. */
-export const MARKETING_LOCALE_COOKIE = "kangur_locale";
+/**
+ * Language picked in the switcher, and only there. The older `kangur_locale` was written
+ * on every visit, so it said where someone had been, not what they chose: ignored.
+ */
+export const MARKETING_LOCALE_COOKIE = "kangur_lang";
 
 /**
  * Language served at URLs without a prefix (`/`, `/faq`). Kangur's main market is Poland,
@@ -53,7 +56,7 @@ const CRAWLER = new RegExp(
     "bingpreview",
     "duckduckbot",
     "applebot",
-    "yandex",
+    "yandex.com/bots",
     "seznambot",
     "baiduspider",
     "petalbot",
@@ -80,8 +83,8 @@ const CRAWLER = new RegExp(
     "discordbot",
     "skypeuripreview",
     "viber",
-    "snapchat",
-    "pinterest",
+    "snap url preview",
+    "pinterestbot",
     "redditbot",
     "vkshare",
     "iframely",
@@ -124,13 +127,13 @@ export function splitLocalePrefix(pathname: string): {
   prefix: AppLocale | null;
   path: string;
 } {
-  const parts = pathname.split("/");
-  const maybe = parts[1];
-  if (maybe && isAppLocale(maybe)) {
-    const rest = parts.slice(2).join("/");
-    return { prefix: maybe, path: rest ? `/${rest}` : "/" };
+  // Empty parts are dropped, so "//host" can never become an address outside the site.
+  const parts = pathname.split("/").filter(Boolean);
+  const [first, ...rest] = parts;
+  if (first && isAppLocale(first)) {
+    return { prefix: first, path: `/${rest.join("/")}` };
   }
-  return { prefix: null, path: pathname || "/" };
+  return { prefix: null, path: `/${parts.join("/")}` };
 }
 
 /** Pathname without the language prefix, the same for `/faq` and its source `/pl/faq`. */
