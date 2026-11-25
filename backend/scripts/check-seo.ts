@@ -23,7 +23,7 @@ import {
   type MarketingRouteId,
 } from "@/lib/marketing/routes";
 import { hreflangAlternates } from "@/lib/marketing/seo";
-import { SITE_URL, absoluteUrl } from "@/lib/marketing/site";
+import { IS_PRODUCTION_SITE, PRODUCTION_HOST, SITE_URL, absoluteUrl } from "@/lib/marketing/site";
 
 const APP_DIR = path.resolve(__dirname, "../.next/server/app");
 const PUBLIC_DIR = path.resolve(__dirname, "../public");
@@ -150,9 +150,21 @@ for (const { id, locale, href, html } of pages) {
   }
 
   // Indexable
-  const robots = meta(html, "name", "robots");
-  if (SITE_URL.includes("www.getkangur.com") && robots?.includes("noindex")) {
-    fail(href, "noindex on the production site");
+  for (const name of ["robots", "googlebot"]) {
+    const value = meta(html, "name", name);
+    if (IS_PRODUCTION_SITE && value && /noindex|none/i.test(value)) {
+      fail(href, `${name} "${value}" on the production site`);
+    }
+  }
+
+  // Every language of the page is one link away
+  const switcher = new Set(
+    tags(html, "a")
+      .filter((a) => (attr(a, "class") ?? "").includes("mkt-lang-option"))
+      .map((a) => attr(a, "href")),
+  );
+  if (switcher.size !== APP_LOCALE_IDS.length) {
+    fail(href, `language switcher has ${switcher.size} links, want ${APP_LOCALE_IDS.length}`);
   }
 
   // Link preview
@@ -184,6 +196,8 @@ for (const { id, locale, href, html } of pages) {
   }
 
   // Structured data
+  if (id === "home" && !html.includes('"@type":"WebSite"')) fail(href, "no WebSite structured data");
+  if (id === "home" && !html.includes('"@type":"MobileApplication"')) fail(href, "no app structured data");
   for (const match of html.matchAll(
     /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g,
   )) {
@@ -256,6 +270,32 @@ if (!fs.existsSync(sitemapFile)) {
   );
   for (const url of expected) if (!listed.includes(url)) fail("/sitemap.xml", `missing ${url}`);
   for (const url of listed) if (!expected.includes(url)) fail("/sitemap.xml", `unexpected ${url}`);
+}
+
+const robotsFile = path.join(APP_DIR, "robots.txt.body");
+if (!fs.existsSync(robotsFile)) {
+  fail("/robots.txt", "not prerendered");
+} else if (/^Disallow:\s*\/\s*$/im.test(fs.readFileSync(robotsFile, "utf8"))) {
+  fail("/robots.txt", "blocks the whole site");
+}
+
+// The noindex rule of next.config.ts must spare exactly the production host.
+const manifest = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, "../.next/routes-manifest.json"), "utf8"),
+) as {
+  headers: {
+    missing?: { type: string; value: string }[];
+    headers: { key: string; value: string }[];
+  }[];
+};
+const noindexRules = manifest.headers.filter((rule) =>
+  rule.headers.some((h) => h.key.toLowerCase() === "x-robots-tag"),
+);
+if (
+  noindexRules.length !== 1 ||
+  !noindexRules[0].missing?.some((m) => m.type === "host" && m.value === PRODUCTION_HOST)
+) {
+  fail("next.config.ts", `X-Robots-Tag must be sent everywhere except ${PRODUCTION_HOST}`);
 }
 
 for (const id of ROUTE_IDS) {

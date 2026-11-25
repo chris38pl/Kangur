@@ -24,6 +24,18 @@ function atPath(request: NextRequest, path: string): URL {
   return url;
 }
 
+/** Both headers, because a privacy setting may remove one of them. */
+function isSameOrigin(request: NextRequest): boolean {
+  if (request.headers.get("sec-fetch-site") === "same-origin") return true;
+  const referer = request.headers.get("referer");
+  if (!referer) return false;
+  try {
+    return new URL(referer).host === request.headers.get("host");
+  } catch {
+    return false;
+  }
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const origin = request.headers.get("origin");
@@ -52,6 +64,7 @@ export function proxy(request: NextRequest) {
     cookieLocale: request.cookies.get(MARKETING_LOCALE_COOKIE)?.value,
     acceptLanguage: request.headers.get("accept-language"),
     userAgent: request.headers.get("user-agent"),
+    sameOrigin: isSameOrigin(request),
   });
 
   switch (decision.kind) {

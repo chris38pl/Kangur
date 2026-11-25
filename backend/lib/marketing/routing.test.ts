@@ -30,6 +30,18 @@ function decide(pathname: string, rest: Omit<RoutingInput, "pathname"> = {}): st
   return `${d.status} ${d.path}`;
 }
 
+/** Follows redirects the way a browser does and returns the language of the last page. */
+function languageOf(pathname: string, visitor: Omit<RoutingInput, "pathname"> = {}): string {
+  let path = pathname;
+  for (let hop = 0; hop < 5; hop += 1) {
+    const d = decideMarketingRoute({ pathname: path, ...visitor });
+    if (d.kind === "rewrite") return d.path.split("/")[1];
+    if (d.kind === "next") return path.split("/")[1];
+    path = d.path;
+  }
+  throw new Error("redirect loop from " + pathname);
+}
+
 test("a URL without a prefix answers in Polish, with no redirect", () => {
   assert.equal(decide("/"), "200 /pl");
   assert.equal(decide("/faq"), "200 /pl/faq");
@@ -105,8 +117,34 @@ test("the visitor's own choice beats the browser", () => {
 test("the old /pl addresses move for good", () => {
   assert.equal(decide("/pl"), "308 /");
   assert.equal(decide("/pl/faq"), "308 /faq");
-  assert.equal(decide("/pl/terms", { acceptLanguage: CHROME_EN }), "308 /terms");
+  assert.equal(decide("/pl/faq", { userAgent: GOOGLEBOT, acceptLanguage: CHROME_EN }), "308 /faq");
   assert.equal(decide("/pl/nie-ma"), "308 /nie-ma");
+});
+
+test("an explicit Polish link always ends in Polish", () => {
+  // The bio link is /pl?utm_..., and phones set to English or Ukrainian open it too.
+  for (const visitor of [
+    {},
+    { acceptLanguage: CHROME_PL },
+    { acceptLanguage: CHROME_EN },
+    { acceptLanguage: "uk-UA,uk;q=0.9,en;q=0.8" },
+    { acceptLanguage: "sv-SE" },
+    { acceptLanguage: CHROME_PL, cookieLocale: "en" },
+    { userAgent: GOOGLEBOT },
+  ]) {
+    for (const path of ["/pl", "/pl/terms", "/pl/faq"]) {
+      assert.equal(languageOf(path, visitor), "pl", path + " " + JSON.stringify(visitor));
+    }
+  }
+});
+
+test("links clicked on the site are never second-guessed", () => {
+  // Polski in the switcher, also in a new tab and with cookies off.
+  const visitor = { acceptLanguage: CHROME_EN, sameOrigin: true };
+  assert.equal(decide("/", visitor), "200 /pl");
+  assert.equal(decide("/faq", visitor), "200 /pl/faq");
+  assert.equal(decide("/faq", { ...visitor, cookieLocale: "en" }), "200 /pl/faq");
+  assert.equal(decide("/en/faq", visitor), "next");
 });
 
 test("prefixed languages are served as they are", () => {
@@ -127,6 +165,33 @@ test("aliases go straight to the final page in one hop", () => {
 test("an unknown address is a 404 where it is, not a redirect", () => {
   assert.equal(decide("/xyz"), "200 /pl/xyz");
   assert.equal(decide("/xyz", { acceptLanguage: CHROME_DE }), "200 /de/xyz");
+});
+
+test("no visitor is ever sent in circles", () => {
+  const languages = [undefined, "*", "sv", CHROME_PL, CHROME_EN, CHROME_DE, "uk", "be-BY,ru;q=0.8"];
+  const cookies = [undefined, ...APP_LOCALE_IDS];
+  const paths = ROUTE_IDS.flatMap((id) =>
+    APP_LOCALE_IDS.flatMap((locale) => {
+      const path = routePath(id, locale);
+      return path ? [path, "/" + locale + (path === "/" ? "" : path)] : [];
+    }),
+  );
+  for (const path of new Set([...paths, "/nie-ma", "/pl/nie-ma", "/support", "/de/support"])) {
+    for (const acceptLanguage of languages) {
+      for (const cookieLocale of cookies) {
+        for (const sameOrigin of [false, true]) {
+          languageOf(path, { acceptLanguage, cookieLocale, sameOrigin });
+        }
+      }
+    }
+  }
+});
+
+test("an address with extra slashes cannot leave the site", () => {
+  for (const path of ["//evil.example", "/pl//evil.example", "/en//evil.example"]) {
+    const d = decideMarketingRoute({ pathname: path });
+    if (d.kind !== "next") assert.ok(!d.path.startsWith("//"), path + " -> " + d.path);
+  }
 });
 
 test("no page redirects to another redirect", () => {
