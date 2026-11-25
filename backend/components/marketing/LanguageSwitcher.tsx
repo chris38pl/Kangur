@@ -22,20 +22,42 @@ function rememberLocale(next: AppLocale) {
 }
 
 /**
- * Links to the same page in every language. They are in the server HTML even while the
- * menu is closed, so crawlers can follow them. Full page loads on purpose: the proxy has
- * to see the cookie set by the click.
+ * Links to the same page in every language. Full page loads on purpose: the proxy has to
+ * see the cookie set by the click.
  */
-export function LanguageSwitcher({ locale, label }: Props) {
+function LanguageLinks({ locale }: { locale: AppLocale }) {
   // `/faq` in the browser is prerendered as `/pl/faq`; without the prefix both are the
   // same route, so server and client render the same links.
   const path = stripLocalePrefix(usePathname() || "/");
   const routeId = findRouteByPath(path)?.id ?? null;
 
+  return SUPPORTED_LOCALES.map((item) => {
+    const selected = item.id === locale;
+    return (
+      <li key={item.id}>
+        <a
+          href={alternateHref(routeId, item.id)}
+          hrefLang={item.id}
+          lang={item.id}
+          aria-current={selected ? "true" : undefined}
+          className={selected ? "mkt-lang-option is-active" : "mkt-lang-option"}
+          onClick={() => rememberLocale(item.id)}
+        >
+          {item.nativeName}
+        </a>
+      </li>
+    );
+  });
+}
+
+/**
+ * Language names, no flags: a language is not a country. The links are in the server HTML
+ * even while the menu is closed, so crawlers can follow them.
+ */
+export function LanguageSwitcher({ locale, label }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId();
-  const current = LOCALE_META[locale];
 
   useEffect(() => {
     if (!open) return;
@@ -60,18 +82,18 @@ export function LanguageSwitcher({ locale, label }: Props) {
         className="mkt-lang-btn"
         aria-expanded={open}
         aria-controls={listId}
-        aria-label={`${label}: ${current.nativeName} (${locale.toUpperCase()})`}
+        aria-label={`${label}: ${LOCALE_META[locale].nativeName} (${locale.toUpperCase()})`}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="mkt-lang-flag" aria-hidden>
-          {current.emoji}
-        </span>
-        <span className="mkt-lang-code" aria-hidden>
-          {locale.toUpperCase()}
-        </span>
-        <span className="mkt-lang-chevron" aria-hidden>
-          ▾
-        </span>
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden>
+          <path
+            d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c2.4 2.4 3.6 5.4 3.6 9S14.4 18.6 12 21M12 3C9.6 5.4 8.4 8.4 8.4 12s1.2 6.6 3.6 9M3.5 9h17M3.5 15h17"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+          />
+        </svg>
+        <span aria-hidden>{locale.toUpperCase()}</span>
       </button>
 
       <ul
@@ -80,30 +102,17 @@ export function LanguageSwitcher({ locale, label }: Props) {
         aria-label={label}
         hidden={!open}
       >
-        {SUPPORTED_LOCALES.map((item) => {
-          const selected = item.id === locale;
-          return (
-            <li key={item.id}>
-              <a
-                href={alternateHref(routeId, item.id)}
-                hrefLang={item.id}
-                lang={item.id}
-                aria-current={selected ? "true" : undefined}
-                className={
-                  selected ? "mkt-lang-option is-active" : "mkt-lang-option"
-                }
-                onClick={() => rememberLocale(item.id)}
-              >
-                <span aria-hidden>{item.emoji}</span>
-                <span className="mkt-lang-option-name">{item.nativeName}</span>
-                <span className="mkt-lang-option-code" aria-hidden>
-                  {item.id.toUpperCase()}
-                </span>
-              </a>
-            </li>
-          );
-        })}
+        <LanguageLinks locale={locale} />
       </ul>
     </div>
+  );
+}
+
+/** The same links inside the phone menu. */
+export function LanguageList({ locale, label }: Props) {
+  return (
+    <ul className="mkt-menu-languages" aria-label={label}>
+      <LanguageLinks locale={locale} />
+    </ul>
   );
 }

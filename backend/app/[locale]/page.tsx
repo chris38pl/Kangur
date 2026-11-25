@@ -40,10 +40,10 @@ export default async function HomePage({ params }: Props) {
   const c = homeCopy(locale);
   const screens = screensFor(locale);
   const polish = locale === "pl";
-  // The four messages that tell the story; step 1 has the whole conversation.
+  // The three messages that tell the story; step 1 has the whole conversation.
   const heroChat = {
     ...c.chat,
-    messages: [0, 2, 3, 6].map((i) => c.chat.messages[i]),
+    messages: [0, 2, 6].map((i) => c.chat.messages[i]),
   };
 
   const link = (id: MarketingRouteId, label: string) => {
@@ -92,7 +92,7 @@ export default async function HomePage({ params }: Props) {
               image={screens.import}
               alt={c.hero.screenAlt}
               className={styles.heroPhone}
-              sizes="(max-width: 700px) 56vw, 264px"
+              sizes="(max-width: 899px) 220px, 270px"
               priority
             />
           </div>
@@ -119,13 +119,18 @@ export default async function HomePage({ params }: Props) {
                     />
                   ) : null}
                   {index === 1 ? (
-                    <Phone image={screens.import} alt="" cropped time="17:55" />
+                    <Phone
+                      image={screens.import}
+                      alt=""
+                      className={styles.stepPhone}
+                      time="17:55"
+                    />
                   ) : null}
                   {index === 2 ? (
                     <Phone
                       image={screens.aisle}
                       alt={c.steps.screenAlt}
-                      cropped
+                      className={styles.stepPhone}
                       time="18:12"
                     >
                       {polish ? (
@@ -144,7 +149,7 @@ export default async function HomePage({ params }: Props) {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section className={`${styles.section} ${styles.flush}`}>
         <div className={styles.wrap}>
           <div className={styles.intro}>
             <Headline lines={c.ways.lines} />
@@ -240,14 +245,14 @@ export default async function HomePage({ params }: Props) {
                 image={SCREENS.pl.sharedOla}
                 alt={c.together.screenAlt}
                 className={styles.pairLeft}
-                sizes="(max-width: 700px) 46vw, 236px"
+                sizes="(max-width: 700px) 46vw, 244px"
                 time="17:20"
               />
               <Phone
                 image={SCREENS.pl.sharedTomek}
                 alt=""
                 className={styles.pairRight}
-                sizes="(max-width: 700px) 46vw, 236px"
+                sizes="(max-width: 700px) 46vw, 244px"
                 time="17:20"
               />
               <span className={styles.pairNoteLeft}>{c.together.added[0]}</span>
@@ -264,12 +269,13 @@ export default async function HomePage({ params }: Props) {
       <section className={styles.section}>
         <div className={`${styles.wrap} ${styles.split} ${styles.reverse}`}>
           <div className={styles.summaryArt}>
-            <Sticker name="zaklopotany" className={styles.summaryKangur} />
+            <Sticker name="smutny" className={styles.summaryKangur} />
             <Phone
               image={polish ? SCREENS.pl.missing : screens.summary}
               alt={c.summary.screenAlt}
               className={styles.summaryPhone}
-              time="18:41"
+              sizes="(max-width: 519px) 57vw, 268px"
+              time="22:14"
             />
           </div>
           <div>

@@ -1,5 +1,6 @@
 import type { ReceiptLine } from "@/components/site/Receipt";
 import type { Lines } from "@/lib/marketing/content/home-types";
+import { typesetCopy } from "@/lib/marketing/typography";
 
 export type PricingCopy = {
   crumb: string;
@@ -28,7 +29,7 @@ export type PricingCopy = {
 };
 
 /** Prices and limits: marketing fact bank, checked against the code of 1.0.8. */
-export const PRICING: Record<"pl" | "en", PricingCopy> = {
+const COPY: Record<"pl" | "en", PricingCopy> = {
   pl: {
     crumb: "Cennik",
     eyebrow: "Kangur - cennik",
@@ -190,3 +191,5 @@ export const PRICING: Record<"pl" | "en", PricingCopy> = {
     ],
   },
 };
+
+export const PRICING = { pl: typesetCopy(COPY.pl), en: COPY.en };

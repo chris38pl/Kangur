@@ -3,7 +3,7 @@ import type { HomeCopy } from "@/lib/marketing/content/home-types";
 export const homeEn: HomeCopy = {
   hero: {
     eyebrow: "Kangur - the shared grocery list app",
-    lines: ["Got the list in a chat?", "Screenshot it. Sorted."],
+    lines: ["Got the list in a chat?", "Screenshot it. Sorted."],
     lead: "Take a screenshot of the conversation. Kangur picks out the items, sorts them by aisle and shows them to everyone at home. In the store you just swipe.",
     storesNote: "For iPhone and Android. No ads. 10 free AI uses to start.",
     playSmall: "GET IT ON",

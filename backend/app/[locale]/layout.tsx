@@ -1,11 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { LanguageSwitcher } from "@/components/marketing/LanguageSwitcher";
+import {
+  LanguageList,
+  LanguageSwitcher,
+} from "@/components/marketing/LanguageSwitcher";
 import { MarketingNav, MobileMenu } from "@/components/marketing/MarketingNav";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { UtmCapture } from "@/components/marketing/UtmCapture";
@@ -14,6 +17,7 @@ import {
   SITE_DEFAULT_LOCALE,
   isAppLocale,
   withLocale,
+  type AppLocale,
 } from "@/lib/marketing/locale";
 import { getMessages } from "@/lib/marketing/messages";
 import { headerLinks } from "@/lib/marketing/navigation";
@@ -31,6 +35,16 @@ const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   display: "swap",
 });
+
+/** Plus Jakarta Sans has no Cyrillic. Manrope is its closest relative that does. */
+const manrope = Manrope({
+  subsets: ["cyrillic"],
+  variable: "--font-jakarta",
+  display: "swap",
+  preload: false,
+});
+
+const CYRILLIC: ReadonlySet<AppLocale> = new Set(["ru", "uk", "be"]);
 
 type Params = Promise<{ locale: string }>;
 
@@ -93,7 +107,9 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale}>
-      <body className={jakarta.variable}>
+      <body
+        className={CYRILLIC.has(locale) ? manrope.variable : jakarta.variable}
+      >
         <div className="mkt-shell">
           <UtmCapture />
           <a className="mkt-skip" href="#tresc">
@@ -120,7 +136,9 @@ export default async function LocaleLayout({
                 <a className="mkt-btn mkt-btn-nav" href={`${home}#pobierz`}>
                   {t.download}
                 </a>
-                <MobileMenu links={links} label={t.menu} />
+                <MobileMenu links={links} label={t.menu}>
+                  <LanguageList locale={locale} label={t.languageAria} />
+                </MobileMenu>
               </div>
             </div>
           </header>

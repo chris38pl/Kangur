@@ -30,8 +30,13 @@
   font-size: clamp(2.6rem, 7.4vw, 4.7rem);
   font-weight: 800;
   letter-spacing: -0.04em;
+  word-spacing: 0.06em;
   line-height: 1.02;
   text-wrap: balance;
+}
+
+.long {
+  font-size: clamp(2rem, 4.6vw, 3.2rem);
 }
 
 .slogan span {

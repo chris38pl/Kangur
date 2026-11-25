@@ -1,4 +1,5 @@
 import type { Lines } from "@/lib/marketing/content/home-types";
+import { typesetCopy } from "@/lib/marketing/typography";
 
 type Card = { title: string; body: string };
 
@@ -34,7 +35,7 @@ const STORES = {
  * then what is true again and what to do. Repeating a rumour is what makes it stick.
  * Facts from the code of 1.0.8 (permissions, what goes to AI, what is stored).
  */
-export const SAFETY: Record<"pl" | "en", SafetyCopy> = {
+const COPY: Record<"pl" | "en", SafetyCopy> = {
   pl: {
     crumb: "Bezpieczeństwo",
     eyebrow: "Kangur - lista zakupów z AI",
@@ -250,3 +251,5 @@ export const SAFETY: Record<"pl" | "en", SafetyCopy> = {
     },
   },
 };
+
+export const SAFETY = { pl: typesetCopy(COPY.pl), en: COPY.en };

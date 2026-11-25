@@ -10,9 +10,10 @@ import { homePl } from "@/lib/marketing/content/home-pl";
 import { homeRu } from "@/lib/marketing/content/home-ru";
 import type { HomeCopy } from "@/lib/marketing/content/home-types";
 import { homeUk } from "@/lib/marketing/content/home-uk";
+import { typesetCopy } from "@/lib/marketing/typography";
 
 const HOME: Record<AppLocale, HomeCopy> = {
-  pl: homePl,
+  pl: typesetCopy(homePl),
   en: homeEn,
   de: homeDe,
   fr: homeFr,

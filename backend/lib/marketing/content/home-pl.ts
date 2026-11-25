@@ -109,7 +109,7 @@ export const homePl: HomeCopy = {
       "Podsumowanie zakupów w Kangurze: awokado i bułki na czerwonej liście Czego nie było",
   },
   price: {
-    lines: ["Ile to kosztuje?", "Paragon obok."],
+    lines: ["Ile to kosztuje?", "Proszę, paragon."],
     body: "Listy, domownicy i tryb zakupów są za darmo. Płaci się tylko za AI bez limitu i dłuższą historię, i to raz za całą przestrzeń, a nie od osoby.",
     receiptLabel: "Cennik Kangura w formie paragonu",
     receipt: [

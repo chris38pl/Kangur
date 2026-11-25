@@ -4,13 +4,18 @@
 
 .wrap {
   width: 100%;
-  max-width: var(--kangur-max);
+  max-width: calc(var(--kangur-max) + 48px);
   margin-inline: auto;
   padding-inline: 24px;
 }
 
 .section {
-  padding-block: clamp(56px, 8vw, 104px);
+  padding-block: clamp(56px, 7vw, 96px);
+}
+
+/* Two white sections in a row share one gap. */
+.flush {
+  padding-top: 0;
 }
 
 .lead {
@@ -77,18 +82,24 @@
 
 .heroGrid {
   display: grid;
-  gap: 34px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 36px;
 }
 
 .heroCopy :global(.mkt-stores) {
   margin-top: 28px;
 }
 
+/*
+ * The whole story in one picture: the message, the list it became, and him. Nothing lies
+ * on any text: the phone covers only the empty edge of the chat, Kangur stands below it.
+ */
 .heroArt {
+  container-type: inline-size;
   position: relative;
   width: 100%;
-  max-width: 420px;
-  height: clamp(440px, 124vw, 540px);
+  max-width: 400px;
+  height: 610px;
   margin-inline: auto;
 }
 
@@ -96,35 +107,41 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 70%;
-  font-size: 13px;
-  transform: rotate(-3deg);
+  width: 90%;
+  font-size: 13.5px;
+  transform: rotate(-2deg);
+}
+
+/* Phones have no room for the third message; step 1 has the whole conversation. */
+.heroChat li:nth-child(3) {
+  display: none;
 }
 
 .heroPhone {
   position: absolute;
-  top: 24%;
+  top: 286px;
   right: 0;
-  width: 56%;
+  width: 58%;
   transform: rotate(3deg);
 }
 
 .heroKangur {
   position: absolute;
   bottom: -12px;
-  left: -2%;
-  width: 40%;
+  left: 0;
+  z-index: 1;
+  width: 41%;
   height: auto;
 }
 
 @media (min-width: 900px) {
   .hero {
-    padding-top: 64px;
+    padding-top: 52px;
   }
 
   .heroGrid {
-    grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
-    gap: 40px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    gap: 36px;
     align-items: center;
   }
 
@@ -134,26 +151,34 @@
 
   .heroArt {
     align-self: end;
-    max-width: 540px;
-    height: 590px;
+    justify-self: end;
+    max-width: 580px;
+    height: auto;
+    aspect-ratio: 580 / 640;
   }
 
   .heroChat {
-    top: 64px;
-    width: 318px;
-    font-size: 14.5px;
+    top: 1.5%;
+    width: 66%;
+    padding-right: 16.5%;
+    font-size: max(11px, 2.36cqw);
+    transform: rotate(-3deg);
+  }
+
+  .heroChat li:nth-child(3) {
+    display: list-item;
   }
 
   .heroPhone {
-    top: 92px;
-    right: 6px;
-    width: 264px;
+    top: 11%;
+    right: 1%;
+    width: 46.5%;
   }
 
   .heroKangur {
-    bottom: -36px;
-    left: 8px;
-    width: 196px;
+    bottom: -5%;
+    left: 7%;
+    width: 30%;
   }
 }
 
@@ -168,8 +193,6 @@
 }
 
 .step {
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
   border-radius: 28px;
   background: linear-gradient(180deg, #f4fbf9, #e3f5ef);
@@ -192,26 +215,24 @@
   color: var(--kangur-text-body);
 }
 
+/* The bottom of a card hides the rest of the phone, so every card ends level. */
 .stepArt {
   display: flex;
-  flex: 1;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: center;
-  height: 400px;
-  margin-top: 24px;
+  height: 536px;
+  padding-top: 24px;
   overflow: hidden;
 }
 
-/* The bottom of a card hides the rest of the phone, so every card ends level. */
-.stepArt > div {
-  align-self: flex-start;
-  max-width: 262px;
+.stepPhone {
+  max-width: 268px;
 }
 
 .stepChat {
-  align-self: flex-start;
   width: calc(100% - 44px);
-  font-size: 13.5px;
+  max-width: 330px;
+  font-size: 13.8px;
   transform: rotate(-1.5deg);
 }
 
@@ -219,17 +240,21 @@
   display: block;
   width: 100%;
   height: auto;
-  padding-top: 9%;
+  padding-top: 15%;
   background: #fff;
 }
 
 @media (min-width: 900px) {
   .steps {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .stepArt {
-    height: 440px;
+  /* Texts differ in length, pictures still start on one line. */
+  .step {
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    row-gap: 0;
   }
 }
 
@@ -249,7 +274,6 @@
   position: relative;
   display: grid;
   overflow: hidden;
-  min-height: 380px;
   border-radius: 28px;
 }
 
@@ -291,16 +315,15 @@
   align-self: end;
   justify-self: center;
   width: min(290px, 82%);
-  margin-bottom: -26px;
-  padding-top: 34px;
+  margin: 46px 0 30px;
 }
 
 .wayPhone {
-  align-self: start;
+  align-self: end;
   justify-self: center;
-  width: min(240px, 72%);
-  height: 250px;
-  margin-top: 26px;
+  width: min(250px, 74%);
+  height: 310px;
+  margin-top: 28px;
   overflow: hidden;
   border-radius: 34px 34px 0 0;
 }
@@ -316,9 +339,9 @@
 .wayKangurLow {
   align-self: end;
   justify-self: end;
-  width: 168px;
+  width: 172px;
   height: auto;
-  margin: 8px 18px -34px 0;
+  margin: 4px 18px -34px 0;
 }
 
 .wayChips {
@@ -338,31 +361,41 @@
 
 @media (min-width: 760px) {
   .ways {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
   }
 }
 
 @media (min-width: 1000px) {
   .way {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-    min-height: 330px;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    min-height: 416px;
   }
 
   .wayCopy {
-    padding: 34px 0 34px 34px;
+    padding: 36px 0 34px 36px;
+  }
+
+  .wayPhoto {
+    grid-template-columns: 1fr;
+  }
+
+  .wayPhoto .wayCopy {
+    max-width: 440px;
+    padding-bottom: 0;
   }
 
   .wayNote {
-    align-self: center;
-    width: 250px;
-    margin-bottom: 0;
-    padding-top: 0;
+    justify-self: end;
+    width: 300px;
+    margin: 22px 40px 34px 0;
   }
 
   .wayPhone {
-    align-self: end;
-    height: 290px;
-    margin-top: 0;
+    justify-self: start;
+    width: 212px;
+    height: 368px;
+    margin: 0 0 0 10px;
   }
 
   .wayTyped {
@@ -376,15 +409,15 @@
   .wayChips {
     grid-column: 1;
     align-content: start;
-    padding: 18px 0 0 34px;
+    padding: 20px 0 0 36px;
   }
 
   .wayKangurLow {
     grid-row: 1 / span 2;
     grid-column: 2;
     justify-self: center;
-    width: 196px;
-    margin: 0 0 -40px;
+    width: 218px;
+    margin: 0 16px -44px 0;
   }
 }
 
@@ -458,15 +491,16 @@
 .pair {
   position: relative;
   display: flex;
+  align-items: flex-start;
   justify-content: center;
-  gap: 4%;
-  padding-block: 18px 40px;
+  gap: 5%;
+  padding-block: 40px 46px;
 }
 
 .pairLeft,
 .pairRight {
   width: 46%;
-  max-width: 236px;
+  max-width: 244px;
 }
 
 .pairLeft {
@@ -478,6 +512,7 @@
   transform: rotate(3deg);
 }
 
+/* Speech bubbles on the frames, never on the screens. */
 .pairNoteLeft,
 .pairNoteRight {
   position: absolute;
@@ -490,15 +525,15 @@
 }
 
 .pairNoteLeft {
-  bottom: 70px;
-  left: 2%;
-  border-bottom-left-radius: 4px;
+  bottom: 26px;
+  left: 0;
+  border-top-left-radius: 4px;
   transform: rotate(-3deg);
 }
 
 .pairNoteRight {
-  top: 30px;
-  right: 2%;
+  top: 20px;
+  right: 0;
   border-bottom-right-radius: 4px;
   transform: rotate(3deg);
 }
@@ -510,23 +545,25 @@
 
 .summaryArt {
   position: relative;
-  display: flex;
-  justify-content: center;
-  padding-left: 30%;
+  overflow: hidden;
+  height: 500px;
+  border-radius: 28px;
+  background: linear-gradient(170deg, #fdeee6, #f9d4c4);
 }
 
 .summaryKangur {
   position: absolute;
-  bottom: -6px;
-  left: 0;
-  z-index: 1;
-  width: 46%;
-  max-width: 236px;
+  bottom: 0;
+  left: 8px;
+  width: 36%;
   height: auto;
 }
 
 .summaryPhone {
-  max-width: 280px;
+  position: absolute;
+  top: 34px;
+  right: 5%;
+  width: 57%;
 }
 
 .receipt {
@@ -535,14 +572,26 @@
   padding-block: 12px;
 }
 
+@media (min-width: 520px) {
+  .summaryArt {
+    height: 560px;
+  }
+
+  .summaryKangur {
+    left: 28px;
+    width: 200px;
+  }
+
+  .summaryPhone {
+    right: 34px;
+    width: 268px;
+  }
+}
+
 @media (min-width: 900px) {
   .split {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 64px;
-  }
-
-  .reverse > :first-child {
-    order: 0;
   }
 }
 
@@ -562,7 +611,7 @@
 
 .makerKangur {
   justify-self: center;
-  width: min(360px, 84%);
+  width: min(380px, 84%);
   height: auto;
 }
 
@@ -582,6 +631,8 @@
   display: block;
   color: var(--kangur-text);
   font-size: 1.05rem;
+  line-height: 1.35;
+  text-wrap: balance;
 }
 
 .links {

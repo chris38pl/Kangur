@@ -65,7 +65,7 @@ export function PricingPage({ locale }: { locale: "pl" | "en" }) {
         <div className={`${prose.wrap} ${prose.prose}`}>
           <h2>{c.uses.title}</h2>
           <p>{c.uses.intro}</p>
-          <ul className={prose.cards}>
+          <ul className={`${prose.cards} ${prose.fourUp}`}>
             {c.uses.items.map((item) => (
               <li key={item.title} className={prose.card}>
                 <h3>{item.title}</h3>
@@ -73,7 +73,7 @@ export function PricingPage({ locale }: { locale: "pl" | "en" }) {
               </li>
             ))}
           </ul>
-          <p className={styles.outro}>{c.uses.outro}</p>
+          <p className={prose.outro}>{c.uses.outro}</p>
         </div>
       </section>
 

@@ -1,0 +1,13 @@
+.kangur {
+  align-self: flex-end;
+  width: min(270px, 62%);
+  height: auto;
+  margin-bottom: -58px;
+}
+
+@media (min-width: 900px) {
+  .kangur {
+    width: 300px;
+    margin-bottom: -92px;
+  }
+}

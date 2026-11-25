@@ -1,4 +1,5 @@
 .phone {
+  container-type: inline-size;
   position: relative;
   width: 100%;
   max-width: 300px;
@@ -32,13 +33,13 @@
   justify-content: space-between;
   padding: 3.6% 8% 0 9%;
   color: var(--kangur-text);
-  font-size: 12px;
+  font-size: clamp(9px, 4.6cqw, 13px);
   font-weight: 600;
   line-height: 1;
 }
 
 .status svg {
-  width: 42px;
+  width: 16cqw;
   height: auto;
 }
 

@@ -24,12 +24,13 @@ export function ClosingBand({
 }) {
   const { closing, hero } = homeCopy(locale);
   const [first, second] = lines ?? closing.lines;
+  const long = Math.max(first.length, second.length) > 16;
 
   return (
     <section className={styles.band}>
       <div className={styles.grid}>
         <div className={styles.copy}>
-          <p className={styles.slogan}>
+          <p className={long ? `${styles.slogan} ${styles.long}` : styles.slogan}>
             <span>{first}</span> <span>{second}</span>
           </p>
           <p className={styles.body}>{body ?? closing.body}</p>

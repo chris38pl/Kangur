@@ -40,6 +40,10 @@ Search engines must see one stable page per address, so:
 - A URL without a prefix answers 200 in Polish. It redirects (307) only a human arriving from outside whose own choice (cookie `kangur_lang`, set by the language switcher) or browser asks for another language, and only where the path reads the same in every language. Crawlers and links clicked on the site are never redirected by language, and `/pl/…` always ends in Polish.
 - Every page is registered in `backend/lib/marketing/routes.ts`. Navigation, hreflang, sitemap, the proxy and the SEO guard all read it. Titles and descriptions: `page-meta.ts`.
 - Pages are prerendered and set no cookie, so the CDN keeps them. Do not read `headers()` or `cookies()` in `app/[locale]`, that would make the whole site dynamic again.
+- Copy lives in `backend/lib/marketing/content/`, home page in ten languages, the other pages in the languages they exist in. Polish copy is typeset once by `typography.ts` (no one-letter word at the end of a line). Links inside copy use the marks of `rich-text.tsx`, so a page that disappears breaks the build instead of the site.
+- `public/img`, `public/og` and the matching `*.generated.ts` are made from real app screens and approved drawings by scripts in `.marketing/06-seo` (outside git). File names carry a content hash. Do not edit them by hand.
+- `/pobierz`, `/get` and `/download` send a phone to its own store and a computer to the buttons on the home page (307, never cached, never indexed). Use them in QR codes and print.
+- After a production deploy with new or changed pages: `pnpm seo:indexnow` (dry run), then `pnpm seo:indexnow --send`. Google is told by the sitemap.
 - `pnpm test:marketing` covers every redirect. After a build, `pnpm test:seo` reads the HTML and fails on a page that stopped being static, a broken link, a wrong canonical or hreflang, a title Google would cut, an orphan page or a dash the house style forbids. Both run in CI.
 
 ### Hard rule - API host isolation

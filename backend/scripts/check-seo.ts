@@ -215,7 +215,8 @@ for (const { id, locale, href, html } of pages) {
     const at = text.search(/[–—]/);
     fail(href, `en or em dash in copy: "...${text.slice(Math.max(0, at - 30), at + 30)}..."`);
   }
-  if (/\b(TODO|FIXME|lorem ipsum)\b/i.test(text)) fail(href, "placeholder text");
+  // Capitals only: "todo" is an ordinary Spanish word.
+  if (/\b(TODO|FIXME|Lorem ipsum)\b/.test(text)) fail(href, "placeholder text");
 
   // Internal links lead to a page, not to a redirect or a 404
   for (const a of tags(html, "a")) {

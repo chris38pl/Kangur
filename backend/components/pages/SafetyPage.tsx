@@ -1,5 +1,6 @@
 import { JsonLd } from "@/components/marketing/JsonLd";
 import { ClosingBand } from "@/components/site/ClosingBand";
+import { FactRows } from "@/components/site/FactRows";
 import { FaqList } from "@/components/site/FaqList";
 import { PageHero } from "@/components/site/PageHero";
 import { ProductLabel } from "@/components/site/ProductLabel";
@@ -41,7 +42,7 @@ export function SafetyPage({ locale }: { locale: "pl" | "en" }) {
         <div className={`${prose.wrap} ${prose.prose}`}>
           <h2>{c.permissions.title}</h2>
           <p>{c.permissions.intro}</p>
-          <ul className={prose.cards}>
+          <ul className={`${prose.cards} ${prose.fourUp}`}>
             {c.permissions.items.map((item) => (
               <li key={item.title} className={prose.card}>
                 <h3>{item.title}</h3>
@@ -49,7 +50,7 @@ export function SafetyPage({ locale }: { locale: "pl" | "en" }) {
               </li>
             ))}
           </ul>
-          <p className={styles.outro}>{c.permissions.outro}</p>
+          <p className={prose.outro}>{c.permissions.outro}</p>
         </div>
       </section>
 
@@ -68,7 +69,7 @@ export function SafetyPage({ locale }: { locale: "pl" | "en" }) {
               </li>
             ))}
           </ol>
-          <div className={styles.outro}>
+          <div className={prose.outro}>
             {c.screenshot.outro.map((p) => (
               <p key={p}>{rich(p, locale)}</p>
             ))}
@@ -81,14 +82,7 @@ export function SafetyPage({ locale }: { locale: "pl" | "en" }) {
           <div className={prose.prose}>
             <h2>{c.check.title}</h2>
             <p>{c.check.intro}</p>
-            <dl className={styles.facts}>
-              {c.check.rows.map((row) => (
-                <div key={row.term}>
-                  <dt>{row.term}</dt>
-                  <dd>{rich(row.value, locale)}</dd>
-                </div>
-              ))}
-            </dl>
+            <FactRows rows={c.check.rows} locale={locale} />
           </div>
           <div className={`${prose.prose} ${styles.never}`}>
             <Sticker name="cwaniak" className={styles.kangur} />

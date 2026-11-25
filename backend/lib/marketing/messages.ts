@@ -27,25 +27,6 @@ export type MarketingMessages = {
     copyright: string;
     rightsReserved: string;
   };
-  contact: {
-    title: string;
-    intro: string;
-    emailLabel: string;
-    responseTitle: string;
-    responseBody: string;
-    helpTitle: string;
-    helpBody: string;
-    mascotAlt: string;
-  };
-  faq: {
-    title: string;
-    meta: string;
-    metaEnNote: string;
-    ctaTitle: string;
-    ctaBody: string;
-    ctaButton: string;
-    mascotAlt: string;
-  };
   deleteAccount: {
     title: string;
     meta: string;
@@ -91,26 +72,6 @@ const en: MarketingMessages = {
     follow: "Follow Kangur",
     copyright: "© 2026 Kangur",
     rightsReserved: "All rights reserved",
-  },
-  contact: {
-    title: "Contact",
-    intro:
-      "Have a question, suggestion, or need help? Write to us - we’ll reply as soon as we can.",
-    emailLabel: "E-mail",
-    responseTitle: "Response time",
-    responseBody: "We usually reply within 24-48 hours.",
-    helpTitle: "We’re here to help",
-    helpBody: "Write to us about anything - we’re here for you!",
-    mascotAlt: "Kangur mascot with a phone",
-  },
-  faq: {
-    title: "FAQ",
-    meta: "Frequently asked questions",
-    metaEnNote: "Frequently asked questions · English",
-    ctaTitle: "Didn’t find an answer?",
-    ctaBody: "Our support team is ready to help you.",
-    ctaButton: "Contact us",
-    mascotAlt: "Kangur support mascot with a headset",
   },
   deleteAccount: {
     title: "Delete account",
@@ -173,26 +134,6 @@ const pl: MarketingMessages = {
     follow: "Kangur w sieci",
     copyright: "© 2026 Kangur",
     rightsReserved: "Wszelkie prawa zastrzeżone",
-  },
-  contact: {
-    title: "Kontakt",
-    intro:
-      "Masz pytanie, sugestię lub potrzebujesz pomocy? Napisz do nas - odpowiemy najszybciej, jak to możliwe.",
-    emailLabel: "E-mail",
-    responseTitle: "Czas odpowiedzi",
-    responseBody: "Zwykle odpowiadamy w ciągu 24-48 godzin.",
-    helpTitle: "Jesteśmy tu, aby pomóc",
-    helpBody: "Napisz do nas w każdej sprawie - jesteśmy dla Ciebie!",
-    mascotAlt: "Maskotka Kangur z telefonem",
-  },
-  faq: {
-    title: "FAQ",
-    meta: "Najczęściej zadawane pytania",
-    metaEnNote: "Najczęściej zadawane pytania · English",
-    ctaTitle: "Nie znalazłeś odpowiedzi?",
-    ctaBody: "Nasz zespół pomocy jest gotowy, aby Ci pomóc.",
-    ctaButton: "Skontaktuj się z nami",
-    mascotAlt: "Maskotka Kangur z headsetem supportu",
   },
   deleteAccount: {
     title: "Usunięcie konta",
@@ -257,26 +198,6 @@ const de: MarketingMessages = {
     copyright: "© 2026 Kangur",
     rightsReserved: "Alle Rechte vorbehalten",
   },
-  contact: {
-    title: "Kontakt",
-    intro:
-      "Hast du eine Frage, einen Vorschlag oder brauchst Hilfe? Schreib uns - wir antworten so schnell wie möglich.",
-    emailLabel: "E-Mail",
-    responseTitle: "Antwortzeit",
-    responseBody: "Wir antworten meist innerhalb von 24-48 Stunden.",
-    helpTitle: "Wir sind für dich da",
-    helpBody: "Schreib uns bei jedem Anliegen - wir helfen gerne!",
-    mascotAlt: "Kangur-Maskottchen mit Telefon",
-  },
-  faq: {
-    title: "FAQ",
-    meta: "Häufig gestellte Fragen",
-    metaEnNote: "Häufig gestellte Fragen · English",
-    ctaTitle: "Keine passende Antwort gefunden?",
-    ctaBody: "Unser Support-Team hilft dir gerne weiter.",
-    ctaButton: "Kontaktiere uns",
-    mascotAlt: "Kangur-Support-Maskottchen mit Headset",
-  },
   deleteAccount: {
     ...en.deleteAccount,
     title: "Konto löschen",
@@ -316,26 +237,6 @@ const fr: MarketingMessages = {
     follow: "Suivre Kangur",
     copyright: "© 2026 Kangur",
     rightsReserved: "Tous droits réservés",
-  },
-  contact: {
-    title: "Contact",
-    intro:
-      "Une question, une suggestion ou besoin d’aide ? Écrivez-nous - nous répondrons dès que possible.",
-    emailLabel: "E-mail",
-    responseTitle: "Délai de réponse",
-    responseBody: "Nous répondons généralement sous 24-48 heures.",
-    helpTitle: "Nous sommes là pour vous",
-    helpBody: "Écrivez-nous pour tout sujet - nous sommes à votre écoute !",
-    mascotAlt: "Mascotte Kangur avec un téléphone",
-  },
-  faq: {
-    title: "FAQ",
-    meta: "Questions fréquentes",
-    metaEnNote: "Questions fréquentes · English",
-    ctaTitle: "Vous n’avez pas trouvé de réponse ?",
-    ctaBody: "Notre équipe d’assistance est prête à vous aider.",
-    ctaButton: "Nous contacter",
-    mascotAlt: "Mascotte Kangur support avec casque",
   },
   deleteAccount: {
     ...en.deleteAccount,
@@ -377,26 +278,6 @@ const es: MarketingMessages = {
     copyright: "© 2026 Kangur",
     rightsReserved: "Todos los derechos reservados",
   },
-  contact: {
-    title: "Contacto",
-    intro:
-      "¿Tienes una pregunta, sugerencia o necesitas ayuda? Escríbenos - te responderemos lo antes posible.",
-    emailLabel: "E-mail",
-    responseTitle: "Tiempo de respuesta",
-    responseBody: "Solemos responder en 24-48 horas.",
-    helpTitle: "Estamos aquí para ayudar",
-    helpBody: "Escríbenos por cualquier asunto - ¡estamos para ti!",
-    mascotAlt: "Mascota Kangur con un teléfono",
-  },
-  faq: {
-    title: "FAQ",
-    meta: "Preguntas frecuentes",
-    metaEnNote: "Preguntas frecuentes · English",
-    ctaTitle: "¿No encontraste respuesta?",
-    ctaBody: "Nuestro equipo de ayuda está listo para ayudarte.",
-    ctaButton: "Contáctanos",
-    mascotAlt: "Mascota Kangur de soporte con auriculares",
-  },
   deleteAccount: {
     ...en.deleteAccount,
     title: "Eliminar cuenta",
@@ -436,26 +317,6 @@ const it: MarketingMessages = {
     follow: "Segui Kangur",
     copyright: "© 2026 Kangur",
     rightsReserved: "Tutti i diritti riservati",
-  },
-  contact: {
-    title: "Contatti",
-    intro:
-      "Hai una domanda, un suggerimento o ti serve aiuto? Scrivici - risponderemo il prima possibile.",
-    emailLabel: "E-mail",
-    responseTitle: "Tempi di risposta",
-    responseBody: "Di solito rispondiamo entro 24-48 ore.",
-    helpTitle: "Siamo qui per aiutarti",
-    helpBody: "Scrivici per qualsiasi cosa - siamo al tuo fianco!",
-    mascotAlt: "Mascotte Kangur con telefono",
-  },
-  faq: {
-    title: "FAQ",
-    meta: "Domande frequenti",
-    metaEnNote: "Domande frequenti · English",
-    ctaTitle: "Non hai trovato una risposta?",
-    ctaBody: "Il nostro team di assistenza è pronto ad aiutarti.",
-    ctaButton: "Contattaci",
-    mascotAlt: "Mascotte Kangur supporto con cuffie",
   },
   deleteAccount: {
     ...en.deleteAccount,
@@ -497,26 +358,6 @@ const cs: MarketingMessages = {
     copyright: "© 2026 Kangur",
     rightsReserved: "Všechna práva vyhrazena",
   },
-  contact: {
-    title: "Kontakt",
-    intro:
-      "Máte otázku, návrh nebo potřebujete pomoc? Napište nám - odpovíme co nejdříve.",
-    emailLabel: "E-mail",
-    responseTitle: "Doba odpovědi",
-    responseBody: "Obvykle odpovídáme do 24-48 hodin.",
-    helpTitle: "Jsme tu, abychom pomohli",
-    helpBody: "Napište nám s čímkoli - jsme tu pro vás!",
-    mascotAlt: "Maskot Kangur s telefonem",
-  },
-  faq: {
-    title: "FAQ",
-    meta: "Často kladené otázky",
-    metaEnNote: "Často kladené otázky · English",
-    ctaTitle: "Nenašli jste odpověď?",
-    ctaBody: "Náš tým podpory je připraven vám pomoci.",
-    ctaButton: "Kontaktujte nás",
-    mascotAlt: "Maskot Kangur podpory se sluchátky",
-  },
   deleteAccount: {
     ...en.deleteAccount,
     title: "Smazání účtu",
@@ -556,26 +397,6 @@ const ru: MarketingMessages = {
     follow: "Kangur в сети",
     copyright: "© 2026 Kangur",
     rightsReserved: "Все права защищены",
-  },
-  contact: {
-    title: "Контакты",
-    intro:
-      "Есть вопрос, предложение или нужна помощь? Напишите нам - ответим как можно скорее.",
-    emailLabel: "E-mail",
-    responseTitle: "Время ответа",
-    responseBody: "Обычно отвечаем в течение 24-48 часов.",
-    helpTitle: "Мы здесь, чтобы помочь",
-    helpBody: "Пишите по любому вопросу - мы на связи!",
-    mascotAlt: "Маскот Kangur с телефоном",
-  },
-  faq: {
-    title: "FAQ",
-    meta: "Частые вопросы",
-    metaEnNote: "Частые вопросы · English",
-    ctaTitle: "Не нашли ответ?",
-    ctaBody: "Наша команда поддержки готова помочь.",
-    ctaButton: "Связаться с нами",
-    mascotAlt: "Маскот Kangur поддержки с гарнитурой",
   },
   deleteAccount: {
     ...en.deleteAccount,
@@ -617,26 +438,6 @@ const uk: MarketingMessages = {
     copyright: "© 2026 Kangur",
     rightsReserved: "Усі права захищено",
   },
-  contact: {
-    title: "Контакти",
-    intro:
-      "Є питання, пропозиція чи потрібна допомога? Напишіть нам - відповімо якнайшвидше.",
-    emailLabel: "E-mail",
-    responseTitle: "Час відповіді",
-    responseBody: "Зазвичай відповідаємо протягом 24-48 годин.",
-    helpTitle: "Ми тут, щоб допомогти",
-    helpBody: "Пишіть з будь-якої справи - ми на зв’язку!",
-    mascotAlt: "Маскот Kangur з телефоном",
-  },
-  faq: {
-    title: "FAQ",
-    meta: "Часті запитання",
-    metaEnNote: "Часті запитання · English",
-    ctaTitle: "Не знайшли відповідь?",
-    ctaBody: "Наша команда підтримки готова допомогти.",
-    ctaButton: "Зв’язатися з нами",
-    mascotAlt: "Маскот Kangur підтримки з гарнітурою",
-  },
   deleteAccount: {
     ...en.deleteAccount,
     title: "Видалення облікового запису",
@@ -676,26 +477,6 @@ const be: MarketingMessages = {
     follow: "Kangur у сетцы",
     copyright: "© 2026 Kangur",
     rightsReserved: "Усе правы абаронены",
-  },
-  contact: {
-    title: "Кантакты",
-    intro:
-      "Ёсць пытанне, прапанова ці патрэбна дапамога? Напішыце нам - адкажам як мага хутчэй.",
-    emailLabel: "E-mail",
-    responseTitle: "Час адказу",
-    responseBody: "Звычайна адказваем на працягу 24-48 гадзін.",
-    helpTitle: "Мы тут, каб дапамагчы",
-    helpBody: "Пішыце па любой справе - мы на сувязі!",
-    mascotAlt: "Маскот Kangur з тэлефонам",
-  },
-  faq: {
-    title: "FAQ",
-    meta: "Частыя пытанні",
-    metaEnNote: "Частыя пытанні · English",
-    ctaTitle: "Не знайшлі адказ?",
-    ctaBody: "Наша каманда падтрымкі гатовая дапамагчы.",
-    ctaButton: "Звязацца з намі",
-    mascotAlt: "Маскот Kangur падтрымкі з гарнітурай",
   },
   deleteAccount: {
     ...en.deleteAccount,

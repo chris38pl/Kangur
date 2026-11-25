@@ -158,7 +158,7 @@ const PAGE_META: Record<
     cs: {
       title: "Kontakt - Kangur, nákupní seznam s AI",
       description:
-        "Máte otázku, nápad nebo problém s nákupním seznamem? Napište nám, obvykle odpovídáme do 24-48 hodin.",
+        "Máš otázku, nápad nebo problém s nákupním seznamem? Napiš nám, obvykle odpovídáme do 24-48 hodin.",
     },
     ru: {
       title: "Контакты - Kangur, список покупок с AI",

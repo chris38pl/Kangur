@@ -30,7 +30,6 @@ export function Picture({ image, alt, sizes, className, priority }: Props) {
   return (
     <picture>
       <source type="image/avif" srcSet={image.avif} sizes={sizes} />
-      {/* eslint-disable-next-line @next/next/no-img-element -- already optimised */}
       <img
         src={image.src}
         alt={alt}

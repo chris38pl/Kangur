@@ -3,6 +3,7 @@ import { Fragment, type ReactNode } from "react";
 
 import type { AppLocale } from "@/lib/marketing/locale";
 import { ROUTES, bestHref, type MarketingRouteId } from "@/lib/marketing/routes";
+import { plainSpaces } from "@/lib/marketing/typography";
 
 /**
  * Copy lives in plain strings, so it can be translated, checked and reused in structured
@@ -50,5 +51,7 @@ export function rich(text: string, locale: AppLocale): ReactNode {
 
 /** The same text without marks, for structured data. */
 export function plainText(text: string): string {
-  return text.replace(MARK, (_, __, label?: string, strong?: string) => label ?? strong ?? "");
+  return plainSpaces(
+    text.replace(MARK, (_, __, label?: string, strong?: string) => label ?? strong ?? ""),
+  );
 }

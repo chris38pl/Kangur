@@ -1,8 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useRef } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { stripLocalePrefix } from "@/lib/marketing/locale";
 import type { NavLink } from "@/lib/marketing/navigation";
@@ -43,15 +43,37 @@ export function MarketingNav({
 export function MobileMenu({
   links,
   label,
+  children,
 }: {
   links: readonly NavLink[];
   label: string;
+  children?: ReactNode;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const isCurrent = useIsCurrent();
   const close = () => {
     if (ref.current) ref.current.open = false;
   };
+
+  // A native <details> opens by itself; closing it from outside is up to us.
+  useEffect(() => {
+    const onPointer = (event: MouseEvent) => {
+      if (ref.current?.open && !ref.current.contains(event.target as Node)) {
+        ref.current.open = false;
+      }
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || !ref.current?.open) return;
+      ref.current.open = false;
+      ref.current.querySelector("summary")?.focus();
+    };
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
   return (
     <details className="mkt-menu" ref={ref}>
@@ -65,19 +87,22 @@ export function MobileMenu({
           />
         </svg>
       </summary>
-      <nav aria-label={label}>
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            hrefLang={link.hrefLang}
-            aria-current={isCurrent(link.href) ? "page" : undefined}
-            onClick={close}
-          >
-            {link.label}
-          </Link>
-        ))}
-      </nav>
+      <div className="mkt-menu-panel">
+        <nav aria-label={label}>
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              hrefLang={link.hrefLang}
+              aria-current={isCurrent(link.href) ? "page" : undefined}
+              onClick={close}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        {children}
+      </div>
     </details>
   );
 }
