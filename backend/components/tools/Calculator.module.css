@@ -124,6 +124,27 @@
   border-color: var(--kangur-primary);
 }
 
+.undo,
+.presets .undo {
+  min-height: 40px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--kangur-primary-deep);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.resetRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .presets button[aria-pressed="true"] {
   border-color: var(--kangur-primary-deep);
   background: var(--kangur-primary-deep);
@@ -184,6 +205,19 @@
 .remove:hover {
   background: #fdecec;
   color: #b3261e;
+}
+
+.ownRow input[aria-disabled="true"] {
+  background: #f3f6f5;
+}
+
+.plainButton[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.small:empty {
+  margin: 0;
 }
 
 .small {
@@ -376,6 +410,10 @@
   gap: 6px 14px;
 }
 
+.left p {
+  outline: none;
+}
+
 .untick {
   min-height: 36px;
   padding: 0 14px;
@@ -500,6 +538,28 @@
   margin: 0 0 10px;
   font-size: 1.1rem;
   font-weight: 800;
+}
+
+/* The name of an own dish gets a line of its own, or it would be three letters wide. */
+@media (max-width: 480px) {
+  .own .dishes li {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+
+  .ownName {
+    flex-basis: 100%;
+  }
+
+  .own .dishes select {
+    flex: 1;
+  }
+}
+
+@media (max-width: 359px) {
+  .dishes select {
+    width: 128px;
+  }
 }
 
 @media (max-width: 380px) {
@@ -629,9 +689,9 @@
     break-inside: avoid;
   }
 
-  /* At home already: no need to buy it on paper. */
-  .group li[data-done],
-  .group[data-empty] {
+  /* At home already: no need to buy it on paper. Unless everything is, then it is a new list. */
+  .groups:not([data-all-done]) .group li[data-done],
+  .groups:not([data-all-done]) .group[data-empty] {
     display: none;
   }
 

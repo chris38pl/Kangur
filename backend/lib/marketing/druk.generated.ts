@@ -36,8 +36,8 @@ export const PRINTABLES = {
     "href": "/druk/lista-zakupow-do-druku-dwie-na-kartce.pdf",
     "kilobytes": 393,
     "preview": {
-      "avif": "/img/druk/dwie.ad476904.avif",
-      "src": "/img/druk/dwie.157277ac.webp",
+      "avif": "/img/druk/dwie.12cce6ab.avif",
+      "src": "/img/druk/dwie.f976b6f7.webp",
       "width": 520,
       "height": 368
     }
@@ -46,8 +46,8 @@ export const PRINTABLES = {
     "href": "/druk/lista-zakupow-do-druku-z-cena.pdf",
     "kilobytes": 143,
     "preview": {
-      "avif": "/img/druk/ceny.7dff6c54.avif",
-      "src": "/img/druk/ceny.f65ed155.webp",
+      "avif": "/img/druk/ceny.20f91d52.avif",
+      "src": "/img/druk/ceny.90a7a7cc.webp",
       "width": 520,
       "height": 735
     }
@@ -64,10 +64,10 @@ export const PRINTABLES = {
   },
   "wigilia": {
     "href": "/druk/lista-zakupow-na-wigilie-do-druku.pdf",
-    "kilobytes": 287,
+    "kilobytes": 288,
     "preview": {
-      "avif": "/img/druk/wigilia.1ca20e48.avif",
-      "src": "/img/druk/wigilia.031e4685.webp",
+      "avif": "/img/druk/wigilia.0cf0ee43.avif",
+      "src": "/img/druk/wigilia.95cb4a75.webp",
       "width": 520,
       "height": 735
     }

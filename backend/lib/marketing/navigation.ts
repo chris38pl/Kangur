@@ -60,7 +60,7 @@ export function footerGroups(locale: AppLocale): FooterGroup[] {
               page("photoList", "Ze zdjęcia i zrzutu", locale),
               page("recipeList", "Z przepisu", locale),
               page("aiList", "Z AI", locale),
-              page("aisleTool", "Podział na kategorie", locale),
+              page("aisleTool", "Podział listy na alejki", locale),
               page("guideChristmas", "Na Wigilię i święta", locale),
               page("guideWeek", "Na tydzień", locale),
               page("guidePrint", "Do druku", locale),

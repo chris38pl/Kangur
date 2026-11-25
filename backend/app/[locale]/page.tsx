@@ -20,6 +20,7 @@ import { isAppLocale } from "@/lib/marketing/locale";
 import { rich } from "@/lib/marketing/rich-text";
 import { bestHref, type MarketingRouteId } from "@/lib/marketing/routes";
 import { AISLE_LOOP, screensFor } from "@/lib/marketing/screens";
+import { isOver } from "@/lib/marketing/season";
 import { buildMarketingMetadata } from "@/lib/marketing/seo";
 import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/marketing/site";
 import { homeStructuredData } from "@/lib/marketing/structured-data";
@@ -106,7 +107,7 @@ export default async function HomePage({ params }: Props) {
         </div>
       </section>
 
-      {c.season ? (
+      {c.season && !isOver(c.season.until) ? (
         <Season until={c.season.until}>
           <div className={styles.wrap}>
             <div className={styles.season}>

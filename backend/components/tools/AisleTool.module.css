@@ -320,6 +320,11 @@
   }
 }
 
+/* Only on paper: how many are left. */
+.paper {
+  display: none;
+}
+
 @media print {
   .tool {
     display: block;
@@ -380,10 +385,14 @@
     break-inside: avoid;
   }
 
-  /* Bought already: no need to buy it on paper. */
-  .group li[data-done],
-  .group[data-empty] {
+  /* Bought already: no need to buy it on paper. Unless everything is, then it is a new list. */
+  .groups:not([data-all-done]) .group li[data-done],
+  .groups:not([data-all-done]) .group[data-empty] {
     display: none;
+  }
+
+  .paper {
+    display: inline;
   }
 
   .group label {

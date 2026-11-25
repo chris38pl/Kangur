@@ -222,7 +222,7 @@ test("a dish from outside the list counts and travels in the message", () => {
 
 test("what rots is not bought too early", () => {
   for (const id of ["carp", "whiteFish", "roast", "coldCuts", "milk"] as const) assert.equal(PRODUCTS[id].when, "last", id);
-  assert.match(PRODUCTS.soupMeat.note ?? "", /zamrażarki/);
+  assert.match(PRODUCTS.soupMeat.note ?? "", /zamroź/);
 });
 
 test("products dish by dish, in kitchen words", () => {

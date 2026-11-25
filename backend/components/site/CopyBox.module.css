@@ -8,6 +8,7 @@
 .box p {
   margin: 0 0 14px;
   color: var(--kangur-text);
+  overflow-wrap: anywhere;
 }
 
 .box button {

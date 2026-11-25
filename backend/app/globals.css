@@ -409,6 +409,7 @@ picture > source {
 
 .mkt-footer a {
   color: var(--kangur-text-body);
+  overflow-wrap: anywhere;
   text-decoration: none;
 }
 
@@ -446,7 +447,8 @@ picture > source {
   }
 
   .mkt-footer-languages ul {
-    grid-template-columns: repeat(3, max-content);
+    grid-template-columns: repeat(auto-fit, minmax(6.2rem, max-content));
+    gap: 8px 16px;
   }
 }
 

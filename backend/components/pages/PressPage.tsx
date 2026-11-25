@@ -11,6 +11,7 @@ import prose from "@/components/site/prose.module.css";
 import { PRESS, PRESS_FILES } from "@/lib/marketing/content/press";
 import { rich } from "@/lib/marketing/rich-text";
 import { routeHref } from "@/lib/marketing/routes";
+import { isOver } from "@/lib/marketing/season";
 import { pageStructuredData } from "@/lib/marketing/structured-data";
 
 import styles from "./PressPage.module.css";
@@ -60,7 +61,7 @@ export function PressPage({ locale }: { locale: "pl" }) {
         <div className={`${prose.wrap} ${prose.prose}`}>
           <h2>{c.ideasTitle}</h2>
           <ul className={`${prose.cards} ${styles.ideas}`}>
-            {c.ideas.map((idea) => {
+            {c.ideas.filter((idea) => !idea.until || !isOver(idea.until)).map((idea) => {
               const card = (
                 <li key={idea.title} className={`${prose.card} ${styles.idea}`}>
                   <h3>{idea.title}</h3>
