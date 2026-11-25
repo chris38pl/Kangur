@@ -5,11 +5,13 @@ import { useCallback, useMemo, useSyncExternalStore } from "react";
 /** Everything typed into the tools stays on this device, under one prefix. */
 const PREFIX = "kangur-www:";
 
-const memory = new Map<string, string>();
+/** Only what the browser refused to store. The tool still has to work until reload. */
+const memory = new Map<string, string | null>();
 const listeners = new Map<string, Set<() => void>>();
 
 function read(key: string): string | null {
-  if (memory.has(key)) return memory.get(key) ?? null;
+  const kept = memory.get(key);
+  if (kept !== undefined) return kept;
   try {
     return window.localStorage.getItem(PREFIX + key);
   } catch {
@@ -18,32 +20,55 @@ function read(key: string): string | null {
 }
 
 function write(key: string, value: string | null) {
-  // Private mode may refuse to store anything; the tool still has to work until reload.
-  if (value === null) memory.delete(key);
-  else memory.set(key, value);
   try {
     if (value === null) window.localStorage.removeItem(PREFIX + key);
     else window.localStorage.setItem(PREFIX + key, value);
+    memory.delete(key);
   } catch {
-    // Kept in memory above.
+    memory.set(key, value);
+    try {
+      // Full storage must not bring yesterday's list back after a reload.
+      window.localStorage.removeItem(PREFIX + key);
+    } catch {
+      // Kept in memory above.
+    }
   }
   listeners.get(key)?.forEach((listener) => listener());
 }
 
+const never = () => () => {};
+
+/** False in the server HTML and until React has taken the page over. */
+export const useHydrated = (): boolean =>
+  useSyncExternalStore(
+    never,
+    () => true,
+    () => false,
+  );
+
 /**
- * State that survives a reload. Server HTML and the first client render use `fallback`, so
- * there is nothing to mismatch. `fallback` has to be a stable reference.
+ * State that survives a reload and follows the other tabs. Server HTML and the first client
+ * render use `fallback`, so there is nothing to mismatch. `parse` turns whatever is in the
+ * browser into a value we can trust. Both have to be stable references.
  */
 export function useStored<T>(
   key: string,
   fallback: T,
+  parse: (stored: unknown) => T,
 ): [value: T, set: (next: T) => void, clear: () => void] {
   const subscribe = useCallback(
     (listener: () => void) => {
       const set = listeners.get(key) ?? new Set();
       listeners.set(key, set);
       set.add(listener);
-      return () => set.delete(listener);
+      const onStorage = (event: StorageEvent) => {
+        if (event.key === PREFIX + key || event.key === null) listener();
+      };
+      window.addEventListener("storage", onStorage);
+      return () => {
+        set.delete(listener);
+        window.removeEventListener("storage", onStorage);
+      };
     },
     [key],
   );
@@ -56,11 +81,11 @@ export function useStored<T>(
   const value = useMemo(() => {
     if (raw === null) return fallback;
     try {
-      return JSON.parse(raw) as T;
+      return parse(JSON.parse(raw));
     } catch {
       return fallback;
     }
-  }, [raw, fallback]);
+  }, [raw, fallback, parse]);
 
   const set = useCallback((next: T) => write(key, JSON.stringify(next)), [key]);
   const clear = useCallback(() => write(key, null), [key]);

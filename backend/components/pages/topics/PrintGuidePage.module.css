@@ -41,6 +41,29 @@
   box-shadow: 0 5px 10px rgba(31, 43, 69, 0.3);
 }
 
+.jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.jump a {
+  padding: 8px 16px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kangur-text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.jump a:hover {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
 .sheets {
   display: grid;
   gap: 24px;
@@ -51,6 +74,7 @@
 
 .sheet {
   display: grid;
+  scroll-margin-top: 96px;
   grid-template-columns: 132px minmax(0, 1fr);
   gap: 22px;
   align-items: start;

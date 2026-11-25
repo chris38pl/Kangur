@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { JsonLd } from "@/components/marketing/JsonLd";
 import { absoluteUrl } from "@/lib/marketing/site";
+import { plainSpaces } from "@/lib/marketing/typography";
 
 import styles from "./Breadcrumbs.module.css";
 
@@ -25,7 +26,7 @@ export function Breadcrumbs({
           itemListElement: crumbs.map((crumb, index) => ({
             "@type": "ListItem",
             position: index + 1,
-            name: crumb.label,
+            name: plainSpaces(crumb.label),
             item: absoluteUrl(crumb.href),
           })),
         }}

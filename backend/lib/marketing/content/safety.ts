@@ -73,7 +73,7 @@ const COPY: Record<"pl" | "en", SafetyCopy> = {
       intro: "Kangur nie ma dostępu do żadnego komunikatora. Widzi tylko obrazek, który mu podasz.",
       steps: [
         { title: "Wybierasz obrazek", body: "Jeden, z galerii albo prosto z aparatu. Imię rozmówcy możesz wcześniej wyciąć z kadru." },
-        { title: "AI czyta produkty", body: "Obrazek, jego nazwa i produkty z tej listy trafiają do dostawcy AI (OpenAI), który przechowuje je według swoich zasad. Kangur nie dołącza Twojego imienia ani e-maila." },
+        { title: "AI czyta produkty", body: "Obrazek, jego nazwa i to, co już jest na tej liście (produkty, ilości, notatki), trafiają do dostawcy AI (OpenAI), który przechowuje je według swoich zasad. Kangur nie dołącza Twojego imienia ani e-maila." },
         { title: "Zostaje lista", body: "Kangur zapisuje to, co AI odczytało. Samego obrazka nie zapisuje." },
       ],
       outro: [
@@ -108,7 +108,7 @@ const COPY: Record<"pl" | "en", SafetyCopy> = {
     other: {
       title: "Inny program o tej samej nazwie",
       body: [
-        "W czerwcu 2025 [[https://ilawa.policja.gov.pl/o08/aktualnosci/138166,Myslal-ze-odzyska-zainwestowane-pieniadze.html|policja w Iławie]] opisała sprawę mężczyzny, którego rozmówca namówił na zainstalowanie na komputerze programu „Kangur”. Z konta mężczyzny zniknęło 10 000 zł.",
+        "W czerwcu 2025 [[https://ilawa.policja.gov.pl/o08/aktualnosci/138166,Myslal-ze-odzyska-zainwestowane-pieniadze.html|policja w Iławie]] opisała sprawę mężczyzny, którego rozmówca namówił na zainstalowanie na komputerze programu „Kangur”.",
         "To inny program. Nasz Kangur to aplikacja na telefon, robi tylko listy zakupów, a jego pierwsza wersja powstała w lipcu 2026, ponad rok później. Łączy je tylko zwierzę w nazwie.",
       ],
     },
@@ -188,7 +188,7 @@ const COPY: Record<"pl" | "en", SafetyCopy> = {
       intro: "Kangur has no access to any messaging app. It sees only the image you hand it.",
       steps: [
         { title: "You pick an image", body: "One, from the gallery or straight from the camera. You can crop out the other person’s name first." },
-        { title: "AI reads the items", body: "The image, its name and the items already on that list go to the AI provider (OpenAI), which keeps them under its own rules. Kangur does not attach your name or email." },
+        { title: "AI reads the items", body: "The image, its name and what is already on that list (items, amounts, notes) go to the AI provider (OpenAI), which keeps them under its own rules. Kangur does not attach your name or email." },
         { title: "The list stays", body: "Kangur keeps what AI has read. It does not keep the image." },
       ],
       outro: [
@@ -223,7 +223,7 @@ const COPY: Record<"pl" | "en", SafetyCopy> = {
     other: {
       title: "Another program with the same name",
       body: [
-        "In June 2025 the [[https://ilawa.policja.gov.pl/o08/aktualnosci/138166,Myslal-ze-odzyska-zainwestowane-pieniadze.html|police in Iława, Poland]] described the case of a man who was talked into installing a program called “Kangur” on his computer. 10,000 PLN disappeared from his account.",
+        "In June 2025 the [[https://ilawa.policja.gov.pl/o08/aktualnosci/138166,Myslal-ze-odzyska-zainwestowane-pieniadze.html|police in Iława, Poland]] described the case of a man who was talked into installing a program called “Kangur” on his computer.",
         "That is a different program. Our Kangur is a phone app, makes only grocery lists, and its first version was written in July 2026, more than a year later. All they share is the animal in the name.",
       ],
     },

@@ -106,6 +106,23 @@ export default async function HomePage({ params }: Props) {
         </div>
       </section>
 
+      {c.season ? (
+        <Season until={c.season.until}>
+          <div className={styles.wrap}>
+            <div className={styles.season}>
+              <div>
+                <Headline size="md" lines={c.season.lines} />
+                <p>{c.season.body}</p>
+                <Link className={styles.seasonLink} href={bestHref(c.season.id, locale).href}>
+                  {c.season.link}
+                </Link>
+              </div>
+              <Sticker name="z-torba" className={styles.seasonKangur} />
+            </div>
+          </div>
+        </Season>
+      ) : null}
+
       <section className={styles.section} id="jak-dziala">
         <div className={styles.wrap}>
           <Headline lines={c.steps.lines} className={styles.centered} />
@@ -170,6 +187,7 @@ export default async function HomePage({ params }: Props) {
                 <h3>{c.ways.photo.title}</h3>
                 <p>{c.ways.photo.body}</p>
                 {more("photoList")}
+                {more("guidePrint")}
               </div>
               <div className={styles.wayNote}>
                 <Notepad lines={c.ways.photo.note} locale={locale} />
@@ -215,6 +233,7 @@ export default async function HomePage({ params }: Props) {
                 <h3>{c.ways.typed.title}</h3>
                 <p>{c.ways.typed.body}</p>
                 {more("aisleTool")}
+                {more("aiList")}
               </div>
               <div className={styles.wayChips} aria-hidden>
                 {c.ways.typed.chips.map((chip) => (
@@ -226,21 +245,6 @@ export default async function HomePage({ params }: Props) {
           </div>
         </div>
       </section>
-
-      {c.season ? (
-        <Season until={c.season.until}>
-          <div className={styles.wrap}>
-            <div className={styles.season}>
-              <div>
-                <Headline size="md" lines={c.season.lines} />
-                <p>{c.season.body}</p>
-                {link(c.season.id, c.season.link)}
-              </div>
-              <Sticker name="z-torba" className={styles.seasonKangur} />
-            </div>
-          </div>
-        </Season>
-      ) : null}
 
       <section className={`${styles.section} ${styles.tinted}`}>
         <div className={`${styles.wrap} ${styles.split}`}>

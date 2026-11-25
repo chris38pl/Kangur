@@ -27,6 +27,8 @@ export type TopicSection = Base &
         rows: readonly (readonly string[])[];
         /** The last column is ours, so it gets a tint. */
         highlight?: boolean;
+        /** On a phone every row is a card, so that words do not break in half. */
+        stack?: boolean;
       }
     | { kind: "fact"; text: string; source: string; href: string }
     | { kind: "custom"; slot: string }
@@ -38,10 +40,14 @@ export type TopicCopy = {
   eyebrow: string;
   lines: Lines;
   lead: readonly string[];
+  /** Store buttons on the first screen, with this line below them. Not on tools. */
+  stores?: string;
   sections: readonly TopicSection[];
   related: {
     title: string;
     items: readonly { id: MarketingRouteId; label: string; body: string }[];
   };
   closing?: { lines: Lines; body: string };
+  /** Who publishes the guide, as of when, and how to quote it. */
+  imprint?: string;
 };

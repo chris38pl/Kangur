@@ -23,6 +23,17 @@
   cursor: pointer;
 }
 
+.refused {
+  display: block;
+  margin-top: 8px;
+  color: var(--kangur-text-body);
+  font-size: 0.92rem;
+}
+
+.refused:empty {
+  display: none;
+}
+
 .box button:hover {
   background: var(--kangur-primary-hover);
 }

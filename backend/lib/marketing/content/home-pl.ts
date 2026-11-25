@@ -1,4 +1,5 @@
 import type { HomeCopy } from "@/lib/marketing/content/home-types";
+import { CHRISTMAS } from "@/lib/marketing/lists/christmas";
 
 export const homePl: HomeCopy = {
   hero: {
@@ -99,7 +100,7 @@ export const homePl: HomeCopy = {
       href: "https://www.cbos.pl/PL/publikacje/news_tekst.php?nr=25/2026",
     },
     screenAlt:
-      "Wspólna lista Zakupy na weekend na dwóch telefonach, na obu to samo 7 produktów",
+      "Wspólna lista Zakupy na weekend na dwóch telefonach, na obu te same 7 produktów",
     added: ["masło dodała Ola", "kawę dodał Tomek"],
   },
   summary: {
@@ -189,16 +190,18 @@ export const homePl: HomeCopy = {
   },
   more: {
     photoList: "Lista ze zdjęcia krok po kroku",
+    guidePrint: "Wolisz papier? Siedem kartek do druku",
     recipeList: "Lista z przepisu na przykładzie",
     guideWeek: "Gotowa lista na tydzień",
     aisleTool: "Wypróbuj alejki w przeglądarce",
+    aiList: "Co AI umie, a czego nie",
     sharedList: "Jak działa wspólna lista",
   },
   season: {
     id: "guideChristmas",
-    until: "2026-12-26",
+    until: CHRISTMAS.strip,
     lines: ["Dwanaście dań.", "Cztery dni bez sklepu."],
-    body: "Kalkulator policzy zakupy na Wigilię i święta: dla ilu osób, co kupić wcześniej i kto co przynosi. Za darmo, bez aplikacji.",
+    body: "Podajesz liczbę gości, a kalkulator liczy zakupy na Wigilię i święta, mówi, co kupić wcześniej, i układa wiadomość, kto co przynosi. Za darmo, bez aplikacji.",
     link: "Policz zakupy na Wigilię",
   },
 };

@@ -2,7 +2,7 @@ import { TopicPage } from "@/components/pages/TopicPage";
 import { ChatCard } from "@/components/site/ChatCard";
 import { Phone } from "@/components/site/Phone";
 import { homeCopy } from "@/lib/marketing/content/home";
-import { AISLE_CALL, SHARED_LIST } from "@/lib/marketing/content/topics/shared-list";
+import { AISLE_CALL, SHARED_LIST, SHARED_SCREEN_ALT } from "@/lib/marketing/content/topics/shared-list";
 import { SCREENS } from "@/lib/marketing/images.generated";
 
 import styles from "./topics.module.css";
@@ -18,14 +18,8 @@ export function SharedListPage() {
       sticker="z-koszykiem"
       art={
         <div className={styles.pair}>
-          <Phone
-            image={SCREENS.pl.sharedOla}
-            alt={together.screenAlt}
-            sizes="200px"
-            time="17:20"
-            priority
-          />
-          <Phone image={SCREENS.pl.sharedOla} alt="" sizes="200px" time="17:20" />
+          <Phone image={SCREENS.pl.quick} alt={SHARED_SCREEN_ALT} sizes="200px" time="17:20" priority />
+          <Phone image={SCREENS.pl.quick} alt="" sizes="200px" time="17:20" />
           <span className={styles.bubble}>{together.added?.[0]}</span>
         </div>
       }

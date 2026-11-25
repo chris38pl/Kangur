@@ -1,8 +1,7 @@
 import { CATALOG_PRODUCTS } from "@shared/product-catalog";
 
-import { buildAisleWords } from "@/lib/marketing/aisles/dictionary";
+import { UNSHOWN, buildAisleWords } from "@/lib/marketing/aisles/dictionary";
 import { AISLES, AISLE_ICONS, AISLE_LABELS } from "@/lib/marketing/aisles/labels";
-import { plural } from "@/lib/marketing/lists/format";
 
 import styles from "./AisleTable.module.css";
 
@@ -16,29 +15,35 @@ const small = (label: string) => label[0].toLocaleLowerCase("pl") + label.slice(
  * the catalogue leaves empty show what the tool knows about them.
  */
 export function AisleTable() {
-  const words = buildAisleWords();
+  const words = buildAisleWords().filter(([word]) => !UNSHOWN.has(word));
+  const aisleOf = new Map(words);
 
   return (
     <dl className={styles.table}>
       {AISLES.map((aisle) => {
-        const products = CATALOG_PRODUCTS.filter((p) => p.category === aisle).map((p) =>
-          small(p.labels.pl),
-        );
+        const products = CATALOG_PRODUCTS.filter(
+          (product) => aisleOf.get(product.labels.pl.toLocaleLowerCase("pl")) === aisle,
+        ).map((product) => small(product.labels.pl));
         const names =
           products.length >= 3
             ? products
             : [...new Set([...products, ...words.filter(([, a]) => a === aisle).map(([w]) => w)])];
+        const rest = names.slice(SHOWN);
         return (
           <div key={aisle}>
             <dt>
               <span aria-hidden>{AISLE_ICONS[aisle]}</span> {AISLE_LABELS[aisle]}
-              {products.length > 0 ? (
-                <small>{plural(products.length, "produkt", "produkty", "produktów")}</small>
-              ) : null}
             </dt>
             <dd>
               {names.slice(0, SHOWN).join(", ")}
-              {names.length > SHOWN ? "..." : ""}
+              {rest.length > 0 ? (
+                <details>
+                  <summary>
+                    Pokaż wszystkie<span className="visually-hidden">: {AISLE_LABELS[aisle]}</span>
+                  </summary>
+                  {rest.join(", ")}
+                </details>
+              ) : null}
             </dd>
           </div>
         );

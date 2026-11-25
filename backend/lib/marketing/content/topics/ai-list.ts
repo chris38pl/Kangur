@@ -1,19 +1,20 @@
 import type { TopicCopy } from "@/lib/marketing/content/topics/types";
 import { typesetCopy } from "@/lib/marketing/typography";
 
-/** Every rule below is in the prompts (backend/features/ai), not a promise about the model. */
+/** Every rule below is in the prompts (backend/features/ai) or in the test log. */
 const copy: TopicCopy = {
   crumb: "Lista zakupów z AI",
-  eyebrow: "Lista zakupów z AI",
+  eyebrow: "Lista zakupów z AI, w aplikacji na telefon",
   lines: ["AI czyta bałagan.", "Ty czytasz listę."],
   lead: [
     "W Kangurze AI ma jedno zadanie: z wiadomości, kartki albo nazwy dania zrobić listę produktów w alejkach. Nie gada i nie doradza.",
     "Wspólne listy, odhaczanie i tryb zakupów działają bez AI.",
   ],
+  stores: "Na start 10 darmowych użyć AI, wspólnych dla całego domu. Bez reklam.",
   sections: [
     {
       kind: "table",
-      title: "Co dajesz, co dostajesz",
+      title: "Jak AI robi listę zakupów: co dajesz, co dostajesz",
       caption: "Co AI w Kangurze przyjmuje i co z tego robi",
       head: ["Dajesz", "Dostajesz"],
       rows: [
@@ -23,7 +24,7 @@ const copy: TopicCopy = {
         ["tekst z listą w innym języku", "produkty w języku Twojej aplikacji"],
       ],
       outro:
-        "Za każdym razem produkty są już rozłożone na 24 alejki. Poprzednie listy Kangur liczy sam, bez modelu AI, choć też zużywają jedno użycie.",
+        "Za każdym razem produkty są już rozłożone na alejki, a alejek jest 24. „Poprzednie listy” Kangur liczy sam, bez modelu AI, choć też zużywają jedno użycie.",
     },
     {
       kind: "cards",
@@ -33,7 +34,7 @@ const copy: TopicCopy = {
       items: [
         {
           title: "Ilości bierze z tekstu",
-          body: "Jest „jajka 10 szt.”, będzie 10 szt. Nikt nie napisał ile, to nie będzie.",
+          body: "Jest „jajka 10 szt.”, będzie 10 szt. Nikt nie napisał, ile? To nie będzie. Wyjątek to nazwy dań, tam ilość bywa podpowiedzią.",
         },
         {
           title: "„Na grilla” to nie produkt",
@@ -45,15 +46,15 @@ const copy: TopicCopy = {
         },
         {
           title: "Łączy dopiski",
-          body: "„Jakieś chipsy” i „2 paczki cebulowych” z dwóch wiadomości to jedna pozycja.",
+          body: "„Jakieś chipsy” i „2 paczki cebulowych” z dwóch wiadomości w testach zawsze były jedną pozycją.",
         },
         {
           title: "Szczegóły daje do notatki",
-          body: "Na liście jest ser, a „w plastrach” stoi obok, małym drukiem.",
+          body: "Na liście jest ser, a „w plastrach” stoi pod spodem, małym drukiem.",
         },
         {
           title: "Nazywa listę",
-          body: "Z zakupów na sobotę zrobi „Zakupy na weekend”. Nazwę zawsze zmienisz.",
+          body: "„Na grilla”, „Zakupy spożywcze i domowe” albo po prostu data. Nazwę zawsze zmienisz.",
         },
       ],
     },
@@ -96,7 +97,7 @@ const copy: TopicCopy = {
       tone: "tinted",
       title: "Co trafia do AI",
       body: [
-        "Obrazek z nazwą pliku albo tekst, który wybierzesz, i nazwy produktów z listy, do której go dodajesz, żeby nic się nie zdublowało. Odczytuje to dostawca AI (OpenAI) i przechowuje według swoich zasad.",
+        "Obrazek z nazwą pliku, tekst albo nazwy dań, które podasz, i to, co już jest na tej liście: produkty, ilości i notatki, żeby nic się nie zdublowało. Odczytuje to dostawca AI (OpenAI) i przechowuje według swoich zasad.",
         "Kangur nie dołącza Twojego imienia ani e-maila. Zapisuje to, co AI odczytało, a obrazka nie. [[safety|Więcej o bezpieczeństwie]].",
       ],
     },
@@ -106,23 +107,27 @@ const copy: TopicCopy = {
       items: [
         {
           q: "Czy Kangur z AI jest darmowy?",
-          a: "Na start jest 10 użyć AI na całą przestrzeń, nie odnawiają się. Ręczne listy, domownicy i tryb zakupów limitu nie mają. AI bez limitu daje Premium. [[pricing|Zobacz cennik]].",
+          a: "Na start jest 10 użyć AI na całą przestrzeń, czyli na wspólne listy domu, i nie odnawiają się. Ręczne listy, domownicy i tryb zakupów limitu nie mają. AI bez limitu daje Premium. [[pricing|Zobacz cennik]].",
         },
         {
           q: "Co to jest jedno użycie AI?",
           a: "Jedna lista albo jedno dopisanie produktów: jeden obrazek, jeden tekst albo do pięciu dań naraz. Nieważne, czy wyjdą 3 produkty, czy 30.",
         },
         {
+          q: "Czy AI ułoży jadłospis na tydzień?",
+          a: "Nie. Dania wymyślasz Ty, do pięciu naraz, a AI wypisuje składniki. Gdy brak pomysłu, pięć obiadów z gotową listą jest w poradniku [[guideWeek|na tydzień]].",
+        },
+        {
           q: "Czy da się używać Kangura bez AI?",
-          a: "Tak. Produkty wpisujesz ręcznie, Kangur podpowiada po dwóch literach, a alejkę dobiera z własnego katalogu.",
+          a: "Tak. Zaczynasz pisać, po dwóch literach Kangur podpowiada produkt, stukasz i alejka jest ustawiona. Czego nie ma w katalogu, temu wybierasz alejkę.",
         },
         {
           q: "W jakich językach działa AI?",
-          a: "W tych samych dziesięciu, co aplikacja: po polsku, angielsku, niemiecku, francusku, hiszpańsku, włosku, czesku, rosyjsku, ukraińsku i białorusku.",
+          a: "W tych samych dziesięciu co aplikacja, od polskiego po białoruski.",
         },
         {
           q: "Czy AI może się pomylić?",
-          a: "Może. Dlatego na listę warto rzucić okiem, a każdą pozycję da się poprawić.",
+          a: "Może, najczęściej przy niewyraźnym piśmie i słowach takich jak „krem”. Rzuć okiem na listę, zanim wyjdziesz.",
         },
       ],
     },
@@ -132,13 +137,16 @@ const copy: TopicCopy = {
     items: [
       { id: "photoList", label: "Lista zakupów ze zdjęcia", body: "Siedem wiadomości, jedna lista, krok po kroku." },
       { id: "recipeList", label: "Lista zakupów z przepisu", body: "Dwa dania, jedna sól i żadnej śmietany w carbonarze." },
-      { id: "aisleTool", label: "Podział listy na alejki", body: "To samo bez AI, w przeglądarce i za darmo." },
+      { id: "aisleTool", label: "Podział listy na alejki", body: "Te same alejki bez AI, w przeglądarce i za darmo." },
     ],
   },
   closing: {
     lines: ["AI pisze listę.", "Koszyk pchasz Ty."],
-    body: "Kangur - lista zakupów z AI. Dostępny na Android i iOS.",
+    body: "Reszta jest bez AI: wspólna lista, alejki i kciuk. Na Android i iOS.",
   },
 };
 
 export const AI_LIST = typesetCopy(copy);
+
+/** Position in the home page chat: the message that never becomes a product. */
+export const AI_HERO_MESSAGE = 3;

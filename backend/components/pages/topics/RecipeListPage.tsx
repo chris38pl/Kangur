@@ -17,16 +17,18 @@ export function RecipeListPage() {
       page="lista-z-przepisu"
       tone="peach"
       sticker="z-koszykiem"
-      art={<Sticker name="skron" className={styles.stickerLow} priority />}
+      art={
+        <Phone
+          image={SCREENS.pl.meal}
+          alt={ways.dish.screenAlt}
+          sizes="264px"
+          className={styles.heroPhone}
+          time="16:40"
+          priority
+        />
+      }
       slots={{
-        meal: (
-          <Phone
-            image={SCREENS.pl.meal}
-            alt={ways.dish.screenAlt}
-            className={styles.phone}
-            time="16:40"
-          />
-        ),
+        kangur: <Sticker name="skron" className={styles.sticker} />,
         example: (
           <div className={styles.example}>
             {RECIPE_EXAMPLE.map(({ dish, icon, items }, index) => (
@@ -50,7 +52,7 @@ export function RecipeListPage() {
             ))}
           </div>
         ),
-        kangur: <Sticker name="z-lista" className={styles.sticker} />,
+        grandma: <Sticker name="z-lista" className={styles.sticker} />,
       }}
     />
   );

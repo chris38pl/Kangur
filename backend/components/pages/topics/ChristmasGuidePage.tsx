@@ -1,13 +1,17 @@
 import { TopicPage } from "@/components/pages/TopicPage";
 import { Phone } from "@/components/site/Phone";
+import { DishTable } from "@/components/site/DishTable";
 import { PrintFoot } from "@/components/site/PrintFoot";
+import { AfterSeason } from "@/components/site/Season";
 import { Sticker } from "@/components/site/Sticker";
+import { ToolNudge } from "@/components/site/ToolNudge";
 import prose from "@/components/site/prose.module.css";
 import { ChristmasCalculator } from "@/components/tools/ChristmasCalculator";
-import { GUIDE_CHRISTMAS } from "@/lib/marketing/content/topics/guide-christmas";
+import { CHRISTMAS_NUDGE, GUIDE_CHRISTMAS } from "@/lib/marketing/content/topics/guide-christmas";
 import { GUIDES } from "@/lib/marketing/content/topics/guides";
-import { homeCopy } from "@/lib/marketing/content/home";
+import { SHARED_SCREEN_ALT } from "@/lib/marketing/content/topics/shared-list";
 import { SCREENS } from "@/lib/marketing/images.generated";
+import { CHRISTMAS } from "@/lib/marketing/lists/christmas";
 
 import styles from "./topics.module.css";
 
@@ -22,27 +26,30 @@ export function ChristmasGuidePage() {
       tone="peach"
       printable
       sticker="z-koszykiem"
-      art={<Sticker name="z-torba" className={styles.stickerLow} priority />}
+      art={<Sticker name="z-torba" className={`${styles.stickerLow} ${styles.toolArt}`} priority />}
       slots={{
+        dishes: <DishTable />,
         kangur: <Sticker name="medytacja" className={styles.sticker} />,
         phones: (
           <div className={styles.duo}>
-            <Phone
-              image={SCREENS.pl.sharedOla}
-              alt={homeCopy("pl").together.screenAlt}
-              sizes="200px"
-              time="17:20"
-            />
-            <Phone image={SCREENS.pl.sharedOla} alt="" sizes="200px" time="17:20" />
+            <Phone image={SCREENS.pl.quick} alt={SHARED_SCREEN_ALT} sizes="200px" time="17:20" />
+            <Phone image={SCREENS.pl.quick} alt="" sizes="200px" time="17:20" />
           </div>
         ),
       }}
     >
       <section className={styles.tool}>
         <div className={prose.wrap}>
-          <ChristmasCalculator>
-            <PrintFoot />
-          </ChristmasCalculator>
+          <AfterSeason after={CHRISTMAS.over}>
+            <p className={styles.over} data-noprint>
+              Święta {CHRISTMAS.year} za nami. Daty poprawimy przed następnymi, ilości zostają te
+              same.
+            </p>
+          </AfterSeason>
+          <ChristmasCalculator
+            code={<PrintFoot />}
+            nudge={<ToolNudge {...CHRISTMAS_NUDGE} page="kalkulator-wigilia" />}
+          />
         </div>
       </section>
     </TopicPage>

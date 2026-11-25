@@ -2,15 +2,18 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { JsonLd } from "@/components/marketing/JsonLd";
+import { StoreButtons } from "@/components/marketing/StoreButtons";
 import { ClosingBand } from "@/components/site/ClosingBand";
 import { FaqList } from "@/components/site/FaqList";
 import { PageHero } from "@/components/site/PageHero";
 import type { StickerName } from "@/components/site/Sticker";
 import prose from "@/components/site/prose.module.css";
+import { homeCopy } from "@/lib/marketing/content/home";
 import type { TopicCopy, TopicSection } from "@/lib/marketing/content/topics/types";
 import type { AppLocale } from "@/lib/marketing/locale";
 import { rich } from "@/lib/marketing/rich-text";
 import { bestHref, routeHref, type MarketingRouteId } from "@/lib/marketing/routes";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/marketing/site";
 import { topicStructuredData } from "@/lib/marketing/structured-data";
 
 import styles from "./TopicPage.module.css";
@@ -64,6 +67,7 @@ export function TopicPage({
   );
 
   const noprint = printable || undefined;
+  const { hero } = homeCopy(locale);
 
   return (
     <div data-full>
@@ -86,7 +90,20 @@ export function TopicPage({
           ))}
           tone={tone}
           art={art}
-        />
+        >
+          {copy.stores ? (
+            <div className={styles.stores}>
+              <StoreButtons
+                appStoreUrl={APP_STORE_URL}
+                playStoreUrl={PLAY_STORE_URL}
+                appStoreSmall={hero.iosSmall}
+                playSmall={hero.playSmall}
+                page={page}
+              />
+              <p>{copy.stores}</p>
+            </div>
+          ) : null}
+        </PageHero>
       </div>
 
       {children}
@@ -100,6 +117,12 @@ export function TopicPage({
             slots={slots}
           />
         ))}
+
+        {copy.imprint ? (
+          <div className={prose.wrap}>
+            <p className={styles.imprint}>{copy.imprint}</p>
+          </div>
+        ) : null}
 
         <section className={`${prose.section} ${prose.tinted}`}>
           <div className={`${prose.wrap} ${prose.prose}`}>
@@ -244,29 +267,36 @@ function Section({
           <div className={`${prose.wrap} ${prose.prose}`}>
             {heading}
             <div className={prose.tableWrap}>
+              {/* Roles, because a table laid out as cards on a phone is no table to Safari. */}
               <table
+                role="table"
                 className={[
                   prose.table,
                   styles.table,
                   section.highlight ? "" : styles.plain,
+                  section.stack ? styles.stack : "",
                 ].join(" ")}
               >
                 <caption className="visually-hidden">{section.caption}</caption>
-                <thead>
-                  <tr>
-                    {section.head.map((cell, index) => (
-                      <th key={cell || index} scope="col">
+                <thead role="rowgroup">
+                  <tr role="row">
+                    {section.head.map((cell) => (
+                      <th key={cell} scope="col" role="columnheader">
                         {cell}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody role="rowgroup">
                   {section.rows.map(([first, ...rest]) => (
-                    <tr key={first}>
-                      <th scope="row">{rich(first, locale)}</th>
+                    <tr key={first} role="row">
+                      <th scope="row" role="rowheader">
+                        {rich(first, locale)}
+                      </th>
                       {rest.map((cell, index) => (
-                        <td key={index}>{rich(cell, locale)}</td>
+                        <td key={index} role="cell" data-label={section.head[index + 1]}>
+                          {rich(cell, locale)}
+                        </td>
                       ))}
                     </tr>
                   ))}

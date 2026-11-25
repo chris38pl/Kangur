@@ -17,7 +17,7 @@
   width: 100%;
   min-height: 300px;
   padding: 7px 18px 15px;
-  border: 1.5px solid #d5e4e0;
+  border: 1.5px solid #8fa9a2;
   border-radius: 18px;
   background:
     repeating-linear-gradient(transparent 0 calc(var(--line) - 1px), #e3edf3 calc(var(--line) - 1px) var(--line))
@@ -31,14 +31,9 @@
   resize: vertical;
 }
 
-.input textarea:focus-visible {
-  border-color: var(--kangur-primary);
-  outline: 3px solid rgba(67, 191, 168, 0.35);
-  outline-offset: 0;
-}
-
 .input textarea::placeholder {
-  color: #8391a0;
+  color: var(--kangur-text-muted);
+  opacity: 1;
 }
 
 .buttons {
@@ -62,15 +57,10 @@
   cursor: pointer;
 }
 
-.buttons button:hover:not(:disabled),
+.buttons button:hover,
 .reset:hover {
   border-color: var(--kangur-primary);
   background: var(--kangur-primary-soft);
-}
-
-.buttons button:disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 
 .buttons .main {
@@ -79,8 +69,15 @@
   color: #fff;
 }
 
-.buttons .main:hover:not(:disabled) {
+.buttons .main:hover {
   background: var(--kangur-primary-hover);
+}
+
+.buttons .main[aria-disabled="true"] {
+  border-color: #cfe3dd;
+  background: #eef5f3;
+  color: var(--kangur-text-muted);
+  cursor: default;
 }
 
 .private {
@@ -133,25 +130,34 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px 16px;
-  margin-bottom: 14px;
 }
 
 .summary p {
   margin: 0;
-  color: var(--kangur-text-body);
+  color: var(--kangur-text);
+  font-weight: 600;
 }
 
-.summary strong {
-  color: var(--kangur-text);
+.summary p:not(:empty) {
+  margin-bottom: 14px;
+}
+
+.resets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .reset {
   min-height: 36px;
+  margin-bottom: 14px;
+  padding: 0 14px;
   font-size: 0.85rem;
 }
 
 .groups {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
   margin-bottom: 20px;
 }
@@ -195,12 +201,13 @@
   cursor: pointer;
 }
 
-.order button:hover:not(:disabled) {
+.order button:hover {
   background: var(--kangur-primary-soft);
   color: var(--kangur-primary-deep);
 }
 
-.order button:disabled {
+.order button[aria-disabled="true"] {
+  background: transparent;
   opacity: 0.3;
   cursor: default;
 }
@@ -224,8 +231,14 @@
   flex: 1;
   align-items: center;
   gap: 12px;
+  min-width: 0;
   min-height: 46px;
   cursor: pointer;
+}
+
+.group label span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .group input {
@@ -237,7 +250,7 @@
 }
 
 .group small {
-  margin-left: 8px;
+  margin-left: 4px;
   color: var(--kangur-text-muted);
   font-size: 0.9rem;
 }
@@ -247,23 +260,39 @@
   text-decoration: line-through;
 }
 
-.group select {
-  max-width: 124px;
+.move {
+  flex: none;
   min-height: 36px;
-  padding: 0 8px;
-  border: 1px solid transparent;
+  padding: 0 10px;
+  border: 0;
   border-radius: 10px;
-  background: var(--kangur-bg-soft);
+  background: transparent;
   color: var(--kangur-text-muted);
   font: inherit;
   font-size: 0.85rem;
+  cursor: pointer;
 }
 
-.group select:hover {
-  border-color: #cfe3dd;
+.move:hover {
+  background: var(--kangur-primary-soft);
+  color: var(--kangur-primary-deep);
 }
 
-.sheetFoot {
+.aisle {
+  flex: none;
+  max-width: 136px;
+  min-height: 38px;
+  padding: 0 8px;
+  border: 1.5px solid #8fa9a2;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  /* Below 16px iPhones zoom the page in. */
+  font-size: 1rem;
+}
+
+.code {
   display: none;
 }
 
@@ -296,21 +325,43 @@
     display: block;
   }
 
+  .result {
+    position: relative;
+  }
+
   .sheetTitle {
     position: static;
     width: auto;
     height: auto;
-    margin: 0 0 6px;
+    margin: 0 0 4px;
     clip-path: none;
     font-size: 19pt;
     font-weight: 800;
     letter-spacing: -0.02em;
   }
 
+  .code {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
+  .summary {
+    min-height: 44px;
+    padding-right: 250px;
+  }
+
+  .empty {
+    min-height: 0;
+    border: 0;
+  }
+
   .groups {
     columns: 2;
     column-gap: 24px;
     display: block;
+    margin: 8px 0 0;
   }
 
   .group {
@@ -318,15 +369,24 @@
     padding: 0;
     border: 0;
     box-shadow: none;
+    break-inside: auto;
+  }
+
+  .group h3 {
+    break-after: avoid;
+  }
+
+  .group li {
     break-inside: avoid;
   }
 
-  .group label {
-    min-height: 28px;
+  /* Bought already: no need to buy it on paper. */
+  .group li[data-done],
+  .group[data-empty] {
+    display: none;
   }
 
-  .sheetFoot {
-    display: block;
-    margin-top: 18px;
+  .group label {
+    min-height: 26px;
   }
 }

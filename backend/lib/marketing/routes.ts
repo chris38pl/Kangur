@@ -211,7 +211,9 @@ export const PATH_ALIASES: Record<string, MarketingRouteId> = {
   "/swieta": "guideChristmas",
   "/poradniki/lista-zakupow-na-wigilie": "guideChristmas",
   "/poradniki/lista-zakupow-na-swieta": "guideChristmas",
+  "/tydzien": "guideWeek",
   "/lista-zakupow-na-tydzien": "guideWeek",
+  "/druk": "guidePrint",
   "/lista-zakupow-do-druku": "guidePrint",
 };
 

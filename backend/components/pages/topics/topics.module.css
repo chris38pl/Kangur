@@ -55,29 +55,68 @@
   transform: rotate(1.5deg);
 }
 
-/* Photo: a note from the fridge turning into a list. */
-.noteAndPhone {
-  position: relative;
+/* Photo: the messages, and the part of the list they became. Never on top of each other. */
+.messagesAndPhone {
+  display: grid;
+  grid-template-columns: minmax(0, 0.84fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
   align-self: flex-end;
   width: 100%;
-  max-width: 430px;
-  height: 480px;
+  max-width: 440px;
   margin-bottom: -44px;
 }
 
-.note {
-  position: absolute;
-  top: 22px;
-  left: 0;
-  width: min(264px, 74%);
+.messages {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
 }
 
-.notePhone {
-  position: absolute;
-  top: 214px;
-  right: 0;
-  width: 52%;
-  transform: rotate(3deg);
+.messages span {
+  padding: 10px 14px;
+  border-radius: 18px 18px 4px;
+  background: #fff;
+  box-shadow: 0 14px 26px -14px rgba(31, 43, 69, 0.4);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.messagesPhone {
+  transform: rotate(1.5deg);
+}
+
+/* AI: what it leaves out, next to what it made. */
+.aiHero {
+  display: flex;
+  align-items: center;
+  align-self: flex-end;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 430px;
+}
+
+.aiHero > div {
+  flex: none;
+  width: min(250px, 62%);
+}
+
+.skipped {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 18px 18px 4px;
+  background: #fff;
+  box-shadow: 0 14px 26px -14px rgba(31, 43, 69, 0.4);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.skipped small {
+  display: block;
+  margin-top: 6px;
+  color: var(--kangur-text-muted);
+  font-weight: 700;
 }
 
 .sticker {
@@ -231,6 +270,26 @@
   padding-block: clamp(28px, 4vw, 52px);
 }
 
+.over {
+  margin: 0 0 24px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: #fdf1e6;
+  font-weight: 600;
+}
+
+/* On a phone the tool matters more than the picture. */
+@media (max-width: 640px) {
+  .toolArt {
+    width: 148px;
+    margin-bottom: -30px;
+  }
+
+  .stickerStanding.toolArt {
+    margin-bottom: -20px;
+  }
+}
+
 @media (min-width: 900px) {
   .stickerStanding {
     margin-bottom: -44px;
@@ -238,7 +297,7 @@
 
   .heroPhone,
   .pair,
-  .noteAndPhone {
+  .messagesAndPhone {
     margin-bottom: -64px;
   }
 

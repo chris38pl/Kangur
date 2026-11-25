@@ -24,18 +24,29 @@ export function Stepper({
   unit: string;
 }) {
   const id = useId();
+  const hintId = `${id}-hint`;
+  // aria-disabled, because a button that becomes disabled drops the keyboard focus.
+  const step = (next: number) => {
+    if (next >= min && next <= max) onChange(next);
+  };
+
   return (
-    <div className={styles.stepper} role="group" aria-labelledby={id}>
+    <div
+      className={styles.stepper}
+      role="group"
+      aria-labelledby={id}
+      aria-describedby={hint ? hintId : undefined}
+    >
       <div>
         <p id={id}>{label}</p>
-        {hint ? <small>{hint}</small> : null}
+        {hint ? <small id={hintId}>{hint}</small> : null}
       </div>
       <div className={styles.stepperControls}>
         <button
           type="button"
           aria-label={`${label}: mniej`}
-          disabled={value <= min}
-          onClick={() => onChange(Math.max(min, value - 1))}
+          aria-disabled={value <= min}
+          onClick={() => step(value - 1)}
         >
           −
         </button>
@@ -43,8 +54,8 @@ export function Stepper({
         <button
           type="button"
           aria-label={`${label}: więcej`}
-          disabled={value >= max}
-          onClick={() => onChange(Math.min(max, value + 1))}
+          aria-disabled={value >= max}
+          onClick={() => step(value + 1)}
         >
           +
         </button>

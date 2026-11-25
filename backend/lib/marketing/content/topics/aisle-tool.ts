@@ -20,7 +20,7 @@ const copy: TopicCopy = {
           body: "Po przecinku, w linijkach, z myślnikami. Ilości zostaną przy produktach.",
         },
         {
-          title: "Popraw, co poszło obok",
+          title: "Popraw, co trafiło nie tam",
           body: "Przy produkcie wybierasz inną alejkę. Na tym urządzeniu narzędzie to zapamięta.",
         },
         {
@@ -34,33 +34,41 @@ const copy: TopicCopy = {
       ],
     },
     {
-      kind: "custom",
-      slot: "aisles",
-      title: "24 alejki i co w nich jest",
-      intro:
-        "Ten sam podział ma aplikacja Kangur. Kategorie pochodzą z naszego katalogu, w którym jest 273 produktów.",
-    },
-    {
       kind: "text",
       tone: "cream",
       title: "Czego to narzędzie nie umie",
       slot: "phone",
       body: [
         "Zna słowa, a nie sens. „Krem” wyśle do kosmetyków, nawet jeśli miał być do ciasta. Zrzutu ekranu nie przeczyta, a druga osoba nie zobaczy Twojej listy.",
-        "To wszystko robi aplikacja: [[photoList|czyta zrzut czatu i zdjęcie kartki]], [[sharedList|dzieli listę z domownikami]], a w sklepie prowadzi alejka po alejce i pozwala odhaczać kciukiem.",
+        "Resztę robi aplikacja: [[photoList|czyta zrzut czatu i zdjęcie kartki]], [[sharedList|dzieli listę z domownikami]], a w sklepie prowadzi alejka po alejce i pozwala odhaczać kciukiem.",
       ],
+    },
+    {
+      kind: "custom",
+      slot: "aisles",
+      title: "Kategorie na liście zakupów: 24 alejki i co w nich jest",
+      intro:
+        "Te same 24 alejki ma aplikacja Kangur. Przykłady pochodzą z jej katalogu, w którym są 273 produkty.",
     },
     {
       kind: "faq",
       title: "Pytania o narzędzie",
       items: [
         {
+          q: "Po co dzielić listę na kategorie?",
+          a: "Żeby po nabiale nie wracać do warzyw. Przez sklep idzie się raz.",
+        },
+        {
           q: "Czy moja lista jest gdzieś wysyłana?",
-          a: "Nie. Narzędzie działa w przeglądarce, a lista zapisuje się tylko na tym urządzeniu. „Wyczyść” usuwa ją także stamtąd.",
+          a: "Nie. Narzędzie działa w przeglądarce, a lista zapisuje się tylko na tym urządzeniu. „Wyczyść” usuwa ją także stamtąd, a „Zapomnij poprawki” kasuje zapamiętane alejki.",
         },
         {
           q: "Skąd wiadomo, co do której alejki?",
-          a: "Ze słownika: 273 produktów z katalogu Kangura i kilkuset potocznych nazw. Czego w nim nie ma, trafia do „Inne”, a Ty wybierasz alejkę.",
+          a: "Ze słownika: 273 produkty z katalogu Kangura i kilkaset potocznych nazw. Czego w nim nie ma, trafia do „Inne”, a Ty wybierasz alejkę.",
+        },
+        {
+          q: "Czy mogę dodać własną alejkę?",
+          a: "Nie, jest ich 24. Możesz zmienić ich kolejność i przenieść produkt, a narzędzie to zapamięta.",
         },
         {
           q: "Czy mogę przenieść tę listę do Kangura?",
@@ -68,7 +76,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Czy da się ją wydrukować?",
-          a: "Tak, przyciskiem „Drukuj”. Na papierze zostają same alejki i kratki. Puste kartki są w poradniku [[guidePrint|Lista zakupów do druku]].",
+          a: "Tak, przyciskiem „Drukuj”. Na papierze zostają alejki, kratki i mały kod do Kangura. Puste kartki są w poradniku [[guidePrint|Lista zakupów do druku]].",
         },
       ],
     },
@@ -89,6 +97,12 @@ const copy: TopicCopy = {
 
 export const AISLE_TOOL = typesetCopy(copy);
 
+/** Below the result: the one thing a web page cannot do. */
+export const AISLE_NUDGE = typesetCopy({
+  title: "Druga osoba tej listy nie widzi.",
+  body: "W Kangurze zobaczy, dopisze i odhaczy u siebie. Skopiuj listę i wybierz „Tekst ze schowka”. To jedno z dziesięciu darmowych użyć AI.",
+});
+
 /** The same conversation as on the home page, in one go. */
 export const AISLE_SAMPLE =
-  "mleko, jajka 10 szt, pomidory, papier toaletowy, ser żółty, chleb, masło, kurczak 1kg, płyn do naczyń, banany, makaron, cebula, passata 2x, jogurt naturalny, ziemniaki, czosnek, szynka, kawa, ogórki, karma dla pieska, 2 paczki chipsów, aaa i proszek do prania";
+  "mleko, jajka 10 szt, pomidory, papier toaletowy, ser żółty, chleb, masło, kurczak 1kg, płyn do naczyń, banany, makaron, cebula, passata 2x, jogurt naturalny, ziemniaki, czosnek, szynka, kawa, ogórki, karma dla pieska, chipsy cebulowe 2 paczki, aaa i proszek do prania";

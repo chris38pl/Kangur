@@ -22,6 +22,7 @@ import {
   routePath,
   type MarketingRouteId,
 } from "@/lib/marketing/routes";
+import { CHRISTMAS } from "@/lib/marketing/lists/christmas";
 import { hreflangAlternates } from "@/lib/marketing/seo";
 import { IS_PRODUCTION_SITE, PRODUCTION_HOST, SITE_URL, absoluteUrl } from "@/lib/marketing/site";
 
@@ -318,6 +319,20 @@ if (
 
 for (const id of ROUTE_IDS) {
   if (Number.isNaN(Date.parse(ROUTES[id].updatedAt))) fail(id, "updatedAt is not a date");
+}
+
+// The tools are useless without JavaScript, and one unknown piece of syntax stops all of it.
+const CHUNKS = path.resolve(__dirname, "../.next/static/chunks");
+for (const file of fs.existsSync(CHUNKS) ? fs.readdirSync(CHUNKS) : []) {
+  if (!file.endsWith(".js")) continue;
+  const code = fs.readFileSync(path.join(CHUNKS, file), "utf8");
+  if (/[{;}]static\s*\{/.test(code)) fail(file, "class static block: Safari before 16.4 cannot read this file");
+  if (/\/[^/\n]*\(\?<[=!][^/\n]*\//.test(code)) fail(file, "regex lookbehind: Safari before 16.4 cannot read this file");
+}
+
+// Nobody remembers in November what was written about the last December.
+if (new Date() >= new Date(`${CHRISTMAS.year + 1}-10-15`)) {
+  console.warn(`The Christmas guide still talks about ${CHRISTMAS.year}. See docs/deploy.md, "Landing URLs".`);
 }
 
 if (errors.length > 0) {

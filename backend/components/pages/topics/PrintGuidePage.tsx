@@ -4,7 +4,6 @@ import { Picture } from "@/components/site/Picture";
 import prose from "@/components/site/prose.module.css";
 import { GUIDE_PRINT, PRINT_SHEETS } from "@/lib/marketing/content/topics/guide-print";
 import { GUIDES } from "@/lib/marketing/content/topics/guides";
-import { homeCopy } from "@/lib/marketing/content/home";
 import { PRINTABLES } from "@/lib/marketing/druk.generated";
 import { SCREENS } from "@/lib/marketing/images.generated";
 
@@ -32,7 +31,7 @@ export function PrintGuidePage() {
         phone: (
           <Phone
             image={SCREENS.pl.import}
-            alt={homeCopy("pl").hero.screenAlt}
+            alt="Lista ze zrzutu rozmowy w Kangurze: 22 pozycje, najpierw owoce i warzywa, potem nabiał"
             className={topics.phone}
           />
         ),
@@ -40,20 +39,29 @@ export function PrintGuidePage() {
     >
       <section className={prose.section}>
         <div className={prose.wrap}>
+          <nav className={styles.jump} aria-label="Szablony">
+            {PRINT_SHEETS.map(({ id, short }) => (
+              <a key={id} href={`#${id}`}>
+                {short}
+              </a>
+            ))}
+          </nav>
           <ul className={styles.sheets}>
-            {PRINT_SHEETS.map(({ id, title, body, button }) => {
+            {PRINT_SHEETS.map(({ id, title, body, button, alt }) => {
               const { href, kilobytes, preview } = PRINTABLES[id];
               return (
-                <li key={id} className={styles.sheet}>
-                  <a href={href} target="_blank" className={styles.preview}>
-                    <Picture image={preview} alt={`Podgląd: ${title}, A4`} />
+                <li key={id} id={id} className={styles.sheet}>
+                  <a href={href} target="_blank" className={styles.preview} tabIndex={-1}>
+                    <Picture image={preview} alt={alt} />
                   </a>
                   <div>
                     <h2>{title}</h2>
                     <p>{body}</p>
                     <a href={href} target="_blank" className={styles.button}>
-                      {button}
-                      <small>PDF, {kilobytes} KB</small>
+                      {button}{" "}
+                      <small>
+                        PDF, {kilobytes} KB<span className="visually-hidden">, nowa karta</span>
+                      </small>
                     </a>
                   </div>
                 </li>

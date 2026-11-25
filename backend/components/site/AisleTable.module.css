@@ -18,11 +18,13 @@
   font-weight: 700;
 }
 
-.table small {
-  margin-left: auto;
-  color: var(--kangur-text-muted);
-  font-size: 0.85rem;
-  font-weight: 400;
+.table summary {
+  width: fit-content;
+  padding: 4px 0;
+  color: var(--kangur-primary-deep);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .table dd {

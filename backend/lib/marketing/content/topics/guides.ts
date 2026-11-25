@@ -21,11 +21,9 @@ const copy: {
   topics: readonly { id: MarketingRouteId; label: string; body: string }[];
 } = {
   crumb: "Poradniki",
-  eyebrow: "Poradniki o listach zakupów",
+  eyebrow: "Listy zakupów: kalkulatory, szablony i narzędzia",
   lines: ["Krótkie,", "bo sklep zaraz zamykają."],
-  lead: [
-    "W każdym jest coś do użycia: kalkulator, narzędzie albo kartka do druku. Wszystko działa bez konta i bez aplikacji.",
-  ],
+  lead: ["Najpierw narzędzie, potem czytanie. Wszystko działa bez konta i bez aplikacji."],
   entries: [
     {
       id: "guideChristmas",
@@ -37,13 +35,13 @@ const copy: {
     {
       id: "guideWeek",
       label: "Lista zakupów na tydzień",
-      body: "Dla jednej osoby, dwóch i rodziny. Duże zakupy i mała dokupka, żeby nic nie zwiędło.",
+      body: "Dla jednej osoby, dwóch i rodziny. Duże zakupy, mała dokupka i pięć obiadów.",
       tag: "Kalkulator",
       tone: "mint",
     },
     {
       id: "aisleTool",
-      label: "Lista z podziałem na kategorie",
+      label: "Lista zakupów z podziałem na kategorie",
       body: "Wklejasz listę, wyjmujesz alejki. Kolejność ustawiasz jak w swoim sklepie.",
       tag: "Narzędzie",
       tone: "sky",
@@ -51,14 +49,14 @@ const copy: {
     {
       id: "guidePrint",
       label: "Lista zakupów do druku",
-      body: "Cztery wzory w PDF: pusty, gotowy, na tydzień i na Wigilię.",
-      tag: "4 kartki PDF",
+      body: "Siedem szablonów w PDF: pusty, gotowy, duże litery, dwie na kartce, z ceną, na tydzień i na Wigilię.",
+      tag: "7 kartek PDF",
       tone: "cream",
     },
   ],
   topicsTitle: "Jak to robi Kangur",
   topics: [
-    { id: "sharedList", label: "Wspólna lista zakupów", body: "Jedna lista, wszyscy domownicy." },
+    { id: "sharedList", label: "Wspólna lista zakupów", body: "Masło dopisane z kanapy, kupione przy lodówkach." },
     { id: "photoList", label: "Lista ze zdjęcia i zrzutu", body: "Siedem wiadomości, jedna lista." },
     { id: "recipeList", label: "Lista z przepisu", body: "Dwa dania, jedna sól." },
     { id: "aiList", label: "Lista zakupów z AI", body: "Co AI umie, a czego nie." },

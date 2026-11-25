@@ -49,6 +49,8 @@ body {
   color: var(--kangur-text);
   font-family: var(--font-jakarta), "Segoe UI", sans-serif;
   line-height: 1.55;
+  /* The font would turn "25-27" into a dash. A hyphen stays a hyphen. */
+  font-variant-ligatures: no-contextual;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -456,7 +458,7 @@ picture > source {
 
 @media (min-width: 760px) {
   .mkt-footer-groups {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
   }
 }
 
@@ -618,7 +620,7 @@ picture > source {
   color: var(--kangur-text-body);
 }
 
-@media (min-width: 860px) {
+@media (min-width: 940px) {
   .mkt-nav {
     display: flex;
   }
@@ -628,7 +630,7 @@ picture > source {
   }
 }
 
-@media (max-width: 859px) {
+@media (max-width: 939px) {
   .mkt-header-inner {
     gap: 12px;
     padding-inline: 20px 14px;

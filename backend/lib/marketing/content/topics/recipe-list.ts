@@ -6,14 +6,15 @@ const copy: TopicCopy = {
   eyebrow: "Lista zakupów z przepisu",
   lines: ["Dwa dania,", "jedna sól."],
   lead: [
-    "Wpisujesz nazwy dań, do pięciu naraz, a Kangur proponuje składniki na jednej liście. Co się powtarza, jest raz.",
-    "Odznaczasz to, co masz w domu, i dodajesz resztę.",
+    "Wpisujesz nazwy dań, do pięciu naraz, a Kangur proponuje składniki na jednej liście. Co się powtarza, jest raz. Odznaczasz to, co masz w domu.",
+    "Masz gotowy przepis? Skopiuj składniki i wybierz „Tekst ze schowka”.",
   ],
+  stores: "Na start 10 darmowych użyć AI, wspólnych dla całego domu. Bez reklam.",
   sections: [
     {
       kind: "steps",
-      title: "Od pomysłu na obiad do listy",
-      slot: "meal",
+      title: "Jak zrobić listę zakupów z przepisu",
+      slot: "kangur",
       items: [
         {
           title: "Wpisz dania",
@@ -38,13 +39,13 @@ const copy: TopicCopy = {
       tone: "cream",
       slot: "example",
       title: "Carbonara i bruschetta, przykład z testu",
-      intro: "Trzynaście składników z dwóch przepisów, na liście jedenaście. Sól i pieprz są raz.",
+      intro: "Trzynaście składników z dwóch dań, na liście jedenaście. Sól i pieprz są raz.",
       outro:
         "W samej carbonarze śmietany nie było ani razu. Sprawdzaliśmy siedem razy, bo wiemy, że ktoś zapyta.",
     },
     {
       kind: "cards",
-      title: "Czego Z przepisu nie robi",
+      title: "Czego „Z przepisu” nie robi",
       columns: 4,
       items: [
         {
@@ -53,7 +54,7 @@ const copy: TopicCopy = {
         },
         {
           title: "Nie liczy porcji",
-          body: "Ilość podaje tylko tam, gdzie ma sens. Wiesz lepiej, kto bierze dokładkę.",
+          body: "Ilość podaje tylko czasem. Nie wie, ilu Was jest i kto bierze dokładkę.",
         },
         {
           title: "Nie układa diety",
@@ -61,23 +62,23 @@ const copy: TopicCopy = {
         },
         {
           title: "Nie każe kupować wody",
-          body: "Do makaronu wystarczy kran. O gazowaną do drinków już poprosi.",
+          body: "Do makaronu wystarczy kran. O gazowaną do lemoniady już poprosi.",
         },
       ],
     },
     {
       kind: "text",
       tone: "mint",
-      title: "Masz swój przepis?",
+      title: "Masz gotowy przepis? Składniki ze schowka na listę",
       body: [
         "Skopiuj listę składników ze strony albo z notatki i wybierz „Tekst ze schowka”. Kangur wypisze produkty razem z ilościami, które tam są, i rozłoży je po alejkach.",
         "To dobry sposób na przepis babci, w którym mąki jest „ile zabierze”.",
       ],
-      slot: "kangur",
+      slot: "grandma",
     },
     {
       kind: "faq",
-      title: "Pytania o listę z przepisu",
+      title: "Pytania o listę zakupów z przepisu",
       items: [
         {
           q: "Ile dań mogę wpisać naraz?",
@@ -96,8 +97,12 @@ const copy: TopicCopy = {
           a: "Przy nazwie, która nic mu nie mówi, może pominąć danie. Wpisz je wtedy prościej albo wklej składniki.",
         },
         {
+          q: "Nie mam pomysłu na obiad. Co wtedy?",
+          a: "Dania wymyślasz Ty. Na brak pomysłu mamy pięć obiadów z gotową listą w poradniku [[guideWeek|na tydzień]].",
+        },
+        {
           q: "Ile kosztuje lista z przepisu?",
-          a: "Jedno użycie AI. Na start jest 10 darmowych na całą przestrzeń, a Premium znosi limit. [[pricing|Zobacz cennik]].",
+          a: "Jedno użycie AI. Na start jest 10 darmowych na całą przestrzeń, czyli na wspólne listy domu, a Premium znosi limit. [[pricing|Zobacz cennik]].",
         },
       ],
     },
@@ -106,7 +111,7 @@ const copy: TopicCopy = {
     title: "Na większe gotowanie",
     items: [
       { id: "guideChristmas", label: "Lista zakupów na Wigilię i święta", body: "Dwanaście dań przeliczonych na liczbę gości." },
-      { id: "guideWeek", label: "Lista zakupów na tydzień", body: "Duże zakupy i mała dokupka, żeby nic nie zwiędło." },
+      { id: "guideWeek", label: "Lista zakupów na tydzień", body: "Pięć obiadów, duże zakupy i mała dokupka." },
       { id: "sharedList", label: "Wspólna lista zakupów", body: "Jedno gotuje, drugie kupuje, lista jest jedna." },
     ],
   },

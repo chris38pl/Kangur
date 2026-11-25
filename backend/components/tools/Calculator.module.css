@@ -29,7 +29,8 @@
   letter-spacing: -0.015em;
 }
 
-.form legend + * {
+/* The skip link below is out of the flow on a wide screen, so every sibling clears the legend. */
+.form legend ~ * {
   clear: both;
 }
 
@@ -72,12 +73,12 @@
   cursor: pointer;
 }
 
-.stepperControls button:hover:not(:disabled) {
+.stepperControls button:hover:not([aria-disabled="true"]) {
   border-color: var(--kangur-primary);
   background: var(--kangur-primary-soft);
 }
 
-.stepperControls button:disabled {
+.stepperControls button[aria-disabled="true"] {
   opacity: 0.35;
   cursor: default;
 }
@@ -86,6 +87,106 @@
   min-width: 78px;
   font-weight: 800;
   text-align: center;
+}
+
+/* On a phone the list is a long way down. With a keyboard it always is. */
+.jump {
+  display: inline-block;
+  margin: 2px 0 8px;
+  color: var(--kangur-primary-deep);
+  font-weight: 700;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.presets button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kangur-text-body);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.presets button:hover {
+  border-color: var(--kangur-primary);
+}
+
+.presets button[aria-pressed="true"] {
+  border-color: var(--kangur-primary-deep);
+  background: var(--kangur-primary-deep);
+  color: #fff;
+}
+
+.own {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--kangur-border);
+}
+
+.own > label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.ownRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ownRow input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid #8fa9a2;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.ownName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.remove {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--kangur-text-muted);
+  font: inherit;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.remove:hover {
+  background: #fdecec;
+  color: #b3261e;
+}
+
+.small {
+  margin: 8px 0 0;
+  color: var(--kangur-text-muted);
+  font-size: 0.9rem;
 }
 
 .verdict {
@@ -132,7 +233,8 @@
   background: #fff;
   color: var(--kangur-text);
   font: inherit;
-  font-size: 0.95rem;
+  /* Below 16px iPhones zoom the page in. */
+  font-size: 1rem;
 }
 
 .dishes li[data-plan="make"] select {
@@ -205,7 +307,9 @@
 }
 
 .result {
+  position: relative;
   scroll-margin-top: 90px;
+  outline: none;
 }
 
 .resultHead {
@@ -251,9 +355,40 @@
 }
 
 .views button[aria-pressed="true"] {
+  background: var(--kangur-primary-deep);
+  color: #fff;
+}
+
+/* Only on paper: what stands on the table, the number left, and the code in the corner. */
+.resultHead .menu,
+.paper,
+.code {
+  display: none;
+}
+
+.left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+.untick {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 10px;
   background: #fff;
   color: var(--kangur-text);
-  box-shadow: 0 4px 12px -6px rgba(31, 43, 69, 0.35);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.untick:hover {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
 }
 
 .groups {
@@ -268,6 +403,14 @@
   background: #fff;
   box-shadow: 0 12px 28px -24px rgba(31, 43, 69, 0.4);
   break-inside: avoid;
+}
+
+.groupHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
 }
 
 .group h3 {
@@ -303,7 +446,9 @@
 
 .name {
   flex: 1;
+  min-width: 0;
   line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .name small {
@@ -325,7 +470,27 @@
 }
 
 .family {
-  margin-top: 24px;
+  margin-top: 28px;
+}
+
+.family > p {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--kangur-text-body);
+}
+
+.familyShare button {
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 0 18px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .family h3 {
@@ -334,17 +499,26 @@
   font-weight: 800;
 }
 
-.kangurHint {
-  margin: 14px 0 0;
-  color: var(--kangur-text-muted);
-  font-size: 0.9rem;
-}
-
-.sheetFoot {
-  display: none;
+@media (max-width: 380px) {
+  .stepper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }
 
 @media (min-width: 980px) {
+  /* Next to the list there is nothing to jump to, except with a keyboard. */
+  .jump:not(:focus) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
   .calculator {
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
     gap: 40px;
@@ -364,35 +538,82 @@
     display: block;
   }
 
+  .resultHead {
+    gap: 4px;
+    margin-bottom: 8px;
+    padding-right: 258px;
+  }
+
+  .resultHead h2 {
+    font-size: 17pt;
+  }
+
+  .resultHead .menu {
+    display: block;
+    font-size: 8.5pt;
+    line-height: 1.35;
+  }
+
+  .paper {
+    display: inline;
+  }
+
+  .code {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
   .groups {
     columns: 2;
     column-gap: 26px;
+    margin: 0;
   }
 
   .group {
-    margin-bottom: 9px;
+    margin-bottom: 8px;
     padding: 0;
     border: 0;
     border-radius: 0;
     box-shadow: none;
+    font-size: 10pt;
+    break-inside: auto;
+  }
+
+  .group h3,
+  .hint {
+    break-after: avoid;
   }
 
   .group ul {
-    margin-top: 3px;
+    margin-top: 2px;
+  }
+
+  .group li {
+    line-height: 1.25;
+    break-inside: avoid;
+  }
+
+  /* At home already: no need to buy it on paper. */
+  .group li[data-done],
+  .group[data-empty] {
+    display: none;
   }
 
   .group label {
-    min-height: 24px;
+    min-height: 20px;
+    gap: 8px;
   }
 
   .group input {
-    width: 15px;
-    height: 15px;
+    width: 13px;
+    height: 13px;
   }
 
-  .sheetFoot {
-    display: block;
-    margin-top: 14px;
-    break-inside: avoid;
+  .name small {
+    display: inline;
+    margin-left: 4px;
+    font-size: 8pt;
   }
 }

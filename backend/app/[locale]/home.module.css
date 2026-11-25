@@ -37,7 +37,8 @@
 }
 
 .textLink {
-  color: var(--kangur-primary-deep);
+  /* The deeper mint: these links also stand on mint cards. */
+  color: var(--kangur-primary-hover);
   font-weight: 700;
   text-decoration: none;
 }
@@ -437,7 +438,7 @@
   position: relative;
   display: grid;
   overflow: hidden;
-  margin-bottom: clamp(56px, 7vw, 96px);
+  margin-top: clamp(24px, 4vw, 48px);
   padding: 28px 28px 0;
   border-radius: 28px;
   background: linear-gradient(120deg, #fdeee6, #f6c9b5);
@@ -449,11 +450,28 @@
   color: #414d5f;
 }
 
+.seasonLink {
+  display: inline-block;
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: var(--kangur-text);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.seasonLink:hover {
+  background: #33415f;
+  color: #fff;
+}
+
+/* Below the button, never on top of it, and it takes no taps. */
 .seasonKangur {
   justify-self: end;
   width: 150px;
   height: auto;
-  margin: -18px 0 -40px;
+  margin: 10px 0 -40px;
+  pointer-events: none;
 }
 
 @media (min-width: 760px) {

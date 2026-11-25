@@ -7,21 +7,22 @@ const copy: TopicCopy = {
   lines: ["Ktoś już to napisał.", "Nie pisz drugi raz."],
   lead: [
     "Zrzut rozmowy albo zdjęcie kartki wystarczy. Kangur wypisze produkty z ilościami i ułoży je według alejek.",
-    "Jeden obrazek to jedno użycie AI, także gdy wiadomości jest siedem. Na start jest 10 darmowych użyć na całą przestrzeń.",
+    "W naszym teście siedem wiadomości zamieniło się w 22 pozycje. Buziak na listę nie trafił.",
   ],
+  stores: "Na start 10 darmowych użyć AI, wspólnych dla całego domu. Bez reklam.",
   sections: [
     {
       kind: "custom",
       slot: "readings",
-      title: "Co Kangur robi z siedmiu wiadomości",
+      title: "Ze zrzutu czatu na listę zakupów: siedem wiadomości, 22 pozycje",
       intro:
         "Przykład z naszych testów. Zrzut tej rozmowy za każdym razem dawał 22 pozycje.",
     },
     {
       kind: "steps",
       tone: "mint",
-      title: "Jak zrobić listę ze zrzutu ekranu",
-      slot: "ways",
+      title: "Jak zrobić listę zakupów ze zdjęcia albo zrzutu",
+      slot: "start",
       items: [
         {
           title: "Zrób zrzut albo zdjęcie",
@@ -29,7 +30,7 @@ const copy: TopicCopy = {
         },
         {
           title: "Wybierz „Zrzut ekranu” albo „Obraz”",
-          body: "Pierwszy przycisk jest na ekranie głównym Kangura, drugi w oknie nowej listy. Jeden obrazek naraz, do 8 MB.",
+          body: "Pierwszy przycisk jest na ekranie głównym Kangura, drugi w oknie nowej listy. Potem „Wybierz z galerii” albo „Zrób zdjęcie”. Jeden obrazek naraz.",
         },
         {
           title: "Rzuć okiem na listę",
@@ -43,12 +44,12 @@ const copy: TopicCopy = {
     },
     {
       kind: "cards",
-      title: "Jaki obrazek się nada",
+      title: "Z jakiego zdjęcia da się zrobić listę zakupów",
       columns: 4,
       items: [
         {
           title: "Zrzut czatu",
-          body: "Z dowolnego komunikatora. Kangur widzi tylko obrazek, z niczym się nie łączy.",
+          body: "Z dowolnego komunikatora. Kangur widzi tylko obrazek, z rozmową się nie łączy.",
         },
         {
           title: "Kartka z lodówki",
@@ -56,7 +57,7 @@ const copy: TopicCopy = {
         },
         {
           title: "Zrzut notatki",
-          body: "Lista w notatniku to też obrazek. Nie trzeba jej przepisywać.",
+          body: "Lista z notatnika też się nada. Nie trzeba jej przepisywać.",
         },
         {
           title: "Lista w innym języku",
@@ -72,7 +73,7 @@ const copy: TopicCopy = {
       body: ["Wolimy napisać to tutaj, niż żeby wyszło przy kasie."],
       list: [
         "**Niewyraźne pismo.** Im trudniej je odczytać Tobie, tym częściej AI coś pominie, pomyli albo dopisze.",
-        "**„Coś na obiad” i „to, co zawsze”.** Kangur nie zgaduje, co masz na myśli. Od tego drugiego są Poprzednie listy.",
+        "**„Coś na obiad” i „to, co zawsze”.** Kangur nie zgaduje, co masz na myśli. Od tego drugiego są „Poprzednie listy”.",
         "**Ilości, których nikt nie podał.** Jest „jajka 10 szt.”, będzie 10 szt. Nie ma, to nie ma.",
       ],
       outro: "Gdy AI nie odpowie albo zgłosi błąd, użycie wraca. Za pomyłkę nie.",
@@ -81,13 +82,13 @@ const copy: TopicCopy = {
       kind: "text",
       title: "Co dzieje się z obrazkiem",
       body: [
-        "Trafia do dostawcy AI (OpenAI), który odczytuje z niego produkty. Razem z nim idzie nazwa pliku i nazwy z listy, do której go dodajesz, żeby nic się nie zdublowało. Kangur nie dołącza Twojego imienia ani e-maila. Zapisuje to, co AI odczytało, a obrazka nie.",
-        "Z galerii widzi tylko ten jeden obrazek, który wybierzesz. [[safety|Więcej o bezpieczeństwie]].",
+        "Trafia do dostawcy AI (OpenAI), który odczytuje z niego produkty i przechowuje go według swoich zasad. Razem z nim idzie nazwa pliku i to, co już jest na tej liście: produkty, ilości i notatki, żeby nic się nie zdublowało. Kangur nie dołącza Twojego imienia ani e-maila. Zapisuje to, co AI odczytało, a obrazka nie.",
+        "Z galerii wysyła tylko ten jeden obrazek, który wybierzesz. [[safety|Więcej o bezpieczeństwie]].",
       ],
     },
     {
       kind: "faq",
-      title: "Pytania o listę ze zdjęcia",
+      title: "Pytania o listę zakupów ze zdjęcia",
       items: [
         {
           q: "Czy działa ze zrzutem z każdego komunikatora?",
@@ -107,7 +108,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Ile kosztuje lista ze zdjęcia?",
-          a: "Jedno użycie AI za obrazek. Na start jest 10 darmowych użyć na całą przestrzeń, a Premium znosi limit. [[pricing|Zobacz cennik]].",
+          a: "Jedno użycie AI za obrazek, także gdy wiadomości jest siedem. Na start jest 10 darmowych użyć na całą przestrzeń, czyli na wspólne listy domu, a Premium znosi limit. [[pricing|Zobacz cennik]].",
         },
       ],
     },
@@ -131,7 +132,10 @@ export const PHOTO_LIST = typesetCopy(copy);
 export const READINGS = typesetCopy([
   { messages: [0, 1], verdict: "rozmowa", note: "Pomija. To nie są produkty." },
   { messages: [2], verdict: "20 pozycji", note: "Każda w swojej alejce. Przy jajkach zostaje „10 szt.”, przy kurczaku „1 kg”." },
-  { messages: [3], verdict: "rozmowa", note: "Zostawia w spokoju. Buziak też." },
+  { messages: [3], verdict: "rozmowa", note: "Zostawia w spokoju. Buziaka też." },
   { messages: [4, 5], verdict: "1 pozycja", note: "Z dwóch wiadomości robi jedne chipsy, „2 paczki”." },
   { messages: [6], verdict: "1 pozycja", note: "Proszek do prania, alejka Sprzątanie. Że się skończył, wiadomo." },
 ] as const);
+
+/** The last three messages next to the part of the list they became. */
+export const HERO_MESSAGES = [4, 5, 6] as const;

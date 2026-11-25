@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 
-import { copyText } from "@/lib/marketing/copy-text";
+import { useCopy } from "@/components/tools/use-copy";
 import { plainSpaces } from "@/lib/marketing/typography";
 
 import styles from "./CopyBox.module.css";
@@ -17,30 +17,26 @@ export function CopyBox({
   label: string;
   done: string;
 }) {
-  const [copied, setCopied] = useState(false);
+  const [state, copy] = useCopy();
   const textRef = useRef<HTMLParagraphElement>(null);
-
-  useEffect(() => {
-    if (!copied) return;
-    const timer = setTimeout(() => setCopied(false), 2500);
-    return () => clearTimeout(timer);
-  }, [copied]);
-
-  const copy = async () => {
-    if (await copyText(plainSpaces(text))) {
-      setCopied(true);
-    } else if (textRef.current) {
-      // No clipboard at all: leave the text selected, one tap away from "Copy".
-      window.getSelection()?.selectAllChildren(textRef.current);
-    }
-  };
 
   return (
     <div className={styles.box}>
       <p ref={textRef}>{text}</p>
-      <button type="button" onClick={() => void copy()}>
-        <span aria-live="polite">{copied ? done : label}</span>
+      <button
+        type="button"
+        onClick={() => {
+          void copy(plainSpaces(text)).then((ok) => {
+            // No clipboard at all: leave the text selected, one tap away from "Kopiuj".
+            if (!ok && textRef.current) window.getSelection()?.selectAllChildren(textRef.current);
+          });
+        }}
+      >
+        <span aria-live="polite">{state === "copied" ? done : label}</span>
       </button>
+      <span role="status" className={styles.refused}>
+        {state === "refused" ? "Tekst jest zaznaczony. Przytrzymaj go i wybierz „Kopiuj”." : null}
+      </span>
     </div>
   );
 }

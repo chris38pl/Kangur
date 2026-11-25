@@ -1,15 +1,14 @@
 import { TopicPage } from "@/components/pages/TopicPage";
-import { Notepad } from "@/components/site/Notepad";
 import { Phone } from "@/components/site/Phone";
 import { Sticker } from "@/components/site/Sticker";
 import { homeCopy } from "@/lib/marketing/content/home";
-import { PHOTO_LIST, READINGS } from "@/lib/marketing/content/topics/photo-list";
+import { HERO_MESSAGES, PHOTO_LIST, READINGS } from "@/lib/marketing/content/topics/photo-list";
 import { SCREENS } from "@/lib/marketing/images.generated";
 
 import styles from "./topics.module.css";
 
 export function PhotoListPage() {
-  const { chat, hero, ways } = homeCopy("pl");
+  const { chat } = homeCopy("pl");
   return (
     <TopicPage
       id="photoList"
@@ -17,15 +16,17 @@ export function PhotoListPage() {
       copy={PHOTO_LIST}
       page="lista-ze-zdjecia"
       art={
-        <div className={styles.noteAndPhone}>
-          <div className={styles.note}>
-            <Notepad lines={ways.photo.note} locale="pl" />
+        <div className={styles.messagesAndPhone}>
+          <div className={styles.messages}>
+            {HERO_MESSAGES.map((index) => (
+              <span key={index}>{chat.messages[index][1]}</span>
+            ))}
           </div>
           <Phone
-            image={SCREENS.pl.import}
-            alt={hero.screenAlt}
+            image={SCREENS.pl.importRest}
+            alt="Lista z tych wiadomości w Kangurze: chipsy cebulowe, 2 paczki, w Przekąskach i proszek do prania w Sprzątaniu"
             sizes="235px"
-            className={styles.notePhone}
+            className={styles.messagesPhone}
             priority
           />
         </div>
@@ -55,10 +56,10 @@ export function PhotoListPage() {
             ))}
           </ol>
         ),
-        ways: (
+        start: (
           <Phone
-            image={SCREENS.pl.ways}
-            alt="Ekran Kangura z pytaniem, jak utworzyć listę: Obraz, Tekst ze schowka, Opisz listę, Z przepisu, Poprzednie listy"
+            image={SCREENS.pl.start}
+            alt="Ekran główny Kangura z szybkimi akcjami: Zrzut ekranu, Schowek, Tekst, Z przepisu"
             className={styles.phone}
             time="17:54"
           />

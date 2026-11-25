@@ -50,8 +50,7 @@ export function WeekTable() {
               {products.map((row) => (
                 <tr key={row.id}>
                   <th scope="row">
-                    {row.name}
-                    {row.when === "topup" ? <small>dokupka</small> : null}
+                    {row.name} {row.when === "topup" ? <small>dokupka</small> : null}
                   </th>
                   {row.amounts.map((amount, index) => (
                     <td key={HOUSEHOLDS[index].label}>{amount}</td>

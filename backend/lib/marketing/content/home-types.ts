@@ -62,7 +62,13 @@ export type HomeCopy = {
   /** Links to pages that only some languages have. */
   more?: Partial<
     Record<
-      "photoList" | "recipeList" | "guideWeek" | "aisleTool" | "sharedList",
+      | "photoList"
+      | "recipeList"
+      | "guideWeek"
+      | "guidePrint"
+      | "aisleTool"
+      | "aiList"
+      | "sharedList",
       string
     >
   >;

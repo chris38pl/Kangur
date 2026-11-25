@@ -4,40 +4,70 @@ import type { MarketingImage } from "@/lib/marketing/images.generated";
 export const PRINTABLES = {
   "alejki": {
     "href": "/druk/lista-zakupow-do-druku-z-alejkami.pdf",
-    "kilobytes": 612,
+    "kilobytes": 625,
     "preview": {
-      "avif": "/img/druk/alejki.4b54babe.avif",
-      "src": "/img/druk/alejki.537fea35.webp",
+      "avif": "/img/druk/alejki.b01cd826.avif",
+      "src": "/img/druk/alejki.b7de10d9.webp",
       "width": 520,
       "height": 735
     }
   },
   "gotowa": {
     "href": "/druk/lista-zakupow-do-druku-gotowa.pdf",
-    "kilobytes": 800,
+    "kilobytes": 962,
     "preview": {
-      "avif": "/img/druk/gotowa.ff37e142.avif",
-      "src": "/img/druk/gotowa.c7ecce78.webp",
+      "avif": "/img/druk/gotowa.9b36211c.avif",
+      "src": "/img/druk/gotowa.5d0b50e6.webp",
+      "width": 520,
+      "height": 735
+    }
+  },
+  "duze": {
+    "href": "/druk/lista-zakupow-do-druku-duze-litery.pdf",
+    "kilobytes": 1022,
+    "preview": {
+      "avif": "/img/druk/duze.1c86b500.avif",
+      "src": "/img/druk/duze.d3b9106f.webp",
+      "width": 520,
+      "height": 735
+    }
+  },
+  "dwie": {
+    "href": "/druk/lista-zakupow-do-druku-dwie-na-kartce.pdf",
+    "kilobytes": 393,
+    "preview": {
+      "avif": "/img/druk/dwie.ad476904.avif",
+      "src": "/img/druk/dwie.157277ac.webp",
+      "width": 520,
+      "height": 368
+    }
+  },
+  "ceny": {
+    "href": "/druk/lista-zakupow-do-druku-z-cena.pdf",
+    "kilobytes": 143,
+    "preview": {
+      "avif": "/img/druk/ceny.7dff6c54.avif",
+      "src": "/img/druk/ceny.f65ed155.webp",
       "width": 520,
       "height": 735
     }
   },
   "tydzien": {
     "href": "/druk/lista-zakupow-na-tydzien-do-druku.pdf",
-    "kilobytes": 212,
+    "kilobytes": 225,
     "preview": {
-      "avif": "/img/druk/tydzien.c288155a.avif",
-      "src": "/img/druk/tydzien.822d3bfa.webp",
+      "avif": "/img/druk/tydzien.7b2540e1.avif",
+      "src": "/img/druk/tydzien.3cff2516.webp",
       "width": 520,
       "height": 735
     }
   },
   "wigilia": {
     "href": "/druk/lista-zakupow-na-wigilie-do-druku.pdf",
-    "kilobytes": 215,
+    "kilobytes": 287,
     "preview": {
-      "avif": "/img/druk/wigilia.b3e2bf08.avif",
-      "src": "/img/druk/wigilia.3db97a3e.webp",
+      "avif": "/img/druk/wigilia.1ca20e48.avif",
+      "src": "/img/druk/wigilia.031e4685.webp",
       "width": 520,
       "height": 735
     }

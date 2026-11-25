@@ -4,23 +4,38 @@ import { typesetCopy } from "@/lib/marketing/typography";
 const copy: TopicCopy = {
   crumb: "Lista na tydzień",
   eyebrow: "Lista zakupów na tydzień dla jednej osoby, dwóch i rodziny",
-  lines: ["Zakupy na tydzień.", "Sałata dożywa środy."],
+  lines: ["Zakupy na tydzień.", "Sałata dopiero w środę."],
   lead: [
-    "Ustaw, ile Was jest i ile obiadów jecie w domu. Dostaniesz listę z ilościami: duże zakupy na weekend i małą dokupkę w środku tygodnia.",
-    "Do skopiowania, odhaczania albo druku. Bez konta i bez maila.",
+    "Ustaw, ile Was jest i ile obiadów jecie w domu. Dostaniesz listę z ilościami: duże zakupy w wolny dzień i małą dokupkę kilka dni później.",
+    "Skopiujesz ją, wydrukujesz albo odhaczysz kciukiem przy lodówkach. Konta nie trzeba.",
   ],
   sections: [
     {
       kind: "custom",
       slot: "table",
-      title: "Ile czego na tydzień",
+      title: "Lista zakupów na tydzień dla 1, 2 i 4 osób",
       intro:
-        "Dla jednej osoby, dwóch i rodziny 2+2, przy pięciu obiadach w domu. Ilości są do kupienia, więc zaokrąglone do całych opakowań.",
+        "Ile czego, przy pięciu obiadach w domu. Ilości są do kupienia, więc zaokrąglone do całych opakowań.",
+    },
+    {
+      kind: "steps",
+      tone: "mint",
+      title: "Pięć obiadów z tej listy",
+      intro: "Dla dwóch osób, z ilości, które liczy kalkulator.",
+      items: [
+        { title: "Makaron z mięsem i passatą", body: "Mięso mielone długo nie poczeka, więc to obiad numer jeden." },
+        { title: "Ryba z ziemniakami i marchewką", body: "Mrożona wytrzyma do dnia, w którym nic się nie chce." },
+        { title: "Kurczak z ryżem i warzywami z mrożonki", body: "Druga połowa fileta śpi już w zamrażarce." },
+        { title: "Kasza z ciecierzycą i kapustą albo brokułem", body: "Puszka, garnek i pół głowy kapusty. Ta druga połowa wróci." },
+        { title: "Ziemniaki zapiekane z tym, co zostało", body: "Ser na górę. Nikt nie zapyta, co jest pod spodem." },
+      ],
+      outro:
+        "Bez mięsa: w pierwszym ser sałatkowy, w drugim twaróg, w trzecim tofu. Wolisz swoje dania? Wpisz je w Kangurze, do pięciu naraz, a [[recipeList|zaproponuje składniki]]. Sól doda raz.",
     },
     {
       kind: "fact",
       tone: "tinted",
-      text: "W co czwartym domu czasami albo zawsze jest tak: zakupy robi się z góry, na przykład na tydzień, i część produktów psuje się, zanim zdąży się je zjeść.",
+      text: "To nie tylko Twoja sałata. W co czwartym domu czasami albo zawsze jest tak: zakupy robi się z góry, na przykład na tydzień, i część produktów psuje się, zanim zdąży się je zjeść.",
       source: "CBOS, sierpień 2023",
       href: "https://www.cbos.pl/SPISKOM.POL/2023/K_126_23.PDF",
     },
@@ -29,19 +44,19 @@ const copy: TopicCopy = {
       title: "Cztery zasady listy na tydzień",
       columns: 4,
       items: [
-        { title: "Najpierw szafka", body: "Otwórz ją, zanim zaczniesz pisać. Trzeci pieprz już tam stoi." },
-        { title: "Obiady, potem produkty", body: "Pięć dań na kartce i od razu wiadomo, po co ta kapusta." },
+        { title: "Najpierw szafka", body: "Otwórz ją, zanim zaczniesz pisać. Kasza zwykle już tam jest, za makaronem." },
+        { title: "Obiady, potem produkty", body: "Pięć dań na kartce i już wiadomo, po co ta kapusta." },
         { title: "Banany w dwóch kolorach", body: "Żółte na jutro, zielonkawe na czwartek." },
         { title: "Zamrażarka pracuje", body: "Chleb w kromkach, mięso w porcjach. Nie wszystko naraz na blacie." },
       ],
     },
     {
       kind: "text",
-      tone: "mint",
+      tone: "cream",
       title: "Dlaczego dwa razy",
       body: [
         "Bo są rzeczy na tydzień i rzeczy na trzy dni. Kasza poczeka, rukola nie.",
-        "Dlatego lista dzieli się na dwie części. W weekend kupujesz ciężkie i trwałe. W środę albo w czwartek wpadasz po chleb, mleko i zielone, w pięć alejek, a nie w dwadzieścia.",
+        "Dlatego lista dzieli się na dwie części. W wolny dzień kupujesz ciężkie i trwałe, a kilka dni później wpadasz po chleb, mleko i zielone. Kilka alejek zamiast całego sklepu.",
       ],
       slot: "kangur",
     },
@@ -49,7 +64,7 @@ const copy: TopicCopy = {
       kind: "text",
       title: "Drugi tydzień jest łatwiejszy",
       body: [
-        "Po kilku listach w Kangurze nie zaczynasz od pustej kartki. „Poprzednie listy” zbierają produkty z pięciu ostatnich zakupów i pokazują, które wracają najczęściej. Zostawiasz te, których trzeba.",
+        "Po kilku listach w Kangurze nie zaczynasz od pustej kartki. „Poprzednie listy” zbierają produkty z pięciu ostatnich list i pokazują, które wracają najczęściej. Zostawiasz te, których trzeba. To jedno użycie AI, choć liczy sam Kangur.",
         "Rukoli, która nie dożyła środy, nikt nie każe kupować drugi raz.",
       ],
       slot: "history",
@@ -57,23 +72,31 @@ const copy: TopicCopy = {
     },
     {
       kind: "faq",
-      title: "Pytania o listę na tydzień",
+      title: "Pytania o listę zakupów na tydzień",
       items: [
         {
           q: "Co kupić na tydzień dla jednej osoby?",
-          a: "Mniej opakowań, za to częściej. Dla jednej osoby najwięcej zmienia zamrażarka: pół chleba w kromkach i mięso w małych porcjach. Dokładne ilości są w tabeli.",
+          a: "Świeżego mało, suchego raz na kilka tygodni. Makaron, ryż i kasza z pierwszych zakupów poczekają, więc druga lista jest krótsza. Pół chleba w kromkach idzie do zamrażarki. Dokładne ilości są w tabeli.",
         },
         {
-          q: "Jak zrobić listę na tydzień dla dwóch osób?",
+          q: "Jak zrobić listę zakupów na tydzień dla dwóch osób?",
           a: "Ustaw w kalkulatorze dwie osoby i tyle obiadów, ile naprawdę jecie w domu. Potem skopiuj listę i zróbcie z niej [[sharedList|wspólną]], żeby nikt nie kupił drugiego masła.",
         },
         {
+          q: "Jak zrobić tańszą listę na tydzień?",
+          a: "Zamieniaj, zamiast skreślać. Udka zamiast filetu, słonecznik zamiast orzechów, duży jogurt zamiast kilku kubków, jajka zamiast ryby. Kasza, strączki i kapusta zostają. Na kartce z [[guidePrint|miejscem na ceny]] policzysz resztę.",
+        },
+        {
+          q: "A bez samochodu?",
+          a: "Duże zakupy dla dwóch osób to kilkanaście kilo. Rozłóż je na dwa kursy: najpierw suche i puszki, potem reszta.",
+        },
+        {
           q: "Czy jest wersja bez mięsa?",
-          a: "Tak. Odznacz „Jemy mięso”, a w jego miejsce wejdą tofu, strączki, ser sałatkowy i hummus.",
+          a: "Tak. Odznacz „Jemy mięso”, a w jego miejsce wejdą tofu, strączki, ser sałatkowy i hummus. To wersja wegetariańska, jajka i nabiał zostają.",
         },
         {
           q: "Skąd są ilości?",
-          a: "Z domowej praktyki, nie z tabel żywieniowych. To punkt startu: po pierwszym tygodniu będziesz wiedzieć, czego zostało, a czego brakło.",
+          a: "Z domowej praktyki, nie z tabel żywieniowych. To punkt startu: po pierwszym tygodniu będziesz wiedzieć, co zostało, a czego zabrakło. Dziecko liczymy jak dorosłego, przy dwojgu małych odejmij jedną osobę.",
         },
         {
           q: "Kiedy zrobić dokupkę?",
@@ -87,13 +110,21 @@ const copy: TopicCopy = {
     items: [
       { id: "recipeList", label: "Lista zakupów z przepisu", body: "Pięć obiadów naraz, składniki na jednej liście." },
       { id: "guidePrint", label: "Lista zakupów do druku", body: "Kartka z planem obiadów i miejscem na produkty." },
-      { id: "aisleTool", label: "Podział listy na alejki", body: "Masz już swoją listę? Wklej ją tutaj." },
+      { id: "aisleTool", label: "Podział listy na alejki", body: "Masz już swoją listę? Wklej ją, jak leci." },
     ],
   },
   closing: {
     lines: ["Kupione w sobotę.", "Zjedzone do piątku."],
-    body: "Kangur - lista zakupów z AI. Dostępny na Android i iOS.",
+    body: "Następną listę Kangur podpowie z pięciu poprzednich. Na Android i iOS.",
   },
+  imprint:
+    "Poradnik wydaje Kangur, Krzysztof Krawiec Software. Stan na 25 listopada 2026. Liczby z tej strony można cytować, z linkiem do getkangur.com/tydzien.",
 };
 
 export const GUIDE_WEEK = typesetCopy(copy);
+
+/** Below the list, where the work is done. */
+export const WEEK_NUDGE = typesetCopy({
+  title: "A kto idzie do sklepu?",
+  body: "Skopiuj listę, w Kangurze wybierz „Tekst ze schowka” i zaproś domowników. Każdy dopisuje i odhacza u siebie. To jedno z dziesięciu darmowych użyć AI. Lista jest długa, rzuć okiem, czy wszystko dojechało.",
+});

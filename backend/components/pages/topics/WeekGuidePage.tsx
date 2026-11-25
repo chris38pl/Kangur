@@ -2,11 +2,12 @@ import { TopicPage } from "@/components/pages/TopicPage";
 import { Phone } from "@/components/site/Phone";
 import { PrintFoot } from "@/components/site/PrintFoot";
 import { Sticker } from "@/components/site/Sticker";
+import { ToolNudge } from "@/components/site/ToolNudge";
 import { WeekTable } from "@/components/site/WeekTable";
 import prose from "@/components/site/prose.module.css";
 import { WeekCalculator } from "@/components/tools/WeekCalculator";
 import { homeCopy } from "@/lib/marketing/content/home";
-import { GUIDE_WEEK } from "@/lib/marketing/content/topics/guide-week";
+import { GUIDE_WEEK, WEEK_NUDGE } from "@/lib/marketing/content/topics/guide-week";
 import { GUIDES } from "@/lib/marketing/content/topics/guides";
 import { SCREENS } from "@/lib/marketing/images.generated";
 
@@ -22,7 +23,7 @@ export function WeekGuidePage() {
       parent={{ label: GUIDES.crumb, id: "guides" }}
       printable
       sticker="lezak"
-      art={<Sticker name="z-koszykiem" className={styles.stickerStanding} priority />}
+      art={<Sticker name="z-koszykiem" className={`${styles.stickerStanding} ${styles.toolArt}`} priority />}
       slots={{
         table: <WeekTable />,
         kangur: <Sticker name="skron" className={styles.sticker} />,
@@ -38,9 +39,10 @@ export function WeekGuidePage() {
     >
       <section className={styles.tool}>
         <div className={prose.wrap}>
-          <WeekCalculator>
-            <PrintFoot />
-          </WeekCalculator>
+          <WeekCalculator
+            code={<PrintFoot />}
+            nudge={<ToolNudge {...WEEK_NUDGE} page="kalkulator-tydzien" />}
+          />
         </div>
       </section>
     </TopicPage>

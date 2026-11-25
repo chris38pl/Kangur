@@ -57,6 +57,25 @@
   background: none;
 }
 
+/* Store buttons on the first screen. */
+.stores {
+  margin-top: 24px;
+}
+
+.stores p {
+  margin: 12px 0 0;
+  color: var(--kangur-text-body);
+  font-size: 0.95rem;
+}
+
+.imprint {
+  max-width: 46rem;
+  margin: 0 auto 48px;
+  color: var(--kangur-text-muted);
+  font-size: 0.92rem;
+  text-align: center;
+}
+
 .fact {
   max-width: 46rem;
   margin: 0 auto;
@@ -99,6 +118,77 @@
 .related:hover h3 a {
   color: var(--kangur-primary-deep);
   text-decoration: underline;
+}
+
+/* On a phone every row is a card: four columns of Polish words do not fit next to each other. */
+@media (max-width: 619px) {
+  .table.stack,
+  .table.stack tbody,
+  .table.stack tr,
+  .table.stack th,
+  .table.stack td {
+    display: block;
+    width: auto;
+  }
+
+  .table.stack {
+    min-width: 0;
+    font-size: 1rem;
+  }
+
+  .table.stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .table.stack tr {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--kangur-border);
+  }
+
+  .table.stack tbody th {
+    padding: 0 0 4px;
+    border: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+  }
+
+  .table.stack td {
+    display: grid;
+    grid-template-columns: 86px minmax(0, 1fr);
+    gap: 10px;
+    padding: 4px 10px 4px 0;
+    border: 0;
+  }
+
+  .table.stack td:not([data-label]) {
+    display: block;
+  }
+
+  .table.stack td::before {
+    content: attr(data-label);
+    color: var(--kangur-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .table.stack td:not([data-label])::before {
+    content: none;
+  }
+
+  .table.stack:not(.plain) td:last-child {
+    margin-top: 4px;
+    padding-left: 10px;
+    border-radius: 10px;
+    color: var(--kangur-text);
+    font-weight: 600;
+  }
+
+  .table.stack:not(.plain) td:last-child {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
 }
 
 @media (min-width: 760px) {

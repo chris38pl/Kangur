@@ -1,17 +1,19 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 
 import { ListActions } from "@/components/tools/ListActions";
-import { ListGroups, type LineGroup } from "@/components/tools/ListGroups";
+import { LeftToBuy, ListGroups, type LineGroup } from "@/components/tools/ListGroups";
 import { Stepper } from "@/components/tools/Stepper";
 import { AISLES, AISLE_ICONS, AISLE_LABELS } from "@/lib/marketing/aisles/labels";
 import { listToText, plural } from "@/lib/marketing/lists/format";
-import { useStored } from "@/lib/marketing/lists/use-stored";
+import { strings } from "@/lib/marketing/lists/stored";
+import { useHydrated, useStored } from "@/lib/marketing/lists/use-stored";
 import {
   DEFAULT_WEEK,
   WEEK_DINNERS,
   WEEK_PEOPLE,
+  readWeek,
   weekList,
   type Trip,
   type WeekPlan,
@@ -20,50 +22,83 @@ import {
 import styles from "./Calculator.module.css";
 
 const TRIPS: readonly { id: Trip; title: string; hint: string }[] = [
-  { id: "main", title: "Duże zakupy", hint: "W weekend. Ciężkie i trwałe." },
-  { id: "topup", title: "Dokupka", hint: "W środku tygodnia. Świeże, na kilka dni." },
+  { id: "main", title: "Duże zakupy", hint: "W wolny dzień. Ciężkie i trwałe." },
+  { id: "topup", title: "Dokupka", hint: "Kilka dni później. Świeże, na krótko." },
   { id: "cupboard", title: "Najpierw sprawdź szafkę", hint: "Starcza na dłużej niż tydzień." },
 ];
 
 const PRESETS: readonly { label: string; people: number }[] = [
   { label: "Jedna osoba", people: 1 },
   { label: "Dwie", people: 2 },
-  { label: "Rodzina 2+2", people: 4 },
+  { label: "Cztery", people: 4 },
 ];
 
 const NOTHING_DONE: readonly string[] = [];
+const URL = "https://www.getkangur.com/poradniki/lista-zakupow-na-tydzien";
 
-export function WeekCalculator({ children }: { children?: ReactNode }) {
-  const [stored, setPlan, reset] = useStored<WeekPlan>("tydzien", DEFAULT_WEEK);
-  const [done, setDone, clearDone] = useStored("tydzien-kupione", NOTHING_DONE);
+export function WeekCalculator({
+  code,
+  nudge,
+}: {
+  /** Corner of the printed sheet. */
+  code?: ReactNode;
+  /** Where the list can go next. */
+  nudge?: ReactNode;
+}) {
+  const [plan, setPlan, reset] = useStored<WeekPlan>("tydzien", DEFAULT_WEEK, readWeek);
+  const [done, setDone, clearDone] = useStored("tydzien-kupione", NOTHING_DONE, strings);
   const [view, setView] = useState<"trips" | "aisles">("trips");
+  const listId = useId();
+  // Until the page comes alive a choice would be lost, so the form waits.
+  const ready = useHydrated();
 
-  const plan = useMemo(() => ({ ...DEFAULT_WEEK, ...stored }), [stored]);
   const lines = useMemo(() => weekList(plan), [plan]);
   const people = plural(plan.people, "osoba", "osoby", "osób");
-  const title = `Zakupy na tydzień, ${people}`;
+  const title = `Lista zakupów na tydzień, ${people}`;
   const doneSet = new Set(done);
+  const left = lines.filter((line) => !doneSet.has(line.id)).length;
+  const total = plural(lines.length, "produkt", "produkty", "produktów");
 
-  const groups: LineGroup[] =
+  const groups: LineGroup[] = (
     view === "trips"
-      ? TRIPS.map(({ id, title: name, hint }) => ({
+      ? TRIPS.map(({ id, title: name, hint }): LineGroup => ({
           key: id,
           title: name,
           hint,
           lines: lines.filter((line) => line.when === id),
-        })).filter((group) => group.lines.length > 0)
-      : AISLES.map((aisle) => ({
+        }))
+      : AISLES.map((aisle): LineGroup => ({
           key: aisle,
           title: AISLE_LABELS[aisle],
           icon: AISLE_ICONS[aisle],
           lines: lines.filter((line) => line.aisle === aisle),
-        })).filter((group) => group.lines.length > 0);
+        }))
+  ).filter((group) => group.lines.length > 0);
+
+  const text = listToText(
+    title,
+    groups.map((group) => ({
+      title: group.title,
+      lines: left > 0 ? group.lines.filter((line) => !doneSet.has(line.id)) : group.lines,
+    })),
+  );
+  const actions = (
+    <ListActions
+      title={title}
+      text={text}
+      url={URL}
+      copied={left > 0 && left < lines.length ? `Skopiowane: ${left} z ${lines.length}` : undefined}
+    />
+  );
 
   return (
     <div className={styles.calculator}>
       <form className={styles.form} data-noprint onSubmit={(event) => event.preventDefault()}>
-        <fieldset>
+        <fieldset disabled={!ready}>
           <legend>Dla kogo ta lista?</legend>
+          <a className={styles.jump} href={`#${listId}`}>
+            Przejdź do listy, {total}
+          </a>
           <div className={styles.views}>
             {PRESETS.map((preset) => (
               <button
@@ -77,7 +112,8 @@ export function WeekCalculator({ children }: { children?: ReactNode }) {
             ))}
           </div>
           <Stepper
-            label="Ile osób je w domu"
+            label="Ile osób jest w domu"
+            hint="dwoje małych dzieci to mniej więcej jedna osoba"
             value={plan.people}
             unit={people}
             {...WEEK_PEOPLE}
@@ -125,26 +161,17 @@ export function WeekCalculator({ children }: { children?: ReactNode }) {
         </button>
       </form>
 
-      <div className={styles.result}>
+      <div className={styles.result} id={listId} tabIndex={-1}>
         <div className={styles.resultHead}>
           <h2>{title}</h2>
-          <p aria-live="polite">
-            {plural(lines.length, "produkt", "produkty", "produktów")}.
-            <span data-noprint> Co masz w domu, odhacz i nie kupuj.</span>
-          </p>
-          <div className={styles.views} data-noprint>
-            <button
-              type="button"
-              aria-pressed={view === "trips"}
-              onClick={() => setView("trips")}
-            >
+          <LeftToBuy total={total} left={left} ticked={lines.length - left} onUntick={clearDone} />
+          <div className={styles.code}>{code}</div>
+          {actions}
+          <div className={styles.views} role="group" aria-label="Widok listy" data-noprint>
+            <button type="button" aria-pressed={view === "trips"} onClick={() => setView("trips")}>
               Duże zakupy i dokupka
             </button>
-            <button
-              type="button"
-              aria-pressed={view === "aisles"}
-              onClick={() => setView("aisles")}
-            >
+            <button type="button" aria-pressed={view === "aisles"} onClick={() => setView("aisles")}>
               Według alejek
             </button>
           </div>
@@ -153,26 +180,14 @@ export function WeekCalculator({ children }: { children?: ReactNode }) {
         <ListGroups
           groups={groups}
           done={doneSet}
+          partTitle={view === "trips" ? title : undefined}
           onToggle={(id) =>
             setDone(doneSet.has(id) ? done.filter((other) => other !== id) : [...done, id])
           }
         />
 
-        <ListActions
-          title={title}
-          text={listToText(
-            title,
-            groups.map((group) => ({
-              title: group.title,
-              lines: group.lines.filter((line) => !doneSet.has(line.id)),
-            })),
-          )}
-        />
-        <p className={styles.kangurHint} data-noprint>
-          Skopiowaną listę wkleisz do Kangura przez „Tekst ze schowka”. To jedno użycie AI, a lista
-          od tej chwili jest wspólna.
-        </p>
-        <div className={styles.sheetFoot}>{children}</div>
+        {actions}
+        {nudge}
       </div>
     </div>
   );

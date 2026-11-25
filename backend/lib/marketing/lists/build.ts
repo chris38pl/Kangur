@@ -4,11 +4,14 @@ import { typesetPl } from "@/lib/marketing/typography";
 
 /** Something you can put in a basket, with the smallest amount worth buying. */
 export type Product<When extends string = string> = {
+  /** No commas: a copied list is split at them, by people and by AI. */
   name: string;
   aisle: Aisle;
   unit: "kg" | "g" | "l" | "szt." | "opak.";
   /** Amounts are rounded up to this: half a kilo, a whole can. */
   step: number;
+  /** A smaller pack for small needs: eggs come in sixes and tens. */
+  small?: number;
   when: When;
   note?: string;
 };
@@ -31,14 +34,17 @@ export type Line<When extends string = string> = {
   note?: string;
 };
 
-function roundUp(amount: number, step: number): number {
+function roundUp(amount: number, { step, small }: Pick<Product, "step" | "small">): number {
   // 0.1 + 0.2 must not become the next half kilo.
+  if (small && amount <= small + 1e-9) return small;
   return Math.ceil(amount / step - 1e-9) * step;
 }
 
+const NBSP = "\u00a0";
+
 export function formatAmount(amount: number, unit: Product["unit"]): string {
-  if (unit === "g" && amount >= 1000) return `${decimal(amount / 1000)} kg`;
-  return `${decimal(amount)} ${unit}`;
+  if (unit === "g" && amount >= 1000) return `${decimal(amount / 1000)}${NBSP}kg`;
+  return `${decimal(amount)}${NBSP}${unit}`;
 }
 
 /**
@@ -58,11 +64,12 @@ export function addUp<Id extends string, When extends string>(
   return [...totals]
     .filter(([, amount]) => amount > 0)
     .map(([id, amount]) => {
-      const { name, aisle, unit, step, when, note } = products[id];
+      const product = products[id];
+      const { name, aisle, unit, when, note } = product;
       return {
         id,
         name: typesetPl(name),
-        quantity: formatAmount(roundUp(amount, step), unit),
+        quantity: formatAmount(roundUp(amount, product), unit),
         aisle,
         when,
         ...(note ? { note: typesetPl(note) } : {}),
