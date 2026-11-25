@@ -3,23 +3,23 @@ import type { HomeCopy } from "@/lib/marketing/content/home-types";
 export const homeEs: HomeCopy = {
   hero: {
     eyebrow: "Kangur - la app de lista de la compra compartida",
-    lines: ["¿La lista llegó por el chat?", "Una captura y listo."],
-    lead: "Haz una captura de la conversación. Kangur saca los productos, los ordena por pasillos y los enseña a todos en casa. En el súper solo deslizas.",
+    lines: ["¿La lista está en el chat?", "Una captura y listo."],
+    lead: "Haz una captura de la conversación. Kangur saca los productos, los ordena por pasillos y los comparte con toda la casa. En el súper solo deslizas.",
     storesNote: "Para iPhone y Android. Sin anuncios. 10 usos de IA gratis para empezar.",
     playSmall: "DISPONIBLE EN",
-    iosSmall: "DESCARGAR EN",
+    iosSmall: "DESCÁRGALO EN EL",
     chatLabel: "Conversación de ejemplo de la que sale la lista",
-    screenAlt: "La misma lista en Kangur: 22 artículos, primero fruta y verdura, luego lácteos",
+    screenAlt: "La lista de esta conversación en Kangur: 22 artículos, primero fruta y verdura, luego lácteos",
   },
   chat: {
     contact: "Cariño ❤️",
     status: "en línea",
     messages: [
-      ["me", "salgo del trabajo, ¿compro algo?"],
-      ["them", "¡sí! espera"],
+      ["me", "salgo del curro, compro algo?"],
+      ["them", "sí! espera"],
       [
         "them",
-        "leche, huevos 10, tomates, papel higiénico, queso, pan, mantequilla, pollo 1kg, lavavajillas, plátanos, pasta, cebolla, passata x2, yogur natural, patatas, ajo, jamón, café, pepinos, pienso para el perro",
+        "leche, 10 huevos, tomates, papel higiénico, queso, pan, mantequilla, pollo 1kg, lavavajillas, plátanos, pasta, cebolla, passata x2, yogur natural, patatas, ajo, jamón, café, pepinos, pienso para el perro",
       ],
       ["them", "que no se te olvide nada 😘"],
       ["them", "ah y unas patatas fritas"],
@@ -54,7 +54,7 @@ export const homeEs: HomeCopy = {
     photo: {
       title: "La nota de la nevera",
       body: "Hazle una foto y Kangur la copia. Con una letra muy difícil puede equivocarse, así que échale un vistazo.",
-      note: ["leche, huevos 10", "papel higiénico", "pollo 1 kg ??", "mantequilla (¿queda?)", "algo para cenar"],
+      note: ["leche, 10 huevos", "papel higiénico", "pollo 1 kg ??", "mantequilla (¿queda?)", "algo para cenar"],
     },
     dish: {
       title: "El plato de hoy",
@@ -68,13 +68,13 @@ export const homeEs: HomeCopy = {
     },
     typed: {
       title: "De memoria",
-      body: "Escribe con comas, dicta o pega un texto. O añade uno a uno: Kangur sugiere con dos letras.",
+      body: "Escribe con comas, dicta o pega un texto. O añádelos de uno en uno: con dos letras, Kangur ya te da ideas.",
       chips: ["leche", "pan", "algo dulce"],
     },
   },
   together: {
     lines: ["Dos móviles,", "una sola lista."],
-    body: "Alguien añade mantequilla desde el sofá y alguien café de camino al súper. Al momento las dos cosas están en la lista de los dos.",
+    body: "Alguien añade mantequilla desde el sofá y otra persona, café de camino al súper. Un momento después, las dos cosas están en los dos móviles.",
     points: [
       "Invita por correo a todas las personas que quieras",
       "Las invitaciones no cuestan nada",
@@ -85,21 +85,21 @@ export const homeEs: HomeCopy = {
   },
   summary: {
     lines: ["¿Pimientos?", "No había."],
-    body: "Después de la compra ves qué se compró, qué faltó y cuánto tardaste. Antes de que alguien pregunte.",
+    body: "Después de la compra ves qué se compró y qué faltó. Antes de que alguien pregunte.",
     screenAlt: "Resumen de la compra en Kangur: 18 comprados, 1 no disponible, 24 minutos",
   },
   price: {
     lines: ["¿Cuánto cuesta?", "Aquí va el ticket."],
-    body: "Las listas, tu casa y el modo compra son gratis. Solo se paga la IA sin límite y un historial más largo, una vez por todo el espacio y no por persona.",
+    body: "Hacer listas, compartirlas en casa y usar el modo compra es gratis. Solo se paga la IA sin límite y un historial más largo: una suscripción mensual para todo el espacio, no una por persona.",
     receiptLabel: "Precios de Kangur en forma de ticket",
     receipt: [
       { kind: "head", text: "Kangur" },
       { kind: "item", text: "Listas compartidas", price: "0,00" },
       { kind: "item", text: "Tu gente", note: "toda la que quieras", price: "0,00" },
-      { kind: "item", text: "10 usos de IA para empezar", price: "0,00" },
-      { kind: "item", text: "Anuncios", note: "no nos quedan", price: "-" },
+      { kind: "item", text: "10 usos de IA para empezar", note: "para todo el espacio", price: "0,00" },
+      { kind: "item", text: "Anuncios", note: "no los trabajamos", price: "-" },
       { kind: "rule" },
-      { kind: "item", text: "Premium", note: "IA sin límite, 200 listas en el historial", price: "en la tienda" },
+      { kind: "item", text: "Premium, al mes", note: "IA sin límite, 200 listas en el historial", price: "en la app" },
       { kind: "foot", text: "La app muestra el precio en tu moneda." },
       { kind: "rule" },
       { kind: "total", text: "Para empezar", price: "0,00" },
@@ -112,22 +112,22 @@ export const homeEs: HomeCopy = {
     body: "Kangur lo hace una empresa unipersonal de Polonia, Krzysztof Krawiec Software. Sin departamento de publicidad y sin vender datos.",
     points: [
       { title: "No lee tus chats", body: "Solo ve la captura que eliges." },
-      { title: "No conoce tus contactos ni tu ubicación", body: "No los pide: una lista de la compra no los necesita." },
+      { title: "No mira tus contactos ni el GPS", body: "Ni siquiera los pide: una lista de la compra no los necesita." },
       { title: "No tiene anuncios", body: "Vive de Premium, no de tu atención." },
     ],
     safetyLink: "Qué permisos usa Kangur (en inglés)",
     aboutLink: "De dónde viene (en inglés)",
   },
   faq: {
-    lines: ["Antes de descargar,", "en corto."],
+    lines: ["Antes de descargar,", "en pocas palabras."],
     items: [
       {
         q: "¿Qué es Kangur?",
-        a: "Kangur es una app para iPhone y Android de listas de la compra compartidas. Hace la lista a partir de una captura del chat, la foto de una nota, el nombre de un plato, tus listas anteriores o lo que escribas, y la ordena por pasillos. Kangur significa canguro en polaco: el naranja con sudadera turquesa del icono.",
+        a: "Kangur es una app de listas de la compra compartidas para iPhone y Android. Hace la lista a partir de una captura del chat, la foto de una nota, el nombre de un plato, tus listas anteriores o lo que escribas, y la ordena por pasillos. Kangur significa canguro en polaco: el naranja con sudadera turquesa del icono.",
       },
       {
         q: "¿Kangur es gratis?",
-        a: "Sí, con un límite: empiezas con 10 usos de IA que no se renuevan. Las listas a mano, tu gente y el modo compra no tienen límite. La IA sin límite viene con Premium.",
+        a: "Sí. Hay dos límites: 10 usos de IA para todo el espacio, que no se renuevan, y las 20 últimas listas en el historial. Las listas a mano, compartir y el modo compra no tienen límite. La IA sin límite viene con Premium.",
       },
       {
         q: "¿La otra persona tiene que pagar?",
@@ -135,15 +135,15 @@ export const homeEs: HomeCopy = {
       },
       {
         q: "¿Kangur lee mis mensajes?",
-        a: "No. No tiene acceso a ninguna app de mensajería. Solo ve la imagen que eliges de la galería. La imagen va al proveedor de IA (OpenAI) para leer la lista y Kangur no la guarda.",
+        a: "No. No tiene acceso a ninguna app de mensajería. Solo ve la imagen que eliges de la galería. La imagen va al proveedor de IA (OpenAI), que lee en ella la lista. Kangur no guarda la imagen.",
       },
       {
         q: "¿Qué funciona sin cobertura en el súper?",
-        a: "Marcar productos en una lista abierta: los cambios esperan en el móvil y se envían después. Crear listas y usar la IA necesita internet.",
+        a: "El modo compra en una lista que ya tienes abierta: marcas y añades, y los cambios se envían después. Para crear listas y usar la IA hace falta internet.",
       },
       {
-        q: "¿Tiene que ver con el concurso Canguro o con un escritorio remoto?",
-        a: "Con ninguno. Canguros hay muchos, el nuestro solo hace listas de la compra. No controla el móvil ni el ordenador y nadie de Kangur te va a llamar. [[safety|Más sobre seguridad (en inglés)]].",
+        q: "¿Tiene que ver con el concurso Canguro?",
+        a: "No. Canguros hay muchos, el nuestro solo hace listas de la compra. [[safety|Cómo reconocernos (en inglés)]].",
       },
     ],
   },

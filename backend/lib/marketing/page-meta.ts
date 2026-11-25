@@ -21,59 +21,59 @@ const PAGE_META: Record<
     pl: {
       title: "Kangur - aplikacja do wspólnej listy zakupów z AI",
       description:
-        "Kangur to aplikacja do list zakupów na iPhone’a i Androida. Zrób listę ze zdjęcia, zrzutu czatu lub przepisu. Produkty ułożą się według alejek.",
+        "Kangur to aplikacja do list zakupów na iPhone’a i Androida. Zrób listę ze zdjęcia, zrzutu czatu lub nazwy dania. Produkty ułożą się według alejek.",
     },
     en: {
       title: "Kangur - shared grocery list app with AI",
       description:
-        "Kangur is a grocery list app for iPhone and Android. Make a list from a photo, a chat screenshot or a recipe. Items line up by store aisle.",
+        "Kangur is a grocery list app for iPhone and Android. Make a list from a photo, a chat screenshot or a dish name. Items line up by store aisle.",
     },
     de: {
-      title: "Kangur - App für gemeinsame Einkaufslisten mit KI",
+      title: "Kangur - App für die gemeinsame Einkaufsliste, mit KI",
       description:
-        "Kangur ist eine Einkaufslisten-App für iPhone und Android. Erstelle Listen aus Foto, Chat-Screenshot oder Rezept, sortiert nach Gängen im Markt.",
+        "Kangur ist eine Einkaufslisten-App für iPhone und Android. Erstelle Listen aus Foto, Chat-Screenshot oder Gericht, sortiert nach Gängen im Markt.",
     },
     fr: {
-      title: "Kangur - appli de liste de courses partagée avec l’IA",
+      title: "Kangur - appli de liste de courses partagée, avec IA",
       description:
-        "Kangur est une appli de liste de courses pour iPhone et Android. Créez une liste depuis une photo, une capture de chat ou une recette, triée par rayon.",
+        "Kangur est une appli de liste de courses pour iPhone et Android. Créez une liste depuis une photo, une capture d’écran ou un plat, triée par rayon.",
     },
     es: {
-      title: "Kangur - app de lista de la compra compartida con IA",
+      title: "Kangur - app de lista de la compra compartida, con IA",
       description:
-        "Kangur es una app de lista de la compra para iPhone y Android. Crea una lista desde una foto, una captura de chat o una receta, ordenada por pasillos.",
+        "Kangur es una app de lista de la compra para iPhone y Android. Crea una lista desde una foto, una captura de chat o un plato, ordenada por pasillos.",
     },
     it: {
-      title: "Kangur - app per la lista della spesa condivisa con AI",
+      title: "Kangur - app con AI per la lista della spesa condivisa",
       description:
-        "Kangur è un’app per la lista della spesa su iPhone e Android. Crea la lista da una foto, uno screenshot della chat o una ricetta, divisa per reparti.",
+        "Kangur è un’app per la lista della spesa su iPhone e Android. Crea la lista da una foto, uno screenshot della chat o un piatto, divisa per reparti.",
     },
     cs: {
-      title: "Kangur - aplikace na společný nákupní seznam s AI",
+      title: "Kangur - aplikace s AI na sdílený nákupní seznam",
       description:
-        "Kangur je aplikace na nákupní seznamy pro iPhone a Android. Seznam vytvoříte z fotky, snímku chatu nebo receptu a položky se seřadí podle uliček.",
+        "Kangur je aplikace na nákupní seznamy pro iPhone a Android. Seznam vytvoříš z fotky, screenshotu chatu nebo jídla a položky se seřadí podle uliček.",
     },
     ru: {
-      title: "Kangur - приложение для общих списков покупок с AI",
+      title: "Kangur - приложение с AI для общего списка покупок",
       description:
-        "Kangur - приложение для списков покупок на iPhone и Android. Список из фото, скриншота чата или рецепта, товары разложены по отделам магазина.",
+        "Kangur - приложение для списков покупок на iPhone и Android. Список из фото, скриншота чата или блюда, товары разложены по отделам магазина.",
     },
     uk: {
-      title: "Kangur - застосунок для спільних списків покупок з AI",
+      title: "Kangur - додаток з AI для спільного списку покупок",
       description:
-        "Kangur - застосунок для списків покупок на iPhone та Android. Список із фото, скриншота чату чи рецепта, товари розкладено за відділами магазину.",
+        "Kangur - застосунок для списків покупок на iPhone та Android. Список із фото, скриншота чату чи страви, товари розкладено за відділами магазину.",
     },
     be: {
-      title: "Kangur - праграма для агульных спісаў пакупак з AI",
+      title: "Kangur - праграма з AI для агульнага спіса пакупак",
       description:
-        "Kangur - праграма для спісаў пакупак на iPhone і Android. Спіс з фота, скрыншота чата або рэцэпта, тавары раскладзены па аддзелах крамы.",
+        "Kangur - праграма для спісаў пакупак на iPhone і Android. Спіс з фота, скрыншота чата або стравы, тавары раскладзены па аддзелах крамы.",
     },
   },
   pricing: {
     pl: {
       title: "Kangur - cennik. Ile kosztuje Premium i co jest za darmo",
       description:
-        "Listy zakupów, domownicy i tryb zakupów w Kangurze są darmowe. Premium kosztuje 9,99 zł miesięcznie za cały dom, pierwszy miesiąc za darmo.",
+        "Listy zakupów, domownicy i tryb zakupów w Kangurze są darmowe. Premium kosztuje 9,99 zł miesięcznie za całą przestrzeń. Pełny cennik na paragonie.",
     },
     en: {
       title: "Kangur pricing - what is free and what Premium adds",
@@ -109,14 +109,14 @@ const PAGE_META: Record<
     pl: {
       title: "Kangur dla mediów - fakty, grafiki i kontakt",
       description:
-        "Opis Kangura w jednym i trzech zdaniach, sprawdzone fakty, logo i zrzuty ekranu do pobrania, pomysły na tekst i bezpośredni kontakt do twórcy.",
+        "Opis Kangura w jednym i czterech zdaniach, fakty, ikona i ekrany do pobrania, pomysły na tekst i kontakt z twórcą.",
     },
   },
   faq: {
     pl: {
       title: "Pytania i odpowiedzi o aplikacji Kangur",
       description:
-        "Jak zrobić listę ze zrzutu czatu, zaprosić domownika, co daje Premium i co działa przy słabym zasięgu. Odpowiedzi o liście zakupów Kangur.",
+        "Jak zrobić listę ze zrzutu czatu, zaprosić domownika, co daje Premium i co działa przy słabym zasięgu. Odpowiedzi na pytania o Kangura, listę zakupów.",
     },
     en: {
       title: "Questions and answers about the Kangur app",
@@ -128,52 +128,52 @@ const PAGE_META: Record<
     pl: {
       title: "Kontakt - Kangur, lista zakupów z AI",
       description:
-        "Masz pytanie, pomysł albo kłopot z listą zakupów? Napisz do nas, zwykle odpowiadamy w ciągu 24-48 godzin.",
+        "Masz pytanie, pomysł albo kłopot z listą zakupów? Napisz do nas, zwykle odpowiadamy w ciągu dwóch dni.",
     },
     en: {
       title: "Contact - Kangur, grocery list with AI",
       description:
-        "A question, an idea or a problem with your grocery list? Write to us, we usually reply within 24-48 hours.",
+        "A question, an idea or a problem with your grocery list? Write to us, we usually reply within two days.",
     },
     de: {
       title: "Kontakt - Kangur, Einkaufsliste mit KI",
       description:
-        "Eine Frage, eine Idee oder ein Problem mit der Einkaufsliste? Schreib uns, meist antworten wir innerhalb von 24-48 Stunden.",
+        "Eine Frage, eine Idee oder ein Problem mit der Einkaufsliste? Schreib uns, meist antworten wir innerhalb von zwei Tagen.",
     },
     fr: {
       title: "Contact - Kangur, liste de courses avec l’IA",
       description:
-        "Une question, une idée ou un souci avec votre liste de courses ? Écrivez-nous, nous répondons en général sous 24 à 48 heures.",
+        "Une question, une idée ou un souci avec votre liste de courses ? Écrivez-nous, nous répondons en général sous deux jours.",
     },
     es: {
       title: "Contacto - Kangur, lista de la compra con IA",
       description:
-        "¿Una pregunta, una idea o un problema con tu lista de la compra? Escríbenos, solemos responder en 24-48 horas.",
+        "¿Una pregunta, una idea o un problema con tu lista de la compra? Escríbenos, solemos responder en dos días.",
     },
     it: {
       title: "Contatti - Kangur, lista della spesa con AI",
       description:
-        "Una domanda, un’idea o un problema con la lista della spesa? Scrivici, di solito rispondiamo entro 24-48 ore.",
+        "Una domanda, un’idea o un problema con la lista della spesa? Scrivici, di solito rispondiamo entro due giorni.",
     },
     cs: {
       title: "Kontakt - Kangur, nákupní seznam s AI",
       description:
-        "Máš otázku, nápad nebo problém s nákupním seznamem? Napiš nám, obvykle odpovídáme do 24-48 hodin.",
+        "Máš otázku, nápad nebo problém s nákupním seznamem? Napiš nám, obvykle odpovídáme do dvou dnů.",
     },
     ru: {
       title: "Контакты - Kangur, список покупок с AI",
       description:
-        "Вопрос, идея или проблема со списком покупок? Напишите нам, обычно мы отвечаем в течение 24-48 часов.",
+        "Вопрос, идея или проблема со списком покупок? Напишите нам, обычно мы отвечаем в течение двух дней.",
     },
     uk: {
       title: "Контакти - Kangur, список покупок з AI",
       description:
-        "Питання, ідея або проблема зі списком покупок? Напишіть нам, зазвичай ми відповідаємо протягом 24-48 годин.",
+        "Питання, ідея або проблема зі списком покупок? Напишіть нам, зазвичай ми відповідаємо протягом двох днів.",
     },
     be: {
       title: "Кантакты - Kangur, спіс пакупак з AI",
       description:
-        "Пытанне, ідэя або праблема са спісам пакупак? Напішыце нам, звычайна мы адказваем на працягу 24-48 гадзін.",
+        "Пытанне, ідэя або праблема са спісам пакупак? Напішыце нам, звычайна мы адказваем на працягу двух дзён.",
     },
   },
   privacy: {
@@ -204,12 +204,52 @@ const PAGE_META: Record<
     pl: {
       title: "Jak usunąć konto w aplikacji Kangur",
       description:
-        "Usuń konto Kangur w aplikacji, krok po kroku. Co znika razem z kontem, a co może zostać, na przykład historia płatności w sklepie.",
+        "Usuń konto w Kangurze, krok po kroku w aplikacji. Co znika razem z kontem, a co może zostać, i dlaczego Premium anuluje się osobno.",
     },
     en: {
       title: "How to delete your Kangur account",
       description:
-        "Delete your Kangur account in the app, step by step. What goes with the account and what may remain, such as payment history in the store.",
+        "Delete your Kangur account in the app, step by step. What goes with the account, what may stay, and why Premium is canceled separately.",
+    },
+    de: {
+      title: "Kangur-Konto löschen, so geht es in der App",
+      description:
+        "Lösche dein Kangur-Konto Schritt für Schritt in der App. Was verschwindet, was bleiben kann und warum du Premium extra kündigst.",
+    },
+    fr: {
+      title: "Comment supprimer votre compte Kangur",
+      description:
+        "Supprimez votre compte Kangur dans l’appli, étape par étape. Ce qui disparaît, ce qui peut rester, et pourquoi Premium se résilie à part.",
+    },
+    es: {
+      title: "Cómo eliminar tu cuenta de Kangur",
+      description:
+        "Elimina tu cuenta de Kangur en la app, paso a paso. Qué desaparece, qué puede quedar y por qué Premium se cancela aparte.",
+    },
+    it: {
+      title: "Come eliminare l’account di Kangur",
+      description:
+        "Elimina l’account di Kangur nell’app, passo dopo passo. Cosa sparisce, cosa può restare e perché Premium si disdice a parte.",
+    },
+    cs: {
+      title: "Jak smazat účet v aplikaci Kangur",
+      description:
+        "Smaž si účet v Kangurovi krok za krokem v aplikaci. Co zmizí, co může zůstat a proč se Premium ruší zvlášť.",
+    },
+    ru: {
+      title: "Как удалить аккаунт в приложении Kangur",
+      description:
+        "Удалите аккаунт Kangur в приложении, шаг за шагом. Что исчезнет, что может остаться и почему Premium отменяется отдельно.",
+    },
+    uk: {
+      title: "Як видалити обліковий запис Kangur",
+      description:
+        "Видаліть обліковий запис Kangur у застосунку, крок за кроком. Що зникне, що може залишитися і чому Premium скасовується окремо.",
+    },
+    be: {
+      title: "Як выдаліць уліковы запіс Kangur",
+      description:
+        "Выдаліце ўліковы запіс Kangur у праграме, крок за крокам. Што знікне, што можа застацца і чаму Premium скасоўваецца асобна.",
     },
   },
 };

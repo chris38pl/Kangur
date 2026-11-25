@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,6 +9,7 @@ import {
   LanguageSwitcher,
 } from "@/components/marketing/LanguageSwitcher";
 import { MarketingNav, MobileMenu } from "@/components/marketing/MarketingNav";
+import { SiteFonts } from "@/components/marketing/SiteFonts";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { UtmCapture } from "@/components/marketing/UtmCapture";
 import {
@@ -17,7 +17,6 @@ import {
   SITE_DEFAULT_LOCALE,
   isAppLocale,
   withLocale,
-  type AppLocale,
 } from "@/lib/marketing/locale";
 import { getMessages } from "@/lib/marketing/messages";
 import { headerLinks } from "@/lib/marketing/navigation";
@@ -29,22 +28,6 @@ import {
 } from "@/lib/marketing/site";
 
 import "../globals.css";
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-jakarta",
-  display: "swap",
-});
-
-/** Plus Jakarta Sans has no Cyrillic. Manrope is its closest relative that does. */
-const manrope = Manrope({
-  subsets: ["cyrillic"],
-  variable: "--font-jakarta",
-  display: "swap",
-  preload: false,
-});
-
-const CYRILLIC: ReadonlySet<AppLocale> = new Set(["ru", "uk", "be"]);
 
 type Params = Promise<{ locale: string }>;
 
@@ -106,10 +89,10 @@ export default async function LocaleLayout({
   const home = withLocale(locale, "/");
 
   return (
-    <html lang={locale}>
-      <body
-        className={CYRILLIC.has(locale) ? manrope.variable : jakarta.variable}
-      >
+    // Anchors glide, page changes do not.
+    <html lang={locale} data-scroll-behavior="smooth">
+      <body>
+        <SiteFonts locale={locale} />
         <div className="mkt-shell">
           <UtmCapture />
           <a className="mkt-skip" href="#tresc">

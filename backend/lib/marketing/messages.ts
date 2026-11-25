@@ -27,23 +27,6 @@ export type MarketingMessages = {
     copyright: string;
     rightsReserved: string;
   };
-  deleteAccount: {
-    title: string;
-    meta: string;
-    intro: string;
-    howHeading: string;
-    howPath: string;
-    howConfirm: string;
-    effectsHeading: string;
-    effectsBody: string;
-    removeHeading: string;
-    removeItems: [string, string, string, string, string, string];
-    keepHeading: string;
-    keepItems: [string, string, string, string];
-    accessHeading: string;
-    accessBody: string;
-    morePrivacy: string;
-  };
 };
 
 const en: MarketingMessages = {
@@ -73,39 +56,6 @@ const en: MarketingMessages = {
     copyright: "© 2026 Kangur",
     rightsReserved: "All rights reserved",
   },
-  deleteAccount: {
-    title: "Delete account",
-    meta: "Delete your Kangur account",
-    intro:
-      "If you have access to your account, you can delete it yourself - contacting support is not required.",
-    howHeading: "How to delete your account",
-    howPath: "Profile → Privacy & security → Delete account",
-    howConfirm:
-      "Then confirm the action by following the instructions shown in the app.",
-    effectsHeading: "What happens after deletion",
-    effectsBody:
-      "Account deletion is permanent and cannot be undone. If you want to use Kangur again later, you will need to create a new account.",
-    removeHeading: "What is deleted",
-    removeItems: [
-      "your user account,",
-      "profile data in Kangur,",
-      "shopping lists and their contents linked to your account (per Workspace rules - if other members still need the content, we remove your Workspace membership and leave data belonging to remaining members),",
-      "settings and list history tied to your account,",
-      "push notification tokens linked to the account,",
-      "Premium subscription data stored by Kangur.",
-    ],
-    keepHeading: "What may remain",
-    keepItems: [
-      "backups and technical logs - until rotation, usually for a limited period,",
-      "data we must keep for legal or accounting reasons,",
-      "payment history held by Stripe, Google Play, or the App Store under those services’ rules,",
-      "workspace content that still belongs to other members.",
-    ],
-    accessHeading: "If you cannot access your account",
-    accessBody:
-      "If you no longer have access to your account and cannot delete it in the app, contact us at support@getkangur.com.",
-    morePrivacy: "More about data processing:",
-  },
 };
 
 const pl: MarketingMessages = {
@@ -115,11 +65,11 @@ const pl: MarketingMessages = {
     terms: "Regulamin",
     contact: "Kontakt",
     download: "Pobierz aplikację",
-    mainAria: "Główne",
+    mainAria: "Menu główne",
     footerAria: "Stopka",
     languageAria: "Język",
     deleteAccount: "Usunięcie konta",
-    how: "Jak działa",
+    how: "Jak to działa",
     pricing: "Cennik",
     safety: "Bezpieczeństwo",
     about: "O Kangurze",
@@ -135,39 +85,6 @@ const pl: MarketingMessages = {
     copyright: "© 2026 Kangur",
     rightsReserved: "Wszelkie prawa zastrzeżone",
   },
-  deleteAccount: {
-    title: "Usunięcie konta",
-    meta: "Usuń konto Kangur",
-    intro:
-      "Jeżeli masz dostęp do swojego konta, możesz usunąć je samodzielnie - kontakt z supportem nie jest wymagany.",
-    howHeading: "Jak usunąć konto",
-    howPath: "Profil → Prywatność i bezpieczeństwo → Usuń konto",
-    howConfirm:
-      "Następnie potwierdź operację zgodnie z instrukcjami wyświetlanymi w aplikacji.",
-    effectsHeading: "Skutki usunięcia",
-    effectsBody:
-      "Usunięcie konta jest trwałe i nieodwracalne. Jeśli później zechcesz wrócić do Kangura, konieczne będzie założenie nowego konta.",
-    removeHeading: "Co zostanie usunięte",
-    removeItems: [
-      "konto użytkownika,",
-      "dane profilu w Kangurze,",
-      "listy zakupów i ich zawartość powiązane z Twoim kontem (zgodnie z zasadami Workspace - jeśli treści potrzebują inni członkowie, usuwamy Twoje członkostwo w Workspace, pozostawiając dane należące do pozostałych członków),",
-      "ustawienia oraz historię list powiązaną z kontem,",
-      "tokeny powiadomień push powiązane z kontem,",
-      "dane dotyczące subskrypcji Premium przechowywane przez Kangura.",
-    ],
-    keepHeading: "Co może pozostać",
-    keepItems: [
-      "kopie zapasowe i logi techniczne - do czasu rotacji, zwykle przez ograniczony okres,",
-      "dane, które musimy zachować z powodów prawnych lub rozliczeniowych,",
-      "historia płatności przechowywana przez Stripe, Google Play lub App Store zgodnie z zasadami tych usług,",
-      "treści Workspace należące do innych członków.",
-    ],
-    accessHeading: "Problemy z dostępem do konta",
-    accessBody:
-      "Jeżeli nie masz dostępu do swojego konta i nie możesz usunąć go z poziomu aplikacji, skontaktuj się z nami pod adresem support@getkangur.com.",
-    morePrivacy: "Więcej o przetwarzaniu danych:",
-  },
 };
 
 const de: MarketingMessages = {
@@ -175,7 +92,7 @@ const de: MarketingMessages = {
   nav: {
     faq: "FAQ",
     privacy: "Datenschutz",
-    terms: "AGB",
+    terms: "Nutzungsbedingungen",
     contact: "Kontakt",
     download: "App holen",
     mainAria: "Hauptnavigation",
@@ -198,16 +115,6 @@ const de: MarketingMessages = {
     copyright: "© 2026 Kangur",
     rightsReserved: "Alle Rechte vorbehalten",
   },
-  deleteAccount: {
-    ...en.deleteAccount,
-    title: "Konto löschen",
-    howHeading: "So löschst du dein Konto",
-    effectsHeading: "Folgen der Löschung",
-    removeHeading: "Was gelöscht wird",
-    keepHeading: "Was ggf. bleibt",
-    accessHeading: "Kein Zugang zum Konto",
-    morePrivacy: "Mehr zur Datenverarbeitung:",
-  },
 };
 
 const fr: MarketingMessages = {
@@ -223,7 +130,7 @@ const fr: MarketingMessages = {
     languageAria: "Langue",
     deleteAccount: "Supprimer le compte",
     how: "Comment ça marche",
-    pricing: "Prix",
+    pricing: "Tarifs",
     safety: "Sécurité",
     about: "À propos",
     guides: "Guides",
@@ -237,16 +144,6 @@ const fr: MarketingMessages = {
     follow: "Suivre Kangur",
     copyright: "© 2026 Kangur",
     rightsReserved: "Tous droits réservés",
-  },
-  deleteAccount: {
-    ...en.deleteAccount,
-    title: "Supprimer le compte",
-    howHeading: "Comment supprimer le compte",
-    effectsHeading: "Conséquences de la suppression",
-    removeHeading: "Ce qui est supprimé",
-    keepHeading: "Ce qui peut rester",
-    accessHeading: "Si vous n’avez plus accès au compte",
-    morePrivacy: "En savoir plus sur le traitement des données :",
   },
 };
 
@@ -278,16 +175,6 @@ const es: MarketingMessages = {
     copyright: "© 2026 Kangur",
     rightsReserved: "Todos los derechos reservados",
   },
-  deleteAccount: {
-    ...en.deleteAccount,
-    title: "Eliminar cuenta",
-    howHeading: "Cómo eliminar la cuenta",
-    effectsHeading: "Consecuencias de la eliminación",
-    removeHeading: "Qué se elimina",
-    keepHeading: "Qué puede permanecer",
-    accessHeading: "Si no puedes acceder a tu cuenta",
-    morePrivacy: "Más sobre el tratamiento de datos:",
-  },
 };
 
 const it: MarketingMessages = {
@@ -305,7 +192,7 @@ const it: MarketingMessages = {
     how: "Come funziona",
     pricing: "Prezzi",
     safety: "Sicurezza",
-    about: "Su Kangur",
+    about: "Chi siamo",
     guides: "Guide",
     press: "Stampa",
     menu: "Menu",
@@ -317,16 +204,6 @@ const it: MarketingMessages = {
     follow: "Segui Kangur",
     copyright: "© 2026 Kangur",
     rightsReserved: "Tutti i diritti riservati",
-  },
-  deleteAccount: {
-    ...en.deleteAccount,
-    title: "Elimina account",
-    howHeading: "Come eliminare l’account",
-    effectsHeading: "Conseguenze dell’eliminazione",
-    removeHeading: "Cosa viene eliminato",
-    keepHeading: "Cosa può rimanere",
-    accessHeading: "Se non puoi accedere all’account",
-    morePrivacy: "Maggiori informazioni sul trattamento dei dati:",
   },
 };
 
@@ -345,28 +222,18 @@ const cs: MarketingMessages = {
     how: "Jak to funguje",
     pricing: "Ceník",
     safety: "Bezpečnost",
-    about: "O Kanguru",
+    about: "O Kangurovi",
     guides: "Rady",
     press: "Pro média",
     menu: "Menu",
     skip: "Přejít na obsah",
-    breadcrumbAria: "Jste tady",
+    breadcrumbAria: "Jsi tady",
     lists: "Nákupní seznamy",
-    legal: "Podmínky",
+    legal: "Právní informace",
     languages: "Jazyky",
-    follow: "Sledujte Kangur",
+    follow: "Sleduj Kangura",
     copyright: "© 2026 Kangur",
     rightsReserved: "Všechna práva vyhrazena",
-  },
-  deleteAccount: {
-    ...en.deleteAccount,
-    title: "Smazání účtu",
-    howHeading: "Jak smazat účet",
-    effectsHeading: "Důsledky smazání",
-    removeHeading: "Co se smaže",
-    keepHeading: "Co může zůstat",
-    accessHeading: "Když nemáš přístup k účtu",
-    morePrivacy: "Více o zpracování údajů:",
   },
 };
 
@@ -398,16 +265,6 @@ const ru: MarketingMessages = {
     copyright: "© 2026 Kangur",
     rightsReserved: "Все права защищены",
   },
-  deleteAccount: {
-    ...en.deleteAccount,
-    title: "Удаление аккаунта",
-    howHeading: "Как удалить аккаунт",
-    effectsHeading: "Последствия удаления",
-    removeHeading: "Что удаляется",
-    keepHeading: "Что может остаться",
-    accessHeading: "Если нет доступа к аккаунту",
-    morePrivacy: "Подробнее об обработке данных:",
-  },
 };
 
 const uk: MarketingMessages = {
@@ -417,7 +274,7 @@ const uk: MarketingMessages = {
     privacy: "Конфіденційність",
     terms: "Умови",
     contact: "Контакти",
-    download: "Завантажити додаток",
+    download: "Завантажити",
     mainAria: "Головна",
     footerAria: "Підвал",
     languageAria: "Мова",
@@ -438,16 +295,6 @@ const uk: MarketingMessages = {
     copyright: "© 2026 Kangur",
     rightsReserved: "Усі права захищено",
   },
-  deleteAccount: {
-    ...en.deleteAccount,
-    title: "Видалення облікового запису",
-    howHeading: "Як видалити обліковий запис",
-    effectsHeading: "Наслідки видалення",
-    removeHeading: "Що видаляється",
-    keepHeading: "Що може залишитися",
-    accessHeading: "Якщо немає доступу до облікового запису",
-    morePrivacy: "Більше про обробку даних:",
-  },
 };
 
 const be: MarketingMessages = {
@@ -457,11 +304,11 @@ const be: MarketingMessages = {
     privacy: "Прыватнасць",
     terms: "Умовы",
     contact: "Кантакты",
-    download: "Спампаваць праграму",
+    download: "Спампаваць",
     mainAria: "Галоўная",
     footerAria: "Падвал",
     languageAria: "Мова",
-    deleteAccount: "Выдаліць акаўнт",
+    deleteAccount: "Выдаліць уліковы запіс",
     how: "Як гэта працуе",
     pricing: "Цэны",
     safety: "Бяспека",
@@ -477,16 +324,6 @@ const be: MarketingMessages = {
     follow: "Kangur у сетцы",
     copyright: "© 2026 Kangur",
     rightsReserved: "Усе правы абаронены",
-  },
-  deleteAccount: {
-    ...en.deleteAccount,
-    title: "Выдаленне акаўнта",
-    howHeading: "Як выдаліць акаўнт",
-    effectsHeading: "Наступствы выдалення",
-    removeHeading: "Што выдаляецца",
-    keepHeading: "Што можа застацца",
-    accessHeading: "Калі няма доступу да акаўнта",
-    morePrivacy: "Больш пра апрацоўку даных:",
   },
 };
 

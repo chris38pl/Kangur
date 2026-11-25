@@ -25,7 +25,14 @@ function rememberLocale(next: AppLocale) {
  * Links to the same page in every language. Full page loads on purpose: the proxy has to
  * see the cookie set by the click.
  */
-function LanguageLinks({ locale }: { locale: AppLocale }) {
+export function LanguageLinks({
+  locale,
+  home = false,
+}: {
+  locale: AppLocale;
+  /** In the footer the languages lead to their home pages. */
+  home?: boolean;
+}) {
   // `/faq` in the browser is prerendered as `/pl/faq`; without the prefix both are the
   // same route, so server and client render the same links.
   const path = stripLocalePrefix(usePathname() || "/");
@@ -36,11 +43,17 @@ function LanguageLinks({ locale }: { locale: AppLocale }) {
     return (
       <li key={item.id}>
         <a
-          href={alternateHref(routeId, item.id)}
+          href={alternateHref(home ? "home" : routeId, item.id)}
           hrefLang={item.id}
           lang={item.id}
           aria-current={selected ? "true" : undefined}
-          className={selected ? "mkt-lang-option is-active" : "mkt-lang-option"}
+          className={
+            home
+              ? undefined
+              : selected
+                ? "mkt-lang-option is-active"
+                : "mkt-lang-option"
+          }
           onClick={() => rememberLocale(item.id)}
         >
           {item.nativeName}
@@ -57,6 +70,7 @@ function LanguageLinks({ locale }: { locale: AppLocale }) {
 export function LanguageSwitcher({ locale, label }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const listId = useId();
 
   useEffect(() => {
@@ -65,7 +79,9 @@ export function LanguageSwitcher({ locale, label }: Props) {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     };
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      buttonRef.current?.focus();
     };
     document.addEventListener("mousedown", onPointer);
     document.addEventListener("keydown", onKey);
@@ -76,8 +92,15 @@ export function LanguageSwitcher({ locale, label }: Props) {
   }, [open]);
 
   return (
-    <div className="mkt-lang" ref={rootRef}>
+    <div
+      className="mkt-lang"
+      ref={rootRef}
+      onBlur={(event) => {
+        if (!rootRef.current?.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
       <button
+        ref={buttonRef}
         type="button"
         className="mkt-lang-btn"
         aria-expanded={open}

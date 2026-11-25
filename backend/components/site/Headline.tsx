@@ -9,6 +9,7 @@ type Props = {
   /** Our signature: first line ink, second line mint. */
   lines: readonly [string, string?];
   id?: string;
+  lang?: string;
   size?: "xl" | "lg" | "md";
   className?: string;
 };
@@ -18,12 +19,14 @@ export function Headline({
   eyebrow,
   lines,
   id,
+  lang,
   size = "lg",
   className,
 }: Props) {
   return (
     <Tag
       id={id}
+      lang={lang}
       className={[styles.headline, styles[size], className ?? ""]
         .filter(Boolean)
         .join(" ")}

@@ -1,18 +1,12 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
 import Image from "next/image";
 
 import { NotFoundMessage } from "@/components/marketing/NotFoundMessage";
+import { SiteFonts } from "@/components/marketing/SiteFonts";
 import { SITE_DEFAULT_LOCALE } from "@/lib/marketing/locale";
 import { notFoundMessages } from "@/lib/marketing/not-found-messages";
 
 import "./globals.css";
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-jakarta",
-  display: "swap",
-});
 
 /** Next adds `noindex` to this page itself. */
 export const metadata: Metadata = {
@@ -22,7 +16,8 @@ export const metadata: Metadata = {
 export default function GlobalNotFound() {
   return (
     <html lang={SITE_DEFAULT_LOCALE}>
-      <body className={jakarta.variable}>
+      <body>
+        <SiteFonts locale={SITE_DEFAULT_LOCALE} />
         <div className="mkt-shell">
           <header className="mkt-header">
             <div className="mkt-header-inner">

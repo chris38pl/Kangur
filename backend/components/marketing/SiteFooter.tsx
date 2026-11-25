@@ -1,11 +1,8 @@
 import Link from "next/link";
 
+import { LanguageLinks } from "@/components/marketing/LanguageSwitcher";
 import { LegalEntityLine } from "@/lib/marketing/legal-entity";
-import {
-  SUPPORTED_LOCALES,
-  withLocale,
-  type AppLocale,
-} from "@/lib/marketing/locale";
+import type { AppLocale } from "@/lib/marketing/locale";
 import { getMessages } from "@/lib/marketing/messages";
 import { footerGroups } from "@/lib/marketing/navigation";
 import { PROFILES } from "@/lib/marketing/profiles";
@@ -46,18 +43,7 @@ export function SiteFooter({ locale }: { locale: AppLocale }) {
           <div className="mkt-footer-languages">
             <p className="mkt-footer-title">{t.languages}</p>
             <ul>
-              {SUPPORTED_LOCALES.map((item) => (
-                <li key={item.id}>
-                  <a
-                    href={withLocale(item.id, "/")}
-                    hrefLang={item.id}
-                    lang={item.id}
-                    aria-current={item.id === locale ? "true" : undefined}
-                  >
-                    {item.nativeName}
-                  </a>
-                </li>
-              ))}
+              <LanguageLinks locale={locale} home />
             </ul>
           </div>
         </nav>

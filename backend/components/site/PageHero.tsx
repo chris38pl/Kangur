@@ -16,6 +16,7 @@ export function PageHero({
   lead,
   art,
   tone = "mint",
+  contentLang,
   children,
 }: {
   locale: AppLocale;
@@ -26,6 +27,8 @@ export function PageHero({
   lead: ReactNode;
   art?: ReactNode;
   tone?: "mint" | "peach" | "cream";
+  /** Language of the heading and the lead, when it is not the page's. */
+  contentLang?: AppLocale;
   children?: ReactNode;
 }) {
   return (
@@ -36,8 +39,16 @@ export function PageHero({
             label={getMessages(locale).nav.breadcrumbAria}
             crumbs={[{ label: "Kangur", href: withLocale(locale, "/") }, ...crumbs]}
           />
-          <Headline as="h1" size="xl" eyebrow={eyebrow} lines={lines} />
-          <div className={styles.lead}>{lead}</div>
+          <Headline
+            as="h1"
+            size="xl"
+            eyebrow={eyebrow}
+            lines={lines}
+            lang={contentLang}
+          />
+          <div className={styles.lead} lang={contentLang}>
+            {lead}
+          </div>
           {children}
         </div>
         {art ? <div className={styles.art}>{art}</div> : null}

@@ -28,7 +28,7 @@ export function PressPage({ locale }: { locale: "pl" }) {
         lead={c.lead.map((p) => (
           <p key={p}>{rich(p, locale)}</p>
         ))}
-        art={<Sticker name="z-lista" className={styles.hero} />}
+        art={<Sticker name="z-lista" className={styles.hero} priority />}
       />
 
       <section className={prose.section}>

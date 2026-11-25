@@ -93,7 +93,7 @@ export default async function HomePage({ params }: Props) {
               alt={c.hero.screenAlt}
               className={styles.heroPhone}
               sizes="(max-width: 899px) 220px, 270px"
-              priority
+              priority="desktop"
             />
           </div>
         </div>
@@ -137,6 +137,8 @@ export default async function HomePage({ params }: Props) {
                         <LoopVideo
                           {...AISLE_LOOP}
                           label={c.steps.screenAlt}
+                          pauseLabel="Zatrzymaj nagranie"
+                          playLabel="Odtwórz nagranie"
                           className={styles.video}
                         />
                       ) : undefined}
@@ -162,7 +164,7 @@ export default async function HomePage({ params }: Props) {
                 <p>{c.ways.photo.body}</p>
               </div>
               <div className={styles.wayNote}>
-                <Notepad lines={c.ways.photo.note} />
+                <Notepad lines={c.ways.photo.note} locale={locale} />
               </div>
             </article>
 
@@ -249,7 +251,7 @@ export default async function HomePage({ params }: Props) {
                 time="17:20"
               />
               <Phone
-                image={SCREENS.pl.sharedTomek}
+                image={SCREENS.pl.sharedOla}
                 alt=""
                 className={styles.pairRight}
                 sizes="(max-width: 700px) 46vw, 244px"

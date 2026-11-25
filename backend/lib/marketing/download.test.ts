@@ -41,6 +41,12 @@ test("a computer gets the buttons, in its language", () => {
     path: "/en",
     hash: "#pobierz",
   });
+  // Served as Polish by the proxy, whatever the browser prefers.
+  assert.deepEqual(target("/pl/pobierz", DESKTOP), {
+    kind: "site",
+    path: "/pl",
+    hash: "#pobierz",
+  });
 });
 
 test("the campaign reaches the store", () => {

@@ -25,7 +25,7 @@ export function AboutPage({ locale }: { locale: "pl" | "en" }) {
           <p key={p}>{p}</p>
         ))}
         tone="peach"
-        art={<Sticker name="z-koszykiem" className={styles.hero} />}
+        art={<Sticker name="z-koszykiem" className={styles.hero} priority />}
       />
 
       <section className={prose.section}>
