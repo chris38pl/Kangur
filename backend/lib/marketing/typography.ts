@@ -8,6 +8,8 @@ import type { AppLocale } from "@/lib/marketing/locale";
 const NBSP = "\u00a0";
 /** Narrow, the French kind. */
 const NNBSP = "\u202f";
+/** Invisible: no line may break here. */
+const WORD_JOINER = "\u2060";
 
 /** One-letter words that may not be left alone at the end of a line. */
 const ONE_LETTER_WORDS: Partial<Record<AppLocale, string>> = {
@@ -33,11 +35,14 @@ const WITH_UNIT =
   /(\d) (?=(?:zł|kg|g|dag|l|ml|szt\.|%|MB|KB|r\.)(?![\p{L}\p{N}]))/gu;
 /** 10 000 zł */
 const THOUSANDS = /(\d) (?=\d{3}(?!\d))/g;
+/** The word, not a part of an address. */
+const E_MAIL = /(^|[\s(„«"|])(e)-(?=mail)/gi;
 
 export function typeset(text: string, locale: AppLocale): string {
   let result = text
     .replace(WITH_UNIT, `$1${NBSP}`)
-    .replace(THOUSANDS, `$1${NBSP}`);
+    .replace(THOUSANDS, `$1${NBSP}`)
+    .replace(E_MAIL, `$1$2-${WORD_JOINER}`);
   const oneLetter = ONE_LETTER[locale];
   if (oneLetter) {
     // Twice, because neighbours ("a i w domu") share the space between them.
@@ -73,5 +78,5 @@ export function typesetCopy<T>(copy: T, locale: AppLocale = "pl"): T {
 
 /** Back to ordinary spaces, for text that leaves the page. */
 export function plainSpaces(text: string): string {
-  return text.replace(/[\u00a0\u202f]/g, " ");
+  return text.replace(/[\u00a0\u202f]/g, " ").replace(/\u2060/g, "");
 }

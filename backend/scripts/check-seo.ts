@@ -321,11 +321,23 @@ for (const id of ROUTE_IDS) {
   if (Number.isNaN(Date.parse(ROUTES[id].updatedAt))) fail(id, "updatedAt is not a date");
 }
 
+/** Every picture, recording and PDF named there has to exist. Some load only after a scroll. */
+const missing = new Set<string>();
+function checkFiles(where: string, source: string) {
+  for (const [file] of source.matchAll(/\/(?:img|druk|og)\/[\w./-]+\.(?:avif|webp|png|jpg|svg|mp4|pdf)/g)) {
+    if (missing.has(file) || fs.existsSync(path.join(PUBLIC_DIR, file))) continue;
+    missing.add(file);
+    fail(where, `missing file: ${file}`);
+  }
+}
+for (const { href, html } of pages) checkFiles(href, html);
+
 // The tools are useless without JavaScript, and one unknown piece of syntax stops all of it.
 const CHUNKS = path.resolve(__dirname, "../.next/static/chunks");
 for (const file of fs.existsSync(CHUNKS) ? fs.readdirSync(CHUNKS) : []) {
   if (!file.endsWith(".js")) continue;
   const code = fs.readFileSync(path.join(CHUNKS, file), "utf8");
+  checkFiles(file, code);
   if (/[{;}]static\s*\{/.test(code)) fail(file, "class static block: Safari before 16.4 cannot read this file");
   if (/\/[^/\n]*\(\?<[=!][^/\n]*\//.test(code)) fail(file, "regex lookbehind: Safari before 16.4 cannot read this file");
 }

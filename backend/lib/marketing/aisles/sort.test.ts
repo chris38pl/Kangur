@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { CATALOG_PRODUCTS } from "@shared/product-catalog";
+
 import { buildAisleWords } from "@/lib/marketing/aisles/dictionary";
 import {
   buildAisleIndex,
@@ -9,6 +11,7 @@ import {
   sortByAisles,
   splitList,
 } from "@/lib/marketing/aisles/sort";
+import { AISLE_TOOL } from "@/lib/marketing/content/topics/aisle-tool";
 
 const index = buildAisleIndex(buildAisleWords());
 const aisleOf = (name: string) => findAisle(index, name);
@@ -21,6 +24,12 @@ const F01: readonly [string, string][] = [
   ["ziemniaki", "vegetables"], ["czosnek", "vegetables"], ["szynka", "meat"], ["kawa", "drinks"], ["ogórki", "vegetables"],
   ["karma dla pieska", "pets"], ["2 paczki cebulowych chipsów", "snacks"], ["proszek do prania", "cleaning"],
 ];
+
+test("the page says how many products the catalogue really has", () => {
+  const said = JSON.stringify(AISLE_TOOL).match(/\d{3}(?= produkt)/g) ?? [];
+  assert.equal(said.length, 2);
+  for (const number of said) assert.equal(Number(number), CATALOG_PRODUCTS.length);
+});
 
 test("the F01 list lands in the same aisles as in the app", () => {
   const items = sortByAisles(F01.map(([text]) => text).join(", "), index);

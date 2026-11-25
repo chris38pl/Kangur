@@ -28,6 +28,14 @@ test("numbers keep their unit", () => {
   assert.equal(typesetPl("ID 6832296080"), "ID 6832296080");
 });
 
+test("e-mail is never split at its hyphen", () => {
+  const J = "\u2060";
+  assert.equal(typesetPl("imienia ani e-maila"), `imienia ani e-${J}maila`);
+  assert.equal(typeset("E-mail (e-mail)", "cs"), `E-${J}mail (e-${J}mail)`);
+  assert.equal(typesetPl("[[https://a.pl/e-mail|adres]]"), "[[https://a.pl/e-mail|adres]]");
+  assert.equal(plainSpaces(typesetPl("ani e-maila")), "ani e-maila");
+});
+
 test("other languages keep their own rules", () => {
   assert.equal(typeset("Ty a já v obchodě", "cs"), `Ty a${N}já v${N}obchodě`);
   assert.equal(typeset("Сыр и масло", "ru"), `Сыр и${N}масло`);

@@ -100,7 +100,7 @@ export const homePl: HomeCopy = {
       href: "https://www.cbos.pl/PL/publikacje/news_tekst.php?nr=25/2026",
     },
     screenAlt:
-      "Wspólna lista Zakupy na weekend na dwóch telefonach, na obu te same 7 produktów",
+      "Wspólna lista Szybkie zakupy na dwóch telefonach, na obu te same 10 produktów",
     added: ["masło dodała Ola", "kawę dodał Tomek"],
   },
   summary: {

@@ -15,7 +15,7 @@ export function Stepper({
   unit,
 }: {
   label: string;
-  hint?: string;
+  hint: string;
   value: number;
   min: number;
   max: number;
@@ -35,12 +35,9 @@ export function Stepper({
       className={styles.stepper}
       role="group"
       aria-labelledby={id}
-      aria-describedby={hint ? hintId : undefined}
+      aria-describedby={hintId}
     >
-      <div>
-        <p id={id}>{label}</p>
-        {hint ? <small id={hintId}>{hint}</small> : null}
-      </div>
+      <p id={id}>{label}</p>
       <div className={styles.stepperControls}>
         <button
           type="button"
@@ -60,6 +57,7 @@ export function Stepper({
           +
         </button>
       </div>
+      <small id={hintId}>{hint}</small>
     </div>
   );
 }

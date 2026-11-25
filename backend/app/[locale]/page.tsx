@@ -275,14 +275,14 @@ export default async function HomePage({ params }: Props) {
           {polish && c.together.added ? (
             <div className={styles.pair}>
               <Phone
-                image={SCREENS.pl.sharedOla}
+                image={SCREENS.pl.quick}
                 alt={c.together.screenAlt}
                 className={styles.pairLeft}
                 sizes="(max-width: 700px) 46vw, 244px"
                 time="17:20"
               />
               <Phone
-                image={SCREENS.pl.sharedOla}
+                image={SCREENS.pl.quick}
                 alt=""
                 className={styles.pairRight}
                 sizes="(max-width: 700px) 46vw, 244px"

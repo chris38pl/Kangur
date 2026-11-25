@@ -117,7 +117,7 @@ const copy: TopicCopy = {
           a: "Tak, na adres, na który przyszło zaproszenie, i potrzebuje aplikacji. Dzięki temu lista nie trafi do kogoś przypadkiem. Gdy ktoś idzie za Ciebie tylko raz, wyślij mu listę zwykłą wiadomością, z naszego [[aisleTool|narzędzia do alejek]].",
         },
         {
-          q: "Ile osób może korzystać z jednej listy?",
+          q: "Ile osób można zaprosić?",
           a: "Ile chcesz, także bez Premium.",
         },
         {

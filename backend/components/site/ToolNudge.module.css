@@ -27,6 +27,24 @@
   display: none;
 }
 
+/* The card is narrower than the page, so are the two buttons in it. */
+@media (max-width: 440px) {
+  .nudge :global(.mkt-store-btn) {
+    gap: 8px;
+    padding-inline: 10px;
+  }
+
+  .nudge :global(.mkt-store-btn span) {
+    font-size: 0.94rem;
+  }
+}
+
+@media (max-width: 389px) {
+  .nudge :global(.mkt-stores) {
+    grid-template-columns: minmax(0, 200px);
+  }
+}
+
 @media (min-width: 620px) {
   .nudge {
     grid-template-columns: minmax(0, 1fr) 128px;
