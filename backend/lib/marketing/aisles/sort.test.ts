@@ -84,6 +84,28 @@ test("what stands before a colon is not a product", () => {
   assert.deepEqual(sorted("Lista zakupów na tydzień: mleko, chleb, masło"), ["Mleko > dairy", "Chleb > bakery", "Masło > dairy"]);
 });
 
+test("greetings and numbers in front are not products", () => {
+  assert.deepEqual(sorted("hej, kup mleko, chleb, dzięki, buziaki :*"), ["Mleko > dairy", "Chleb > bakery"]);
+  assert.deepEqual(sorted("1. 2 mozzarella\n2. 1,5 kg pieczarki\n3) pół chleba"), [
+    "Mozzarella 2 > dairy",
+    "Pieczarki 1,5 kg > vegetables",
+    "Chleba pół > bakery",
+  ]);
+  assert.deepEqual(sorted("1.5 l wody"), ["Wody 1.5 l > drinks"]);
+});
+
+test("a unit can be a part of the name", () => {
+  assert.deepEqual(sorted("2 kostki rosołowe, kostki rosołowe (warzywne), mleko"), [
+    "Kostki rosołowe 2 > spices",
+    "Kostki rosołowe (warzywne) > spices",
+    "Mleko > dairy",
+  ].map((line) => line.replace("spices", aisleOf("kostki rosołowe") ?? "")));
+  assert.deepEqual(sorted("aaa i mleko i chleb 0,5 kg"), ["Mleko > dairy", "Chleb 0,5 kg > bakery"]);
+  assert.deepEqual(sorted("szynka, 5 plastrów"), ["Szynka 5 plastrów > meat"]);
+  assert.deepEqual(sorted("twaróg 20 dag, 2 plastry"), ["Twaróg 20 dag > dairy", "Plastry 2 > pharmacy"]);
+  assert.deepEqual(sorted("imbir x2,2 pomidory, woda 6x1,5 l"), ["Imbir 2 > vegetables", "Pomidory 2 > vegetables", "Woda 6x1,5 l > drinks"]);
+});
+
 test("dkg, gr and multi-packs are amounts", () => {
   assert.deepEqual(sorted("ser żółty, 20 dkg, szynka, 15 dkg"), ["Ser żółty 20 dkg > dairy", "Szynka 15 dkg > meat"]);
   assert.deepEqual(sorted("200 gr masła"), ["Masła 200 gr > dairy"]);
@@ -246,4 +268,46 @@ test("what people paste together with a list", () => {
   const started = performance.now();
   sortByAisles([long, ".".repeat(20000), "a".repeat(20000)].join("\n"), index);
   assert.ok(performance.now() - started < 400);
+});
+
+/** The same lists on every run, the way people write them: smileys, notes, bullets, amounts. */
+test("two thousand random messages lose no product and glue none", () => {
+  let seed = 20261125;
+  const random = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32;
+  const pick = <T>(from: readonly T[]): T => from[Math.floor(random() * from.length)];
+  const words = CATALOG_PRODUCTS.map((product) => product.labels.pl.toLocaleLowerCase("pl")).filter(
+    // "Plastry" are also slices, and a name with a preposition is a dish for the sorter.
+    (word) => /^[\p{L} ]+$/u.test(word) && word !== "plastry" && !/ (?:i|z|ze|oraz|do|na|w|dla|bez) /.test(` ${word} `),
+  );
+  const dress = (word: string) => {
+    const before = pick(["", "", "", "", "2 ", "pół kilo ", "1,5 kg "]);
+    const after = before ? "" : pick(["", "", "", " 2 szt", " 1 kg", " x2", " 20 dag", " 15 dkg", " 500 gr", " 6x1,5 l", " 10szt."]);
+    return before + word + after + pick(["", "", "", "", " (małe)", " (te zielone, duże)"]);
+  };
+  const styles: readonly ((parts: readonly string[]) => string)[] = [
+    (parts) => parts.join(", "),
+    (parts) => parts.join("\n"),
+    (parts) => parts.join("; "),
+    (parts) => parts.join(" • "),
+    (parts) => parts.join(" + "),
+    (parts) => `${parts.slice(0, -1).join(", ")} i ${parts.at(-1)}`,
+    (parts) => parts.map((part) => `- ${part}`).join("\n"),
+    (parts) => parts.map((part) => `-${part}`).join("\n"),
+    (parts) => parts.map((part, i) => `${i + 1}. ${part}`).join("\n"),
+  ];
+  const bad: string[] = [];
+  for (let run = 0; run < 2000; run += 1) {
+    const products: string[] = [];
+    while (products.length < 2 + (run % 9)) {
+      const word = pick(words);
+      if (!products.some((other) => other.includes(word) || word.includes(other))) products.push(word);
+    }
+    const style = Math.floor(random() * styles.length);
+    const start = style >= 6 ? pick(["", "Zakupy:\n", "Na sobotę:\n", "LISTA\n"]) : pick(["", "", "hej, kup ", "Kochanie weź proszę: ", "aaa i ", "[18:02, 25.11.2026] Ola: "]);
+    const text = start + styles[style](products.map(dress)) + pick(["", " :)", " ;-)", " ❤️", "!", " xD", " :*", "..."]);
+    const names = sortByAisles(text, index).map((item) => item.name.toLocaleLowerCase("pl"));
+    const lost = products.filter((word) => !names.some((name) => name === word || name.startsWith(`${word} (`)));
+    if (lost.length > 0 || names.length !== products.length) bad.push(`${JSON.stringify(text)} => ${names.join(" | ")}`);
+  }
+  assert.deepEqual(bad, []);
 });

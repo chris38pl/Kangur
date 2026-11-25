@@ -188,9 +188,31 @@ function parseQuantity(raw: string): { name: string; quantity: string | null } {
   return { name: raw, quantity: null };
 }
 
+const NUMBER_FIRST = new RegExp(`^(?:x\\s*)?(${NUMBER})\\s+(.+)$`, "iu");
+
+/** "2 kostki rosołowe" are two of a product, not two cubes of "rosołowe". */
+function parseProduct(raw: string, index: AisleIndex): { name: string; quantity: string | null } {
+  const noted = NOTE.exec(raw);
+  const body = noted ? noted[1] : raw;
+  const note = noted ? ` ${noted[2]}` : "";
+  if (index.exact.has(lower(body))) return { name: body + note, quantity: null };
+  const counted = NUMBER_FIRST.exec(body);
+  if (counted && index.exact.has(lower(counted[2]))) {
+    return { name: counted[2], quantity: counted[1] + note };
+  }
+  return parseQuantity(raw);
+}
+
 /** "aaa i jeszcze jakieś chipsy" → "chipsy". */
 const LEADING_FILLER =
   /^(?:(?:a+|no|to|i|oraz|też|tez|jeszcze|może|moze|aha|ej|hej|o+|aaa+i?|weź|wez|kup|kupisz|proszę|prosze|najlepiej|plus|jakieś|jakies|jakiś|jakis|jakąś|trochę|troche)[\s,:-]+)+/iu;
+
+/** What people say around a list. "Hej" is not for sale. */
+const SMALL_TALK: ReadonlySet<string> = new Set([
+  "hej", "hejka", "cześć", "czesc", "siema", "kochanie", "skarbie", "misiu", "misiaczku", "mamo", "tato",
+  "kup", "kupisz", "weź", "wez", "proszę", "prosze", "dzięki", "dzieki", "dziękuję", "dziekuje", "z góry dzięki",
+  "ok", "okej", "no", "aha", "i", "oraz", "pa", "buziaki", "buziaczki", "całusy", "tyle", "to tyle", "to wszystko",
+]);
 
 /** Emoji with everything that travels with them: skin tones, joiners, keycaps. */
 const EMOJI = /[0-9#*]\uFE0F?\u20E3|\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}\uFE0E\uFE0F\u200B-\u200D\u2060]/gu;
@@ -206,7 +228,8 @@ function clean(part: string): string {
     .replace(SMILEY, "$1")
     .replace(/^[\s\-*•·–—>→+.✓✔☐☑□▪▢◦○●❑❏]+/u, "")
     .replace(/^\[[ xX]?\]\s*/, "")
-    .replace(/^\d+[.)]\s*(?=\p{L})/u, "")
+    // "1. mleko", "1. 2 mleka", but not "1.5 l wody".
+    .replace(/^\d{1,2}[.)](?:\s*(?=\p{L})|\s+(?=\p{N}))/u, "")
     .replace(/[!?.;:\s–—-]{1,40}$/u, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -259,7 +282,10 @@ const DECIMAL = "\u0001";
 /** Splits, but not inside "1,5 l" and not inside "bakalie (rodzynki, orzechy)". */
 function pieces(text: string, separator: RegExp): string[] {
   return text
-    .replace(/(\d),(?=\d)/g, `$1${DECIMAL}`)
+    .replace(/(\d),(?=\d)/g, (whole, digit: string, at: number, all: string) =>
+      // "imbir x2,2 pomidory": after a count the comma separates. "6x1,5 l" is one amount.
+      /(?:^|[^\d\s])\s*x\s?\d*$/iu.test(all.slice(Math.max(0, at - 8), at)) ? whole : digit + DECIMAL,
+    )
     // Only a closed pair of brackets. "masło :)" has one bracket too few.
     .replace(/\([^()]*\)/g, (note) => note.replace(/,/g, DECIMAL))
     .split(separator)
@@ -296,8 +322,10 @@ export function splitList(
     for (const raw of pieces(spread, /[;•·\t,]|\s\+\s/u)) {
       const part = clean(raw);
       if (!part) continue;
-      // "mleko, 2 l": the amount belongs to what stands before it.
-      if (result.length > 0 && QUANTITY_ONLY.test(part)) {
+      // "mleko, 2 l": the amount belongs to what stands before it. "ser 20 dag, 2 plastry" has
+      // its amount already, so these are plasters.
+      const before = result.at(-1)?.text;
+      if (before && QUANTITY_ONLY.test(part) && !(/\d|^pół/iu.test(before) && known(part))) {
         result[result.length - 1].text += ` ${part}`;
       } else {
         result.push({ text: part, whole: false });
@@ -310,20 +338,16 @@ export function splitList(
 export function sortByAisles(text: string, index: AisleIndex, limit = Infinity): SortedItem[] {
   const items: SortedItem[] = [];
   const known = (raw: string) =>
-    findAisle(index, parseQuantity(clean(raw.replace(LEADING_FILLER, ""))).name) !== null;
+    findAisle(index, parseProduct(clean(raw.replace(LEADING_FILLER, "")), index).name) !== null;
   const push = (whole: string) => {
     if (items.length >= limit) return;
     // "Kochanie, weź proszę: mleko" and "Nabiał: mleko" are milk.
     const said = /^([^:]{2,60}):\s+(.+)$/u.exec(whole);
     const raw =
       said && known(said[2]) && (AISLE_NAMES.has(lower(said[1].trim())) || !known(said[1])) ? said[2] : whole;
-    const trimmed = clean(raw.replace(LEADING_FILLER, ""));
-    // "Kostki rosołowe" are a product, not some cubes of "rosołowe".
-    const { name, quantity } = index.exact.has(lower(trimmed))
-      ? { name: trimmed, quantity: null }
-      : parseQuantity(trimmed);
+    const { name, quantity } = parseProduct(clean(raw.replace(LEADING_FILLER, "")), index);
     const bare = clean(name.replace(LEADING_FILLER, ""));
-    if (!bare) return;
+    if (!bare || SMALL_TALK.has(lower(bare))) return;
     const aisle = findAisle(index, bare);
     items.push({
       id: `${items.length}`,
@@ -352,9 +376,8 @@ export function sortByAisles(text: string, index: AisleIndex, limit = Infinity):
       }
     }
     // "chleb i masło" is two products, "kapusta z grochem i grzybami" is one dish.
-    const halves = whole || /\sze?\s/iu.test(part)
-      ? [part]
-      : part.split(/\s+(?:i|oraz)\s+/iu);
+    const said = part.replace(LEADING_FILLER, "");
+    const halves = whole || /\sze?\s/iu.test(said) ? [said] : said.split(/\s+(?:i|oraz)\s+/iu);
     if (
       halves.length > 1 &&
       !index.exact.has(lower(part)) &&
