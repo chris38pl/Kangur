@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 
+import { CHRISTMAS } from "@/lib/marketing/lists/christmas";
 import { ROUTES, ROUTE_IDS, contentLocales, routeHref } from "@/lib/marketing/routes";
+import { isOver } from "@/lib/marketing/season";
 import { hreflangAlternates } from "@/lib/marketing/seo";
 import { absoluteUrl } from "@/lib/marketing/site";
 
@@ -10,7 +12,9 @@ import { absoluteUrl } from "@/lib/marketing/site";
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   return ROUTE_IDS.flatMap((id) => {
-    const { updatedAt, changeFrequency, priority } = ROUTES[id];
+    const { updatedAt, changeFrequency } = ROUTES[id];
+    // Until next November other pages matter more.
+    const priority = id === "guideChristmas" && isOver(CHRISTMAS.over) ? 0.3 : ROUTES[id].priority;
     const alternates = hreflangAlternates(id);
     const languages = alternates
       ? Object.fromEntries(

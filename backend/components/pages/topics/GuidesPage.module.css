@@ -19,9 +19,50 @@
   flex-direction: column;
   align-items: flex-start;
   min-height: 230px;
-  padding: 28px;
+  overflow: hidden;
+  padding: 28px 28px 0;
   border-radius: 28px;
   transition: transform 0.2s ease;
+}
+
+/* A cut-out that stands on the bottom edge. The link lies on top of it. */
+.art {
+  align-self: flex-end;
+  width: 132px;
+  height: auto;
+  margin: 14px 0 -10px;
+  pointer-events: none;
+}
+
+.whole {
+  width: 124px;
+  margin-bottom: 14px;
+}
+
+.sheets {
+  position: relative;
+  width: 190px;
+  height: 150px;
+  margin-bottom: 0;
+}
+
+.sheets img {
+  position: absolute;
+  top: 18px;
+  right: 0;
+  width: 116px;
+  height: auto;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: 0 16px 28px -16px rgba(31, 43, 69, 0.45);
+  transform: rotate(6deg);
+}
+
+.sheets picture:last-child img {
+  top: 10px;
+  right: auto;
+  left: 0;
+  transform: rotate(-4deg);
 }
 
 .entry h2 {
@@ -87,7 +128,55 @@
   }
 
   .entry {
+    min-height: 270px;
     padding: 34px;
+    padding-right: 208px;
+  }
+
+  .art {
+    position: absolute;
+    right: 26px;
+    bottom: -12px;
+    width: 164px;
+    margin: 0;
+  }
+
+  .whole {
+    bottom: 18px;
+    width: 160px;
+  }
+
+  .sheets {
+    right: 22px;
+    bottom: -34px;
+    width: 178px;
+    height: 220px;
+  }
+
+  .sheets img {
+    top: 26px;
+    width: 124px;
+  }
+}
+
+@media (min-width: 760px) and (max-width: 939px) {
+  .entry {
+    padding: 28px;
+    padding-right: 150px;
+  }
+
+  .art {
+    right: 14px;
+    width: 124px;
+  }
+
+  .sheets {
+    right: 10px;
+    width: 132px;
+  }
+
+  .sheets img {
+    width: 92px;
   }
 }
 

@@ -5,11 +5,13 @@ import { ClosingBand } from "@/components/site/ClosingBand";
 import { CopyBox } from "@/components/site/CopyBox";
 import { FactRows } from "@/components/site/FactRows";
 import { PageHero } from "@/components/site/PageHero";
+import { Season } from "@/components/site/Season";
 import { Sticker } from "@/components/site/Sticker";
 import prose from "@/components/site/prose.module.css";
 import { PRESS, PRESS_FILES } from "@/lib/marketing/content/press";
 import { rich } from "@/lib/marketing/rich-text";
 import { routeHref } from "@/lib/marketing/routes";
+import { isOver } from "@/lib/marketing/season";
 import { pageStructuredData } from "@/lib/marketing/structured-data";
 
 import styles from "./PressPage.module.css";
@@ -58,16 +60,25 @@ export function PressPage({ locale }: { locale: "pl" }) {
       <section className={prose.section}>
         <div className={`${prose.wrap} ${prose.prose}`}>
           <h2>{c.ideasTitle}</h2>
-          <ul className={`${prose.cards} ${prose.threeUp}`}>
-            {c.ideas.map((idea) => (
-              <li key={idea.title} className={`${prose.card} ${styles.idea}`}>
-                <h3>{idea.title}</h3>
-                <p>{idea.body}</p>
-                {idea.source ? (
-                  <p className={prose.source}>{rich(idea.source, locale)}</p>
-                ) : null}
-              </li>
-            ))}
+          <ul className={`${prose.cards} ${styles.ideas}`}>
+            {c.ideas.filter((idea) => !idea.until || !isOver(idea.until)).map((idea) => {
+              const card = (
+                <li key={idea.title} className={`${prose.card} ${styles.idea}`}>
+                  <h3>{idea.title}</h3>
+                  <p>{rich(idea.body, locale)}</p>
+                  {idea.source ? (
+                    <p className={prose.source}>{rich(idea.source, locale)}</p>
+                  ) : null}
+                </li>
+              );
+              return idea.until ? (
+                <Season key={idea.title} until={idea.until}>
+                  {card}
+                </Season>
+              ) : (
+                card
+              );
+            })}
           </ul>
         </div>
       </section>

@@ -59,7 +59,7 @@ const COPY: Record<"pl" | "en", FaqPageCopy> = {
           },
           {
             q: "Co działa bez zasięgu?",
-            a: "W trybie zakupów odhaczysz i dopiszesz produkty na liście, którą masz już otwartą. Zmiany czekają w telefonie i wysyłają się, gdy wrócisz do aplikacji z internetem. Nowe listy, poprawki i AI potrzebują internetu.",
+            a: "W trybie zakupów odhaczysz produkty na liście, którą masz już otwartą. Zmiany czekają w telefonie i wysyłają się, gdy wrócisz do aplikacji z internetem. Zakupy zakończ dopiero wtedy. Nowe listy, poprawki i AI potrzebują internetu.",
           },
         ],
       },
@@ -68,7 +68,7 @@ const COPY: Record<"pl" | "en", FaqPageCopy> = {
         items: [
           {
             q: "Jak dodać drugą osobę do listy?",
-            a: "Właściciel przestrzeni zaprasza ją e-mailem. Zaproszenie jest ważne 7 dni i działa dla adresu, na który zostało wysłane. Najlepiej, żeby druga osoba najpierw zainstalowała Kangura i założyła konto na ten sam adres.",
+            a: "Właściciel przestrzeni zaprasza ją e-mailem. Zaproszenie jest ważne 7 dni i działa dla adresu, na który zostało wysłane. Druga osoba najpierw instaluje Kangura i zakłada konto na ten sam adres, bo zaproszenie otwiera się w aplikacji.",
           },
           {
             q: "Ile osób może korzystać z jednej listy?",
@@ -160,13 +160,13 @@ const COPY: Record<"pl" | "en", FaqPageCopy> = {
         items: [
           { q: "What is shopping mode?", a: "A view of the list for the time you are in the store. You go aisle by aisle and swipe: right is bought, left is not there. The screen stays on. At the end you get a summary of what was bought and what was missing." },
           { q: "Can I put the aisles in the order of my store?", a: "Yes. There are 24 aisles, and you drag them into your own order. It is saved with that list, a new one starts from the default." },
-          { q: "What works without signal?", a: "In shopping mode you can check off and add items on a list you already have open. Changes wait on the phone and are sent when you come back to the app with internet. New lists, editing and AI need the internet." },
+          { q: "What works without signal?", a: "In shopping mode you can check off items on a list you already have open. Changes wait on the phone and are sent when you come back to the app with internet. Finish the trip only then. New lists, editing and AI need the internet." },
         ],
       },
       {
         title: "Shared lists",
         items: [
-          { q: "How do I add another person?", a: "The owner of the space invites them by email. The invitation is valid for 7 days and works for the address it was sent to. It is easiest when the other person installs Kangur first and signs up with that address." },
+          { q: "How do I add another person?", a: "The owner of the space invites them by email. The invitation is valid for 7 days and works for the address it was sent to. The other person installs Kangur first and signs up with that address, because the invitation opens in the app." },
           { q: "How many people can use one list?", a: "As many as you like, with or without Premium." },
           { q: "When does the other person see a change?", a: "A moment later, if they have that list open. If the app is closed, the change shows when it is opened." },
           { q: "What does Kangur notify me about?", a: "Invitations, and somebody starting or finishing shopping. You can add new and deleted lists. Each kind can be switched off in the settings." },

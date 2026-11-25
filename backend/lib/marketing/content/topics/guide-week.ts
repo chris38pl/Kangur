@@ -25,12 +25,12 @@ const copy: TopicCopy = {
       items: [
         { title: "Makaron z mięsem i passatą", body: "Mięso mielone długo nie poczeka, więc to obiad numer jeden." },
         { title: "Ryba z ziemniakami i marchewką", body: "Mrożona wytrzyma do dnia, w którym nic się nie chce." },
-        { title: "Kurczak z ryżem i warzywami z mrożonki", body: "Druga połowa fileta śpi już w zamrażarce." },
+        { title: "Kurczak z ryżem i warzywami z mrożonki", body: "Druga połowa filetu śpi już w zamrażarce." },
         { title: "Kasza z ciecierzycą i kapustą albo brokułem", body: "Puszka, garnek i pół głowy kapusty. Ta druga połowa wróci." },
         { title: "Ziemniaki zapiekane z tym, co zostało", body: "Ser na górę. Nikt nie zapyta, co jest pod spodem." },
       ],
       outro:
-        "Bez mięsa: w pierwszym ser sałatkowy, w drugim twaróg, w trzecim tofu. Wolisz swoje dania? Wpisz je w Kangurze, do pięciu naraz, a [[recipeList|zaproponuje składniki]]. Sól doda raz.",
+        "Bez mięsa: w pierwszym ser sałatkowy, w drugim twaróg z dokupki, w trzecim tofu. Wolisz swoje dania? Wpisz je w Kangurze, do pięciu naraz, a [[recipeList|zaproponuje składniki]]. Sól doda raz.",
     },
     {
       kind: "fact",
@@ -65,7 +65,7 @@ const copy: TopicCopy = {
       title: "Drugi tydzień jest łatwiejszy",
       body: [
         "Po kilku listach w Kangurze nie zaczynasz od pustej kartki. „Poprzednie listy” zbierają produkty z pięciu ostatnich list i pokazują, które wracają najczęściej. Zostawiasz te, których trzeba. To jedno użycie AI, choć liczy sam Kangur.",
-        "Rukoli, która nie dożyła środy, nikt nie każe kupować drugi raz.",
+        "Rukoli, która nie dożyła soboty, nikt nie każe kupować drugi raz.",
       ],
       slot: "history",
       flip: true,

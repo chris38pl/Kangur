@@ -132,7 +132,7 @@ export function readWeek(stored: unknown): WeekPlan {
 }
 
 /** One person eats a bag of rice for a month, so it waits in the cupboard, not in the basket. */
-const KEEPS: ReadonlySet<string> = new Set<Id>(["pasta", "rice", "groats", "oats", "pulses", "passata", "nuts"]);
+const KEEPS: ReadonlySet<string> = new Set<Id>(["pasta", "rice", "groats", "oats", "nuts"]);
 
 export function weekList(plan: WeekPlan): Line<Trip>[] {
   const needs: { need: N; people: number }[] = [];

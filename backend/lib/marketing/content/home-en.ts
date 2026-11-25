@@ -115,7 +115,7 @@ export const homeEn: HomeCopy = {
     lines: ["Who makes it?", "One person in Poznań."],
     body: "Kangur is made by a one-person company from Poland, Krzysztof Krawiec Software. No ad department and no selling of data.",
     points: [
-      { title: "Doesn’t read your chats", body: "It sees only the screenshot you pick." },
+      { title: "Has no access to your chat apps", body: "It gets only the screenshot you pick." },
       { title: "Doesn’t know your contacts or location", body: "It never asks: a grocery list has no use for them." },
       { title: "Has no ads", body: "Premium pays for it, not your attention." },
     ],
@@ -139,11 +139,11 @@ export const homeEn: HomeCopy = {
       },
       {
         q: "Does Kangur read my messages?",
-        a: "No. It has no access to any messaging app. It sees only the one image you pick from your gallery. The image goes to the AI provider (OpenAI), which reads the list from it. Kangur does not store the image.",
+        a: "No. It has no access to any messaging app. It gets only the one image you pick. The image goes to the AI provider (OpenAI), which reads the list from it. Kangur does not store the image.",
       },
       {
         q: "What works without signal in the store?",
-        a: "Shopping mode on a list you already have open: you check off and add items, and the changes are sent later. New lists and AI need the internet.",
+        a: "Shopping mode on a list you already have open: you check items off, and the changes are sent later. Finish the trip when the signal is back. New lists and AI need the internet.",
       },
       {
         q: "Is it connected to the Math Kangaroo contest?",

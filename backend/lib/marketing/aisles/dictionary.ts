@@ -59,6 +59,8 @@ const EXTRA: Partial<Record<ShoppingCategory, string>> = {
 /** Words nobody should read on our page, only find. */
 export const UNSHOWN: ReadonlySet<string> = new Set([
   "pampersy", "domestos", "kret", "vegeta", "delicje", "ptasie mleczko", "kubuś soczek", "sriracha",
+  // The same thing in another form.
+  "bateria", "zeszyty", "długopisy", "słoiczek", "kaszka", "musy", "ziemia", "karma",
 ]);
 
 /**

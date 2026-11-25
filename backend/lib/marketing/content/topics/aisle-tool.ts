@@ -48,7 +48,7 @@ const copy: TopicCopy = {
       slot: "aisles",
       title: "Kategorie na liście zakupów: 24 alejki i co w nich jest",
       intro:
-        "Te same 24 alejki ma aplikacja Kangur. Przykłady pochodzą z jej katalogu, w którym są 273 produkty.",
+        "Te same 24 alejki ma aplikacja Kangur. Przykłady są z jej katalogu, w którym są 273 produkty, i ze słownika tego narzędzia.",
     },
     {
       kind: "faq",

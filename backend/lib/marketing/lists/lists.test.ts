@@ -131,7 +131,8 @@ test("a week for one, two and a family", () => {
   const family = weekList({ ...DEFAULT_WEEK, people: 4 });
   // Eggs come in sixes and tens.
   assert.equal(amountOf(one, "eggs"), `6${N}szt.`);
-  assert.equal(amountOf(family, "eggs"), `20${N}szt.`);
+  // A ten and a six, because sixteen eggs do not need two tens.
+  assert.equal(amountOf(family, "eggs"), `16${N}szt.`);
   // One person keeps dry things in the cupboard, unless the cupboard is hidden.
   assert.equal(one.find((line) => line.id === "rice")?.when, "cupboard");
   assert.equal(weekList({ ...DEFAULT_WEEK, people: 1, cupboard: false }).find((line) => line.id === "rice")?.when, "main");
@@ -221,7 +222,7 @@ test("a dish from outside the list counts and travels in the message", () => {
 
 test("what rots is not bought too early", () => {
   for (const id of ["carp", "whiteFish", "roast", "coldCuts", "milk"] as const) assert.equal(PRODUCTS[id].when, "last", id);
-  assert.match(PRODUCTS.soupMeat.note ?? "", /zamrażarki/);
+  assert.match(PRODUCTS.soupMeat.note ?? "", /zamroź/);
 });
 
 test("products dish by dish, in kitchen words", () => {

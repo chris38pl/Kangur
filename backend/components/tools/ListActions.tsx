@@ -10,7 +10,10 @@ const never = () => () => {};
 const canShare = () => typeof navigator.share === "function";
 const canPrint = () => typeof window.print === "function";
 
-/** The phone's share sheet. Closing it rejects the promise, which is not an error. */
+/** Closing the share sheet, or a second tap while it opens, is not an error. */
+const HARMLESS: ReadonlySet<string> = new Set(["AbortError", "InvalidStateError"]);
+
+/** The phone's share sheet. */
 export function ShareButton({
   label,
   title,
@@ -33,7 +36,7 @@ export function ShareButton({
       type="button"
       onClick={() => {
         navigator.share({ title, text, ...(url ? { url } : {}) }).catch((error: unknown) => {
-          if (!(error instanceof DOMException && error.name === "AbortError")) onRefused?.();
+          if (!(error instanceof DOMException && HARMLESS.has(error.name))) onRefused?.();
         });
       }}
     >

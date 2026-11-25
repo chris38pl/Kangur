@@ -21,7 +21,7 @@ import {
 } from "@/lib/marketing/aisles/sort";
 import { listToText, plural } from "@/lib/marketing/lists/format";
 import { isRecord, strings } from "@/lib/marketing/lists/stored";
-import { useStored } from "@/lib/marketing/lists/use-stored";
+import { hasStored, useStored } from "@/lib/marketing/lists/use-stored";
 import { mergeActiveCategoryOrder, resolveShoppingCategoryOrder } from "@shared/shopping-categories";
 
 import styles from "./AisleTool.module.css";
@@ -31,6 +31,8 @@ const NO_TEXT = "";
 const NO_ORDER: readonly Aisle[] = AISLES;
 const NO_MOVES: Readonly<Record<string, Aisle>> = {};
 const NO_DONE: readonly string[] = [];
+/** A page pasted by mistake must not freeze a phone, and nobody shops for more. */
+const LIMIT = 400;
 
 const readText = (stored: unknown) => (typeof stored === "string" ? stored : NO_TEXT);
 const readOrder = (stored: unknown): readonly Aisle[] => resolveShoppingCategoryOrder(strings(stored));
@@ -54,7 +56,8 @@ function withKeys(items: readonly SortedItem[]): Item[] {
     const name = nameKey(item.name);
     const count = (seen.get(name) ?? 0) + 1;
     seen.set(name, count);
-    return { ...item, key: count === 1 ? name : `${name}#${count}` };
+    // A new line cannot be a part of a name.
+    return { ...item, key: count === 1 ? name : `${name}\n${count}` };
   });
 }
 
@@ -67,7 +70,8 @@ function summary(total: number, aisles: number, unknown: number): string {
       : unknown === 1
         ? " Nie znamy jednego z nich, jest w „Inne”."
         : ` Nie znamy ${unknown} z nich, są w „Inne”.`;
-  return `${plural(total, "produkt", "produkty", "produktów")} w ${where}.${missing}`;
+  const cut = total >= LIMIT ? ` Pokazujemy pierwsze ${LIMIT}.` : "";
+  return `${plural(total, "produkt", "produkty", "produktów")} w ${where}.${missing}${cut}`;
 }
 
 /** Text in, aisles out. Everything happens in the browser. */
@@ -88,7 +92,7 @@ export function AisleTool({
   const fieldId = useId();
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
-  const [cleared, setCleared] = useState("");
+  const [cleared, setCleared] = useState<{ text: string; done: readonly string[] } | null>(null);
   /** The product that has just changed its aisle: the keyboard goes there with it. */
   const moved = useRef<string | null>(null);
 
@@ -102,7 +106,11 @@ export function AisleTool({
   // Somebody may have pasted a list before the page came alive. It wins over the saved one.
   useLayoutEffect(() => {
     const early = fieldRef.current?.value;
-    if (early) setText(early);
+    if (!early) return;
+    // After Back, a reload or in a restored tab the browser puts the old text there by itself.
+    const [visit] = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
+    if (visit && visit.type !== "navigate" && hasStored("alejki-tekst")) return;
+    setText(early);
     // Only once, on arrival.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -119,7 +127,7 @@ export function AisleTool({
 
   const items = useMemo<Item[]>(
     () =>
-      withKeys(sortByAisles(deferred, index)).map((item) => {
+      withKeys(sortByAisles(deferred, index, LIMIT)).map((item) => {
         const key = nameKey(item.name);
         return Object.hasOwn(moves, key) ? { ...item, aisle: moves[key], recognised: true } : item;
       }),
@@ -128,6 +136,8 @@ export function AisleTool({
   const groups = useMemo(() => groupByAisle(items, order), [items, order]);
 
   const doneSet = new Set(done);
+  const ticked = items.filter((item) => doneSet.has(item.key)).length;
+  const left = items.length - ticked;
   const unknown = items.filter((item) => !item.recognised).length;
   const changedOrder = order.some((aisle, i) => aisle !== AISLES[i]);
   const corrections = Object.keys(moves).length;
@@ -139,8 +149,15 @@ export function AisleTool({
     moved.current = null;
   }, [groups]);
 
-  const toggle = (key: string) =>
-    setDone(doneSet.has(key) ? done.filter((other) => other !== key) : [...done, key]);
+  const toggle = (key: string) => {
+    const here = new Set(items.map((item) => item.key));
+    setDone(
+      doneSet.has(key)
+        ? done.filter((other) => other !== key)
+        : [...done.filter((other) => here.has(other)), key],
+    );
+  };
+  const focusResult = () => resultRef.current?.focus({ preventScroll: true });
 
   /** Moves an aisle past the next one that is on this list, not past an invisible one. */
   const moveAisle = (aisle: Aisle, step: -1 | 1) => {
@@ -153,12 +170,11 @@ export function AisleTool({
   };
 
   // What is already in the basket does not go any further, unless everything is.
-  const anyLeft = items.some((item) => !doneSet.has(item.key));
   const plainText = listToText(
     "Lista zakupów",
     groups.map(({ aisle, items: products }) => ({
       title: AISLE_LABELS[aisle],
-      lines: anyLeft ? products.filter((item) => !doneSet.has((item as Item).key)) : products,
+      lines: left > 0 ? products.filter((item) => !doneSet.has((item as Item).key)) : products,
     })),
   );
 
@@ -175,12 +191,20 @@ export function AisleTool({
           ref={fieldRef}
           id={fieldId}
           value={text}
-          onChange={(event) => setText(event.target.value)}
+          onChange={(event) => {
+            setText(event.target.value);
+            // An empty field is a new list, and last week's ticks are not for it.
+            if (!event.target.value.trim()) clearDone();
+          }}
+          onPaste={({ currentTarget: { selectionStart, selectionEnd, value } }) => {
+            if (value && selectionStart === 0 && selectionEnd === value.length) clearDone();
+          }}
           placeholder={sample}
           rows={9}
           maxLength={20000}
           spellCheck={false}
           autoCapitalize="none"
+          autoComplete="off"
         />
         <div className={styles.buttons}>
           <button
@@ -197,7 +221,7 @@ export function AisleTool({
             <button
               type="button"
               onClick={() => {
-                setCleared(text);
+                setCleared({ text, done });
                 clearText();
                 clearDone();
                 fieldRef.current?.focus();
@@ -207,11 +231,26 @@ export function AisleTool({
             </button>
           ) : (
             <>
-              <button type="button" onClick={() => setText(sample)}>
+              <button
+                type="button"
+                onClick={() => {
+                  setText(sample);
+                  clearDone();
+                  focusResult();
+                }}
+              >
                 Wstaw przykład
               </button>
               {cleared ? (
-                <button type="button" onClick={() => setText(cleared)}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setText(cleared.text);
+                    setDone(cleared.done);
+                    setCleared(null);
+                    focusResult();
+                  }}
+                >
                   Cofnij
                 </button>
               ) : null}
@@ -230,27 +269,49 @@ export function AisleTool({
       >
         {items.length > 0 ? <h2 className={styles.sheetTitle}>Lista zakupów</h2> : null}
         <div className={styles.summary}>
-          <p role="status">{summary(items.length, groups.length, unknown)}</p>
+          <p role="status">
+            <span data-noprint={ticked > 0 || undefined}>
+              {summary(items.length, groups.length, unknown)}
+              {ticked > 0 ? ` Zostało ${left} z ${items.length}.` : null}
+            </span>
+            {ticked > 0 ? (
+              <span className={styles.paper}>
+                Do kupienia: {left > 0 ? left : items.length}.
+              </span>
+            ) : null}
+          </p>
           <div className={styles.resets} data-noprint>
+            {ticked > 0 ? (
+              <button
+                type="button"
+                className={styles.reset}
+                onClick={() => {
+                  clearDone();
+                  focusResult();
+                }}
+              >
+                Odznacz wszystko ({ticked})
+              </button>
+            ) : null}
             {changedOrder && items.length > 0 ? (
               <button
                 type="button"
                 className={styles.reset}
                 onClick={() => {
                   clearOrder();
-                  resultRef.current?.focus({ preventScroll: true });
+                  focusResult();
                 }}
               >
                 Przywróć kolejność
               </button>
             ) : null}
-            {corrections > 0 && items.length > 0 ? (
+            {corrections > 0 ? (
               <button
                 type="button"
                 className={styles.reset}
                 onClick={() => {
                   clearMoves();
-                  resultRef.current?.focus({ preventScroll: true });
+                  focusResult();
                 }}
               >
                 Zapomnij poprawki ({corrections})
@@ -267,7 +328,7 @@ export function AisleTool({
           </div>
         ) : (
           <>
-            <div className={styles.groups}>
+            <div className={styles.groups} data-all-done={left === 0 || undefined}>
               {groups.map(({ aisle, items: products }, position) => (
                 <div
                   key={aisle}
@@ -331,7 +392,11 @@ export function AisleTool({
               ))}
             </div>
 
-            <ListActions text={plainText} title="Lista zakupów" />
+            <ListActions
+              text={plainText}
+              title="Lista zakupów"
+              copied={ticked > 0 && left > 0 ? `Skopiowane: ${left} z ${items.length}` : undefined}
+            />
             {nudge}
           </>
         )}
@@ -393,7 +458,7 @@ function MoveItem({
         className={styles.move}
         data-noprint
         data-move={item.key}
-        aria-label={`Zmień alejkę: ${item.name}`}
+        aria-label={`Przenieś: ${item.name}`}
         onClick={() => setOpen(true)}
       >
         Przenieś

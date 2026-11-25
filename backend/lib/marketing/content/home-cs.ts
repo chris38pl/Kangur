@@ -111,7 +111,7 @@ export const homeCs: HomeCopy = {
     lines: ["Kdo za tím stojí?", "Jeden člověk z Poznaně."],
     body: "Kangura dělá jednočlenná firma z Polska, Krzysztof Krawiec Software. Bez reklamního oddělení a bez prodeje dat.",
     points: [
-      { title: "Nečte chaty", body: "Vidí jen screenshot, který vybereš." },
+      { title: "Nemá přístup k chatovacím aplikacím", body: "Dostane jen screenshot, který vybereš." },
       { title: "Nekouká do kontaktů ani na GPS", body: "Ani se na ně neptá, nákupní seznam je nepotřebuje." },
       { title: "Nemá reklamy", body: "Živí ho Premium, ne tvoje pozornost." },
     ],
@@ -135,11 +135,11 @@ export const homeCs: HomeCopy = {
       },
       {
         q: "Čte Kangur moje zprávy?",
-        a: "Ne. Nemá přístup k žádné chatovací aplikaci. Vidí jen ten jeden obrázek, který vybereš z galerie. Obrázek jde k poskytovateli AI (OpenAI), který z něj přečte seznam. Samotný obrázek Kangur neukládá.",
+        a: "Ne. Nemá přístup k žádné chatovací aplikaci. Dostane jen ten jeden obrázek, který vybereš. Obrázek jde k poskytovateli AI (OpenAI), který z něj přečte seznam. Samotný obrázek Kangur neukládá.",
       },
       {
         q: "Co funguje bez signálu v obchodě?",
-        a: "Režim nákupu na seznamu, který už máš otevřený: odškrtáváš a přidáváš, změny se odešlou později. Nové seznamy a AI potřebují internet.",
+        a: "Režim nákupu na seznamu, který už máš otevřený: odškrtáváš a změny se odešlou později. Nákup ukonči, až bude zase signál. Nové seznamy a AI potřebují internet.",
       },
       {
         q: "Má to něco společného s matematickým Klokanem?",

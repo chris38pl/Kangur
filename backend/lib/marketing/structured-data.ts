@@ -22,8 +22,8 @@ const APP_ID = `${SITE_URL}/#app`;
 
 /** Says out loud what search engines confuse us with. */
 const DISAMBIGUATION: Record<"pl" | "en", string> = {
-  pl: "Aplikacja na telefon do list zakupów. Nie jest konkursem matematycznym ani programem do zdalnego pulpitu.",
-  en: "A phone app for grocery lists. Not a maths contest and not a remote desktop program.",
+  pl: "Aplikacja na telefon do list zakupów. Nie jest konkursem matematycznym ani programem na komputer.",
+  en: "A phone app for grocery lists. Not a maths contest and not desktop software.",
 };
 
 const graph = (...nodes: Node[]): Node => ({

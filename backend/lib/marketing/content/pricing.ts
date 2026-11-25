@@ -68,7 +68,7 @@ const COPY: Record<"pl" | "en", PricingCopy> = {
         ["Alejki, tryb zakupów, podsumowanie", "tak", "tak"],
         ["Użycia AI", "10 na przestrzeń, nie odnawiają się", "bez limitu"],
         ["Historia zakończonych list", "20 ostatnich", "200 ostatnich"],
-        ["Lista z poprzednich zakupów", "tak, za 1 użycie AI", "tak, bez limitu"],
+        ["Poprzednie listy", "tak, za 1 użycie AI", "tak, bez limitu"],
         ["Reklamy", "nie ma", "nie ma"],
         ["Cena", "0 zł", "9,99 zł miesięcznie, pierwszy miesiąc 0 zł"],
       ],

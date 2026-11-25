@@ -11,11 +11,17 @@ import { CHRISTMAS_NUDGE, GUIDE_CHRISTMAS } from "@/lib/marketing/content/topics
 import { GUIDES } from "@/lib/marketing/content/topics/guides";
 import { SHARED_SCREEN_ALT } from "@/lib/marketing/content/topics/shared-list";
 import { SCREENS } from "@/lib/marketing/images.generated";
+import { isOver } from "@/lib/marketing/season";
 import { CHRISTMAS } from "@/lib/marketing/lists/christmas";
 
 import styles from "./topics.module.css";
 
 export function ChristmasGuidePage() {
+  const over = (
+    <p className={styles.over} data-noprint>
+      Święta {CHRISTMAS.year} za nami. Daty poprawimy przed następnymi, ilości zostają te same.
+    </p>
+  );
   return (
     <TopicPage
       id="guideChristmas"
@@ -40,12 +46,7 @@ export function ChristmasGuidePage() {
     >
       <section className={styles.tool}>
         <div className={prose.wrap}>
-          <AfterSeason after={CHRISTMAS.over}>
-            <p className={styles.over} data-noprint>
-              Święta {CHRISTMAS.year} za nami. Daty poprawimy przed następnymi, ilości zostają te
-              same.
-            </p>
-          </AfterSeason>
+          {isOver(CHRISTMAS.over) ? over : <AfterSeason after={CHRISTMAS.over}>{over}</AfterSeason>}
           <ChristmasCalculator
             code={<PrintFoot />}
             nudge={<ToolNudge {...CHRISTMAS_NUDGE} page="kalkulator-wigilia" />}

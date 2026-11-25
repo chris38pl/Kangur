@@ -111,7 +111,7 @@ export const homeEs: HomeCopy = {
     lines: ["¿Quién está detrás?", "Una persona en Poznań."],
     body: "Kangur lo hace una empresa unipersonal de Polonia, Krzysztof Krawiec Software. Sin departamento de publicidad y sin vender datos.",
     points: [
-      { title: "No lee tus chats", body: "Solo ve la captura que eliges." },
+      { title: "No tiene acceso a tus apps de mensajería", body: "Solo recibe la captura que eliges." },
       { title: "No mira tus contactos ni el GPS", body: "Ni siquiera los pide: una lista de la compra no los necesita." },
       { title: "No tiene anuncios", body: "Vive de Premium, no de tu atención." },
     ],
@@ -135,11 +135,11 @@ export const homeEs: HomeCopy = {
       },
       {
         q: "¿Kangur lee mis mensajes?",
-        a: "No. No tiene acceso a ninguna app de mensajería. Solo ve la imagen que eliges de la galería. La imagen va al proveedor de IA (OpenAI), que lee en ella la lista. Kangur no guarda la imagen.",
+        a: "No. No tiene acceso a ninguna app de mensajería. Solo recibe la imagen que eliges. La imagen va al proveedor de IA (OpenAI), que lee en ella la lista. Kangur no guarda la imagen.",
       },
       {
         q: "¿Qué funciona sin cobertura en el súper?",
-        a: "El modo compra en una lista que ya tienes abierta: marcas y añades, y los cambios se envían después. Para crear listas y usar la IA hace falta internet.",
+        a: "El modo compra en una lista que ya tienes abierta: marcas, y los cambios se envían después. Termina la compra cuando vuelva la cobertura. Para crear listas y usar la IA hace falta internet.",
       },
       {
         q: "¿Tiene que ver con el concurso Canguro?",

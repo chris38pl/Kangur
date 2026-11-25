@@ -30,5 +30,5 @@ export const OG_IMAGES: Readonly<Record<string, string>> = {
   "recipeList/pl": "/og/recipeList-pl.acd67c27.jpg",
   "safety/en": "/og/safety-en.7d2fe94f.jpg",
   "safety/pl": "/og/safety-pl.21779bdb.jpg",
-  "sharedList/pl": "/og/sharedList-pl.782809b7.jpg",
+  "sharedList/pl": "/og/sharedList-pl.64ae1f3c.jpg",
 };

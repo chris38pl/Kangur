@@ -1,11 +1,12 @@
 "use client";
 
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { CopyBox } from "@/components/site/CopyBox";
 import { ListActions, ShareButton } from "@/components/tools/ListActions";
 import { LeftToBuy, ListGroups, type LineGroup } from "@/components/tools/ListGroups";
 import { Stepper } from "@/components/tools/Stepper";
+import { useCopy } from "@/components/tools/use-copy";
 import { AISLES, AISLE_ICONS, AISLE_LABELS } from "@/lib/marketing/aisles/labels";
 import {
   CHRISTMAS,
@@ -26,7 +27,9 @@ import {
   dishPlan,
   familyMessage,
   menu,
+  mostStaying,
   readPlan,
+  staying,
   type ChristmasPlan,
   type Dish,
   type DishPlan,
@@ -80,9 +83,26 @@ export function ChristmasCalculator({
     strings,
   );
   const [view, setView] = useState<"aisles" | "dates">("aisles");
+  /** The plan from before a preset or a reset. Promises are not deleted by a curious tap. */
+  const [before, setBefore] = useState<{ plan: ChristmasPlan; done: readonly string[]; by: "preset" | "reset" } | null>(null);
+  const presetsRef = useRef<HTMLDivElement>(null);
+  const resetRef = useRef<HTMLButtonElement>(null);
   const listId = useId();
   // Until the page comes alive a choice would be lost, so the form waits.
   const ready = useHydrated();
+
+  /** A change by hand: from now on there is nothing to go back to. */
+  const change = (next: ChristmasPlan) => {
+    setBefore(null);
+    setPlan(next);
+  };
+  const undo = () => {
+    if (!before) return;
+    setPlan(before.plan);
+    setDone(before.done);
+    setBefore(null);
+    (before.by === "preset" ? presetsRef.current?.querySelector("button") : resetRef.current)?.focus();
+  };
 
   const lines = useMemo(() => christmasList(plan), [plan]);
   const count = dishCount(plan);
@@ -119,7 +139,8 @@ export function ChristmasCalculator({
       lines: left > 0 ? group.lines.filter((line) => !doneSet.has(line.id)) : group.lines,
     })),
   );
-  const actions = (
+  const home = staying(plan);
+  const actions = lines.length === 0 ? null : (
     <ListActions
       title={title}
       text={text}
@@ -142,24 +163,23 @@ export function ChristmasCalculator({
             value={plan.people}
             unit={people}
             {...PEOPLE}
-            onChange={(next) =>
-              setPlan({ ...plan, people: next, home: Math.min(plan.home, Math.max(next, HOME.min)) })
-            }
+            onChange={(next) => change({ ...plan, people: next })}
           />
           <Stepper
             label="Zostaje na kolejne dni"
-            hint="śniadania do 27, obiady do 26 grudnia"
-            value={plan.home}
-            unit={plural(plan.home, "osoba", "osoby", "osób")}
-            {...HOME}
-            onChange={(next) => setPlan({ ...plan, home: next })}
+            hint="śniadania i obiady po Wigilii, wybierasz je niżej"
+            value={home}
+            unit={plural(home, "osoba", "osoby", "osób")}
+            min={HOME.min}
+            max={mostStaying(plan)}
+            onChange={(next) => change({ ...plan, home: next })}
           />
           <div className={styles.checks}>
             <label>
               <input
                 type="checkbox"
                 checked={plan.meat}
-                onChange={(event) => setPlan({ ...plan, meat: event.target.checked })}
+                onChange={(event) => change({ ...plan, meat: event.target.checked })}
               />
               <span>
                 Jemy mięso
@@ -170,7 +190,7 @@ export function ChristmasCalculator({
               <input
                 type="checkbox"
                 checked={plan.seat}
-                onChange={(event) => setPlan({ ...plan, seat: event.target.checked })}
+                onChange={(event) => change({ ...plan, seat: event.target.checked })}
               />
               <span>
                 Dodatkowe nakrycie
@@ -182,17 +202,26 @@ export function ChristmasCalculator({
 
         <fieldset disabled={!ready}>
           <legend>Dania</legend>
-          <div className={styles.presets}>
+          <div className={styles.presets} ref={presetsRef}>
             {PRESETS.map(({ id, label }) => (
               <button
                 key={id}
                 type="button"
                 aria-pressed={preset === id}
-                onClick={() => setPlan(applyPreset(plan, id))}
+                onClick={() => {
+                  // Two presets in a row still go back to what was set by hand.
+                  setBefore(before?.by === "preset" ? before : { plan, done, by: "preset" });
+                  setPlan(applyPreset(plan, id));
+                }}
               >
                 {label}
               </button>
             ))}
+            {before?.by === "preset" ? (
+              <button type="button" className={styles.undo} onClick={undo}>
+                Cofnij
+              </button>
+            ) : null}
           </div>
           <p className={styles.verdict} aria-live="polite">
             <strong>{plural(count, "danie", "dania", "dań")}.</strong> {verdict(count, plan.people)}
@@ -208,7 +237,7 @@ export function ChristmasCalculator({
                     id={id}
                     value={choice}
                     onChange={(event) =>
-                      setPlan({
+                      change({
                         ...plan,
                         dishes: { ...plan.dishes, [dish.id]: event.target.value as DishPlan },
                       })
@@ -226,7 +255,7 @@ export function ChristmasCalculator({
               );
             })}
           </ul>
-          <OwnDishes own={plan.own} onChange={(own) => setPlan({ ...plan, own })} />
+          <OwnDishes own={plan.own} onChange={(own) => change({ ...plan, own })} />
         </fieldset>
 
         <fieldset disabled={!ready}>
@@ -238,7 +267,7 @@ export function ChristmasCalculator({
                   type="checkbox"
                   checked={plan.extras[extra.id] ?? extra.on}
                   onChange={(event) =>
-                    setPlan({
+                    change({
                       ...plan,
                       extras: { ...plan.extras, [extra.id]: event.target.checked },
                     })
@@ -264,7 +293,7 @@ export function ChristmasCalculator({
                     type="checkbox"
                     checked={plan.forgotten[id] ?? on}
                     onChange={(event) =>
-                      setPlan({
+                      change({
                         ...plan,
                         forgotten: { ...plan.forgotten, [id]: event.target.checked },
                       })
@@ -277,16 +306,25 @@ export function ChristmasCalculator({
           </details>
         </fieldset>
 
-        <button
-          type="button"
-          className={styles.plainButton}
-          onClick={() => {
-            reset();
-            clearDone();
-          }}
-        >
-          Zacznij od nowa
-        </button>
+        <div className={styles.resetRow}>
+          <button
+            ref={resetRef}
+            type="button"
+            className={styles.plainButton}
+            onClick={() => {
+              setBefore({ plan, done, by: "reset" });
+              reset();
+              clearDone();
+            }}
+          >
+            Zacznij od nowa
+          </button>
+          {before?.by === "reset" ? (
+            <button type="button" className={styles.undo} onClick={undo}>
+              Cofnij
+            </button>
+          ) : null}
+        </div>
       </form>
 
       <div className={styles.result} id={listId} tabIndex={-1}>
@@ -298,7 +336,11 @@ export function ChristmasCalculator({
               {bring.length > 0 ? <>Przynoszą: {bring.map((name) => `${name} ..............`).join(", ")}</> : null}
             </p>
           ) : null}
-          <LeftToBuy total={total} left={left} ticked={lines.length - left} onUntick={clearDone} />
+          {lines.length > 0 ? (
+            <LeftToBuy total={total} left={left} ticked={lines.length - left} onUntick={clearDone} />
+          ) : (
+            <p>Lista jest pusta. Włącz jakieś danie albo posiłek.</p>
+          )}
           <div className={styles.code}>{code}</div>
           {actions}
           <div className={styles.views} role="group" aria-label="Widok listy" data-noprint>
@@ -326,12 +368,7 @@ export function ChristmasCalculator({
         <div className={styles.family} data-noprint>
           <h3>Wiadomość do rodziny</h3>
           {message ? (
-            <>
-              <CopyBox text={message} label="Kopiuj wiadomość" done="Skopiowane" />
-              <div className={styles.familyShare}>
-                <ShareButton label="Wyślij rodzinie" title="Wigilia" text={message} />
-              </div>
-            </>
+            <FamilyMessage text={message} />
           ) : (
             <p>
               Przy daniach, które ktoś przyniesie, ustaw „Ktoś przynosi”. Ułożymy wiadomość do
@@ -341,6 +378,22 @@ export function ChristmasCalculator({
         </div>
       </div>
     </div>
+  );
+}
+
+/** Who brings what, ready to send. When the share sheet does not open, it is copied. */
+function FamilyMessage({ text }: { text: string }) {
+  const [state, copy] = useCopy();
+  return (
+    <>
+      <CopyBox text={text} label="Kopiuj wiadomość" done="Skopiowane" />
+      <div className={styles.familyShare}>
+        <ShareButton label="Wyślij rodzinie" title="Wigilia" text={text} onRefused={() => void copy(text)} />
+        <p role="status" className={styles.small}>
+          {state === "copied" ? "Wysyłanie się nie otworzyło, więc wiadomość jest skopiowana." : null}
+        </p>
+      </div>
+    </>
   );
 }
 
@@ -354,10 +407,23 @@ function OwnDishes({
 }) {
   const [name, setName] = useState("");
   const id = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  /** Place of the dish that has just been removed: the keyboard goes to its neighbour. */
+  const removed = useRef<number | null>(null);
   const clean = name.trim();
   const full = own.length >= OWN.max;
 
+  useEffect(() => {
+    if (removed.current === null) return;
+    const crosses = listRef.current?.querySelectorAll("button") ?? [];
+    (crosses[Math.min(removed.current, crosses.length - 1)] ?? inputRef.current)?.focus();
+    removed.current = null;
+  }, [own]);
+
+  // Nothing here is ever disabled: what is disabled drops the keyboard focus.
   const add = () => {
+    inputRef.current?.focus();
     if (!clean || full) return;
     onChange([...own, { name: clean, plan: "make" }]);
     setName("");
@@ -368,10 +434,13 @@ function OwnDishes({
       <label htmlFor={id}>Dopisz swoje danie</label>
       <div className={styles.ownRow}>
         <input
+          ref={inputRef}
           id={id}
           value={name}
           maxLength={OWN.length}
-          disabled={full}
+          readOnly={full}
+          aria-disabled={full || undefined}
+          aria-describedby={full ? `${id}-full` : undefined}
           autoComplete="off"
           enterKeyHint="done"
           onChange={(event) => setName(event.target.value)}
@@ -381,13 +450,21 @@ function OwnDishes({
             add();
           }}
         />
-        <button type="button" className={styles.plainButton} disabled={!clean || full} onClick={add}>
+        <button
+          type="button"
+          className={styles.plainButton}
+          aria-disabled={!clean || full}
+          onClick={add}
+        >
           Dodaj
         </button>
       </div>
+      <p role="status" id={`${id}-full`} className={styles.small}>
+        {full ? `Najwyżej ${OWN.max} własnych dań. Usuń któreś, żeby dodać następne.` : null}
+      </p>
       {own.length > 0 ? (
         <>
-          <ul className={styles.dishes}>
+          <ul className={styles.dishes} ref={listRef}>
             {own.map((dish, index) => (
               <li key={`${index}-${dish.name}`} data-plan={dish.plan}>
                 <span className={styles.ownName}>{dish.name}</span>
@@ -411,7 +488,10 @@ function OwnDishes({
                   type="button"
                   className={styles.remove}
                   aria-label={`Usuń danie: ${dish.name}`}
-                  onClick={() => onChange(own.filter((_, i) => i !== index))}
+                  onClick={() => {
+                    removed.current = index;
+                    onChange(own.filter((_, i) => i !== index));
+                  }}
                 >
                   ×
                 </button>

@@ -62,7 +62,7 @@ const copy: TopicCopy = {
         },
         {
           title: "Nie każe kupować wody",
-          body: "Do makaronu wystarczy kran. O gazowaną do lemoniady już poprosi.",
+          body: "Do makaronu wystarczy kran. Gazowana trafia na listę tylko wtedy, gdy jest częścią dania.",
         },
       ],
     },

@@ -6,7 +6,7 @@ const copy: TopicCopy = {
   eyebrow: "Lista zakupów do druku w PDF, format A4",
   lines: ["Kartka na lodówkę.", "Magnes masz swój."],
   lead: [
-    "Siedem szablonów listy zakupów do wydruku. Dwa mają kategorie w kolejności sklepu, żeby nie wracać trzy razy po masło.",
+    "Siedem szablonów listy zakupów do wydruku. Cztery mają kategorie w kolejności sklepu, żeby nie wracać trzy razy po masło.",
     "Za darmo i bez maila. Długopis we własnym zakresie.",
   ],
   sections: [

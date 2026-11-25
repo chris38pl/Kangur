@@ -19,6 +19,9 @@ function read(key: string): string | null {
   }
 }
 
+/** Is anything saved under this name? */
+export const hasStored = (key: string): boolean => read(key) !== null;
+
 function write(key: string, value: string | null) {
   try {
     if (value === null) window.localStorage.removeItem(PREFIX + key);
@@ -64,10 +67,16 @@ export function useStored<T>(
       const onStorage = (event: StorageEvent) => {
         if (event.key === PREFIX + key || event.key === null) listener();
       };
+      // A page taken from the back-forward cache has slept through everything.
+      const onShow = (event: PageTransitionEvent) => {
+        if (event.persisted) listener();
+      };
       window.addEventListener("storage", onStorage);
+      window.addEventListener("pageshow", onShow);
       return () => {
         set.delete(listener);
         window.removeEventListener("storage", onStorage);
+        window.removeEventListener("pageshow", onShow);
       };
     },
     [key],

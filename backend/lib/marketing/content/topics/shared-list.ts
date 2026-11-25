@@ -33,7 +33,7 @@ const copy: TopicCopy = {
         },
         {
           title: "Zaproś domowników",
-          body: "W zakładce „Przestrzeń”, pod „Zaproś do listy”, wpisz e-mail i stuknij „Wyślij zaproszenie”. Robi to właściciel albo admin. Zaproszenie działa 7 dni i tylko dla tego adresu, więc konto trzeba założyć na ten sam e-mail.",
+          body: "W zakładce „Przestrzeń”, pod „Zaproś do listy”, wpisz e-mail i stuknij „Wyślij zaproszenie”. Robi to właściciel przestrzeni. Druga osoba najpierw instaluje Kangura i zakłada konto na ten sam e-mail, bo zaproszenie otwiera się w aplikacji. Jest ważne 7 dni i tylko dla tego adresu.",
         },
         {
           title: "Dopisujcie po swojemu",
@@ -51,7 +51,7 @@ const copy: TopicCopy = {
       caption: "Co robisz Ty i co widzi druga osoba na wspólnej liście",
       head: ["Ty", "Druga osoba"],
       rows: [
-        ["dopisujesz masło", "ma je po chwili na otwartej liście, z informacją, kto dodał"],
+        ["dopisujesz masło", "ma je po chwili na otwartej liście, a u góry na moment widać, kto coś dodał"],
         ["zaczynasz zakupy", "dostaje powiadomienie"],
         ["przesuwasz mleko w prawo", "widzi, że jest w koszyku"],
         ["przesuwasz awokado w lewo", "widzi, że go nie było"],
@@ -134,11 +134,11 @@ const copy: TopicCopy = {
         },
         {
           q: "Jak usunąć kogoś ze wspólnej listy?",
-          a: "W zakładce „Przestrzeń” właściciel albo admin stuka trzy kropki przy osobie i wybiera „Usuń”. Kto woli wyjść po cichu, może opuścić przestrzeń bez pytania.",
+          a: "W zakładce „Przestrzeń” właściciel stuka trzy kropki przy osobie i wybiera „Usuń”. Kto woli wyjść po cichu, opuszcza przestrzeń bez pytania. Właściciel może ją tylko usunąć.",
         },
         {
           q: "Czy Kangur podzieli rachunek?",
-          a: "Nie, pieniędzy nie liczy. Ale będzie wiadomo, kto dopisał czwartą czekoladę.",
+          a: "Nie, pieniędzy nie liczy. A kto dopisał czwartą czekoladę, ustalicie między sobą.",
         },
         {
           q: "Czy da się używać wspólnej listy online, na komputerze?",
@@ -146,7 +146,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Co, gdy w sklepie nie ma zasięgu?",
-          a: "W trybie zakupów odhaczysz i dopiszesz produkty na liście, którą masz już otwartą. Zmiany wyślą się później, a nowe dopiski z domu zobaczysz, gdy wróci zasięg.",
+          a: "W trybie zakupów odhaczysz produkty na liście, którą masz już otwartą. Zmiany wyślą się później. Nowe dopiski z domu zobaczysz, gdy wróci zasięg, i wtedy zakończ zakupy.",
         },
       ],
     },
@@ -171,6 +171,9 @@ export const SHARED_LIST = typesetCopy(copy);
 export const SHARED_SCREEN_ALT = typesetCopy(
   "Wspólna lista w Kangurze na dwóch telefonach: te same 10 produktów, od bananów po kawę",
 );
+
+/** Where the butter on both phones came from. */
+export const SHARED_NOTE = typesetCopy("z tramwaju: masło");
 
 /** The call from the aisle that a shared list saves. */
 export const AISLE_CALL: Chat = typesetCopy<Chat>({

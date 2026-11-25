@@ -1,8 +1,11 @@
 "use client";
 
+import { useRef } from "react";
+
 import { CopyPart } from "@/components/tools/ListActions";
 import type { Line } from "@/lib/marketing/lists/build";
 import { listToText } from "@/lib/marketing/lists/format";
+import { useHydrated } from "@/lib/marketing/lists/use-stored";
 
 import styles from "./Calculator.module.css";
 
@@ -27,8 +30,12 @@ export function ListGroups({
   /** Name of the whole list. When given, every group can be copied on its own. */
   partTitle?: string;
 }) {
+  // Until the page comes alive a tick would be shown and lost.
+  const ready = useHydrated();
+  const allDone = groups.every((group) => group.lines.every((line) => done.has(line.id)));
+
   return (
-    <div className={styles.groups}>
+    <div className={styles.groups} data-all-done={allDone || undefined}>
       {groups.map((group) => {
         const left = group.lines.filter((line) => !done.has(line.id));
         return (
@@ -55,6 +62,7 @@ export function ListGroups({
                     <input
                       type="checkbox"
                       checked={done.has(line.id)}
+                      disabled={!ready}
                       onChange={() => onToggle(line.id)}
                     />
                     <span className={styles.name}>
@@ -85,21 +93,30 @@ export function LeftToBuy({
   ticked: number;
   onUntick: () => void;
 }) {
+  const textRef = useRef<HTMLParagraphElement>(null);
   return (
     <div className={styles.left}>
-      <p aria-live="polite">
+      <p ref={textRef} tabIndex={-1} aria-live="polite">
         {ticked === 0 ? (
           `${total} do kupienia.`
         ) : (
           <>
-            <span data-noprint>{`Zostało ${left} z ${total}. `}</span>
-            <span className={styles.paper}>Do kupienia: {left}.</span>
+            <span data-noprint>{`Zostało ${left} z ${left + ticked}. `}</span>
+            <span className={styles.paper}>Do kupienia: {left > 0 ? left : ticked}.</span>
           </>
         )}
         {ticked === 0 ? <span data-noprint> Co masz w domu, odhacz i nie kupuj.</span> : null}
       </p>
       {ticked > 0 ? (
-        <button type="button" className={styles.untick} data-noprint onClick={onUntick}>
+        <button
+          type="button"
+          className={styles.untick}
+          data-noprint
+          onClick={() => {
+            onUntick();
+            textRef.current?.focus({ preventScroll: true });
+          }}
+        >
           Odznacz wszystko ({ticked})
         </button>
       ) : null}
