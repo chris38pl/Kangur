@@ -55,7 +55,7 @@ export const PRODUCTS = {
   herring: p("Śledzie (płaty)", "fish", "kg", 0.25, "weekend"),
   whiteFish: p("Biała ryba (filety)", "fish", "kg", 0.25, "last", { note: "może być mrożona" }),
   roast: p("Mięso na pieczeń", "meat", "kg", 0.25, "last"),
-  soupMeat: p("Porcja rosołowa", "meat", "kg", 0.25, "weekend", { note: "do zamrażarki, rosół jest 26" }),
+  soupMeat: p("Porcja rosołowa", "meat", "kg", 0.25, "weekend", { note: "zamroź, na rosół 26 grudnia" }),
   coldCuts: p("Wędlina", "meat", "kg", 0.1, "last"),
 
   // Dairy

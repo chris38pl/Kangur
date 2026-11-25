@@ -166,7 +166,7 @@ const COPY: Record<"pl" | "en", FaqPageCopy> = {
       {
         title: "Shared lists",
         items: [
-          { q: "How do I add another person?", a: "The owner of the space invites them by email. The invitation is valid for 7 days and works for the address it was sent to. It is easiest when the other person installs Kangur first and signs up with that address." },
+          { q: "How do I add another person?", a: "The owner of the space invites them by email. The invitation is valid for 7 days and works for the address it was sent to. The other person installs Kangur first and signs up with that address, because the invitation opens in the app." },
           { q: "How many people can use one list?", a: "As many as you like, with or without Premium." },
           { q: "When does the other person see a change?", a: "A moment later, if they have that list open. If the app is closed, the change shows when it is opened." },
           { q: "What does Kangur notify me about?", a: "Invitations, and somebody starting or finishing shopping. You can add new and deleted lists. Each kind can be switched off in the settings." },

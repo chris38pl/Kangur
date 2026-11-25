@@ -584,10 +584,25 @@
     right: 0;
   }
 
-  .groups {
+  /* The columns belong to the whole sheet: a box of columns would jump to the next page. */
+  .result {
     columns: 2;
     column-gap: 26px;
+  }
+
+  .result > * {
+    column-span: all;
+  }
+
+  .result > .groups {
+    column-span: none;
+    columns: auto;
     margin: 0;
+  }
+
+  .hint {
+    font-size: 8pt;
+    line-height: 1.2;
   }
 
   .group {
@@ -621,7 +636,7 @@
   }
 
   .group label {
-    min-height: 20px;
+    min-height: 18px;
     gap: 8px;
   }
 
