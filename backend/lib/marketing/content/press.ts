@@ -23,7 +23,7 @@ const COPY = {
   },
   long: {
     title: "Kangur w czterech zdaniach",
-    text: "Kangur to polska aplikacja na iPhone’a i Androida, która zamienia zrzut czatu, zdjęcie kartki albo nazwę dania w listę zakupów ułożoną według alejek. Lista jest wspólna dla domowników, a w sklepie produkty przesuwa się palcem: w prawo kupione, w lewo nie było. Listy są darmowe i bez reklam, na start jest 10 użyć AI, a Premium z AI bez limitu kosztuje 9,99 zł miesięcznie za całą przestrzeń. Robi ją w Poznaniu jednoosobowa firma Krzysztof Krawiec Software.",
+    text: "Kangur to polska aplikacja na iPhone’a i Androida, która zamienia zrzut czatu, zdjęcie kartki albo nazwę dania w listę zakupów ułożoną według alejek. Lista jest wspólna dla domowników, a w sklepie produkty przesuwa się palcem: w prawo kupione, w lewo nie było. Listy są darmowe i bez reklam, na start jest 10 użyć AI, a Premium z AI bez limitu kosztuje 9,99 zł miesięcznie za całą przestrzeń. Aplikację robi w Poznaniu jednoosobowa firma Krzysztof Krawiec Software.",
   },
   factsTitle: "Fakty",
   facts: [
@@ -46,11 +46,11 @@ const COPY = {
     {
       title: "Cztery dni bez sklepów",
       body: "Od 24 do 27 grudnia 2026 duże sklepy będą zamknięte cztery dni z rzędu, pierwszy raz, odkąd Wigilia jest wolna. [[guideChristmas|Darmowy kalkulator]] liczy zakupy na tyle osób, ile siada do stołu, dzieli je na trzy terminy i układa wiadomość, kto co przynosi. Liczby można cytować, z linkiem.",
-      source: "[[https://zielonalinia.gov.pl/niedziele-handlowe-w-2026-r/|Zielona Linia]]",
+      source: "[[https://zielonalinia.gov.pl/niedziele-handlowe-w-2026-r/|Zielona Linia]], [[https://www.money.pl/gospodarka/cztery-dni-bez-zakupow-w-duzych-sklepach-grudzien-z-handlowa-przerwa-7347071442889152a.html|Money.pl]]",
       until: CHRISTMAS.strip,
     },
     {
-      title: "Lista przeniosła się do czatu",
+      title: "Coraz więcej domów chodzi z listą",
       body: "W 2023 roku w 43% domów na zakupy zawsze albo prawie zawsze chodziło się z listą, siedem lat wcześniej w 31%. W 57% domów z co najmniej dwojgiem dorosłych codzienne zakupy robi się wspólnie albo raz robi je jedno, raz drugie (2026).",
       source: "[[https://www.cbos.pl/SPISKOM.POL/2023/K_126_23.PDF|CBOS 126/2023]], [[https://www.cbos.pl/PL/publikacje/news_tekst.php?nr=25/2026|CBOS News 25/2026]]",
     },
@@ -61,7 +61,7 @@ const COPY = {
     },
     {
       title: "Jedna osoba, dziesięć języków, cztery miesiące",
-      body: "Od pierwszego opisu pomysłu do obu sklepów. Chętnie opowiemy, co poszło gładko, a co trzy razy od nowa, także o tym, gdzie AI wciąż myli się przy kartce z lodówki.",
+      body: "Od pierwszego opisu pomysłu do obu sklepów. Chętnie opowiemy, co poszło gładko, co trzy razy od nowa i gdzie AI wciąż myli się przy kartce z lodówki.",
       source: "",
     },
   ] as Idea[],

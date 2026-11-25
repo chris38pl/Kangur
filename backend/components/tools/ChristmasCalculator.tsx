@@ -148,7 +148,7 @@ export function ChristmasCalculator({
           />
           <Stepper
             label="Zostaje na kolejne dni"
-            hint="śniadania do 27, obiady do 26 grudnia"
+            hint="śniadania i obiady po Wigilii, wybierasz je niżej"
             value={plan.home}
             unit={plural(plan.home, "osoba", "osoby", "osób")}
             {...HOME}

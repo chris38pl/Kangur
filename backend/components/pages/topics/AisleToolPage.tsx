@@ -8,7 +8,6 @@ import prose from "@/components/site/prose.module.css";
 import { AisleTool } from "@/components/tools/AisleTool";
 import { buildAisleWords } from "@/lib/marketing/aisles/dictionary";
 import type { Aisle } from "@/lib/marketing/aisles/labels";
-import { homeCopy } from "@/lib/marketing/content/home";
 import { AISLE_NUDGE, AISLE_SAMPLE, AISLE_TOOL } from "@/lib/marketing/content/topics/aisle-tool";
 import { SCREENS } from "@/lib/marketing/images.generated";
 
@@ -38,7 +37,7 @@ export function AisleToolPage() {
         phone: (
           <Phone
             image={SCREENS.pl.aisle}
-            alt={homeCopy("pl").steps.screenAlt}
+            alt="Tryb zakupów w Kangurze, alejka Warzywa: ogórki przesuwane w prawo jako kupione"
             className={styles.phone}
             time="18:12"
           />

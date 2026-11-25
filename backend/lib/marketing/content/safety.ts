@@ -70,7 +70,7 @@ const COPY: Record<"pl" | "en", SafetyCopy> = {
     },
     screenshot: {
       title: "Co się dzieje ze zrzutem rozmowy",
-      intro: "Kangur nie ma dostępu do żadnego komunikatora. Widzi tylko obrazek, który mu podasz.",
+      intro: "Kangur nie ma dostępu do żadnego komunikatora. Dostaje tylko obrazek, który mu podasz.",
       steps: [
         { title: "Wybierasz obrazek", body: "Jeden, z galerii albo prosto z aparatu. Imię rozmówcy możesz wcześniej wyciąć z kadru." },
         { title: "AI czyta produkty", body: "Obrazek, jego nazwa i to, co już jest na tej liście (produkty, ilości, notatki), trafiają do dostawcy AI (OpenAI), który przechowuje je według swoich zasad. Kangur nie dołącza Twojego imienia ani e-maila." },
@@ -185,7 +185,7 @@ const COPY: Record<"pl" | "en", SafetyCopy> = {
     },
     screenshot: {
       title: "What happens to a chat screenshot",
-      intro: "Kangur has no access to any messaging app. It sees only the image you hand it.",
+      intro: "Kangur has no access to any messaging app. It gets only the image you hand it.",
       steps: [
         { title: "You pick an image", body: "One, from the gallery or straight from the camera. You can crop out the other person’s name first." },
         { title: "AI reads the items", body: "The image, its name and what is already on that list (items, amounts, notes) go to the AI provider (OpenAI), which keeps them under its own rules. Kangur does not attach your name or email." },

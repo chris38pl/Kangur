@@ -253,7 +253,7 @@ export const DISHES = [
   {
     id: "makowiec", name: "Makowiec", starter: true,
     needs: [
-      { product: "poppyPaste", each: 0.12 }, { product: "flour", each: 0.04 }, { product: "yeast", each: 0.06 }, { product: "butter", each: 0.05 },
+      { product: "poppyPaste", each: 0.12 }, { product: "flour", each: 0.04 }, { product: "yeast", each: 0.03 }, { product: "butter", each: 0.05 },
       { product: "milk", each: 0.02 }, { product: "eggs", each: 0.25 }, { product: "sugar", each: 0.01 }, { product: "icingSugar", base: 0.4 },
     ],
     ready: { product: "readyPoppyCake", each: 0.12 },
@@ -572,7 +572,7 @@ export function familyMessage(plan: ChristmasPlan): string | null {
     `Wigilia, przy stole ${plural(plan.people, "osoba", "osoby", "osób")}.`,
     ours.length ? `U nas będzie: ${ours.join(", ")}.` : null,
     `Do przyniesienia: ${bring.join(", ")}.`,
-    "Kto co bierze? Lista i terminy: getkangur.com/wigilia",
+    "Kto co bierze? Terminy zakupów: getkangur.com/wigilia",
   ]
     .filter(Boolean)
     .join(" ")

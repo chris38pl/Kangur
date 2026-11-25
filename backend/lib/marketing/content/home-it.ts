@@ -111,7 +111,7 @@ export const homeIt: HomeCopy = {
     lines: ["Chi c’è dietro?", "Una persona a Poznań."],
     body: "Kangur lo fa una ditta individuale polacca, Krzysztof Krawiec Software. Niente reparto pubblicità e niente vendita di dati.",
     points: [
-      { title: "Non legge le chat", body: "Vede solo lo screenshot che scegli." },
+      { title: "Non ha accesso alle app di messaggistica", body: "Riceve solo lo screenshot che scegli." },
       { title: "Non guarda contatti né GPS", body: "Non li chiede nemmeno: a una lista della spesa non servono." },
       { title: "Non ha pubblicità", body: "Vive di Premium, non della tua attenzione." },
     ],
@@ -135,11 +135,11 @@ export const homeIt: HomeCopy = {
       },
       {
         q: "Kangur legge i miei messaggi?",
-        a: "No. Non ha accesso a nessuna app di messaggistica. Vede solo l’immagine che scegli dalla galleria. L’immagine va al fornitore di AI (OpenAI), che ne legge la lista. Kangur non salva l’immagine.",
+        a: "No. Non ha accesso a nessuna app di messaggistica. Riceve solo l’immagine che scegli. L’immagine va al fornitore di AI (OpenAI), che ne legge la lista. Kangur non salva l’immagine.",
       },
       {
         q: "Cosa funziona senza segnale al supermercato?",
-        a: "La modalità spesa su una lista già aperta: spunti e aggiungi, e le modifiche partono dopo. Per creare liste e usare l’AI serve internet.",
+        a: "La modalità spesa su una lista già aperta: spunti, e le modifiche partono dopo. Termina la spesa quando torna il segnale. Per creare liste e usare l’AI serve internet.",
       },
       {
         q: "C’entra con la gara Kangourou?",

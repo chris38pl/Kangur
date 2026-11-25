@@ -92,7 +92,7 @@ export function LeftToBuy({
           `${total} do kupienia.`
         ) : (
           <>
-            <span data-noprint>{`Zostało ${left} z ${total}. `}</span>
+            <span data-noprint>{`Zostało ${left} z ${left + ticked}. `}</span>
             <span className={styles.paper}>Do kupienia: {left}.</span>
           </>
         )}

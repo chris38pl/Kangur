@@ -111,7 +111,7 @@ export const homeFr: HomeCopy = {
     lines: ["Qui est derrière ?", "Une personne à Poznań."],
     body: "Kangur est l’œuvre d’une entreprise individuelle polonaise, Krzysztof Krawiec Software. Pas de régie publicitaire, pas de vente de données.",
     points: [
-      { title: "Ne lit pas vos conversations", body: "Il ne voit que la capture que vous choisissez." },
+      { title: "N’a pas accès à vos messageries", body: "Il ne reçoit que la capture que vous choisissez." },
       { title: "Ne regarde ni vos contacts ni le GPS", body: "Il ne les demande même pas : une liste de courses n’en a pas besoin." },
       { title: "N’a pas de publicité", body: "Il vit de Premium, pas de votre attention." },
     ],
@@ -135,11 +135,11 @@ export const homeFr: HomeCopy = {
       },
       {
         q: "Kangur lit-il mes messages ?",
-        a: "Non. Il n’a accès à aucune messagerie. Il ne voit que l’image que vous choisissez dans la galerie. Elle est envoyée au fournisseur d’IA (OpenAI), qui y lit la liste. Kangur ne conserve pas l’image.",
+        a: "Non. Il n’a accès à aucune messagerie. Il ne reçoit que l’image que vous choisissez. Elle est envoyée au fournisseur d’IA (OpenAI), qui y lit la liste. Kangur ne conserve pas l’image.",
       },
       {
         q: "Que se passe-t-il sans réseau au magasin ?",
-        a: "Le mode courses sur une liste déjà ouverte : vous cochez et ajoutez, les changements partent plus tard. Pour une nouvelle liste ou l’IA, il faut internet.",
+        a: "Le mode courses sur une liste déjà ouverte : vous cochez, les changements partent plus tard. Terminez les courses une fois le réseau revenu. Pour une nouvelle liste ou l’IA, il faut internet.",
       },
       {
         q: "Y a-t-il un lien avec le concours Kangourou ?",

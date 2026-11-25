@@ -20,13 +20,13 @@ const copy: TopicCopy = {
       head: ["Kiedy", "Co", "Dlaczego wtedy"],
       stack: true,
       rows: [
-        ["Do 13 grudnia", "mąka, mak, bakalie, susz, grzyby, przyprawy, opłatek, świece. Lepisz wcześniej? Także kapusta, cebula i jajka na farsz", "Poczeka w szafce, a pod koniec bywa wykupione"],
+        ["Do 13 grudnia", "mąka, mak, bakalie, susz, grzyby, przyprawy, opłatek, świece. Lepisz wcześniej? Także kapusta, cebula i jajka", "Poczeka w szafce, a pod koniec bywa wykupione"],
         ["19 i 20 grudnia", "warzywa, kapusta, śledzie, jajka, masło, śmietana, napoje, porcja rosołowa do zamrażarki", "Ostatni weekend z niedzielą handlową"],
         ["22 i 23 grudnia", "karp, biała ryba, mięso na pieczeń, wędlina, mleko, pieczywo, pomidory", "Świeże. Lodówka i tak już protestuje"],
         ["Od 24 do 27 grudnia", "nic", "Wigilia jest wolna od pracy, potem dwa dni świąt i niedziela niehandlowa"],
       ],
       outro:
-        "Taki układ, cztery dni z rzędu bez dużych sklepów, powtórzy się dopiero w 2037 roku. Stan na 25 listopada 2026, źródła: [[https://zielonalinia.gov.pl/niedziele-handlowe-w-2026-r/|Zielona Linia]], [[https://www.money.pl/gospodarka/cztery-dni-bez-zakupow-w-duzych-sklepach-grudzien-z-handlowa-przerwa-7347071442889152a.html|Money.pl]].",
+        "Taki układ, cztery dni z rzędu bez dużych sklepów, powtórzy się dopiero w 2037 roku, jeśli przepisy się nie zmienią. Stan na 25 listopada 2026, źródła: [[https://zielonalinia.gov.pl/niedziele-handlowe-w-2026-r/|Zielona Linia]], [[https://www.money.pl/gospodarka/cztery-dni-bez-zakupow-w-duzych-sklepach-grudzien-z-handlowa-przerwa-7347071442889152a.html|Money.pl]].",
     },
     {
       kind: "custom",
@@ -42,7 +42,7 @@ const copy: TopicCopy = {
       slot: "kangur",
       body: [
         "Dwanaście prób, nie dwanaście obiadów. Dwadzieścia deko karpia na osobę, bo obok stoi jedenaście innych dań i ktoś na pewno pilnuje, czy próbujesz każdego.",
-        "Ilości są z domowej kuchni, nie z tabel. Na osobę to między innymi 20 dag karpia, 14 dag śledzi w dwóch daniach, 18 dag buraków na barszcz i 15 dag pierogów, gdy kupujesz gotowe. Wszystko sumujemy i zaokrąglamy raz, na końcu. Inaczej wyszłoby pięć napoczętych worków mąki.",
+        "Ilości są z domowej kuchni, nie z tabel żywieniowych. Na osobę to między innymi 20 dag karpia, 14 dag śledzi w dwóch daniach, 18 dag buraków na barszcz i 15 dag pierogów, gdy kupujesz gotowe. Wszystko sumujemy i zaokrąglamy raz, na końcu. Inaczej wyszłoby pięć napoczętych worków mąki.",
         "Jeśli u Was wszyscy biorą dokładkę pierogów, dodaj jedną osobę. Jeśli ciocia zawsze przywozi drugi makowiec, ustaw przy nim „Ktoś przynosi”.",
       ],
     },
@@ -55,7 +55,7 @@ const copy: TopicCopy = {
       items: [
         { title: "Gospodarze: gorące", body: "Barszcz, karp i kapusta nie lubią podróży." },
         { title: "Goście: zimne", body: "Śledź, sałatka, makowiec. Zniosą bagażnik, pociąg i trzecie piętro." },
-        { title: "Dzieci: pierniczki", body: "Upieczone dwa tygodnie wcześniej zdążą zmięknąć, o ile dotrwają." },
+        { title: "Dzieci: pierniczki", body: "Pierniczki upieczone dwa tygodnie wcześniej zdążą zmięknąć, o ile dotrwają." },
         { title: "Jedna osoba: drobiazgi", body: "Opłatek, sianko, świece, zapałki. Tylko to, ale na pewno." },
       ],
     },
@@ -65,9 +65,9 @@ const copy: TopicCopy = {
       intro: "Żeby 24 grudnia smażyć karpia, a nie wszystko naraz.",
       items: [
         { title: "Początek grudnia: pierniczki", body: "Masło i jajka kup na nie osobno. Po upieczeniu są twarde, miękną w puszce, im dłużej, tym lepiej." },
-        { title: "Około 13 grudnia: uszka i pierogi", body: "Kapusta, cebula i jajka na farsz przychodzą więc z pierwszymi zakupami. Zamroź na tacy, potem przesyp do woreczka. Nie skleją się." },
+        { title: "Około 13 grudnia: uszka i pierogi", body: "Kapustę, cebulę i jajka do ciasta kup więc na pierwszych zakupach. Ulepione zamroź na tacy, potem przesyp do woreczka. Nie skleją się." },
         { title: "Około 17 grudnia: zakwas na barszcz", body: "Domowy potrzebuje kilku dni, więc buraki i czosnek kup wcześniej. Kupny może poczekać na weekend." },
-        { title: "21 i 22 grudnia: śledzie i makowiec", body: "Śledziom dwa dni z cebulą robią dobrze. Makowcowi nic się nie stanie." },
+        { title: "21 i 22 grudnia: śledzie i makowiec", body: "Śledziom dwa dni z cebulą robią dobrze. Makowcowi nic się nie stanie, tylko szklankę mleka weź na niego wcześniej." },
         { title: "23 grudnia: ryba po grecku, sałatka, kapusta, kutia, kompot", body: "Następnego dnia smakują lepiej niż w dniu gotowania." },
         { title: "24 grudnia: karp, barszcz, nakrycie", body: "I to wszystko. Taki był plan." },
       ],
@@ -105,7 +105,7 @@ const copy: TopicCopy = {
       slot: "phones",
       body: [
         "Skopiuj listę i w Kangurze wybierz „Tekst ze schowka”. To jedno z dziesięciu darmowych użyć AI. Lista jest długa, więc rzuć okiem, czy wszystko dojechało. Potem zaproś rodzinę, zaproszenia nic nie kosztują.",
-        "Jedna osoba bierze warzywa, druga stoi po rybę. Na liście widać, co już w koszyku, więc karp wróci do domu jeden. [[sharedList|Jak działa wspólna lista]].",
+        "Jedna osoba bierze warzywa, druga stoi po rybę. Na liście widać, co już w koszyku, więc jest szansa, że karp wróci do domu jeden. [[sharedList|Jak działa wspólna lista]].",
       ],
     },
     {
@@ -172,5 +172,5 @@ export const GUIDE_CHRISTMAS = typesetCopy(copy);
 /** Below the list, where the work is done. */
 export const CHRISTMAS_NUDGE = typesetCopy({
   title: "A kto idzie do sklepu?",
-  body: "Skopiuj listę, w Kangurze wybierz „Tekst ze schowka” i zaproś rodzinę. Każdy odhacza u siebie, więc karp wróci do domu jeden. To jedno z dziesięciu darmowych użyć AI. Lista jest długa, rzuć okiem, czy wszystko dojechało.",
+  body: "Skopiuj listę, w Kangurze wybierz „Tekst ze schowka” i zaproś rodzinę. Każdy odhacza u siebie, więc jest szansa, że karp wróci do domu jeden. To jedno z dziesięciu darmowych użyć AI. Lista jest długa, rzuć okiem, czy wszystko dojechało.",
 });

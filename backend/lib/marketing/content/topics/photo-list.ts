@@ -6,7 +6,7 @@ const copy: TopicCopy = {
   eyebrow: "Lista zakupów ze zdjęcia i zrzutu ekranu",
   lines: ["Ktoś już to napisał.", "Nie pisz drugi raz."],
   lead: [
-    "Zrzut rozmowy albo zdjęcie kartki wystarczy. Kangur wypisze produkty z ilościami i ułoży je według alejek.",
+    "Zrzut rozmowy albo zdjęcie kartki wystarczy. Kangur wypisze produkty, z ilościami, jeśli są, i ułoży je według alejek.",
     "W naszym teście siedem wiadomości zamieniło się w 22 pozycje. Buziak na listę nie trafił.",
   ],
   stores: "Na start 10 darmowych użyć AI, wspólnych dla całego domu. Bez reklam.",
@@ -49,7 +49,7 @@ const copy: TopicCopy = {
       items: [
         {
           title: "Zrzut czatu",
-          body: "Z dowolnego komunikatora. Kangur widzi tylko obrazek, z rozmową się nie łączy.",
+          body: "Z dowolnego komunikatora. Kangur dostaje tylko obrazek, z rozmową się nie łączy.",
         },
         {
           title: "Kartka z lodówki",

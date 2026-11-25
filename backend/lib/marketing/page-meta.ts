@@ -170,7 +170,7 @@ const PAGE_META: Record<
     pl: {
       title: "Lista zakupów na Wigilię i święta 2026 + kalkulator",
       description:
-        "Produkty na 12 potraw z ilościami dla 1 do 30 osób, co kupić wcześniej i kto co przynosi. Boże Narodzenie 2026: duże sklepy zamknięte od 24 do 27.",
+        "Produkty na 12 potraw z ilościami na liczbę gości, co kupić wcześniej i kto co przynosi. Boże Narodzenie 2026: duże sklepy zamknięte od 24 do 27 grudnia.",
     },
   },
   guideWeek: {
