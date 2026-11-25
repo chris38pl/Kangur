@@ -12,6 +12,7 @@ import { LoopVideo } from "@/components/site/LoopVideo";
 import { Notepad } from "@/components/site/Notepad";
 import { Phone } from "@/components/site/Phone";
 import { Receipt } from "@/components/site/Receipt";
+import { Season } from "@/components/site/Season";
 import { Sticker } from "@/components/site/Sticker";
 import { homeCopy } from "@/lib/marketing/content/home";
 import { SCREENS } from "@/lib/marketing/images.generated";
@@ -54,6 +55,12 @@ export default async function HomePage({ params }: Props) {
         <span aria-hidden> →</span>
       </Link>
     );
+  };
+
+  /** Only where the page exists in the reader's language. */
+  const more = (id: keyof NonNullable<typeof c.more>) => {
+    const label = c.more?.[id];
+    return label ? <p className={styles.more}>{link(id, label)}</p> : null;
   };
 
   return (
@@ -162,6 +169,7 @@ export default async function HomePage({ params }: Props) {
               <div className={styles.wayCopy}>
                 <h3>{c.ways.photo.title}</h3>
                 <p>{c.ways.photo.body}</p>
+                {more("photoList")}
               </div>
               <div className={styles.wayNote}>
                 <Notepad lines={c.ways.photo.note} locale={locale} />
@@ -172,6 +180,7 @@ export default async function HomePage({ params }: Props) {
               <div className={styles.wayCopy}>
                 <h3>{c.ways.dish.title}</h3>
                 <p>{c.ways.dish.body}</p>
+                {more("recipeList")}
               </div>
               <Phone
                 image={screens.meal}
@@ -186,6 +195,7 @@ export default async function HomePage({ params }: Props) {
               <div className={styles.wayCopy}>
                 <h3>{c.ways.usual.title}</h3>
                 <p>{c.ways.usual.body}</p>
+                {more("guideWeek")}
               </div>
               {screens.history ? (
                 <Phone
@@ -204,6 +214,7 @@ export default async function HomePage({ params }: Props) {
               <div className={styles.wayCopy}>
                 <h3>{c.ways.typed.title}</h3>
                 <p>{c.ways.typed.body}</p>
+                {more("aisleTool")}
               </div>
               <div className={styles.wayChips} aria-hidden>
                 {c.ways.typed.chips.map((chip) => (
@@ -216,6 +227,21 @@ export default async function HomePage({ params }: Props) {
         </div>
       </section>
 
+      {c.season ? (
+        <Season until={c.season.until}>
+          <div className={styles.wrap}>
+            <div className={styles.season}>
+              <div>
+                <Headline size="md" lines={c.season.lines} />
+                <p>{c.season.body}</p>
+                {link(c.season.id, c.season.link)}
+              </div>
+              <Sticker name="z-torba" className={styles.seasonKangur} />
+            </div>
+          </div>
+        </Season>
+      ) : null}
+
       <section className={`${styles.section} ${styles.tinted}`}>
         <div className={`${styles.wrap} ${styles.split}`}>
           <div>
@@ -226,6 +252,7 @@ export default async function HomePage({ params }: Props) {
                 <li key={point}>{point}</li>
               ))}
             </ul>
+            {more("sharedList")}
             {c.together.fact ? (
               <blockquote className={styles.fact}>
                 <p>{c.together.fact.text}</p>

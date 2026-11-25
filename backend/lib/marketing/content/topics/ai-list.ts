@@ -32,12 +32,12 @@ const copy: TopicCopy = {
       columns: 3,
       items: [
         {
-          title: "Nie wymyśla ilości",
+          title: "Ilości bierze z tekstu",
           body: "Jest „jajka 10 szt.”, będzie 10 szt. Nikt nie napisał ile, to nie będzie.",
         },
         {
-          title: "Nie dopisuje od siebie",
-          body: "„Na grilla” to dla niego nazwa listy, a nie pięć produktów do zgadnięcia.",
+          title: "„Na grilla” to nie produkt",
+          body: "Taki dopisek staje się nazwą listy, a nie pięcioma produktami do zgadnięcia.",
         },
         {
           title: "Pomija gadanie",
@@ -65,12 +65,12 @@ const copy: TopicCopy = {
         "Jak każdy, komu ktoś podyktował listę przez zamknięte drzwi.",
       ],
       list: [
-        "**Niewyraźne pismo.** Może coś pominąć albo odczytać po swojemu.",
+        "**Niewyraźne pismo.** Może coś pominąć, pomylić albo dopisać.",
         "**Słowa, które znaczą dwie rzeczy.** „Krem” bywa do rąk i do ciasta. Bez dopisku AI wybierze za Ciebie.",
         "**Skróty tylko Waszego domu.** „Ten co zawsze” zna u Was każdy. AI nie.",
       ],
       outro:
-        "Każdą pozycję zmienisz, przeniesiesz do innej alejki albo usuniesz. Gdy AI w ogóle nie odpowie, użycie wraca.",
+        "Każdą pozycję zmienisz, przeniesiesz do innej alejki albo usuniesz. Gdy AI nie odpowie albo zgłosi błąd, użycie wraca. Za pomyłkę nie.",
     },
     {
       kind: "cards",
@@ -96,8 +96,8 @@ const copy: TopicCopy = {
       tone: "tinted",
       title: "Co trafia do AI",
       body: [
-        "Obrazek albo tekst, który wybierzesz, i nazwy produktów z listy, do której go dodajesz, żeby nic się nie zdublowało. Odczytuje to dostawca AI (OpenAI).",
-        "Kangur nie dołącza Twojego imienia ani e-maila, a obrazka nie zapisuje. [[safety|Więcej o bezpieczeństwie]].",
+        "Obrazek z nazwą pliku albo tekst, który wybierzesz, i nazwy produktów z listy, do której go dodajesz, żeby nic się nie zdublowało. Odczytuje to dostawca AI (OpenAI) i przechowuje według swoich zasad.",
+        "Kangur nie dołącza Twojego imienia ani e-maila. Zapisuje to, co AI odczytało, a obrazka nie. [[safety|Więcej o bezpieczeństwie]].",
       ],
     },
     {
@@ -106,15 +106,15 @@ const copy: TopicCopy = {
       items: [
         {
           q: "Czy Kangur z AI jest darmowy?",
-          a: "Na start masz 10 użyć AI, nie odnawiają się. Ręczne listy, domownicy i tryb zakupów limitu nie mają. AI bez limitu daje Premium. [[pricing|Zobacz cennik]].",
+          a: "Na start jest 10 użyć AI na całą przestrzeń, nie odnawiają się. Ręczne listy, domownicy i tryb zakupów limitu nie mają. AI bez limitu daje Premium. [[pricing|Zobacz cennik]].",
         },
         {
           q: "Co to jest jedno użycie AI?",
-          a: "Jedno zrobienie listy: jeden obrazek, jeden tekst albo do pięciu dań naraz. Nieważne, czy wyjdą 3 produkty, czy 30.",
+          a: "Jedna lista albo jedno dopisanie produktów: jeden obrazek, jeden tekst albo do pięciu dań naraz. Nieważne, czy wyjdą 3 produkty, czy 30.",
         },
         {
           q: "Czy da się używać Kangura bez AI?",
-          a: "Tak. Produkty wpisujesz ręcznie, Kangur podpowiada po dwóch literach, a alejki dobiera z własnego słownika.",
+          a: "Tak. Produkty wpisujesz ręcznie, Kangur podpowiada po dwóch literach, a alejkę dobiera z własnego katalogu.",
         },
         {
           q: "W jakich językach działa AI?",

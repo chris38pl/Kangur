@@ -19,7 +19,7 @@ export function PhotoListPage() {
       art={
         <div className={styles.noteAndPhone}>
           <div className={styles.note}>
-            <Notepad lines={ways.photo.note} />
+            <Notepad lines={ways.photo.note} locale="pl" />
           </div>
           <Phone
             image={SCREENS.pl.import}

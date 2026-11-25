@@ -25,7 +25,7 @@ export function SharedListPage() {
             time="17:20"
             priority
           />
-          <Phone image={SCREENS.pl.sharedTomek} alt="" sizes="200px" time="17:20" />
+          <Phone image={SCREENS.pl.sharedOla} alt="" sizes="200px" time="17:20" />
           <span className={styles.bubble}>{together.added?.[0]}</span>
         </div>
       }

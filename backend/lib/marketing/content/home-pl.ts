@@ -187,4 +187,18 @@ export const homePl: HomeCopy = {
     qrLabel: "Kod QR, który otwiera Kangura w Google Play albo App Store",
     qrHint: "Przy komputerze? Zeskanuj telefonem.",
   },
+  more: {
+    photoList: "Lista ze zdjęcia krok po kroku",
+    recipeList: "Lista z przepisu na przykładzie",
+    guideWeek: "Gotowa lista na tydzień",
+    aisleTool: "Wypróbuj alejki w przeglądarce",
+    sharedList: "Jak działa wspólna lista",
+  },
+  season: {
+    id: "guideChristmas",
+    until: "2026-12-26",
+    lines: ["Dwanaście dań.", "Cztery dni bez sklepu."],
+    body: "Kalkulator policzy zakupy na Wigilię i święta: dla ilu osób, co kupić wcześniej i kto co przynosi. Za darmo, bez aplikacji.",
+    link: "Policz zakupy na Wigilię",
+  },
 };

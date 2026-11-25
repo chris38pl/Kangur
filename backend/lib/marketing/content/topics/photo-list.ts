@@ -7,7 +7,7 @@ const copy: TopicCopy = {
   lines: ["Ktoś już to napisał.", "Nie pisz drugi raz."],
   lead: [
     "Zrzut rozmowy albo zdjęcie kartki wystarczy. Kangur wypisze produkty z ilościami i ułoży je według alejek.",
-    "Jeden obrazek to jedno użycie AI, także gdy wiadomości jest siedem. Na start masz 10 użyć za darmo.",
+    "Jeden obrazek to jedno użycie AI, także gdy wiadomości jest siedem. Na start jest 10 darmowych użyć na całą przestrzeń.",
   ],
   sections: [
     {
@@ -71,17 +71,17 @@ const copy: TopicCopy = {
       slot: "kangur",
       body: ["Wolimy napisać to tutaj, niż żeby wyszło przy kasie."],
       list: [
-        "**Niewyraźne pismo.** Im trudniej je odczytać Tobie, tym częściej AI coś pominie albo dopisze po swojemu.",
+        "**Niewyraźne pismo.** Im trudniej je odczytać Tobie, tym częściej AI coś pominie, pomyli albo dopisze.",
         "**„Coś na obiad” i „to, co zawsze”.** Kangur nie zgaduje, co masz na myśli. Od tego drugiego są Poprzednie listy.",
         "**Ilości, których nikt nie podał.** Jest „jajka 10 szt.”, będzie 10 szt. Nie ma, to nie ma.",
       ],
-      outro: "Gdy AI w ogóle nie odpowie, użycie wraca na konto.",
+      outro: "Gdy AI nie odpowie albo zgłosi błąd, użycie wraca. Za pomyłkę nie.",
     },
     {
       kind: "text",
       title: "Co dzieje się z obrazkiem",
       body: [
-        "Trafia do dostawcy AI (OpenAI), żeby odczytać produkty. Razem z nim idą nazwy z listy, do której go dodajesz, żeby nic się nie zdublowało. Kangur nie dołącza Twojego imienia ani e-maila i obrazka nie zapisuje.",
+        "Trafia do dostawcy AI (OpenAI), który odczytuje z niego produkty. Razem z nim idzie nazwa pliku i nazwy z listy, do której go dodajesz, żeby nic się nie zdublowało. Kangur nie dołącza Twojego imienia ani e-maila. Zapisuje to, co AI odczytało, a obrazka nie.",
         "Z galerii widzi tylko ten jeden obrazek, który wybierzesz. [[safety|Więcej o bezpieczeństwie]].",
       ],
     },
@@ -106,8 +106,8 @@ const copy: TopicCopy = {
           a: "Tak. Skopiuj wiadomość i wybierz „Tekst ze schowka”, zmieści się do 8000 znaków.",
         },
         {
-          q: "Ile to kosztuje?",
-          a: "Jedno użycie AI za obrazek. Na start masz 10 użyć za darmo, a Premium znosi limit. [[pricing|Zobacz cennik]].",
+          q: "Ile kosztuje lista ze zdjęcia?",
+          a: "Jedno użycie AI za obrazek. Na start jest 10 darmowych użyć na całą przestrzeń, a Premium znosi limit. [[pricing|Zobacz cennik]].",
         },
       ],
     },

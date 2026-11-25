@@ -8,7 +8,7 @@ const copy: TopicCopy = {
   lines: ["Dwie osoby w sklepie.", "Jedno masło w koszyku."],
   lead: [
     "Wspólna lista w Kangurze jest jedna dla całego domu. Każdy dopisuje i odhacza ze swojego telefonu, a reszta widzi to po chwili.",
-    "Zapraszasz e-mailem, ile osób chcesz. Zaproszenia nic nie kosztują, a reklam nie ma.",
+    "Zapraszasz e-mailem tyle osób, ile chcesz. Zaproszenia nic nie kosztują, a reklam nie ma.",
   ],
   sections: [
     {
@@ -71,7 +71,7 @@ const copy: TopicCopy = {
         },
         {
           title: "Rodzina",
-          body: "Dzieci też mogą dopisywać. Chipsy pojawią się na pewno.",
+          body: "Każdy dopisuje swoje. Chipsy pojawią się na pewno.",
         },
         {
           title: "Współlokatorzy",
@@ -112,7 +112,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Ile osób może korzystać z jednej listy?",
-          a: "Ile chcesz. Kangur nie ma limitu domowników ani przestrzeni.",
+          a: "Ile chcesz, także bez Premium.",
         },
         {
           q: "Czy druga osoba musi płacić albo mieć Premium?",
@@ -124,11 +124,11 @@ const copy: TopicCopy = {
         },
         {
           q: "Czy da się używać wspólnej listy online, na komputerze?",
-          a: "Nie, Kangur działa na telefonach. W przeglądarce mamy za to darmowe [[aisleTool|narzędzie, które układa listę według alejek]].",
+          a: "Nie, Kangur to aplikacja na telefon. W przeglądarce mamy za to darmowe [[aisleTool|narzędzie, które układa listę według alejek]].",
         },
         {
           q: "Co, gdy w sklepie nie ma zasięgu?",
-          a: "Odhaczanie na otwartej liście działa, a zmiany wysyłają się później. Nowe dopiski z domu zobaczysz, gdy wróci zasięg.",
+          a: "W trybie zakupów odhaczysz i dopiszesz produkty na liście, którą masz już otwartą. Zmiany wyślą się później, a nowe dopiski z domu zobaczysz, gdy wróci zasięg.",
         },
       ],
     },

@@ -36,8 +36,8 @@ const copy: TopicCopy = {
     {
       kind: "fact",
       tone: "tinted",
-      text: "Z listą na zakupy zawsze chodzi 43% badanych, a siedem lat wcześniej było to 31%.",
-      source: "CBOS, komunikat 126/2023",
+      text: "W 43% domów na zakupy zawsze albo prawie zawsze chodzi się z listą. Siedem lat wcześniej było to 31%.",
+      source: "CBOS, sierpień 2023",
       href: "https://www.cbos.pl/SPISKOM.POL/2023/K_126_23.PDF",
     },
     {

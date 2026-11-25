@@ -427,6 +427,48 @@
   }
 }
 
+.more {
+  margin: 14px 0 0;
+}
+
+/* ── Season ───────────────────────────────────────────────────────────── */
+
+.season {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  margin-bottom: clamp(56px, 7vw, 96px);
+  padding: 28px 28px 0;
+  border-radius: 28px;
+  background: linear-gradient(120deg, #fdeee6, #f6c9b5);
+}
+
+.season p {
+  max-width: 34rem;
+  margin: 12px 0 14px;
+  color: #414d5f;
+}
+
+.seasonKangur {
+  justify-self: end;
+  width: 150px;
+  height: auto;
+  margin: -18px 0 -40px;
+}
+
+@media (min-width: 760px) {
+  .season {
+    grid-template-columns: minmax(0, 1fr) 210px;
+    align-items: center;
+    padding: 32px 36px;
+  }
+
+  .seasonKangur {
+    width: 200px;
+    margin: -10px 0 -110px;
+  }
+}
+
 /* ── Two columns ──────────────────────────────────────────────────────── */
 
 .split {

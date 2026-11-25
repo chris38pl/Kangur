@@ -196,11 +196,15 @@ function capitalise(name: string): string {
   return name ? name[0].toLocaleUpperCase("pl") + name.slice(1) : name;
 }
 
+/** A comma between digits, kept out of the way while the list is split. */
+const DECIMAL = "\u0001";
+
 /** Lines, commas, semicolons and bullets; "1,5 l" stays in one piece. */
 export function splitList(text: string): string[] {
   return text
-    .split(/\r?\n|;|•|·|\t|(?<!\d),|,(?!\d)|\s\+\s/u)
-    .map(clean)
+    .replace(/(\d),(?=\d)/g, `$1${DECIMAL}`)
+    .split(/\r?\n|;|•|·|\t|,|\s\+\s/u)
+    .map((part) => clean(part.split(DECIMAL).join(",")))
     .filter((part) => /\p{L}/u.test(part));
 }
 

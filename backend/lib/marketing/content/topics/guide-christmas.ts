@@ -25,7 +25,7 @@ const copy: TopicCopy = {
         ["24-27 grudnia", "nic", "Wigilia jest wolna od pracy, potem dwa dni świąt i niedziela niehandlowa"],
       ],
       outro:
-        "Stan na 26 listopada 2026. Źródła: [[https://zielonalinia.gov.pl/niedziele-handlowe-w-2026-r/|Zielona Linia]], [[https://www.money.pl/gospodarka/cztery-dni-bez-zakupow-w-duzych-sklepach-grudzien-z-handlowa-przerwa-7347071442889152a.html|Money.pl]].",
+        "Stan na 25 listopada 2026. Źródła: [[https://zielonalinia.gov.pl/niedziele-handlowe-w-2026-r/|Zielona Linia]], [[https://www.money.pl/gospodarka/cztery-dni-bez-zakupow-w-duzych-sklepach-grudzien-z-handlowa-przerwa-7347071442889152a.html|Money.pl]].",
     },
     {
       kind: "text",
@@ -65,8 +65,8 @@ const copy: TopicCopy = {
     {
       kind: "fact",
       tone: "tinted",
-      text: "Po świętach jedzenie wyrzuca zawsze albo czasami 22% gospodarstw domowych, a rzadko kolejne 35%.",
-      source: "CBOS, komunikat 126/2023",
+      text: "Po świętach w 22% domów zawsze albo czasami wyrzuca się część przygotowanych i niezjedzonych dań, na przykład sałatki. W kolejnych 35% rzadko.",
+      source: "CBOS, sierpień 2023",
       href: "https://www.cbos.pl/SPISKOM.POL/2023/K_126_23.PDF",
     },
     {
@@ -86,7 +86,7 @@ const copy: TopicCopy = {
       title: "Ta lista na kilku telefonach",
       slot: "phones",
       body: [
-        "Skopiuj listę i w Kangurze wybierz „Tekst ze schowka”. To jedno użycie AI z dziesięciu darmowych. Potem zaproś rodzinę, zaproszenia nic nie kosztują.",
+        "Skopiuj listę i w Kangurze wybierz „Tekst ze schowka”. To jedno z dziesięciu darmowych użyć AI. Potem zaproś rodzinę, zaproszenia nic nie kosztują.",
         "Jedna osoba bierze warzywa, druga stoi po rybę. Na liście widać, co już w koszyku, więc karp wróci do domu jeden. [[sharedList|Jak działa wspólna lista]].",
       ],
     },

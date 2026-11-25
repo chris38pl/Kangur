@@ -33,7 +33,7 @@ export function ChristmasGuidePage() {
               sizes="200px"
               time="17:20"
             />
-            <Phone image={SCREENS.pl.sharedTomek} alt="" sizes="200px" time="17:20" />
+            <Phone image={SCREENS.pl.sharedOla} alt="" sizes="200px" time="17:20" />
           </div>
         ),
       }}

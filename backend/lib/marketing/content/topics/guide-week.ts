@@ -20,8 +20,8 @@ const copy: TopicCopy = {
     {
       kind: "fact",
       tone: "tinted",
-      text: "W co czwartym gospodarstwie domowym zdarza się, że jedzenie kupione na tydzień z góry psuje się, zanim ktoś je zje.",
-      source: "CBOS, komunikat 126/2023",
+      text: "W co czwartym domu czasami albo zawsze jest tak: zakupy robi się z góry, na przykład na tydzień, i część produktów psuje się, zanim zdąży się je zjeść.",
+      source: "CBOS, sierpień 2023",
       href: "https://www.cbos.pl/SPISKOM.POL/2023/K_126_23.PDF",
     },
     {

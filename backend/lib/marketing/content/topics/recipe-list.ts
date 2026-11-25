@@ -89,15 +89,15 @@ const copy: TopicCopy = {
         },
         {
           q: "Czy składniki trafiają na listę same?",
-          a: "Nie. Tutaj zawsze najpierw wybierasz, co dodać. Inaczej niż przy zrzucie czy zdjęciu, gdzie produkty lądują na liście od razu po odczytaniu.",
+          a: "Nie. Tutaj zawsze najpierw wybierasz, co dodać. Inaczej niż przy zrzucie czy zdjęciu, gdzie produkty lądują na liście same.",
         },
         {
           q: "Co, jeśli Kangur nie zna dania?",
           a: "Przy nazwie, która nic mu nie mówi, może pominąć danie. Wpisz je wtedy prościej albo wklej składniki.",
         },
         {
-          q: "Ile to kosztuje?",
-          a: "Jedno użycie AI. Na start masz 10 za darmo, a Premium znosi limit. [[pricing|Zobacz cennik]].",
+          q: "Ile kosztuje lista z przepisu?",
+          a: "Jedno użycie AI. Na start jest 10 darmowych na całą przestrzeń, a Premium znosi limit. [[pricing|Zobacz cennik]].",
         },
       ],
     },
