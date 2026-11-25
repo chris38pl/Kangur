@@ -7,8 +7,8 @@ import { Sticker } from "@/components/site/Sticker";
 import { ToolNudge } from "@/components/site/ToolNudge";
 import prose from "@/components/site/prose.module.css";
 import { ChristmasCalculator } from "@/components/tools/ChristmasCalculator";
-import { CHRISTMAS_NUDGE, GUIDE_CHRISTMAS } from "@/lib/marketing/content/topics/guide-christmas";
-import { GUIDES } from "@/lib/marketing/content/topics/guides";
+import { CHRISTMAS_NUDGE, CHRISTMAS_TOOL } from "@/lib/marketing/content/topics/christmas-tool";
+import { TOOLS } from "@/lib/marketing/content/topics/tools";
 import { SHARED_SCREEN_ALT } from "@/lib/marketing/content/topics/shared-list";
 import { SCREENS } from "@/lib/marketing/images.generated";
 import { isOver } from "@/lib/marketing/season";
@@ -16,7 +16,7 @@ import { CHRISTMAS } from "@/lib/marketing/lists/christmas";
 
 import styles from "./topics.module.css";
 
-export function ChristmasGuidePage() {
+export function ChristmasToolPage() {
   const over = (
     <p className={styles.over} data-noprint>
       Święta {CHRISTMAS.year} za nami. Daty poprawimy przed następnymi, ilości zostają te same.
@@ -24,11 +24,11 @@ export function ChristmasGuidePage() {
   );
   return (
     <TopicPage
-      id="guideChristmas"
+      id="christmasTool"
       locale="pl"
-      copy={GUIDE_CHRISTMAS}
+      copy={CHRISTMAS_TOOL}
       page="poradnik-swieta"
-      parent={{ label: GUIDES.crumb, id: "guides" }}
+      parent={{ label: TOOLS.crumb, id: "tools" }}
       tone="peach"
       printable
       sticker="z-koszykiem"

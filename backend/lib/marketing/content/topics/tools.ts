@@ -6,9 +6,9 @@ type Entry = {
   id: MarketingRouteId;
   label: string;
   body: string;
-  /** What is inside besides the text. */
+  /** What it is, in a word. */
   tag: string;
-  tone: "peach" | "mint" | "cream" | "sky";
+  tone: "peach" | "mint" | "sky";
 };
 
 const copy: {
@@ -17,23 +17,27 @@ const copy: {
   lines: Lines;
   lead: readonly string[];
   entries: readonly Entry[];
+  /** The fourth card: where every one of them ends. */
+  after: { tag: string; title: string; body: string; link: string };
   topicsTitle: string;
   topics: readonly { id: MarketingRouteId; label: string; body: string }[];
 } = {
-  crumb: "Poradniki",
-  eyebrow: "Listy zakupów: kalkulatory, szablony i narzędzia",
-  lines: ["Krótkie,", "bo sklep zaraz zamykają."],
-  lead: ["Najpierw narzędzie, potem czytanie. Wszystko działa bez konta i bez aplikacji."],
+  crumb: "Narzędzia",
+  eyebrow: "Darmowe narzędzia do listy zakupów, bez konta",
+  lines: ["Tu policzysz.", "W Kangurze odhaczysz."],
+  lead: [
+    "Trzy narzędzia w przeglądarce. Każde kończy się listą: kopiujesz ją, w Kangurze stukasz „Schowek” i robicie zakupy razem.",
+  ],
   entries: [
     {
-      id: "guideChristmas",
+      id: "christmasTool",
       label: "Lista zakupów na Wigilię i święta 2026",
       body: "Dwanaście dań przeliczonych na gości, terminy zakupów i wiadomość do rodziny, kto co przynosi.",
       tag: "Kalkulator",
       tone: "peach",
     },
     {
-      id: "guideWeek",
+      id: "weekTool",
       label: "Lista zakupów na tydzień",
       body: "Dla jednej osoby, dwóch i rodziny. Duże zakupy, mała dokupka i pięć obiadów.",
       tag: "Kalkulator",
@@ -43,17 +47,16 @@ const copy: {
       id: "aisleTool",
       label: "Lista zakupów z podziałem na kategorie",
       body: "Wklejasz listę, wyjmujesz alejki. Kolejność ustawiasz jak w swoim sklepie.",
-      tag: "Narzędzie",
+      tag: "Alejki",
       tone: "sky",
     },
-    {
-      id: "guidePrint",
-      label: "Lista zakupów do druku",
-      body: "Siedem szablonów w PDF: pusty, gotowy, duże litery, dwie na kartce, z ceną, na tydzień i na Wigilię.",
-      tag: "7 kartek PDF",
-      tone: "cream",
-    },
   ],
+  after: {
+    tag: "A potem",
+    title: "Hop do Kangura",
+    body: "Kopiujesz listę, stukasz „Schowek” i zapraszasz domowników. Reszta dzieje się w telefonach.",
+    link: "Jak działa wspólna lista",
+  },
   topicsTitle: "Jak to robi Kangur",
   topics: [
     { id: "sharedList", label: "Wspólna lista zakupów", body: "Masło dopisane z kanapy, kupione przy lodówkach." },
@@ -63,4 +66,4 @@ const copy: {
   ],
 };
 
-export const GUIDES = typesetCopy(copy);
+export const TOOLS = typesetCopy(copy);

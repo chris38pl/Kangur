@@ -15,7 +15,7 @@ export type MarketingMessages = {
     pricing: string;
     safety: string;
     about: string;
-    guides: string;
+    tools: string;
     press: string;
     menu: string;
     skip: string;
@@ -44,7 +44,7 @@ const en: MarketingMessages = {
     pricing: "Pricing",
     safety: "Safety",
     about: "About Kangur",
-    guides: "Guides",
+    tools: "Tools",
     press: "Press",
     menu: "Menu",
     skip: "Skip to content",
@@ -73,7 +73,7 @@ const pl: MarketingMessages = {
     pricing: "Cennik",
     safety: "Bezpieczeństwo",
     about: "O Kangurze",
-    guides: "Poradniki",
+    tools: "Narzędzia",
     press: "Dla mediów",
     menu: "Menu",
     skip: "Przejdź do treści",
@@ -103,7 +103,7 @@ const de: MarketingMessages = {
     pricing: "Preise",
     safety: "Sicherheit",
     about: "Über Kangur",
-    guides: "Ratgeber",
+    tools: "Werkzeuge",
     press: "Presse",
     menu: "Menü",
     skip: "Zum Inhalt springen",
@@ -133,7 +133,7 @@ const fr: MarketingMessages = {
     pricing: "Tarifs",
     safety: "Sécurité",
     about: "À propos",
-    guides: "Guides",
+    tools: "Outils",
     press: "Presse",
     menu: "Menu",
     skip: "Aller au contenu",
@@ -163,7 +163,7 @@ const es: MarketingMessages = {
     pricing: "Precios",
     safety: "Seguridad",
     about: "Sobre Kangur",
-    guides: "Guías",
+    tools: "Herramientas",
     press: "Prensa",
     menu: "Menú",
     skip: "Ir al contenido",
@@ -193,7 +193,7 @@ const it: MarketingMessages = {
     pricing: "Prezzi",
     safety: "Sicurezza",
     about: "Chi siamo",
-    guides: "Guide",
+    tools: "Strumenti",
     press: "Stampa",
     menu: "Menu",
     skip: "Vai al contenuto",
@@ -223,7 +223,7 @@ const cs: MarketingMessages = {
     pricing: "Ceník",
     safety: "Bezpečnost",
     about: "O Kangurovi",
-    guides: "Rady",
+    tools: "Nástroje",
     press: "Pro média",
     menu: "Menu",
     skip: "Přejít na obsah",
@@ -253,7 +253,7 @@ const ru: MarketingMessages = {
     pricing: "Цены",
     safety: "Безопасность",
     about: "О Kangur",
-    guides: "Советы",
+    tools: "Инструменты",
     press: "Для прессы",
     menu: "Меню",
     skip: "Перейти к содержанию",
@@ -283,7 +283,7 @@ const uk: MarketingMessages = {
     pricing: "Ціни",
     safety: "Безпека",
     about: "Про Kangur",
-    guides: "Поради",
+    tools: "Інструменти",
     press: "Для преси",
     menu: "Меню",
     skip: "Перейти до вмісту",
@@ -313,7 +313,7 @@ const be: MarketingMessages = {
     pricing: "Цэны",
     safety: "Бяспека",
     about: "Пра Kangur",
-    guides: "Парады",
+    tools: "Інструменты",
     press: "Для прэсы",
     menu: "Меню",
     skip: "Перайсці да зместу",

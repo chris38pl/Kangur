@@ -7,7 +7,7 @@ const copy: TopicCopy = {
   lines: ["Zakupy na tydzień.", "Sałata dopiero w środę."],
   lead: [
     "Ustaw, ile Was jest i ile obiadów jecie w domu. Dostaniesz listę z ilościami: duże zakupy w wolny dzień i małą dokupkę kilka dni później.",
-    "Skopiujesz ją, wydrukujesz albo odhaczysz kciukiem przy lodówkach. Konta nie trzeba.",
+    "Liczysz tutaj, bez konta. Na końcu kopiujesz listę, w Kangurze stukasz „Schowek” i przy lodówkach odhaczasz kciukiem.",
   ],
   sections: [
     {
@@ -45,7 +45,7 @@ const copy: TopicCopy = {
       columns: 4,
       items: [
         { title: "Najpierw szafka", body: "Otwórz ją, zanim zaczniesz pisać. Kasza zwykle już tam jest, za makaronem." },
-        { title: "Obiady, potem produkty", body: "Pięć dań na kartce i już wiadomo, po co ta kapusta." },
+        { title: "Obiady, potem produkty", body: "Pięć dań i już wiadomo, po co ta kapusta." },
         { title: "Banany w dwóch kolorach", body: "Żółte na jutro, zielonkawe na czwartek." },
         { title: "Zamrażarka pracuje", body: "Chleb w kromkach, mięso w porcjach. Nie wszystko naraz na blacie." },
       ],
@@ -80,11 +80,11 @@ const copy: TopicCopy = {
         },
         {
           q: "Jak zrobić listę zakupów na tydzień dla dwóch osób?",
-          a: "Ustaw w kalkulatorze dwie osoby i tyle obiadów, ile naprawdę jecie w domu. Potem skopiuj listę i zróbcie z niej [[sharedList|wspólną]], żeby nikt nie kupił drugiego masła.",
+          a: "Ustaw w kalkulatorze dwie osoby i tyle obiadów, ile naprawdę jecie w domu. Potem skopiuj listę, w Kangurze stuknij „Schowek” i zróbcie z niej [[sharedList|wspólną]], żeby nikt nie kupił drugiego masła.",
         },
         {
           q: "Jak zrobić tańszą listę na tydzień?",
-          a: "Zamieniaj, zamiast skreślać. Udka zamiast filetu, słonecznik zamiast orzechów, duży jogurt zamiast kilku kubków, jajka zamiast ryby. Kasza, strączki i kapusta zostają. Na kartce z [[guidePrint|miejscem na ceny]] policzysz resztę.",
+          a: "Zamieniaj, zamiast skreślać. Udka zamiast filetu, słonecznik zamiast orzechów, duży jogurt zamiast kilku kubków, jajka zamiast ryby. Kasza, strączki i kapusta zostają.",
         },
         {
           q: "A bez samochodu?",
@@ -109,7 +109,7 @@ const copy: TopicCopy = {
     title: "Co dalej",
     items: [
       { id: "recipeList", label: "Lista zakupów z przepisu", body: "Pięć obiadów naraz, składniki na jednej liście." },
-      { id: "guidePrint", label: "Lista zakupów do druku", body: "Kartka z planem obiadów i miejscem na produkty." },
+      { id: "christmasTool", label: "Lista zakupów na Wigilię i święta", body: "Dwanaście dań przeliczonych na liczbę gości." },
       { id: "aisleTool", label: "Podział listy na alejki", body: "Masz już swoją listę? Wklej ją, jak leci." },
     ],
   },
@@ -118,13 +118,7 @@ const copy: TopicCopy = {
     body: "Następną listę Kangur podpowie z pięciu poprzednich. Na Android i iOS.",
   },
   imprint:
-    "Poradnik wydaje Kangur, Krzysztof Krawiec Software. Stan na 25 listopada 2026. Liczby z tej strony można cytować, z linkiem do getkangur.com/tydzien.",
+    "Kalkulator robi Kangur, Krzysztof Krawiec Software. Stan na 25 listopada 2026. Liczby z tej strony można cytować, z linkiem do getkangur.com/tydzien.",
 };
 
-export const GUIDE_WEEK = typesetCopy(copy);
-
-/** Below the list, where the work is done. */
-export const WEEK_NUDGE = typesetCopy({
-  title: "A kto idzie do sklepu?",
-  body: "Skopiuj listę, w Kangurze wybierz „Tekst ze schowka” i zaproś domowników. Każdy dopisuje i odhacza u siebie. To jedno z dziesięciu darmowych użyć AI. Lista jest długa, rzuć okiem, czy wszystko dojechało.",
-});
+export const WEEK_TOOL = typesetCopy(copy);

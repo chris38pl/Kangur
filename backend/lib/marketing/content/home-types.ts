@@ -64,8 +64,7 @@ export type HomeCopy = {
     Record<
       | "photoList"
       | "recipeList"
-      | "guideWeek"
-      | "guidePrint"
+      | "weekTool"
       | "aisleTool"
       | "aiList"
       | "sharedList",

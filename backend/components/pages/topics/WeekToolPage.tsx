@@ -7,20 +7,20 @@ import { WeekTable } from "@/components/site/WeekTable";
 import prose from "@/components/site/prose.module.css";
 import { WeekCalculator } from "@/components/tools/WeekCalculator";
 import { homeCopy } from "@/lib/marketing/content/home";
-import { GUIDE_WEEK, WEEK_NUDGE } from "@/lib/marketing/content/topics/guide-week";
-import { GUIDES } from "@/lib/marketing/content/topics/guides";
+import { WEEK_TOOL, WEEK_NUDGE } from "@/lib/marketing/content/topics/week-tool";
+import { TOOLS } from "@/lib/marketing/content/topics/tools";
 import { SCREENS } from "@/lib/marketing/images.generated";
 
 import styles from "./topics.module.css";
 
-export function WeekGuidePage() {
+export function WeekToolPage() {
   return (
     <TopicPage
-      id="guideWeek"
+      id="weekTool"
       locale="pl"
-      copy={GUIDE_WEEK}
+      copy={WEEK_TOOL}
       page="poradnik-tydzien"
-      parent={{ label: GUIDES.crumb, id: "guides" }}
+      parent={{ label: TOOLS.crumb, id: "tools" }}
       printable
       sticker="lezak"
       art={<Sticker name="z-koszykiem" className={`${styles.stickerStanding} ${styles.toolArt}`} priority />}

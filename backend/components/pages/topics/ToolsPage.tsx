@@ -8,17 +8,17 @@ import { PageHero } from "@/components/site/PageHero";
 import { Picture } from "@/components/site/Picture";
 import { Sticker } from "@/components/site/Sticker";
 import prose from "@/components/site/prose.module.css";
-import { GUIDES } from "@/lib/marketing/content/topics/guides";
+import { TOOLS } from "@/lib/marketing/content/topics/tools";
 import { PRINTABLES } from "@/lib/marketing/druk.generated";
 import { routeHref, type MarketingRouteId } from "@/lib/marketing/routes";
 import { pageStructuredData } from "@/lib/marketing/structured-data";
 
-import styles from "./GuidesPage.module.css";
+import styles from "./ToolsPage.module.css";
 
 /** The same Kangur who opens the page the card leads to. */
 const ART: Partial<Record<MarketingRouteId, ReactNode>> = {
-  guideChristmas: <Sticker name="z-torba" className={styles.art} />,
-  guideWeek: <Sticker name="z-koszykiem" className={`${styles.art} ${styles.whole}`} />,
+  christmasTool: <Sticker name="z-torba" className={styles.art} />,
+  weekTool: <Sticker name="z-koszykiem" className={`${styles.art} ${styles.whole}`} />,
   aisleTool: <Sticker name="z-lista" className={styles.art} />,
   guidePrint: (
     <span className={`${styles.art} ${styles.sheets}`}>
@@ -28,14 +28,14 @@ const ART: Partial<Record<MarketingRouteId, ReactNode>> = {
   ),
 };
 
-export function GuidesPage() {
-  const c = GUIDES;
+export function ToolsPage() {
+  const c = TOOLS;
   return (
     <div data-full>
-      <JsonLd data={pageStructuredData("guides", "pl")} />
+      <JsonLd data={pageStructuredData("tools", "pl")} />
       <PageHero
         locale="pl"
-        crumbs={[{ label: c.crumb, href: routeHref("guides", "pl") }]}
+        crumbs={[{ label: c.crumb, href: routeHref("tools", "pl") }]}
         eyebrow={c.eyebrow}
         lines={c.lines}
         lead={c.lead.map((p) => (

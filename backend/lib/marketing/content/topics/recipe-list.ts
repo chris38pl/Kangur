@@ -98,7 +98,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Nie mam pomysłu na obiad. Co wtedy?",
-          a: "Dania wymyślasz Ty. Na brak pomysłu mamy pięć obiadów z gotową listą w poradniku [[guideWeek|na tydzień]].",
+          a: "Dania wymyślasz Ty. Na brak pomysłu mamy pięć obiadów z gotową listą w kalkulatorze [[weekTool|na tydzień]].",
         },
         {
           q: "Ile kosztuje lista z przepisu?",
@@ -110,8 +110,8 @@ const copy: TopicCopy = {
   related: {
     title: "Na większe gotowanie",
     items: [
-      { id: "guideChristmas", label: "Lista zakupów na Wigilię i święta", body: "Dwanaście dań przeliczonych na liczbę gości." },
-      { id: "guideWeek", label: "Lista zakupów na tydzień", body: "Pięć obiadów, duże zakupy i mała dokupka." },
+      { id: "christmasTool", label: "Lista zakupów na Wigilię i święta", body: "Dwanaście dań przeliczonych na liczbę gości." },
+      { id: "weekTool", label: "Lista zakupów na tydzień", body: "Pięć obiadów, duże zakupy i mała dokupka." },
       { id: "sharedList", label: "Wspólna lista zakupów", body: "Jedno gotuje, drugie kupuje, lista jest jedna." },
     ],
   },

@@ -14,7 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return ROUTE_IDS.flatMap((id) => {
     const { updatedAt, changeFrequency } = ROUTES[id];
     // Until next November other pages matter more.
-    const priority = id === "guideChristmas" && isOver(CHRISTMAS.over) ? 0.3 : ROUTES[id].priority;
+    const priority = id === "christmasTool" && isOver(CHRISTMAS.over) ? 0.3 : ROUTES[id].priority;
     const alternates = hreflangAlternates(id);
     const languages = alternates
       ? Object.fromEntries(

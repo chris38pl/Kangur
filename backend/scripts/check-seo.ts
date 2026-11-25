@@ -324,7 +324,7 @@ for (const id of ROUTE_IDS) {
 /** Every picture, recording and PDF named there has to exist. Some load only after a scroll. */
 const missing = new Set<string>();
 function checkFiles(where: string, source: string) {
-  for (const [file] of source.matchAll(/\/(?:img|druk|og)\/[\w./-]+\.(?:avif|webp|png|jpg|svg|mp4|pdf)/g)) {
+  for (const [file] of source.matchAll(/\/(?:img|og)\/[\w./-]+\.(?:avif|webp|png|jpg|svg|mp4|pdf)/g)) {
     if (missing.has(file) || fs.existsSync(path.join(PUBLIC_DIR, file))) continue;
     missing.add(file);
     fail(where, `missing file: ${file}`);

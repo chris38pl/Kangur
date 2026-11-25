@@ -16,10 +16,9 @@ export type MarketingRouteId =
   | "recipeList"
   | "aiList"
   | "aisleTool"
-  | "guides"
-  | "guideChristmas"
-  | "guideWeek"
-  | "guidePrint"
+  | "tools"
+  | "christmasTool"
+  | "weekTool"
   | "faq"
   | "contact"
   | "privacy"
@@ -39,8 +38,6 @@ export type MarketingRoute = {
    * prefix may be sent to their own language (`/terms` opened from the app in German).
    */
   languageNeutral?: boolean;
-  /** Articles only: the day it first went live. */
-  publishedAt?: string;
   /** Day the content last changed, feeds sitemap `lastmod`. */
   updatedAt: string;
   changeFrequency: "daily" | "weekly" | "monthly" | "yearly";
@@ -118,29 +115,20 @@ export const ROUTES: Record<MarketingRouteId, MarketingRoute> = {
     changeFrequency: "monthly",
     priority: 0.9,
   },
-  guides: {
-    paths: { pl: "/poradniki" },
+  tools: {
+    paths: { pl: "/narzedzia" },
     updatedAt: "2026-11-25",
     changeFrequency: "weekly",
     priority: 0.6,
   },
-  guideChristmas: {
-    paths: { pl: "/poradniki/lista-zakupow-na-wigilie-i-swieta" },
-    publishedAt: "2026-11-25",
+  christmasTool: {
+    paths: { pl: "/lista-zakupow-na-wigilie-i-swieta" },
     updatedAt: "2026-11-25",
     changeFrequency: "weekly",
     priority: 0.9,
   },
-  guideWeek: {
-    paths: { pl: "/poradniki/lista-zakupow-na-tydzien" },
-    publishedAt: "2026-11-25",
-    updatedAt: "2026-11-25",
-    changeFrequency: "monthly",
-    priority: 0.8,
-  },
-  guidePrint: {
-    paths: { pl: "/poradniki/lista-zakupow-do-druku" },
-    publishedAt: "2026-11-25",
+  weekTool: {
+    paths: { pl: "/lista-zakupow-na-tydzien" },
     updatedAt: "2026-11-25",
     changeFrequency: "monthly",
     priority: 0.8,
@@ -206,15 +194,14 @@ export const PATH_ALIASES: Record<string, MarketingRouteId> = {
   "/lista-zakupow-ze-zrzutu": "photoList",
   "/lista-z-przepisu": "recipeList",
   "/alejki": "aisleTool",
-  "/blog": "guides",
-  "/wigilia": "guideChristmas",
-  "/swieta": "guideChristmas",
-  "/poradniki/lista-zakupow-na-wigilie": "guideChristmas",
-  "/poradniki/lista-zakupow-na-swieta": "guideChristmas",
-  "/tydzien": "guideWeek",
-  "/lista-zakupow-na-tydzien": "guideWeek",
-  "/druk": "guidePrint",
-  "/lista-zakupow-do-druku": "guidePrint",
+  "/blog": "tools",
+  "/poradniki": "tools",
+  "/kalkulator": "tools",
+  "/wigilia": "christmasTool",
+  "/swieta": "christmasTool",
+  "/lista-zakupow-na-wigilie": "christmasTool",
+  "/lista-zakupow-na-swieta": "christmasTool",
+  "/tydzien": "weekTool",
 };
 
 /** Languages that have their own indexable version of the page. */

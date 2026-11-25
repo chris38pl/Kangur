@@ -68,9 +68,7 @@ export function buildMarketingMetadata(
       languages: hreflangAlternates(id),
     },
     openGraph: {
-      ...(ROUTES[id].publishedAt
-        ? { type: "article" as const, publishedTime: ROUTES[id].publishedAt }
-        : { type: "website" as const }),
+      type: "website",
       siteName: "Kangur",
       url: canonical,
       title,

@@ -156,35 +156,28 @@ const PAGE_META: Record<
     pl: {
       title: "Lista zakupów z podziałem na kategorie - wklej swoją",
       description:
-        "Wklej listę zakupów, a narzędzie ułoży ją według 24 kategorii w kolejności sklepu. Za darmo, bez konta, w przeglądarce. Potem skopiuj albo wydrukuj.",
+        "Wklej listę zakupów, a narzędzie ułoży ją według 24 kategorii w kolejności sklepu. Za darmo, bez konta, w przeglądarce. Potem hop z nią do Kangura.",
     },
   },
-  guides: {
+  tools: {
     pl: {
-      title: "Listy zakupów: kalkulatory, szablony i narzędzia - Kangur",
+      title: "Narzędzia do listy zakupów: kalkulatory i alejki - Kangur",
       description:
-        "Lista zakupów na Wigilię przeliczona na gości, lista na tydzień, podział na kategorie i szablony do druku. Za darmo, bez konta.",
+        "Kalkulator zakupów na Wigilię i na tydzień oraz podział listy na alejki. Za darmo, bez konta. Gotową listę wczytasz do aplikacji Kangur.",
     },
   },
-  guideChristmas: {
+  christmasTool: {
     pl: {
       title: "Lista zakupów na Wigilię i święta 2026 + kalkulator",
       description:
         "Produkty na 12 potraw z ilościami na liczbę gości, co kupić wcześniej i kto co przynosi. Boże Narodzenie 2026: duże sklepy zamknięte od 24 do 27 grudnia.",
     },
   },
-  guideWeek: {
+  weekTool: {
     pl: {
       title: "Lista zakupów na tydzień dla 1, 2 i 4 osób z ilościami",
       description:
         "Gotowa lista zakupów na tydzień: ile czego dla jednej osoby, dwóch i rodziny, także bez mięsa. Duże zakupy, mała dokupka i pięć obiadów z tej listy.",
-    },
-  },
-  guidePrint: {
-    pl: {
-      title: "Lista zakupów do druku (PDF, A4) - 7 darmowych szablonów",
-      description:
-        "Siedem szablonów listy zakupów do wydruku w PDF: pusta z kategoriami, gotowa, duże litery, z ceną, na tydzień i na Wigilię. Za darmo, bez maila.",
     },
   },
   contact: {

@@ -45,7 +45,7 @@ const COPY = {
   ideas: [
     {
       title: "Cztery dni bez sklepów",
-      body: "Od 24 do 27 grudnia 2026 duże sklepy będą zamknięte cztery dni z rzędu, pierwszy raz, odkąd Wigilia jest wolna. [[guideChristmas|Darmowy kalkulator]] liczy zakupy na tyle osób, ile siada do stołu, dzieli je na trzy terminy i układa wiadomość, kto co przynosi. Liczby można cytować, z linkiem.",
+      body: "Od 24 do 27 grudnia 2026 duże sklepy będą zamknięte cztery dni z rzędu, pierwszy raz, odkąd Wigilia jest wolna. [[christmasTool|Darmowy kalkulator]] liczy zakupy na tyle osób, ile siada do stołu, dzieli je na trzy terminy i układa wiadomość, kto co przynosi. Liczby można cytować, z linkiem.",
       source: "[[https://zielonalinia.gov.pl/niedziele-handlowe-w-2026-r/|Zielona Linia]], [[https://www.money.pl/gospodarka/cztery-dni-bez-zakupow-w-duzych-sklepach-grudzien-z-handlowa-przerwa-7347071442889152a.html|Money.pl]]",
       until: CHRISTMAS.strip,
     },

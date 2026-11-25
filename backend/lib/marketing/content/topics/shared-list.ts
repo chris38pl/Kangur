@@ -155,8 +155,8 @@ const copy: TopicCopy = {
     title: "Skoro już robicie listę razem",
     items: [
       { id: "photoList", label: "Lista zakupów ze zdjęcia", body: "Gdy lista przyszła w wiadomości albo wisi na lodówce." },
-      { id: "guideWeek", label: "Lista zakupów na tydzień", body: "Ile kupić dla jednej osoby, dla dwóch i dla rodziny." },
-      { id: "guideChristmas", label: "Lista zakupów na Wigilię i święta", body: "Kto co robi, kto co przynosi i kiedy to kupić." },
+      { id: "weekTool", label: "Lista zakupów na tydzień", body: "Ile kupić dla jednej osoby, dla dwóch i dla rodziny." },
+      { id: "christmasTool", label: "Lista zakupów na Wigilię i święta", body: "Kto co robi, kto co przynosi i kiedy to kupić." },
     ],
   },
   closing: {

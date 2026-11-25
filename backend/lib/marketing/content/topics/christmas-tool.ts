@@ -7,7 +7,7 @@ const copy: TopicCopy = {
   lines: ["Dwanaście dań.", "Cztery dni bez sklepu."],
   lead: [
     "Ustaw liczbę gości i dania, a kalkulator policzy zakupy na Wigilię, śniadania do 27 i obiady do 26 grudnia. Reszta to resztki. Od czwartku 24 do niedzieli 27 grudnia duże sklepy są zamknięte.",
-    "Listę skopiujesz albo wydrukujesz, a dania podzielisz między rodzinę. Bez konta i bez maila.",
+    "Liczysz tutaj, bez konta. Na końcu kopiujesz listę, w Kangurze stukasz „Schowek” i odhaczacie razem.",
   ],
   sections: [
     {
@@ -101,10 +101,10 @@ const copy: TopicCopy = {
     {
       kind: "text",
       tone: "cream",
-      title: "Ta lista na kilku telefonach",
+      title: "Jedna Wigilia, kilka telefonów",
       slot: "phones",
       body: [
-        "Skopiuj listę i w Kangurze wybierz „Tekst ze schowka”. To jedno z dziesięciu darmowych użyć AI. Lista jest długa, więc rzuć okiem, czy wszystko dojechało. Potem zaproś rodzinę, zaproszenia nic nie kosztują.",
+        "Gdy lista jest już w Kangurze, zaproś rodzinę. Zaproszenia nic nie kosztują, a każdy widzi to samo.",
         "Jedna osoba bierze warzywa, druga stoi po rybę. Na liście widać, co już w koszyku, więc jest szansa, że karp wróci do domu jeden. [[sharedList|Jak działa wspólna lista]].",
       ],
     },
@@ -142,7 +142,11 @@ const copy: TopicCopy = {
         },
         {
           q: "Ile kosztują zakupy na Wigilię?",
-          a: "Kwoty nie zgadujemy, ceny przed świętami zmieniają się co tydzień. Żeby zejść z rachunku, ustaw mniej dań albo „Ktoś przynosi” i najpierw zajrzyj do szafki. Na kartce z [[guidePrint|miejscem na ceny]] policzysz resztę.",
+          a: "Kwoty nie zgadujemy, ceny przed świętami zmieniają się co tydzień. Żeby zejść z rachunku, ustaw mniej dań albo „Ktoś przynosi” i najpierw zajrzyj do szafki.",
+        },
+        {
+          q: "Jak przenieść tę listę do Kangura?",
+          a: "Skopiuj ją i na ekranie Start w Kangurze stuknij „Schowek”. Przy komputerze zeskanuj kod, ta sama lista otworzy się w telefonie. Wczytanie to jedno z dziesięciu darmowych użyć AI.",
         },
         {
           q: "Czy lista się zapisuje?",
@@ -154,7 +158,7 @@ const copy: TopicCopy = {
   related: {
     title: "Przyda się jeszcze",
     items: [
-      { id: "guidePrint", label: "Lista zakupów do druku", body: "Gotowe kartki A4, jest też wigilijna." },
+      { id: "weekTool", label: "Lista zakupów na tydzień", body: "Na zwykły tydzień, bez karpia." },
       { id: "recipeList", label: "Lista zakupów z przepisu", body: "Danie spoza kalkulatora? Kangur zaproponuje składniki." },
       { id: "sharedList", label: "Wspólna lista zakupów", body: "Jedna lista u wszystkich, którzy coś przynoszą." },
     ],
@@ -164,13 +168,7 @@ const copy: TopicCopy = {
     body: "W Kangurze jest wspólna dla całej rodziny. Na Android i iOS.",
   },
   imprint:
-    "Poradnik wydaje Kangur, Krzysztof Krawiec Software. Stan na 25 listopada 2026. Liczby z tej strony można cytować, z linkiem do getkangur.com/wigilia.",
+    "Kalkulator robi Kangur, Krzysztof Krawiec Software. Stan na 25 listopada 2026. Liczby z tej strony można cytować, z linkiem do getkangur.com/wigilia.",
 };
 
-export const GUIDE_CHRISTMAS = typesetCopy(copy);
-
-/** Below the list, where the work is done. */
-export const CHRISTMAS_NUDGE = typesetCopy({
-  title: "A kto idzie do sklepu?",
-  body: "Skopiuj listę, w Kangurze wybierz „Tekst ze schowka” i zaproś rodzinę. Każdy odhacza u siebie, więc jest szansa, że karp wróci do domu jeden. To jedno z dziesięciu darmowych użyć AI. Lista jest długa, rzuć okiem, czy wszystko dojechało.",
-});
+export const CHRISTMAS_TOOL = typesetCopy(copy);
