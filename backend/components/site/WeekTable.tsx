@@ -7,7 +7,7 @@ import styles from "./WeekTable.module.css";
 const HOUSEHOLDS = [
   { label: "1 osoba", people: 1 },
   { label: "2 osoby", people: 2 },
-  { label: "Rodzina 2+2", people: 4 },
+  { label: "4 osoby (2+2)", people: 4 },
 ] as const;
 
 /** The calculator's answer for three households, in the page itself. */
