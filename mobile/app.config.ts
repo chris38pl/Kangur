@@ -80,6 +80,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       },
       predictiveBackGestureEnabled: false,
       permissions: ["android.permission.RECORD_AUDIO"],
+      // The Expo template asks to draw over other apps for the developer overlay. Released
+      // builds do not need it, and in Poland it is known as a permission scammers ask for.
+      blockedPermissions: isDevApp ? [] : ["android.permission.SYSTEM_ALERT_WINDOW"],
     },
     web: {
       bundler: "metro",
