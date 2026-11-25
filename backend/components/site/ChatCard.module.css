@@ -1,0 +1,74 @@
+.card {
+  margin: 0;
+  padding: 16px 16px 18px;
+  border: 1px solid rgba(31, 43, 69, 0.06);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow:
+    0 24px 50px -22px rgba(20, 70, 60, 0.3),
+    0 6px 16px -8px rgba(31, 43, 69, 0.14);
+  font-size: 14.5px;
+  line-height: 1.4;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--kangur-border);
+}
+
+.head b,
+.head small {
+  display: block;
+  line-height: 1.25;
+}
+
+.head b {
+  font-size: 15px;
+}
+
+.head small {
+  color: var(--kangur-text-muted);
+  font-size: 12px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f6d9c4;
+  color: #7a4a24;
+  font-weight: 700;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.me,
+.them {
+  max-width: 88%;
+  padding: 8px 13px;
+  border-radius: 18px;
+}
+
+.me {
+  align-self: flex-end;
+  background: #2a5fd8;
+  color: #fff;
+}
+
+.them {
+  background: #eef1f4;
+  color: var(--kangur-text);
+}

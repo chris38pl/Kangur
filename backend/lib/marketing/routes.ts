@@ -7,6 +7,10 @@ import {
 
 export type MarketingRouteId =
   | "home"
+  | "pricing"
+  | "safety"
+  | "about"
+  | "press"
   | "faq"
   | "contact"
   | "privacy"
@@ -45,15 +49,39 @@ export const ROUTES: Record<MarketingRouteId, MarketingRoute> = {
   home: {
     paths: inAll("/"),
     languageNeutral: true,
-    updatedAt: "2026-11-22",
+    updatedAt: "2026-11-25",
     changeFrequency: "weekly",
     priority: 1,
+  },
+  pricing: {
+    paths: { pl: "/cennik", en: "/pricing" },
+    updatedAt: "2026-11-25",
+    changeFrequency: "monthly",
+    priority: 0.8,
+  },
+  safety: {
+    paths: { pl: "/bezpieczenstwo", en: "/safety" },
+    updatedAt: "2026-11-25",
+    changeFrequency: "monthly",
+    priority: 0.9,
+  },
+  about: {
+    paths: { pl: "/o-kangurze", en: "/about" },
+    updatedAt: "2026-11-25",
+    changeFrequency: "monthly",
+    priority: 0.6,
+  },
+  press: {
+    paths: { pl: "/dla-mediow" },
+    updatedAt: "2026-11-25",
+    changeFrequency: "monthly",
+    priority: 0.5,
   },
   faq: {
     paths: inPolishAndEnglish("/faq"),
     englishFallback: true,
     languageNeutral: true,
-    updatedAt: "2026-11-22",
+    updatedAt: "2026-11-25",
     changeFrequency: "monthly",
     priority: 0.7,
   },
@@ -95,6 +123,11 @@ export const ROUTE_IDS = Object.keys(ROUTES) as MarketingRouteId[];
 /** Old or guessed addresses and the page they mean. Permanent, in every language. */
 export const PATH_ALIASES: Record<string, MarketingRouteId> = {
   "/support": "contact",
+  "/cena": "pricing",
+  "/premium": "pricing",
+  "/press": "press",
+  "/media": "press",
+  "/security": "safety",
   "/kontakt": "contact",
   "/pomoc": "faq",
   "/regulamin": "terms",

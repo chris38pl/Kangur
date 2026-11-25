@@ -1,0 +1,169 @@
+/* Text sections shared by all content pages. */
+
+.section {
+  padding-block: clamp(44px, 6vw, 76px);
+}
+
+.tinted {
+  background: var(--kangur-bg-soft);
+}
+
+.cream {
+  background: #fbf5ea;
+}
+
+.wrap {
+  width: 100%;
+  max-width: calc(var(--kangur-max) + 48px);
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+.narrow {
+  max-width: calc(46rem + 48px);
+}
+
+.columns {
+  display: grid;
+  gap: 36px;
+}
+
+.prose h2 {
+  margin: 0 0 14px;
+  font-size: clamp(1.5rem, 3vw, 2.05rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.14;
+  text-wrap: balance;
+}
+
+.prose h3 {
+  margin: 28px 0 8px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+.prose p,
+.prose li {
+  color: var(--kangur-text-body);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.prose p {
+  max-width: 42rem;
+  margin: 0 0 14px;
+}
+
+.prose ul,
+.prose ol {
+  max-width: 42rem;
+  margin: 0 0 16px;
+  padding-left: 1.3rem;
+}
+
+.prose li {
+  margin-bottom: 8px;
+}
+
+.prose li::marker {
+  color: var(--kangur-primary-deep);
+  font-weight: 700;
+}
+
+.prose strong {
+  color: var(--kangur-text);
+}
+
+.prose a {
+  font-weight: 600;
+}
+
+.source {
+  color: var(--kangur-text-muted);
+  font-size: 0.9rem !important;
+}
+
+.cards {
+  display: grid;
+  gap: 18px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  padding: 24px 24px 22px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 14px 34px -24px rgba(31, 43, 69, 0.4);
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 1.18rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.card p {
+  margin: 0;
+  color: var(--kangur-text-body);
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-top: 24px;
+}
+
+.table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+
+.table th,
+.table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--kangur-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table thead th {
+  border-bottom: 2px solid var(--kangur-text);
+  font-size: 1.05rem;
+}
+
+.table tbody th {
+  font-weight: 600;
+}
+
+.table td {
+  color: var(--kangur-text-body);
+}
+
+.table td:last-child,
+.table thead th:last-child {
+  background: #f1faf7;
+}
+
+@media (min-width: 900px) {
+  .columns {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 64px;
+    align-items: start;
+  }
+
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .threeUp {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

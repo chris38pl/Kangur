@@ -1,0 +1,109 @@
+.band {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(150deg, #2a8f7e 0%, #1f7a6c 55%, #185f55 100%);
+  color: #fff;
+}
+
+.band::before {
+  content: "";
+  position: absolute;
+  top: -180px;
+  right: -120px;
+  width: 560px;
+  height: 560px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.grid {
+  position: relative;
+  display: grid;
+  gap: 30px;
+  max-width: calc(var(--kangur-max) + 48px);
+  margin: 0 auto;
+  padding: clamp(56px, 7vw, 88px) 24px 0;
+}
+
+.slogan {
+  margin: 0;
+  font-size: clamp(2.6rem, 7.4vw, 4.7rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+.slogan span {
+  display: block;
+}
+
+.body {
+  max-width: 34rem;
+  margin: 18px 0 26px;
+  font-size: 1.12rem;
+  font-weight: 600;
+}
+
+.band :global(.mkt-store-play) {
+  background: #fff;
+  color: var(--kangur-text);
+}
+
+.band :global(.mkt-store-play:hover) {
+  background: #eefaf6;
+  color: var(--kangur-text);
+}
+
+.qr {
+  display: none;
+}
+
+.kangur {
+  align-self: end;
+  justify-self: center;
+  width: min(250px, 60%);
+  height: auto;
+  margin-bottom: -22px;
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 48px;
+    align-items: end;
+  }
+
+  .copy {
+    padding-bottom: clamp(56px, 7vw, 88px);
+  }
+
+  .kangur {
+    width: 270px;
+  }
+}
+
+/* A code to scan makes sense only where the app cannot be installed. */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
+  .qr {
+    display: block;
+    width: 172px;
+    padding-bottom: clamp(56px, 7vw, 88px);
+    text-align: center;
+  }
+
+  .qr svg {
+    width: 148px;
+    height: 148px;
+    padding: 6px;
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  .qr p {
+    margin: 10px 0 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+}

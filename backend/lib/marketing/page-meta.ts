@@ -69,6 +69,49 @@ const PAGE_META: Record<
         "Kangur - праграма для спісаў пакупак на iPhone і Android. Спіс з фота, скрыншота чата або рэцэпта, тавары раскладзены па аддзелах крамы.",
     },
   },
+  pricing: {
+    pl: {
+      title: "Kangur - cennik. Ile kosztuje Premium i co jest za darmo",
+      description:
+        "Listy zakupów, domownicy i tryb zakupów w Kangurze są darmowe. Premium kosztuje 9,99 zł miesięcznie za cały dom, pierwszy miesiąc za darmo.",
+    },
+    en: {
+      title: "Kangur pricing - what is free and what Premium adds",
+      description:
+        "Grocery lists, your household and shopping mode are free in Kangur. Premium adds unlimited AI and a longer history for the whole home.",
+    },
+  },
+  safety: {
+    pl: {
+      title: "Czy aplikacja Kangur jest bezpieczna? Fakty i zgody",
+      description:
+        "Kangur to lista zakupów z Google Play i App Store. Kto go tworzy, o jakie zgody prosi, czego nie robi i jak sprawdzić, że to na pewno my.",
+    },
+    en: {
+      title: "Is the Kangur app safe? Facts and permissions",
+      description:
+        "Kangur is a grocery list from Google Play and the App Store. Who makes it, which permissions it asks for, what it never does and how to check it is us.",
+    },
+  },
+  about: {
+    pl: {
+      title: "O Kangurze - kto robi tę listę zakupów i po co",
+      description:
+        "Kangur powstał w Poznaniu, bo lista zakupów mieszkała w czacie. Kto go robi, jak powstawał, pod jakimi nazwami jest w sklepach i z czym go nie mylić.",
+    },
+    en: {
+      title: "About Kangur - who makes this grocery list and why",
+      description:
+        "Kangur comes from Poznań, Poland, because the shopping list lived in a chat. Who makes it, how it grew, its names in the stores and what it is not.",
+    },
+  },
+  press: {
+    pl: {
+      title: "Kangur dla mediów - fakty, grafiki i kontakt",
+      description:
+        "Opis Kangura w jednym i trzech zdaniach, sprawdzone fakty, logo i zrzuty ekranu do pobrania, pomysły na tekst i bezpośredni kontakt do twórcy.",
+    },
+  },
   faq: {
     pl: {
       title: "Pytania i odpowiedzi o aplikacji Kangur",

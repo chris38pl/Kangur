@@ -2,7 +2,6 @@ import type { AppLocale } from "@shared/locales";
 
 export type MarketingMessages = {
   nav: {
-    features: string;
     faq: string;
     privacy: string;
     terms: string;
@@ -12,26 +11,21 @@ export type MarketingMessages = {
     footerAria: string;
     languageAria: string;
     deleteAccount: string;
+    how: string;
+    pricing: string;
+    safety: string;
+    about: string;
+    guides: string;
+    press: string;
+    menu: string;
+    skip: string;
+    breadcrumbAria: string;
+    lists: string;
+    legal: string;
+    languages: string;
+    follow: string;
     copyright: string;
     rightsReserved: string;
-  };
-  home: {
-    badge: string;
-    headlineBefore: string;
-    headlineAccent: string;
-    lead: string;
-    features: [string, string, string, string];
-    playSmall: string;
-    iosSmall: string;
-    /** Under the store buttons. Claims only from the marketing fact bank. */
-    storesNote: string;
-    heroAlt: string;
-    highlightsAria: string;
-    highlights: [
-      { title: string; body: string },
-      { title: string; body: string },
-      { title: string; body: string },
-    ];
   };
   contact: {
     title: string;
@@ -73,7 +67,6 @@ export type MarketingMessages = {
 
 const en: MarketingMessages = {
   nav: {
-    features: "Features",
     faq: "FAQ",
     privacy: "Privacy Policy",
     terms: "Terms of Use",
@@ -83,30 +76,21 @@ const en: MarketingMessages = {
     footerAria: "Footer",
     languageAria: "Language",
     deleteAccount: "Delete account",
+    how: "How it works",
+    pricing: "Pricing",
+    safety: "Safety",
+    about: "About Kangur",
+    guides: "Guides",
+    press: "Press",
+    menu: "Menu",
+    skip: "Skip to content",
+    breadcrumbAria: "You are here",
+    lists: "Grocery lists",
+    legal: "Legal",
+    languages: "Languages",
+    follow: "Follow Kangur",
     copyright: "© 2026 Kangur",
     rightsReserved: "All rights reserved",
-  },
-  home: {
-    badge: "✨ Your smart shopping assistant",
-    headlineBefore: "Remember together.",
-    headlineAccent: "Don’t forget what matters.",
-    lead: "Kangur is a shared shopping list for your whole household. Create a list the way that suits you, shop aisle by aisle, and everyone at home sees every change.",
-    features: [
-      "Lists from a photo, screenshot or recipe",
-      "Items sorted by store aisle",
-      "Shared lists with your household",
-      "Shop aisle by aisle, then get a summary",
-    ],
-    playSmall: "GET IT ON",
-    iosSmall: "DOWNLOAD ON THE",
-    storesNote: "For iPhone and Android. Start with 10 free AI uses.",
-    heroAlt: "Kangur - the app and mascot with a shopping bag",
-    highlightsAria: "Features",
-    highlights: [
-      { title: "Built for families", body: "Everyone in one place." },
-      { title: "Private and secure", body: "Your data stays yours." },
-      { title: "Everyday ready", body: "Simple, fast, reliable." },
-    ],
   },
   contact: {
     title: "Contact",
@@ -165,7 +149,6 @@ const en: MarketingMessages = {
 
 const pl: MarketingMessages = {
   nav: {
-    features: "Funkcje",
     faq: "FAQ",
     privacy: "Polityka prywatności",
     terms: "Regulamin",
@@ -175,30 +158,21 @@ const pl: MarketingMessages = {
     footerAria: "Stopka",
     languageAria: "Język",
     deleteAccount: "Usunięcie konta",
+    how: "Jak działa",
+    pricing: "Cennik",
+    safety: "Bezpieczeństwo",
+    about: "O Kangurze",
+    guides: "Poradniki",
+    press: "Dla mediów",
+    menu: "Menu",
+    skip: "Przejdź do treści",
+    breadcrumbAria: "Gdzie jesteś",
+    lists: "Listy zakupów",
+    legal: "Zasady",
+    languages: "Języki",
+    follow: "Kangur w sieci",
     copyright: "© 2026 Kangur",
     rightsReserved: "Wszelkie prawa zastrzeżone",
-  },
-  home: {
-    badge: "✨ Twój inteligentny asystent zakupów",
-    headlineBefore: "Pamiętaj razem.",
-    headlineAccent: "Nie zapominaj o tym, co ważne.",
-    lead: "Kangur to wspólna lista zakupów dla całego domu. Tworzysz listę tak, jak Ci wygodnie, robisz zakupy alejka po alejce, a domownicy widzą wszystkie zmiany.",
-    features: [
-      "Lista ze zdjęcia, zrzutu ekranu albo przepisu",
-      "Produkty ułożone według alejek w sklepie",
-      "Wspólne listy z domownikami",
-      "Zakupy alejka po alejce i podsumowanie",
-    ],
-    playSmall: "POBIERZ Z",
-    iosSmall: "POBIERZ W",
-    storesNote: "Na iPhone’a i Androida. Na start 10 darmowych użyć AI.",
-    heroAlt: "Kangur - aplikacja i maskotka z torbą zakupów",
-    highlightsAria: "Funkcje",
-    highlights: [
-      { title: "Stworzone dla rodzin", body: "Wszyscy w jednym miejscu." },
-      { title: "Prywatne i bezpieczne", body: "Twoje dane są tylko Twoje." },
-      { title: "Na co dzień", body: "Proste, szybkie, niezawodne." },
-    ],
   },
   contact: {
     title: "Kontakt",
@@ -258,7 +232,6 @@ const pl: MarketingMessages = {
 const de: MarketingMessages = {
   ...en,
   nav: {
-    features: "Funktionen",
     faq: "FAQ",
     privacy: "Datenschutz",
     terms: "AGB",
@@ -268,30 +241,21 @@ const de: MarketingMessages = {
     footerAria: "Fußzeile",
     languageAria: "Sprache",
     deleteAccount: "Konto löschen",
+    how: "So geht’s",
+    pricing: "Preise",
+    safety: "Sicherheit",
+    about: "Über Kangur",
+    guides: "Ratgeber",
+    press: "Presse",
+    menu: "Menü",
+    skip: "Zum Inhalt springen",
+    breadcrumbAria: "Du bist hier",
+    lists: "Einkaufslisten",
+    legal: "Rechtliches",
+    languages: "Sprachen",
+    follow: "Kangur folgen",
     copyright: "© 2026 Kangur",
     rightsReserved: "Alle Rechte vorbehalten",
-  },
-  home: {
-    badge: "✨ Dein smarter Einkaufsassistent",
-    headlineBefore: "Gemeinsam merken.",
-    headlineAccent: "Vergiss nicht, was zählt.",
-    lead: "Kangur ist die gemeinsame Einkaufsliste für deinen ganzen Haushalt. Erstelle Listen, wie es dir passt, kaufe Gang für Gang ein, und alle zu Hause sehen jede Änderung.",
-    features: [
-      "Listen aus Foto, Screenshot oder Rezept",
-      "Sortiert nach Gängen im Laden",
-      "Gemeinsame Listen für den Haushalt",
-      "Gang für Gang einkaufen, mit Zusammenfassung",
-    ],
-    playSmall: "JETZT BEI",
-    iosSmall: "LADEN IM",
-    storesNote: "Für iPhone und Android. Zum Start 10 kostenlose AI-Nutzungen.",
-    heroAlt: "Kangur - App und Maskottchen mit Einkaufstasche",
-    highlightsAria: "Funktionen",
-    highlights: [
-      { title: "Für Familien gemacht", body: "Alle an einem Ort." },
-      { title: "Privat und sicher", body: "Deine Daten bleiben deine." },
-      { title: "Für den Alltag", body: "Einfach, schnell, zuverlässig." },
-    ],
   },
   contact: {
     title: "Kontakt",
@@ -328,7 +292,6 @@ const de: MarketingMessages = {
 const fr: MarketingMessages = {
   ...en,
   nav: {
-    features: "Fonctions",
     faq: "FAQ",
     privacy: "Confidentialité",
     terms: "Conditions",
@@ -338,30 +301,21 @@ const fr: MarketingMessages = {
     footerAria: "Pied de page",
     languageAria: "Langue",
     deleteAccount: "Supprimer le compte",
+    how: "Comment ça marche",
+    pricing: "Prix",
+    safety: "Sécurité",
+    about: "À propos",
+    guides: "Guides",
+    press: "Presse",
+    menu: "Menu",
+    skip: "Aller au contenu",
+    breadcrumbAria: "Vous êtes ici",
+    lists: "Listes de courses",
+    legal: "Mentions légales",
+    languages: "Langues",
+    follow: "Suivre Kangur",
     copyright: "© 2026 Kangur",
     rightsReserved: "Tous droits réservés",
-  },
-  home: {
-    badge: "✨ Votre assistant shopping intelligent",
-    headlineBefore: "Souvenez-vous ensemble.",
-    headlineAccent: "N’oubliez pas l’essentiel.",
-    lead: "Kangur est la liste de courses partagée de tout votre foyer. Créez la liste comme vous voulez, faites les courses rayon par rayon, et toute la maison voit chaque modification.",
-    features: [
-      "Listes à partir d’une photo, d’une capture ou d’une recette",
-      "Classée par rayon du magasin",
-      "Listes partagées avec tout le foyer",
-      "Les courses rayon par rayon, avec un résumé",
-    ],
-    playSmall: "DISPONIBLE SUR",
-    iosSmall: "TÉLÉCHARGER DANS",
-    storesNote: "Pour iPhone et Android. Vous commencez avec 10 usages IA gratuits.",
-    heroAlt: "Kangur - l’appli et la mascotte avec un sac de courses",
-    highlightsAria: "Fonctions",
-    highlights: [
-      { title: "Fait pour les familles", body: "Tout le monde au même endroit." },
-      { title: "Privé et sécurisé", body: "Vos données restent les vôtres." },
-      { title: "Au quotidien", body: "Simple, rapide, fiable." },
-    ],
   },
   contact: {
     title: "Contact",
@@ -398,7 +352,6 @@ const fr: MarketingMessages = {
 const es: MarketingMessages = {
   ...en,
   nav: {
-    features: "Funciones",
     faq: "FAQ",
     privacy: "Privacidad",
     terms: "Términos",
@@ -408,30 +361,21 @@ const es: MarketingMessages = {
     footerAria: "Pie de página",
     languageAria: "Idioma",
     deleteAccount: "Eliminar cuenta",
+    how: "Cómo funciona",
+    pricing: "Precios",
+    safety: "Seguridad",
+    about: "Sobre Kangur",
+    guides: "Guías",
+    press: "Prensa",
+    menu: "Menú",
+    skip: "Ir al contenido",
+    breadcrumbAria: "Estás aquí",
+    lists: "Listas de la compra",
+    legal: "Legal",
+    languages: "Idiomas",
+    follow: "Sigue a Kangur",
     copyright: "© 2026 Kangur",
     rightsReserved: "Todos los derechos reservados",
-  },
-  home: {
-    badge: "✨ Tu asistente de compras inteligente",
-    headlineBefore: "Recordad juntos.",
-    headlineAccent: "No olvidéis lo importante.",
-    lead: "Kangur es la lista de la compra compartida para toda tu casa. Crea la lista como prefieras, compra pasillo a pasillo y todos en casa ven cada cambio.",
-    features: [
-      "Listas desde una foto, una captura o una receta",
-      "Ordenada por pasillos del súper",
-      "Listas compartidas con toda la casa",
-      "Compra pasillo a pasillo, con resumen al final",
-    ],
-    playSmall: "DISPONIBLE EN",
-    iosSmall: "DESCARGAR EN",
-    storesNote: "Para iPhone y Android. Empiezas con 10 usos de IA gratis.",
-    heroAlt: "Kangur - la app y la mascota con bolsa de la compra",
-    highlightsAria: "Funciones",
-    highlights: [
-      { title: "Hecho para familias", body: "Todos en un solo lugar." },
-      { title: "Privado y seguro", body: "Tus datos son solo tuyos." },
-      { title: "Para el día a día", body: "Simple, rápido, fiable." },
-    ],
   },
   contact: {
     title: "Contacto",
@@ -468,7 +412,6 @@ const es: MarketingMessages = {
 const it: MarketingMessages = {
   ...en,
   nav: {
-    features: "Funzioni",
     faq: "FAQ",
     privacy: "Privacy",
     terms: "Termini",
@@ -478,30 +421,21 @@ const it: MarketingMessages = {
     footerAria: "Piè di pagina",
     languageAria: "Lingua",
     deleteAccount: "Elimina account",
+    how: "Come funziona",
+    pricing: "Prezzi",
+    safety: "Sicurezza",
+    about: "Su Kangur",
+    guides: "Guide",
+    press: "Stampa",
+    menu: "Menu",
+    skip: "Vai al contenuto",
+    breadcrumbAria: "Sei qui",
+    lists: "Liste della spesa",
+    legal: "Note legali",
+    languages: "Lingue",
+    follow: "Segui Kangur",
     copyright: "© 2026 Kangur",
     rightsReserved: "Tutti i diritti riservati",
-  },
-  home: {
-    badge: "✨ Il tuo assistente shopping intelligente",
-    headlineBefore: "Ricordate insieme.",
-    headlineAccent: "Non dimenticate l’essenziale.",
-    lead: "Kangur è la lista della spesa condivisa per tutta la casa. Crei la lista come preferisci, fai la spesa reparto per reparto e tutti in casa vedono ogni modifica.",
-    features: [
-      "Liste da una foto, uno screenshot o una ricetta",
-      "Ordinata per corsie del supermercato",
-      "Liste condivise con tutta la famiglia",
-      "La spesa reparto per reparto, con riepilogo",
-    ],
-    playSmall: "SCARICA SU",
-    iosSmall: "SCARICA SU",
-    storesNote: "Per iPhone e Android. Inizi con 10 usi AI gratuiti.",
-    heroAlt: "Kangur - l’app e la mascotte con la borsa della spesa",
-    highlightsAria: "Funzioni",
-    highlights: [
-      { title: "Pensato per le famiglie", body: "Tutti in un unico posto." },
-      { title: "Privato e sicuro", body: "I tuoi dati restano tuoi." },
-      { title: "Per tutti i giorni", body: "Semplice, veloce, affidabile." },
-    ],
   },
   contact: {
     title: "Contatti",
@@ -538,7 +472,6 @@ const it: MarketingMessages = {
 const cs: MarketingMessages = {
   ...en,
   nav: {
-    features: "Funkce",
     faq: "FAQ",
     privacy: "Soukromí",
     terms: "Podmínky",
@@ -548,30 +481,21 @@ const cs: MarketingMessages = {
     footerAria: "Zápatí",
     languageAria: "Jazyk",
     deleteAccount: "Smazat účet",
+    how: "Jak to funguje",
+    pricing: "Ceník",
+    safety: "Bezpečnost",
+    about: "O Kanguru",
+    guides: "Rady",
+    press: "Pro média",
+    menu: "Menu",
+    skip: "Přejít na obsah",
+    breadcrumbAria: "Jste tady",
+    lists: "Nákupní seznamy",
+    legal: "Podmínky",
+    languages: "Jazyky",
+    follow: "Sledujte Kangur",
     copyright: "© 2026 Kangur",
     rightsReserved: "Všechna práva vyhrazena",
-  },
-  home: {
-    badge: "✨ Váš chytrý nákupní asistent",
-    headlineBefore: "Pamatujte spolu.",
-    headlineAccent: "Nezapomeňte na to důležité.",
-    lead: "Kangur je společný nákupní seznam pro celou domácnost. Seznam vytvoříte, jak vám to vyhovuje, nakupujete ulička po uličce a všichni doma vidí každou změnu.",
-    features: [
-      "Seznam z fotky, snímku obrazovky nebo receptu",
-      "Seřazený podle uliček v obchodě",
-      "Společné seznamy pro celou domácnost",
-      "Nákup ulička po uličce se shrnutím",
-    ],
-    playSmall: "STÁHNOUT Z",
-    iosSmall: "STÁHNOUT V",
-    storesNote: "Pro iPhone a Android. Na začátek 10 bezplatných použití AI.",
-    heroAlt: "Kangur - aplikace a maskot s nákupní taškou",
-    highlightsAria: "Funkce",
-    highlights: [
-      { title: "Pro rodiny", body: "Všichni na jednom místě." },
-      { title: "Soukromé a bezpečné", body: "Vaše data zůstávají vaše." },
-      { title: "Na každý den", body: "Jednoduché, rychlé, spolehlivé." },
-    ],
   },
   contact: {
     title: "Kontakt",
@@ -608,7 +532,6 @@ const cs: MarketingMessages = {
 const ru: MarketingMessages = {
   ...en,
   nav: {
-    features: "Функции",
     faq: "FAQ",
     privacy: "Конфиденциальность",
     terms: "Условия",
@@ -618,30 +541,21 @@ const ru: MarketingMessages = {
     footerAria: "Подвал",
     languageAria: "Язык",
     deleteAccount: "Удалить аккаунт",
+    how: "Как это работает",
+    pricing: "Цены",
+    safety: "Безопасность",
+    about: "О Kangur",
+    guides: "Советы",
+    press: "Для прессы",
+    menu: "Меню",
+    skip: "Перейти к содержанию",
+    breadcrumbAria: "Вы здесь",
+    lists: "Списки покупок",
+    legal: "Правила",
+    languages: "Языки",
+    follow: "Kangur в сети",
     copyright: "© 2026 Kangur",
     rightsReserved: "Все права защищены",
-  },
-  home: {
-    badge: "✨ Ваш умный помощник по покупкам",
-    headlineBefore: "Помните вместе.",
-    headlineAccent: "Не забывайте важное.",
-    lead: "Kangur - общий список покупок для всей семьи. Создавайте список как удобно, покупайте отдел за отделом, а все дома видят каждое изменение.",
-    features: [
-      "Список из фото, скриншота или рецепта",
-      "По отделам магазина",
-      "Общие списки для всей семьи",
-      "Покупки отдел за отделом и итог",
-    ],
-    playSmall: "СКАЧАТЬ В",
-    iosSmall: "СКАЧАТЬ В",
-    storesNote: "Для iPhone и Android. Для начала 10 бесплатных использований AI.",
-    heroAlt: "Kangur - приложение и маскот с сумкой для покупок",
-    highlightsAria: "Функции",
-    highlights: [
-      { title: "Для семей", body: "Все в одном месте." },
-      { title: "Приватно и безопасно", body: "Ваши данные только ваши." },
-      { title: "На каждый день", body: "Просто, быстро, надёжно." },
-    ],
   },
   contact: {
     title: "Контакты",
@@ -678,7 +592,6 @@ const ru: MarketingMessages = {
 const uk: MarketingMessages = {
   ...en,
   nav: {
-    features: "Функції",
     faq: "FAQ",
     privacy: "Конфіденційність",
     terms: "Умови",
@@ -688,30 +601,21 @@ const uk: MarketingMessages = {
     footerAria: "Підвал",
     languageAria: "Мова",
     deleteAccount: "Видалити обліковий запис",
+    how: "Як це працює",
+    pricing: "Ціни",
+    safety: "Безпека",
+    about: "Про Kangur",
+    guides: "Поради",
+    press: "Для преси",
+    menu: "Меню",
+    skip: "Перейти до вмісту",
+    breadcrumbAria: "Ви тут",
+    lists: "Списки покупок",
+    legal: "Правила",
+    languages: "Мови",
+    follow: "Kangur у мережі",
     copyright: "© 2026 Kangur",
     rightsReserved: "Усі права захищено",
-  },
-  home: {
-    badge: "✨ Ваш розумний помічник з покупок",
-    headlineBefore: "Пам’ятайте разом.",
-    headlineAccent: "Не забувайте важливе.",
-    lead: "Kangur - спільний список покупок для всієї родини. Створюйте список як зручно, купуйте відділ за відділом, а всі вдома бачать кожну зміну.",
-    features: [
-      "Список із фото, скриншота або рецепта",
-      "За відділами магазину",
-      "Спільні списки для всієї родини",
-      "Покупки відділ за відділом і підсумок",
-    ],
-    playSmall: "ЗАВАНТАЖИТИ З",
-    iosSmall: "ЗАВАНТАЖИТИ В",
-    storesNote: "Для iPhone і Android. Для початку 10 безкоштовних використань AI.",
-    heroAlt: "Kangur - додаток і маскот із сумкою для покупок",
-    highlightsAria: "Функції",
-    highlights: [
-      { title: "Для родин", body: "Усі в одному місці." },
-      { title: "Приватно й безпечно", body: "Ваші дані лише ваші." },
-      { title: "На щодень", body: "Просто, швидко, надійно." },
-    ],
   },
   contact: {
     title: "Контакти",
@@ -748,7 +652,6 @@ const uk: MarketingMessages = {
 const be: MarketingMessages = {
   ...en,
   nav: {
-    features: "Функцыі",
     faq: "FAQ",
     privacy: "Прыватнасць",
     terms: "Умовы",
@@ -758,30 +661,21 @@ const be: MarketingMessages = {
     footerAria: "Падвал",
     languageAria: "Мова",
     deleteAccount: "Выдаліць акаўнт",
+    how: "Як гэта працуе",
+    pricing: "Цэны",
+    safety: "Бяспека",
+    about: "Пра Kangur",
+    guides: "Парады",
+    press: "Для прэсы",
+    menu: "Меню",
+    skip: "Перайсці да зместу",
+    breadcrumbAria: "Вы тут",
+    lists: "Спісы пакупак",
+    legal: "Правілы",
+    languages: "Мовы",
+    follow: "Kangur у сетцы",
     copyright: "© 2026 Kangur",
     rightsReserved: "Усе правы абаронены",
-  },
-  home: {
-    badge: "✨ Ваш разумны памочнік па пакупках",
-    headlineBefore: "Памятайце разам.",
-    headlineAccent: "Не забывайце важнае.",
-    lead: "Kangur - агульны спіс пакупак для ўсёй сям’і. Стварайце спіс як зручна, купляйце аддзел за аддзелам, а ўсе дома бачаць кожную змену.",
-    features: [
-      "Спіс з фота, скрыншота або рэцэпта",
-      "Па аддзелах крамы",
-      "Агульныя спісы для ўсёй сям’і",
-      "Пакупкі аддзел за аддзелам і вынікі",
-    ],
-    playSmall: "СПАМПАВАЦЬ З",
-    iosSmall: "СПАМПАВАЦЬ У",
-    storesNote: "Для iPhone і Android. Для пачатку 10 бясплатных выкарыстанняў AI.",
-    heroAlt: "Kangur - праграма і маскот з торбай для пакупак",
-    highlightsAria: "Функцыі",
-    highlights: [
-      { title: "Для сем’яў", body: "Усе ў адным месцы." },
-      { title: "Прыватна і бяспечна", body: "Вашы даныя толькі вашы." },
-      { title: "На кожны дзень", body: "Проста, хутка, надзейна." },
-    ],
   },
   contact: {
     title: "Кантакты",

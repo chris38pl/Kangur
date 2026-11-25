@@ -1,0 +1,61 @@
+.outro {
+  margin-top: 24px !important;
+}
+
+.steps li {
+  position: relative;
+}
+
+.number {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background: var(--kangur-primary-deep);
+  color: #fff;
+  font-weight: 800;
+}
+
+.facts {
+  margin: 18px 0 0;
+}
+
+.facts > div {
+  display: grid;
+  grid-template-columns: 7.2rem 1fr;
+  gap: 4px 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--kangur-border);
+}
+
+.facts dt {
+  font-weight: 700;
+}
+
+.facts dd {
+  margin: 0;
+  color: var(--kangur-text-body);
+  overflow-wrap: anywhere;
+}
+
+.never {
+  position: relative;
+  padding: 28px 28px 20px;
+  border-radius: 28px;
+  background: linear-gradient(170deg, #eaf8f3, #d3efe6);
+}
+
+.kangur {
+  float: right;
+  width: 112px;
+  height: auto;
+  margin: -70px -4px 6px 12px;
+}
+
+@media (max-width: 480px) {
+  .facts > div {
+    grid-template-columns: 1fr;
+  }
+}

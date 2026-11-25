@@ -1,0 +1,55 @@
+.phone {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  padding: 3%;
+  border-radius: 13.5% / 6.3%;
+  background: var(--kangur-text);
+  box-shadow:
+    0 30px 60px -20px rgba(20, 70, 60, 0.32),
+    0 8px 20px -8px rgba(31, 43, 69, 0.22);
+}
+
+.screen {
+  position: relative;
+  overflow: hidden;
+  border-radius: 11% / 5.1%;
+  background: #fff;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Fixed to the screen's own width, so it scales with the phone. */
+.status {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3.6% 8% 0 9%;
+  color: var(--kangur-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.status svg {
+  width: 42px;
+  height: auto;
+}
+
+/* Upper part of the phone, for cards: the bottom runs off the card. */
+.cropped {
+  padding-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cropped .screen {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}

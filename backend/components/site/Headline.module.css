@@ -1,0 +1,50 @@
+.headline {
+  margin: 0;
+  color: var(--kangur-text);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.06;
+  text-wrap: balance;
+}
+
+.xl {
+  font-size: clamp(2.35rem, 6.1vw, 4rem);
+}
+
+.lg {
+  font-size: clamp(1.9rem, 4.4vw, 3rem);
+}
+
+.md {
+  font-size: clamp(1.45rem, 3vw, 1.95rem);
+  line-height: 1.14;
+}
+
+.line {
+  display: block;
+}
+
+.accent {
+  color: var(--kangur-mint-strong);
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 16px;
+  color: var(--kangur-primary-deep);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.pill {
+  display: inline-block;
+  padding: 5px 13px 6px;
+  border-radius: 999px;
+  background: var(--kangur-primary-deep);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
