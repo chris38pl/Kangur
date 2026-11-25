@@ -16,7 +16,7 @@ Canonical env templates: [backend/.env.example](../backend/.env.example) · [mob
 | **Staging** | Pre-release tests | `https://staging-api.getkangur.com` (branch `staging`) | `kangur-staging` | Development (same project) | Test | `preview` → Google Play Closed Testing |
 | **Production** | Live | `https://api.getkangur.com` (branch `main`) | `kangur-prod` | Production instance | Live | `production` → store |
 
-**Landing (production only):** `https://getkangur.com` - `/`, `/privacy`, `/terms`, `/contact`, `/delete-account`; `/support` → `/contact`. No staging landing domain; use Vercel Preview URLs on PRs.
+**Landing:** `https://www.getkangur.com`. The same pages answer on `https://staging.getkangur.com` and on Vercel Preview URLs, where every response carries `X-Robots-Tag: noindex, nofollow` (`backend/next.config.ts`, decided by host).
 
 Sync on MVP is **HTTP polling** (`EventPollingProvider`), not Ably/Pusher. Test “realtime” = shared-list polling behaviour.
 
@@ -26,12 +26,21 @@ Sync on MVP is **HTTP polling** (`EventPollingProvider`), not Ably/Pusher. Test 
 
 | Purpose | Host / path |
 |---------|-------------|
-| Landing + legal | `https://getkangur.com` - `/{locale}/…` (pl, en, de, ru, uk, fr, es, it, cs, be); bare `/privacy` etc. redirect by cookie / `Accept-Language`; Privacy & Terms copy: PL + EN (EN fallback) |
+| Landing + legal | `https://www.getkangur.com` - Polish without a prefix (`/`, `/faq`), other languages under `/{locale}/…` (en, de, ru, uk, fr, es, it, cs, be). `/pl/…` is a 308 to the same page without the prefix. See [Landing URLs](#landing-urls) |
 | API Production | `https://api.getkangur.com` → Vercel branch `main` |
 | API Staging | `https://staging-api.getkangur.com` → Vercel branch `staging` |
-| Landing staging | **None** - Vercel Preview URL on PR |
+| Landing staging | `https://staging.getkangur.com` (branch `staging`), hidden from search engines |
 
 One Vercel project can serve all of these via domain + env mapping. PR Preview deployments stay on temporary `*.vercel.app` URLs and do **not** replace the stable staging API host.
+
+### Landing URLs
+
+Search engines must see one stable page per address, so:
+
+- A URL without a prefix answers 200 in Polish. It redirects (307) only a human whose own choice (cookie `kangur_locale`, set by the language switcher) or browser asks for another language, and only where the path reads the same in every language. Crawlers are never redirected by language.
+- Every page is registered in `backend/lib/marketing/routes.ts`. Navigation, hreflang, sitemap, the proxy and the SEO guard all read it. Titles and descriptions: `page-meta.ts`.
+- Pages are prerendered and set no cookie, so the CDN keeps them. Do not read `headers()` or `cookies()` in `app/[locale]`, that would make the whole site dynamic again.
+- `pnpm test:marketing` covers every redirect. After a build, `pnpm test:seo` reads the HTML and fails on a page that stopped being static, a broken link, a wrong canonical or hreflang, a title Google would cut, an orphan page or a dash the house style forbids. Both run in CI.
 
 ### Hard rule - API host isolation
 
@@ -524,7 +533,6 @@ Follow [§4 Deployment order](#4-deployment-order). Bump **semver** only on prod
 ## 11. Out of scope (MVP)
 
 - Ably / Redis / object storage / Clerk webhooks
-- Staging landing domain
 - Automated CD (deploy from CI)
 - Prisma Accelerate
 

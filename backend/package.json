@@ -16,6 +16,8 @@
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "test:locales": "tsx scripts/check-locales.ts",
     "test:unit": "node --test --experimental-strip-types lib/billing/linkedWorkspace.test.ts features/workspace/workspaceRemoval.test.ts",
+    "test:marketing": "tsx --test lib/marketing/*.test.ts",
+    "test:seo": "tsx scripts/check-seo.ts",
     "eval:ai": "tsx evals/runner/cli.ts",
     "eval:prune-reports": "tsx evals/runner/cli.ts --prune-only",
     "db:generate": "prisma generate",

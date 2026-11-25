@@ -1,20 +1,6 @@
 import type { AppLocale } from "@shared/locales";
 
 export type MarketingMessages = {
-  meta: {
-    homeTitle: string;
-    homeDescription: string;
-    privacyTitle: string;
-    privacyDescription: string;
-    termsTitle: string;
-    termsDescription: string;
-    contactTitle: string;
-    contactDescription: string;
-    deleteTitle: string;
-    deleteDescription: string;
-    faqTitle: string;
-    faqDescription: string;
-  };
   nav: {
     features: string;
     faq: string;
@@ -83,34 +69,9 @@ export type MarketingMessages = {
     accessBody: string;
     morePrivacy: string;
   };
-  notFound: {
-    title: string;
-    body: string;
-    back: string;
-  };
 };
 
 const en: MarketingMessages = {
-  meta: {
-    homeTitle: "Kangur - Shared grocery lists with AI",
-    homeDescription:
-      "Create lists from a photo, text, a recipe or past shopping. Shop aisle by aisle and share your lists with your household.",
-    privacyTitle: "Privacy Policy | Kangur",
-    privacyDescription:
-      "Kangur privacy policy - what data we collect, why, and your rights.",
-    termsTitle: "Terms of Use | Kangur",
-    termsDescription:
-      "Terms for using Kangur - service rules, accounts, Premium, and liability.",
-    contactTitle: "Contact | Kangur",
-    contactDescription:
-      "Questions, suggestions, or need help? Contact the Kangur team - we usually reply within 24-48 hours.",
-    deleteTitle: "Delete Account | Kangur",
-    deleteDescription:
-      "How to delete your Kangur account in the app and what data is removed.",
-    faqTitle: "FAQ | Kangur",
-    faqDescription:
-      "Answers to common questions about Kangur - workspaces, AI Credits, Premium, and shared shopping.",
-  },
   nav: {
     features: "Features",
     faq: "FAQ",
@@ -200,34 +161,9 @@ const en: MarketingMessages = {
       "If you no longer have access to your account and cannot delete it in the app, contact us at support@getkangur.com.",
     morePrivacy: "More about data processing:",
   },
-  notFound: {
-    title: "Page not found",
-    body: "This page doesn’t exist or has moved.",
-    back: "Back to home",
-  },
 };
 
 const pl: MarketingMessages = {
-  meta: {
-    homeTitle: "Kangur - Wspólne listy zakupów z AI",
-    homeDescription:
-      "Twórz listy ze zdjęcia, tekstu, przepisu albo poprzednich zakupów. Rób zakupy alejka po alejce i dziel listy z domownikami.",
-    privacyTitle: "Polityka prywatności | Kangur",
-    privacyDescription:
-      "Polityka prywatności aplikacji Kangur - jakie dane zbieramy, w jakim celu i jakie masz prawa.",
-    termsTitle: "Regulamin | Kangur",
-    termsDescription:
-      "Regulamin korzystania z aplikacji Kangur - zasady usługi, konta, Premium i odpowiedzialność.",
-    contactTitle: "Kontakt | Kangur",
-    contactDescription:
-      "Masz pytanie, sugestię lub potrzebujesz pomocy? Napisz do zespołu Kangur - zwykle odpowiadamy w ciągu 24-48 godzin.",
-    deleteTitle: "Usunięcie konta | Kangur",
-    deleteDescription:
-      "Jak usunąć konto Kangur w aplikacji i jakie dane są usuwane.",
-    faqTitle: "FAQ | Kangur",
-    faqDescription:
-      "Najczęstsze pytania o Kangura - Workspace, AI Credits, Premium i wspólne zakupy.",
-  },
   nav: {
     features: "Funkcje",
     faq: "FAQ",
@@ -317,33 +253,10 @@ const pl: MarketingMessages = {
       "Jeżeli nie masz dostępu do swojego konta i nie możesz usunąć go z poziomu aplikacji, skontaktuj się z nami pod adresem support@getkangur.com.",
     morePrivacy: "Więcej o przetwarzaniu danych:",
   },
-  notFound: {
-    title: "Nie znaleziono strony",
-    body: "Ta strona nie istnieje albo została przeniesiona.",
-    back: "Wróć na stronę główną",
-  },
 };
 
 const de: MarketingMessages = {
   ...en,
-  meta: {
-    homeTitle: "Kangur - Geteilte Einkaufslisten mit AI",
-    homeDescription:
-      "Erstelle Listen aus Foto, Text, Rezept oder früheren Einkäufen. Kaufe Gang für Gang ein und teile Listen mit deinem Haushalt.",
-    privacyTitle: "Datenschutz | Kangur",
-    privacyDescription: en.meta.privacyDescription,
-    termsTitle: "Nutzungsbedingungen | Kangur",
-    termsDescription: en.meta.termsDescription,
-    contactTitle: "Kontakt | Kangur",
-    contactDescription:
-      "Schreib dem Kangur-Team - Support, Datenschutz und Kontofragen.",
-    deleteTitle: "Konto löschen | Kangur",
-    deleteDescription:
-      "So löschst du dein Kangur-Konto und welche Daten entfernt werden.",
-    faqTitle: "FAQ | Kangur",
-    faqDescription:
-      "Frequently asked questions about Kangur - workspaces, AI, Premium, and shared shopping.",
-  },
   nav: {
     features: "Funktionen",
     faq: "FAQ",
@@ -410,33 +323,10 @@ const de: MarketingMessages = {
     accessHeading: "Kein Zugang zum Konto",
     morePrivacy: "Mehr zur Datenverarbeitung:",
   },
-  notFound: {
-    title: "Seite nicht gefunden",
-    body: "Diese Seite existiert nicht oder wurde verschoben.",
-    back: "Zur Startseite",
-  },
 };
 
 const fr: MarketingMessages = {
   ...en,
-  meta: {
-    homeTitle: "Kangur - Listes de courses avec l’IA",
-    homeDescription:
-      "Créez vos listes à partir d’une photo, d’un texte, d’une recette ou de vos courses passées. Faites les courses rayon par rayon, à plusieurs.",
-    privacyTitle: "Confidentialité | Kangur",
-    privacyDescription: en.meta.privacyDescription,
-    termsTitle: "Conditions | Kangur",
-    termsDescription: en.meta.termsDescription,
-    contactTitle: "Contact | Kangur",
-    contactDescription:
-      "Contactez l’équipe Kangur - support, confidentialité et compte.",
-    deleteTitle: "Supprimer le compte | Kangur",
-    deleteDescription:
-      "Comment supprimer votre compte Kangur et quelles données sont effacées.",
-    faqTitle: "FAQ | Kangur",
-    faqDescription:
-      "Frequently asked questions about Kangur - workspaces, AI, Premium, and shared shopping.",
-  },
   nav: {
     features: "Fonctions",
     faq: "FAQ",
@@ -503,33 +393,10 @@ const fr: MarketingMessages = {
     accessHeading: "Si vous n’avez plus accès au compte",
     morePrivacy: "En savoir plus sur le traitement des données :",
   },
-  notFound: {
-    title: "Page introuvable",
-    body: "Cette page n’existe pas ou a été déplacée.",
-    back: "Retour à l’accueil",
-  },
 };
 
 const es: MarketingMessages = {
   ...en,
-  meta: {
-    homeTitle: "Kangur - Listas de la compra con IA",
-    homeDescription:
-      "Crea listas desde una foto, un texto, una receta o compras anteriores. Compra pasillo a pasillo y comparte las listas con tu familia.",
-    privacyTitle: "Privacidad | Kangur",
-    privacyDescription: en.meta.privacyDescription,
-    termsTitle: "Términos | Kangur",
-    termsDescription: en.meta.termsDescription,
-    contactTitle: "Contacto | Kangur",
-    contactDescription:
-      "Contacta con el equipo de Kangur - soporte, privacidad y cuenta.",
-    deleteTitle: "Eliminar cuenta | Kangur",
-    deleteDescription:
-      "Cómo eliminar tu cuenta de Kangur y qué datos se borran.",
-    faqTitle: "FAQ | Kangur",
-    faqDescription:
-      "Frequently asked questions about Kangur - workspaces, AI, Premium, and shared shopping.",
-  },
   nav: {
     features: "Funciones",
     faq: "FAQ",
@@ -596,33 +463,10 @@ const es: MarketingMessages = {
     accessHeading: "Si no puedes acceder a tu cuenta",
     morePrivacy: "Más sobre el tratamiento de datos:",
   },
-  notFound: {
-    title: "Página no encontrada",
-    body: "Esta página no existe o se ha movido.",
-    back: "Volver al inicio",
-  },
 };
 
 const it: MarketingMessages = {
   ...en,
-  meta: {
-    homeTitle: "Kangur - Lista della spesa con l’AI",
-    homeDescription:
-      "Crea liste da una foto, un testo, una ricetta o dalle spese precedenti. Fai la spesa reparto per reparto e condividi le liste in famiglia.",
-    privacyTitle: "Privacy | Kangur",
-    privacyDescription: en.meta.privacyDescription,
-    termsTitle: "Termini | Kangur",
-    termsDescription: en.meta.termsDescription,
-    contactTitle: "Contatti | Kangur",
-    contactDescription:
-      "Contatta il team Kangur - supporto, privacy e account.",
-    deleteTitle: "Elimina account | Kangur",
-    deleteDescription:
-      "Come eliminare l’account Kangur e quali dati vengono rimossi.",
-    faqTitle: "FAQ | Kangur",
-    faqDescription:
-      "Frequently asked questions about Kangur - workspaces, AI, Premium, and shared shopping.",
-  },
   nav: {
     features: "Funzioni",
     faq: "FAQ",
@@ -689,33 +533,10 @@ const it: MarketingMessages = {
     accessHeading: "Se non puoi accedere all’account",
     morePrivacy: "Maggiori informazioni sul trattamento dei dati:",
   },
-  notFound: {
-    title: "Pagina non trovata",
-    body: "Questa pagina non esiste o è stata spostata.",
-    back: "Torna alla home",
-  },
 };
 
 const cs: MarketingMessages = {
   ...en,
-  meta: {
-    homeTitle: "Kangur - Sdílené nákupní seznamy s AI",
-    homeDescription:
-      "Vytvářejte seznamy z fotky, textu, receptu nebo předchozích nákupů. Nakupujte ulička po uličce a sdílejte seznamy s domácností.",
-    privacyTitle: "Soukromí | Kangur",
-    privacyDescription: en.meta.privacyDescription,
-    termsTitle: "Podmínky | Kangur",
-    termsDescription: en.meta.termsDescription,
-    contactTitle: "Kontakt | Kangur",
-    contactDescription:
-      "Kontaktujte tým Kangur - podpora, soukromí a účet.",
-    deleteTitle: "Smazání účtu | Kangur",
-    deleteDescription:
-      "Jak smazat účet Kangur a která data se odstraní.",
-    faqTitle: "FAQ | Kangur",
-    faqDescription:
-      "Frequently asked questions about Kangur - workspaces, AI, Premium, and shared shopping.",
-  },
   nav: {
     features: "Funkce",
     faq: "FAQ",
@@ -782,33 +603,10 @@ const cs: MarketingMessages = {
     accessHeading: "Když nemáš přístup k účtu",
     morePrivacy: "Více o zpracování údajů:",
   },
-  notFound: {
-    title: "Stránka nenalezena",
-    body: "Tato stránka neexistuje nebo byla přesunuta.",
-    back: "Zpět na úvod",
-  },
 };
 
 const ru: MarketingMessages = {
   ...en,
-  meta: {
-    homeTitle: "Kangur - Общие списки покупок с AI",
-    homeDescription:
-      "Создавайте списки из фото, текста, рецепта или прошлых покупок. Покупайте отдел за отделом и делитесь списками с семьёй.",
-    privacyTitle: "Конфиденциальность | Kangur",
-    privacyDescription: en.meta.privacyDescription,
-    termsTitle: "Условия | Kangur",
-    termsDescription: en.meta.termsDescription,
-    contactTitle: "Контакты | Kangur",
-    contactDescription:
-      "Свяжитесь с командой Kangur - поддержка, конфиденциальность и аккаунт.",
-    deleteTitle: "Удаление аккаунта | Kangur",
-    deleteDescription:
-      "Как удалить аккаунт Kangur и какие данные удаляются.",
-    faqTitle: "FAQ | Kangur",
-    faqDescription:
-      "Frequently asked questions about Kangur - workspaces, AI, Premium, and shared shopping.",
-  },
   nav: {
     features: "Функции",
     faq: "FAQ",
@@ -875,33 +673,10 @@ const ru: MarketingMessages = {
     accessHeading: "Если нет доступа к аккаунту",
     morePrivacy: "Подробнее об обработке данных:",
   },
-  notFound: {
-    title: "Страница не найдена",
-    body: "Этой страницы нет или она была перемещена.",
-    back: "На главную",
-  },
 };
 
 const uk: MarketingMessages = {
   ...en,
-  meta: {
-    homeTitle: "Kangur - Спільні списки покупок з AI",
-    homeDescription:
-      "Створюйте списки з фото, тексту, рецепта або попередніх покупок. Купуйте відділ за відділом і діліться списками з родиною.",
-    privacyTitle: "Конфіденційність | Kangur",
-    privacyDescription: en.meta.privacyDescription,
-    termsTitle: "Умови | Kangur",
-    termsDescription: en.meta.termsDescription,
-    contactTitle: "Контакти | Kangur",
-    contactDescription:
-      "Зв’яжіться з командою Kangur - підтримка, конфіденційність і обліковий запис.",
-    deleteTitle: "Видалення облікового запису | Kangur",
-    deleteDescription:
-      "Як видалити обліковий запис Kangur і які дані видаляються.",
-    faqTitle: "FAQ | Kangur",
-    faqDescription:
-      "Frequently asked questions about Kangur - workspaces, AI, Premium, and shared shopping.",
-  },
   nav: {
     features: "Функції",
     faq: "FAQ",
@@ -968,33 +743,10 @@ const uk: MarketingMessages = {
     accessHeading: "Якщо немає доступу до облікового запису",
     morePrivacy: "Більше про обробку даних:",
   },
-  notFound: {
-    title: "Сторінку не знайдено",
-    body: "Цієї сторінки немає або її переміщено.",
-    back: "На головну",
-  },
 };
 
 const be: MarketingMessages = {
   ...en,
-  meta: {
-    homeTitle: "Kangur - Агульныя спісы пакупак з AI",
-    homeDescription:
-      "Стварайце спісы з фота, тэксту, рэцэпта або папярэдніх пакупак. Купляйце аддзел за аддзелам і дзяліцеся спісамі з сям’ёй.",
-    privacyTitle: "Прыватнасць | Kangur",
-    privacyDescription: en.meta.privacyDescription,
-    termsTitle: "Умовы | Kangur",
-    termsDescription: en.meta.termsDescription,
-    contactTitle: "Кантакты | Kangur",
-    contactDescription:
-      "Звяжыцеся з камандай Kangur - падтрымка, прыватнасць і акаўнт.",
-    deleteTitle: "Выдаленне акаўнта | Kangur",
-    deleteDescription:
-      "Як выдаліць акаўнт Kangur і якія даныя выдаляюцца.",
-    faqTitle: "FAQ | Kangur",
-    faqDescription:
-      "Frequently asked questions about Kangur - workspaces, AI, Premium, and shared shopping.",
-  },
   nav: {
     features: "Функцыі",
     faq: "FAQ",
@@ -1060,11 +812,6 @@ const be: MarketingMessages = {
     keepHeading: "Што можа застацца",
     accessHeading: "Калі няма доступу да акаўнта",
     morePrivacy: "Больш пра апрацоўку даных:",
-  },
-  notFound: {
-    title: "Старонка не знойдзена",
-    body: "Гэтай старонкі няма або яна перамешчана.",
-    back: "На галоўную",
   },
 };
 

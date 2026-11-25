@@ -3,7 +3,6 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import {
-  APP_LOCALE_IDS,
   isAppLocale,
   type AppLocale,
 } from "@/lib/marketing/locale";
@@ -13,20 +12,10 @@ import { buildMarketingMetadata } from "@/lib/marketing/seo";
 
 type Props = { params: Promise<{ locale: string }> };
 
-export function generateStaticParams() {
-  return APP_LOCALE_IDS.map((locale) => ({ locale }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: raw } = await params;
   if (!isAppLocale(raw)) return {};
-  const t = getMessages(raw);
-  return buildMarketingMetadata({
-    locale: raw,
-    path: "/contact",
-    title: t.meta.contactTitle,
-    description: t.meta.contactDescription,
-  });
+  return buildMarketingMetadata("contact", raw);
 }
 
 const contactEmail =

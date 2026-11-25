@@ -1,30 +1,37 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
 import {
   LOCALE_META,
   MARKETING_LOCALE_COOKIE,
   SUPPORTED_LOCALES,
-  isAppLocale,
   stripLocalePrefix,
   type AppLocale,
-  withLocale,
 } from "@/lib/marketing/locale";
+import { alternateHref, findRouteByPath } from "@/lib/marketing/routes";
 
 type Props = {
   locale: AppLocale;
   label: string;
 };
 
-function writeMarketingLocaleCookie(next: AppLocale) {
+function rememberLocale(next: AppLocale) {
   document.cookie = `${MARKETING_LOCALE_COOKIE}=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
 }
 
+/**
+ * Links to the same page in every language. They are in the server HTML even while the
+ * menu is closed, so crawlers can follow them. Full page loads on purpose: the proxy has
+ * to see the cookie set by the click.
+ */
 export function LanguageSwitcher({ locale, label }: Props) {
-  const router = useRouter();
-  const pathname = usePathname() || "/";
+  // `/faq` in the browser is prerendered as `/pl/faq`; without the prefix both are the
+  // same route, so server and client render the same links.
+  const path = stripLocalePrefix(usePathname() || "/");
+  const routeId = findRouteByPath(path)?.id ?? null;
+
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId();
@@ -46,66 +53,57 @@ export function LanguageSwitcher({ locale, label }: Props) {
     };
   }, [open]);
 
-  const switchTo = (next: AppLocale) => {
-    setOpen(false);
-    if (next === locale) return;
-    writeMarketingLocaleCookie(next);
-    const rest = stripLocalePrefix(pathname);
-    router.push(withLocale(next, rest));
-  };
-
   return (
     <div className="mkt-lang" ref={rootRef}>
       <button
         type="button"
         className="mkt-lang-btn"
-        aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}
-        aria-label={label}
+        aria-label={`${label}: ${current.nativeName} (${locale.toUpperCase()})`}
         onClick={() => setOpen((v) => !v)}
       >
         <span className="mkt-lang-flag" aria-hidden>
           {current.emoji}
         </span>
-        <span className="mkt-lang-code">{locale.toUpperCase()}</span>
+        <span className="mkt-lang-code" aria-hidden>
+          {locale.toUpperCase()}
+        </span>
         <span className="mkt-lang-chevron" aria-hidden>
           ▾
         </span>
       </button>
 
-      {open ? (
-        <ul
-          id={listId}
-          className="mkt-lang-menu"
-          role="listbox"
-          aria-label={label}
-        >
-          {SUPPORTED_LOCALES.map((item) => {
-            const selected = item.id === locale;
-            return (
-              <li key={item.id} role="option" aria-selected={selected}>
-                <button
-                  type="button"
-                  className={
-                    selected ? "mkt-lang-option is-active" : "mkt-lang-option"
-                  }
-                  onClick={() => {
-                    if (!isAppLocale(item.id)) return;
-                    switchTo(item.id);
-                  }}
-                >
-                  <span aria-hidden>{item.emoji}</span>
-                  <span className="mkt-lang-option-name">{item.nativeName}</span>
-                  <span className="mkt-lang-option-code">
-                    {item.id.toUpperCase()}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
+      <ul
+        id={listId}
+        className="mkt-lang-menu"
+        aria-label={label}
+        hidden={!open}
+      >
+        {SUPPORTED_LOCALES.map((item) => {
+          const selected = item.id === locale;
+          return (
+            <li key={item.id}>
+              <a
+                href={alternateHref(routeId, item.id)}
+                hrefLang={item.id}
+                lang={item.id}
+                aria-current={selected ? "true" : undefined}
+                className={
+                  selected ? "mkt-lang-option is-active" : "mkt-lang-option"
+                }
+                onClick={() => rememberLocale(item.id)}
+              >
+                <span aria-hidden>{item.emoji}</span>
+                <span className="mkt-lang-option-name">{item.nativeName}</span>
+                <span className="mkt-lang-option-code" aria-hidden>
+                  {item.id.toUpperCase()}
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
