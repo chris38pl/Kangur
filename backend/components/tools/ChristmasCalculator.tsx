@@ -21,7 +21,6 @@ import {
   PEOPLE,
   PRESETS,
   PRODUCTS,
-  WHEN,
   activePreset,
   applyPreset,
   christmasList,
@@ -35,6 +34,7 @@ import {
   planChanges,
   readPlan,
   staying,
+  tripsOn,
   type ChristmasPlan,
   type Dish,
   type DishPlan,
@@ -46,6 +46,7 @@ import { strings } from "@/lib/marketing/lists/stored";
 import { useArrival } from "@/lib/marketing/lists/use-arrival";
 import { hasStored, readStored, useHydrated, useStored } from "@/lib/marketing/lists/use-stored";
 import { typesetCopy } from "@/lib/marketing/typography";
+import { useToday } from "@/lib/marketing/use-today";
 
 import styles from "./Calculator.module.css";
 
@@ -65,12 +66,15 @@ const PATH = "/wigilia";
 const URL = `https://www.getkangur.com${PATH}`;
 
 function verdict(count: number, people: number): string {
-  if (count === 0) return "Bez Wigilii. Zostają cztery dni, kiedy duże sklepy śpią.";
-  if (people <= 3 && count > 8) return "Na tak mały stół sześć dań to i tak uczta.";
-  if (count < 12) return "Dwanaście to zwyczaj, a nie kontrola.";
-  if (count === 12) return "Dwanaście. Tradycja policzona.";
-  return "Więcej niż dwanaście. Ktoś będzie jadł na stojąco.";
+  if (count === 0) return "Bez Wigilii. Zostają śniadania i obiady na cztery dni.";
+  if (people <= 3 && count > 8) return "Na tak mały stół wystarczy sześć dań.";
+  if (count < 12) return "Dwanaście to zwyczaj, nie obowiązek.";
+  if (count === 12) return "Dwanaście, jak w tradycji.";
+  return "Więcej niż dwanaście, więc porcje mogą być mniejsze.";
 }
+
+const sameTicks = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((id) => b.includes(id));
 
 export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
   const [plan, setPlan, reset] = useStored<ChristmasPlan>(PLAN_KEY, DEFAULT_PLAN, readPlan);
@@ -82,7 +86,8 @@ export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
     done: readonly string[];
     by: "preset" | "reset" | "code";
   } | null>(null);
-  const [arrived, setArrived] = useState(false);
+  /** Grows with every list that comes from a computer, back to zero after a change by hand. */
+  const [arrival, setArrival] = useState(0);
   const presetsRef = useRef<HTMLDivElement>(null);
   const resetRef = useRef<HTMLButtonElement>(null);
   const listId = useId();
@@ -92,6 +97,7 @@ export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
   /** A change by hand: from now on there is nothing to go back to. */
   const change = (next: ChristmasPlan) => {
     setBefore(null);
+    setArrival(0);
     setPlan(next);
   };
   const undo = () => {
@@ -99,23 +105,23 @@ export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
     setPlan(before.plan);
     setDone(before.done);
     setBefore(null);
-    setArrived(false);
+    setArrival(0);
     if (before.by === "preset") presetsRef.current?.querySelector("button")?.focus();
     if (before.by === "reset") resetRef.current?.focus();
   };
 
   useArrival((list) => {
     const next = readPlan(list.p);
+    const nextDone = unpackTicks(list.d, christmasList(next).map((line) => line.id));
     const here = readStored(PLAN_KEY, DEFAULT_PLAN, readPlan);
-    const same = JSON.stringify(planChanges(here)) === JSON.stringify(planChanges(next));
-    setBefore(
-      hasStored(PLAN_KEY) && !same
-        ? { plan: here, done: readStored(DONE_KEY, NOTHING_DONE, strings), by: "code" }
-        : null,
-    );
+    const hereDone = readStored(DONE_KEY, NOTHING_DONE, strings);
+    const same =
+      JSON.stringify(planChanges(here)) === JSON.stringify(planChanges(next)) && sameTicks(hereDone, nextDone);
+    // Whatever was set on this phone can come back, ticks included.
+    setBefore((hasStored(PLAN_KEY) || hereDone.length > 0) && !same ? { plan: here, done: hereDone, by: "code" } : null);
     setPlan(next);
-    setDone(unpackTicks(list.d, christmasList(next).map((line) => line.id)));
-    setArrived(true);
+    setDone(nextDone);
+    setArrival((count) => count + 1);
   });
 
   const lines = useMemo(() => christmasList(plan), [plan]);
@@ -131,6 +137,8 @@ export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
   const toBuy = left > 0 ? lines.filter((line) => !doneSet.has(line.id)) : lines;
   const going = new Set(toBuy.map((line) => line.id));
   const total = plural(lines.length, "produkt", "produkty", "produktów");
+  // A date that has passed becomes the next trip.
+  const trips = tripsOn(useToday());
 
   const groups: LineGroup[] = (
     view === "aisles"
@@ -140,11 +148,11 @@ export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
           icon: AISLE_ICONS[aisle],
           lines: lines.filter((line) => line.aisle === aisle),
         }))
-      : WHEN.map(({ id, title: name, hint }): LineGroup => ({
+      : trips.map(({ id, title: name, hint, covers }): LineGroup => ({
           key: id,
           title: name,
           hint,
-          lines: lines.filter((line) => line.when === id),
+          lines: lines.filter((line) => covers.includes(line.when)),
         }))
   ).filter((group) => group.lines.length > 0);
 
@@ -153,8 +161,9 @@ export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
     groups.map((group) => ({ title: group.title, lines: group.lines.filter((line) => going.has(line.id)) })),
   );
   const home = staying(plan);
-  const { trips, whole } = christmasTrips(plan, toBuy);
+  const parts = christmasTrips(plan, toBuy, trips);
   const guests = count > 0 ? plan.people : plan.home;
+  const ownOnly = plan.own.filter((dish) => dish.plan === "make").map((dish) => dish.name.toLocaleLowerCase("pl"));
 
   return (
     <>
@@ -219,6 +228,7 @@ export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
                   onClick={() => {
                     // Two presets in a row still go back to what was set by hand.
                     setBefore(before?.by === "preset" ? before : { plan, done, by: "preset" });
+                    setArrival(0);
                     setPlan(applyPreset(plan, id));
                   }}
                 >
@@ -321,6 +331,7 @@ export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
               className={styles.plainButton}
               onClick={() => {
                 setBefore({ plan, done, by: "reset" });
+                setArrival(0);
                 reset();
                 clearDone();
               }}
@@ -336,7 +347,7 @@ export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
         </form>
 
         <div className={styles.result} id={listId} tabIndex={-1}>
-          <div className={styles.sheet}>
+          <div>
             <div className={styles.resultHead}>
               <h2>{title}</h2>
               {lines.length > 0 ? (
@@ -364,38 +375,40 @@ export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
             />
             {lines.length > 0 ? <HopBar count={toBuy.length} /> : null}
           </div>
-
-          <div className={styles.family}>
-            <h3>Wiadomość do rodziny</h3>
-            {message ? (
-              <FamilyMessage text={message} />
-            ) : (
-              <p>
-                Przy daniach, które ktoś przyniesie, ustaw „Ktoś przynosi”. Ułożymy wiadomość do
-                rodziny.
-              </p>
-            )}
-          </div>
         </div>
       </div>
 
       {lines.length > 0 ? (
         <ToKangur
-          line={count === 0 ? "Oto cztery dni bez sklepu." : plan.people === 1 ? "Oto Twoje dania." : "Oto Wasze dania."}
-          chips={ours}
+          lines={
+            count === 0
+              ? [home === 1 ? "Oto Twój zapas." : "Oto Wasz zapas.", HANDOFF.loadIt]
+              : [plan.people === 1 ? "Oto Twoje dania." : "Oto Wasze dania.", HANDOFF.loadThem]
+          }
+          chips={[...new Set(ours)].map((text) => ({ text }))}
           summary={typesetCopy([
-            ...(bring.length > 0 ? [`Przynoszą: ${bring.join(", ")}.`] : []),
+            ...(bring.length > 0 ? [`Do przyniesienia: ${bring.join(", ")}.`] : []),
+            ...(ownOnly.length > 0
+              ? [`Składników własnych dań nie znamy: ${ownOnly.join(", ")}. W Kangurze dodasz je przez „Z przepisu”.`]
+              : []),
             `Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")} na ${plural(guests, "osobę", "osoby", "osób")}.`,
           ])}
-          trips={trips}
-          whole={whole}
-          intro={HANDOFF.copy.trips[trips.length]}
-          ticked={left > 0 && left < lines.length}
+          trips={parts.trips}
+          whole={parts.whole}
+          intro={HANDOFF.copy.trips[parts.trips.length]}
+          ticked={left === 0 ? "all" : left < lines.length ? "some" : "none"}
           share={{ title, text, url: URL }}
           path={PATH}
           list={{ p: planChanges(plan), d: packTicks(lines.map((line) => line.id), doneSet) }}
-          inviteTitle={HANDOFF.invite.titleFamily}
-          arrived={arrived}
+          store={PLAN_KEY}
+          family={
+            <>
+              <h4>{HANDOFF.family.title}</h4>
+              <p>{HANDOFF.family.body}</p>
+              {message ? <FamilyMessage text={message} /> : <p>{HANDOFF.family.empty}</p>}
+            </>
+          }
+          arrival={arrival}
           onBack={before?.by === "code" ? undo : undefined}
           slots={slots}
         />
@@ -413,7 +426,7 @@ function FamilyMessage({ text }: { text: string }) {
       <div className={styles.familyShare}>
         <ShareButton label="Wyślij rodzinie" title="Wigilia" text={text} onRefused={() => void copy(text)} />
         <p role="status" className={styles.small}>
-          {state === "copied" ? "Wysyłanie się nie otworzyło, więc wiadomość jest skopiowana." : null}
+          {state === "copied" ? "Nie udało się otworzyć wysyłania. Wiadomość jest skopiowana, wklej ją rodzinie." : null}
         </p>
       </div>
     </>
@@ -522,7 +535,7 @@ function OwnDishes({
             ))}
           </ul>
           <p className={styles.small}>
-            Składników nie znamy. Zna je Kangur: wpisz nazwę w „Z przepisu”.
+            Składników nie znamy. W Kangurze wpisz nazwę w „Z przepisu”, a zaproponuje składniki.
           </p>
         </>
       ) : null}

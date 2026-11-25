@@ -7,7 +7,7 @@ const copy: TopicCopy = {
   lines: ["Wklej bałagan.", "Wyjmij alejki."],
   lead: [
     "Wklej listę z wiadomości albo notatki, a narzędzie podzieli ją na alejki: od owoców po sprzątanie. Kolejność ustawisz jak w swoim sklepie.",
-    "Działa w przeglądarce, bez konta, a lista nie opuszcza Twojego urządzenia. Gdy alejki się zgadzają, hop z nią do Kangura.",
+    "Działa w przeglądarce, bez konta, a lista zostaje na Twoim urządzeniu. Gdy alejki się zgadzają, wczytaj ją do aplikacji Kangur.",
   ],
   sections: [
     {
@@ -28,8 +28,8 @@ const copy: TopicCopy = {
           body: "Strzałkami przy alejkach. Nabiał na końcu, jeśli w Twoim sklepie stoi na końcu.",
         },
         {
-          title: "Hop do Kangura",
-          body: "Skopiuj listę, w aplikacji stuknij „Schowek” i zaproś resztę domu. Odhaczacie już razem.",
+          title: "Wczytaj do Kangura",
+          body: "Skopiuj listę, w aplikacji stuknij „Schowek” i zaproś domowników. Od tej pory macie jedną listę.",
         },
       ],
     },
@@ -60,7 +60,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Czy moja lista jest gdzieś wysyłana?",
-          a: "Nie. Narzędzie działa w przeglądarce, a lista zapisuje się tylko na tym urządzeniu. „Wyczyść” usuwa ją także stamtąd, a „Zapomnij poprawki” kasuje zapamiętane alejki.",
+          a: "Nie. Narzędzie działa w przeglądarce, a lista zapisuje się tylko na tym urządzeniu. „Wyczyść” usuwa ją także stamtąd, a „Zapomnij poprawki” kasuje zapamiętane alejki. Dopiero gdy wczytasz ją w Kangurze, tekst czyta AI, tak jak opisuje [[safety|strona o bezpieczeństwie]].",
         },
         {
           q: "Skąd wiadomo, co do której alejki?",
@@ -72,7 +72,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Czy mogę przenieść tę listę do Kangura?",
-          a: "Tak, po to jest. Skopiuj ją i na ekranie Start w aplikacji stuknij „Schowek”. To jedno użycie AI. Przy komputerze zeskanuj kod, ta sama lista otworzy się w telefonie.",
+          a: "Tak, po to jest. Skopiuj ją i na ekranie Start w aplikacji stuknij „Schowek”. Przejdą produkty i ilości, a kolejność alejek ustawisz w Kangurze. To jedno użycie AI. Przy komputerze zeskanuj kod, ta sama lista otworzy się w telefonie.",
         },
       ],
     },

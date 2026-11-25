@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 
-import { HopBar, ToKangur, type KangurSlots } from "@/components/tools/ToKangur";
+import { HopBar, HopButton, ToKangur, type KangurSlots } from "@/components/tools/ToKangur";
 import { AISLES, AISLE_ICONS, AISLE_LABELS, isAisle, type Aisle } from "@/lib/marketing/aisles/labels";
 import {
   buildAisleIndex,
@@ -25,7 +25,7 @@ import { KANGUR_LIMIT, kangurParts } from "@/lib/marketing/lists/parts";
 import { isRecord, strings } from "@/lib/marketing/lists/stored";
 import { useArrival } from "@/lib/marketing/lists/use-arrival";
 import { hasStored, readStored, useStored } from "@/lib/marketing/lists/use-stored";
-import { typesetPl } from "@/lib/marketing/typography";
+import { typesetCopy } from "@/lib/marketing/typography";
 import { mergeActiveCategoryOrder, resolveShoppingCategoryOrder } from "@shared/shopping-categories";
 
 import styles from "./AisleTool.module.css";
@@ -108,9 +108,20 @@ export function AisleTool({
   const [order, setOrder, clearOrder] = useStored(ORDER_KEY, NO_ORDER, readOrder);
   const [moves, setMoves, clearMoves] = useStored(MOVES_KEY, NO_MOVES, readMoves);
   const [done, setDone, clearDone] = useStored(DONE_KEY, NO_DONE, strings);
-  const [arrived, setArrived] = useState(false);
-  /** The list that was here before a code was scanned. */
-  const [before, setBefore] = useState<{ text: string; done: readonly string[] } | null>(null);
+  /** Grows with every list that comes from a computer, back to zero after a change by hand. */
+  const [arrival, setArrival] = useState(0);
+  /** Everything that was here before a code was scanned. */
+  const [before, setBefore] = useState<{
+    text: string;
+    done: readonly string[];
+    order: readonly Aisle[];
+    moves: Readonly<Record<string, Aisle>>;
+  } | null>(null);
+  /** Typing, clearing or the sample: the list is now this person's own. */
+  const byHand = () => {
+    setArrival(0);
+    setBefore(null);
+  };
   // Typing stays quick on a phone, the aisles follow a moment later.
   const deferred = useDeferredValue(text);
 
@@ -141,15 +152,18 @@ export function AisleTool({
   useArrival((list) => {
     if (typeof list.t !== "string" || !list.t.trim()) return;
     const next = list.t.slice(0, KANGUR_LIMIT);
-    const here = readStored(TEXT_KEY, NO_TEXT, readText);
-    setBefore(
-      here.trim() && here !== next ? { text: here, done: readStored(DONE_KEY, NO_DONE, strings) } : null,
-    );
+    const here = {
+      text: readStored(TEXT_KEY, NO_TEXT, readText),
+      done: readStored(DONE_KEY, NO_DONE, strings),
+      order: readStored(ORDER_KEY, NO_ORDER, readOrder),
+      moves: readStored(MOVES_KEY, NO_MOVES, readMoves),
+    };
+    setBefore(here.text.trim() && (here.text !== next || here.done.length > 0) ? here : null);
     setText(next);
     clearDone();
     if (Array.isArray(list.o)) setOrder(readOrder(list.o.map((place) => AISLES[place])));
-    if (list.m) setMoves({ ...readStored(MOVES_KEY, NO_MOVES, readMoves), ...readMoves(list.m) });
-    setArrived(true);
+    if (list.m) setMoves({ ...here.moves, ...readMoves(list.m) });
+    setArrival((count) => count + 1);
   });
 
   const index = useMemo(
@@ -237,6 +251,7 @@ export function AisleTool({
             id={fieldId}
             value={text}
             onChange={(event) => {
+              byHand();
               setText(event.target.value);
               // An empty field is a new list, and last week's ticks are not for it.
               if (!event.target.value.trim()) clearDone();
@@ -266,6 +281,7 @@ export function AisleTool({
               <button
                 type="button"
                 onClick={() => {
+                  byHand();
                   setCleared({ text, done });
                   clearText();
                   clearDone();
@@ -279,6 +295,7 @@ export function AisleTool({
                 <button
                   type="button"
                   onClick={() => {
+                    byHand();
                     setText(sample);
                     clearDone();
                     focusResult();
@@ -290,6 +307,7 @@ export function AisleTool({
                   <button
                     type="button"
                     onClick={() => {
+                      byHand();
                       setText(cleared.text);
                       setDone(cleared.done);
                       setCleared(null);
@@ -318,6 +336,7 @@ export function AisleTool({
               {summary(items.length, groups.length, unknown)}
               {ticked > 0 ? ` Zostało ${left} z ${items.length}.` : null}
             </p>
+            {items.length > 0 ? <HopButton /> : null}
             <div className={styles.resets}>
               {ticked > 0 ? (
                 <button
@@ -433,12 +452,20 @@ export function AisleTool({
 
       {items.length > 0 ? (
         <ToKangur
-          line="Oto Twoje alejki."
-          chips={groupsToBuy.map(({ aisle, lines }) => `${AISLE_ICONS[aisle]} ${AISLE_LABELS[aisle]} ${lines.length}`)}
-          summary={[typesetPl(`Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")}.`)]}
+          lines={["Oto Twoje alejki.", HANDOFF.loadThem]}
+          chips={groupsToBuy.map(({ aisle, lines }) => ({
+            icon: AISLE_ICONS[aisle],
+            text: `${AISLE_LABELS[aisle]}: ${lines.length}`,
+          }))}
+          summary={typesetCopy([
+            `Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")}.`,
+            ...(changedOrder || corrections > 0
+              ? ["Kangur ułoży produkty w te same 24 alejki. Swoją kolejność ustawisz w nim jeszcze raz."]
+              : []),
+          ])}
           trips={trips}
           intro={HANDOFF.copy.parts}
-          ticked={ticked > 0 && left > 0}
+          ticked={ticked === 0 ? "none" : left > 0 ? "some" : "all"}
           share={{
             title: TITLE,
             text: listToText(TITLE, groupsToBuy.map(({ aisle, lines }) => ({ title: AISLE_LABELS[aisle], lines }))),
@@ -450,14 +477,17 @@ export function AisleTool({
             ...(changedOrder ? { o: order.map((aisle) => AISLES.indexOf(aisle)) } : {}),
             ...(Object.keys(movedHere).length > 0 ? { m: movedHere } : {}),
           }}
-          arrived={arrived}
+          store="alejki"
+          arrival={arrival}
           onBack={
             before
               ? () => {
                   setText(before.text);
                   setDone(before.done);
+                  setOrder(before.order);
+                  setMoves(before.moves);
                   setBefore(null);
-                  setArrived(false);
+                  setArrival(0);
                 }
               : undefined
           }

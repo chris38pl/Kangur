@@ -6,11 +6,20 @@ import { isRecord } from "@/lib/marketing/lists/stored";
  * anything found in the browser: the tools read it with the same functions as their own notes.
  */
 const MARK = "#k=";
+/** The longest address that still makes a code a phone reads (version 22, see qr/encode.ts). */
+export const QR_LIMIT = 1003;
 /** Far more than fits a code. Somebody has to have written it by hand. */
 const LONGEST = 6000;
 
 const isEmpty = (value: unknown) =>
   typeof value === "object" && value !== null && Object.keys(value).length === 0;
+
+/**
+ * Takes a list out of the address before Next.js starts. Otherwise the router keeps the long
+ * address, puts it back on the next link to the same page, and a reload applies the list from
+ * the computer again over the changes made on the phone.
+ */
+export const TAKE_LIST_EARLY = `(function(){var h=location.hash;if(h.slice(0,3)==="#k="){window.__kangurList=h;history.replaceState(history.state,"",location.pathname+location.search)}})()`;
 
 /** Empty parts stay behind: the shorter the code, the easier it is to scan. */
 export function packList(list: Record<string, unknown>): string {

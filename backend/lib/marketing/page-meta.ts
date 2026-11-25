@@ -156,7 +156,7 @@ const PAGE_META: Record<
     pl: {
       title: "Lista zakupów z podziałem na kategorie - wklej swoją",
       description:
-        "Wklej listę zakupów, a narzędzie ułoży ją według 24 kategorii w kolejności sklepu. Za darmo, bez konta, w przeglądarce. Potem hop z nią do Kangura.",
+        "Wklej listę zakupów, a narzędzie ułoży ją według 24 kategorii w kolejności sklepu. Za darmo, bez konta. Gotową listę wczytasz do aplikacji Kangur.",
     },
   },
   tools: {

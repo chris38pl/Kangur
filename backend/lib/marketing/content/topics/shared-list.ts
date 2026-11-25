@@ -33,7 +33,7 @@ const copy: TopicCopy = {
         },
         {
           title: "Zaproś domowników",
-          body: "W zakładce „Przestrzeń”, pod „Zaproś do listy”, wpisz e-mail i stuknij „Wyślij zaproszenie”. Robi to właściciel przestrzeni. Druga osoba najpierw instaluje Kangura i zakłada konto na ten sam e-mail, bo zaproszenie otwiera się w aplikacji. Jest ważne 7 dni i tylko dla tego adresu.",
+          body: "W zakładce „Przestrzeń”, pod „Zaproś do listy”, wpisz e-mail i stuknij „Wyślij zaproszenie”. Robi to właściciel przestrzeni albo admin. Druga osoba najpierw instaluje Kangura i zakłada konto na ten sam e-mail, bo zaproszenie otwiera się w aplikacji. Jest ważne 7 dni i tylko dla tego adresu.",
         },
         {
           title: "Dopisujcie po swojemu",

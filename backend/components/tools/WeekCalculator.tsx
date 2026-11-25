@@ -23,20 +23,22 @@ import {
   type Trip,
   type WeekPlan,
 } from "@/lib/marketing/lists/week";
-import { typesetCopy, typesetPl } from "@/lib/marketing/typography";
+import { typesetCopy } from "@/lib/marketing/typography";
 
 import styles from "./Calculator.module.css";
 
-const TRIPS = typesetCopy<readonly { id: Trip; title: string; short: string; hint: string }[]>([
-  { id: "main", title: "Duże zakupy", short: "Duże zakupy", hint: "W wolny dzień. Ciężkie i trwałe." },
-  { id: "topup", title: "Dokupka", short: "Dokupka", hint: "Kilka dni później. Świeże, na krótko." },
+const TRIPS = typesetCopy<readonly { id: Trip; title: string; hint: string }[]>([
+  { id: "main", title: "Duże zakupy", hint: "W wolny dzień. Ciężkie i trwałe." },
+  { id: "topup", title: "Dokupka", hint: "Kilka dni później. Świeże, na krótko." },
   {
     id: "cupboard",
     title: "Najpierw sprawdź szafkę",
-    short: "Może stoi w szafce",
-    hint: "Starcza na dłużej niż tydzień. Czego nie odhaczysz, kupisz przy dużych zakupach.",
+    hint: "Starcza na dłużej niż tydzień. Czego nie zaznaczysz, trafi na duże zakupy.",
   },
 ]);
+
+const sameTicks = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((id) => b.includes(id));
 
 const PRESETS: readonly { label: string; people: number }[] = [
   { label: "Jedna osoba", people: 1 },
@@ -55,23 +57,31 @@ export function WeekCalculator({ slots }: { slots: KangurSlots }) {
   const [plan, setPlan, reset] = useStored<WeekPlan>(PLAN_KEY, DEFAULT_WEEK, readWeek);
   const [done, setDone, clearDone] = useStored(DONE_KEY, NOTHING_DONE, strings);
   const [view, setView] = useState<"trips" | "aisles">("trips");
-  const [arrived, setArrived] = useState(false);
+  /** Grows with every list that comes from a computer, back to zero after a change by hand. */
+  const [arrival, setArrival] = useState(0);
   /** The week that was here before a code was scanned. */
   const [before, setBefore] = useState<{ plan: WeekPlan; done: readonly string[] } | null>(null);
   const listId = useId();
   // Until the page comes alive a choice would be lost, so the form waits.
   const ready = useHydrated();
 
+  /** A change by hand: from now on there is nothing to go back to. */
+  const change = (next: WeekPlan) => {
+    setBefore(null);
+    setArrival(0);
+    setPlan(next);
+  };
+
   useArrival((list) => {
     const next = readWeek(list.p);
+    const nextDone = unpackTicks(list.d, weekList(next).map((line) => line.id));
     const here = readStored(PLAN_KEY, DEFAULT_WEEK, readWeek);
-    const same = JSON.stringify(weekChanges(here)) === JSON.stringify(weekChanges(next));
-    setBefore(
-      hasStored(PLAN_KEY) && !same ? { plan: here, done: readStored(DONE_KEY, NOTHING_DONE, strings) } : null,
-    );
+    const hereDone = readStored(DONE_KEY, NOTHING_DONE, strings);
+    const same = JSON.stringify(weekChanges(here)) === JSON.stringify(weekChanges(next)) && sameTicks(hereDone, nextDone);
+    setBefore((hasStored(PLAN_KEY) || hereDone.length > 0) && !same ? { plan: here, done: hereDone } : null);
     setPlan(next);
-    setDone(unpackTicks(list.d, weekList(next).map((line) => line.id)));
-    setArrived(true);
+    setDone(nextDone);
+    setArrival((count) => count + 1);
   });
 
   const lines = useMemo(() => weekList(plan), [plan]);
@@ -105,14 +115,17 @@ export function WeekCalculator({ slots }: { slots: KangurSlots }) {
     title,
     groups.map((group) => ({ title: group.title, lines: group.lines.filter((line) => going.has(line.id)) })),
   );
-  const ofTrip = (trip: Trip) => toBuy.filter((line) => line.when === trip).length;
-  const cooked =
-    plan.dinners === 0
-      ? "bez obiadów w domu"
-      : `z czego wyjdzie ${plural(plan.dinners, "obiad", "obiady", "obiadów")}`;
-  const summary = typesetPl(
-    `Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")} na ${plural(plan.people, "osobę", "osoby", "osób")}, ${cooked}.`,
-  );
+  const inCupboard = toBuy.filter((line) => line.when === "cupboard").length;
+  const tens = inCupboard % 100;
+  const may = inCupboard % 10 >= 2 && inCupboard % 10 <= 4 && !(tens >= 12 && tens <= 14) ? "mogą" : "może";
+  const summary = typesetCopy([
+    `Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")} na ${plural(plan.people, "osobę", "osoby", "osób")}${
+      plan.dinners === 0 ? ", bez obiadów w domu" : ` i ${plural(plan.dinners, "obiad", "obiady", "obiadów")}`
+    }.`,
+    ...(inCupboard > 0
+      ? [`Zanim skopiujesz, zajrzyj do szafki. ${plural(inCupboard, "produkt", "produkty", "produktów")} z listy ${may} już tam być.`]
+      : []),
+  ]);
 
   return (
     <>
@@ -129,7 +142,7 @@ export function WeekCalculator({ slots }: { slots: KangurSlots }) {
                   key={preset.people}
                   type="button"
                   aria-pressed={plan.people === preset.people}
-                  onClick={() => setPlan({ ...plan, people: preset.people })}
+                  onClick={() => change({ ...plan, people: preset.people })}
                 >
                   {preset.label}
                 </button>
@@ -141,7 +154,7 @@ export function WeekCalculator({ slots }: { slots: KangurSlots }) {
               value={plan.people}
               unit={people}
               {...WEEK_PEOPLE}
-              onChange={(next) => setPlan({ ...plan, people: next })}
+              onChange={(next) => change({ ...plan, people: next })}
             />
             <Stepper
               label="Obiady w domu"
@@ -149,14 +162,14 @@ export function WeekCalculator({ slots }: { slots: KangurSlots }) {
               value={plan.dinners}
               unit={plural(plan.dinners, "obiad", "obiady", "obiadów")}
               {...WEEK_DINNERS}
-              onChange={(next) => setPlan({ ...plan, dinners: next })}
+              onChange={(next) => change({ ...plan, dinners: next })}
             />
             <div className={styles.checks}>
               <label>
                 <input
                   type="checkbox"
                   checked={plan.meat}
-                  onChange={(event) => setPlan({ ...plan, meat: event.target.checked })}
+                  onChange={(event) => change({ ...plan, meat: event.target.checked })}
                 />
                 <span>Jemy mięso</span>
               </label>
@@ -164,7 +177,7 @@ export function WeekCalculator({ slots }: { slots: KangurSlots }) {
                 <input
                   type="checkbox"
                   checked={plan.cupboard}
-                  onChange={(event) => setPlan({ ...plan, cupboard: event.target.checked })}
+                  onChange={(event) => change({ ...plan, cupboard: event.target.checked })}
                 />
                 <span>
                   Pokaż też zapasy
@@ -177,6 +190,8 @@ export function WeekCalculator({ slots }: { slots: KangurSlots }) {
             type="button"
             className={styles.plainButton}
             onClick={() => {
+              setBefore(null);
+              setArrival(0);
               reset();
               clearDone();
             }}
@@ -186,7 +201,7 @@ export function WeekCalculator({ slots }: { slots: KangurSlots }) {
         </form>
 
         <div className={styles.result} id={listId} tabIndex={-1}>
-          <div className={styles.sheet}>
+          <div>
             <div className={styles.resultHead}>
               <h2>{title}</h2>
               <LeftToBuy total={total} left={left} ticked={lines.length - left} onUntick={clearDone} />
@@ -214,25 +229,25 @@ export function WeekCalculator({ slots }: { slots: KangurSlots }) {
       </div>
 
       <ToKangur
-        line={plan.people === 1 ? "Oto Twój tydzień." : "Oto Wasz tydzień."}
-        chips={TRIPS.map(({ id, short }) => [short, ofTrip(id)] as const)
-          .filter(([, count]) => count > 0)
-          .map(([short, count]) => `${short}: ${count}`)}
-        summary={[summary]}
+        lines={[plan.people === 1 ? "Oto Twój tydzień." : "Oto Wasz tydzień.", HANDOFF.loadIt]}
+        chips={trips.map((part) => ({ text: `${part.label}: ${part.count}` }))}
+        summary={summary}
         trips={trips}
         intro={HANDOFF.copy.trips[trips.length]}
-        ticked={left > 0 && left < lines.length}
+        ticked={left === 0 ? "all" : left < lines.length ? "some" : "none"}
         share={{ title, text, url: URL }}
         path={PATH}
         list={{ p: weekChanges(plan), d: packTicks(lines.map((line) => line.id), doneSet) }}
-        arrived={arrived}
+        store={PLAN_KEY}
+        invite={plan.people === 1 ? HANDOFF.alone : undefined}
+        arrival={arrival}
         onBack={
           before
             ? () => {
                 setPlan(before.plan);
                 setDone(before.done);
                 setBefore(null);
-                setArrived(false);
+                setArrival(0);
               }
             : undefined
         }

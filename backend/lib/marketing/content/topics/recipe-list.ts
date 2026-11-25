@@ -7,7 +7,7 @@ const copy: TopicCopy = {
   lines: ["Dwa dania,", "jedna sól."],
   lead: [
     "Wpisujesz nazwy dań, do pięciu naraz, a Kangur proponuje składniki na jednej liście. Co się powtarza, jest raz. Odznaczasz to, co masz w domu.",
-    "Masz gotowy przepis? Skopiuj składniki i wybierz „Tekst ze schowka”.",
+    "Masz gotowy przepis? Skopiuj składniki i na ekranie Start stuknij „Schowek”.",
   ],
   stores: "Na start 10 darmowych użyć AI, wspólnych dla całego domu. Bez reklam.",
   sections: [
@@ -71,7 +71,7 @@ const copy: TopicCopy = {
       tone: "mint",
       title: "Masz gotowy przepis? Składniki ze schowka na listę",
       body: [
-        "Skopiuj listę składników ze strony albo z notatki i wybierz „Tekst ze schowka”. Kangur wypisze produkty razem z ilościami, które tam są, i rozłoży je po alejkach.",
+        "Skopiuj listę składników ze strony albo z notatki i na ekranie Start stuknij „Schowek”. Kangur wypisze produkty razem z ilościami, które tam są, i rozłoży je po alejkach.",
         "To dobry sposób na przepis babci, w którym mąki jest „ile zabierze”.",
       ],
       slot: "grandma",

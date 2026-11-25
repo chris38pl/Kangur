@@ -45,7 +45,7 @@ export function ChristmasToolPage() {
       <section className={styles.tool}>
         <div className={prose.wrap}>
           {isOver(CHRISTMAS.over) ? over : <AfterSeason after={CHRISTMAS.over}>{over}</AfterSeason>}
-          <ChristmasCalculator slots={kangurSlots("hop-wigilia")} />
+          <ChristmasCalculator slots={kangurSlots("do-kangura-wigilia")} />
         </div>
       </section>
     </TopicPage>

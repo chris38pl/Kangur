@@ -46,7 +46,7 @@ export function AisleToolPage() {
     >
       <section className={styles.tool}>
         <div className={prose.wrap}>
-          <AisleTool words={packWords()} sample={AISLE_SAMPLE} slots={kangurSlots("hop-alejki")} />
+          <AisleTool words={packWords()} sample={AISLE_SAMPLE} slots={kangurSlots("do-kangura-alejki")} />
         </div>
       </section>
     </TopicPage>

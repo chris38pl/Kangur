@@ -15,12 +15,13 @@ import {
   dishPlan,
   planChanges,
   readPlan,
+  tripsOn,
   type ChristmasPlan,
   type Dish,
   type DishPlan,
 } from "@/lib/marketing/lists/christmas";
-import { packList, packTicks, unpackList, unpackTicks } from "@/lib/marketing/lists/handoff";
-import { KANGUR_LIMIT, kangurPart, kangurParts, type KangurPart } from "@/lib/marketing/lists/parts";
+import { QR_LIMIT, packList, packTicks, unpackList, unpackTicks } from "@/lib/marketing/lists/handoff";
+import { KANGUR_LIMIT, kangurPart, kangurParts, oneOfEachName, type KangurPart } from "@/lib/marketing/lists/parts";
 import { DEFAULT_WEEK, readWeek, weekChanges, weekList, weekTrips, type WeekPlan } from "@/lib/marketing/lists/week";
 
 /** The same plans on every run. */
@@ -165,11 +166,11 @@ test("a week is two lists, because milk is on both", () => {
 });
 
 test("text for Kangur has a name and products, nothing else", () => {
-  const part = kangurPart("x", "Dokupka", "Małe zakupy w tygodniu", [
+  const part = kangurPart("x", "Dokupka", "Dokupka w tygodniu", [
     { name: "Mleko", quantity: "2 l" },
     { name: "Chleb", quantity: "1 kg", note: "krojony" },
   ]);
-  assert.equal(part.text, "Małe zakupy w tygodniu\n- Mleko 2 l\n- Chleb 1 kg (krojony)");
+  assert.equal(part.text, "Dokupka w tygodniu\n- Mleko 2 l\n- Chleb 1 kg (krojony)");
   assert.equal(part.count, 2);
 });
 
@@ -185,4 +186,49 @@ test("a very long list is taken in several goes", () => {
   const [short] = kangurParts("Lista zakupów", lines.slice(0, 3));
   assert.equal(short.text.split("\n")[0], "Lista zakupów");
   assert.deepEqual(kangurParts("Lista zakupów", []), []);
+});
+
+test("a date that has passed becomes the next trip", () => {
+  // Typesetting keeps "i" with the next word, the test reads ordinary spaces.
+  const titles = (today: string | null) =>
+    tripsOn(today).map((trip) => `${trip.title.replace(/\s/gu, " ")}=${trip.covers.join("+")}`);
+  const early = "Do 13 grudnia=early";
+  assert.deepEqual(titles(null), [early, "19 i 20 grudnia=weekend", "22 i 23 grudnia=last"]);
+  assert.deepEqual(titles("2026-12-13"), titles(null));
+  assert.deepEqual(titles("2026-12-14"), ["Najbliższe zakupy=early", "19 i 20 grudnia=weekend", "22 i 23 grudnia=last"]);
+  assert.deepEqual(titles("2026-12-21"), ["Najbliższe zakupy=early+weekend", "22 i 23 grudnia=last"]);
+  for (const today of [null, "2026-12-16", "2026-12-22"]) {
+    const lines = christmasList(DEFAULT_PLAN);
+    const { trips } = christmasTrips(DEFAULT_PLAN, lines, tripsOn(today));
+    assert.equal(trips.reduce((sum, part) => sum + part.count, 0), lines.length, String(today));
+    for (const part of trips) {
+      assertFitsKangur(part);
+      assertNothingDropped(part);
+    }
+  }
+  const later = christmasTrips(DEFAULT_PLAN, christmasList(DEFAULT_PLAN), tripsOn("2026-12-16")).trips[0];
+  assert.match(later.text, /^Najbliższe zakupy na święta\n/);
+});
+
+test("a name typed twice goes to Kangur once, with both amounts", () => {
+  const merged = oneOfEachName([
+    { name: "Mleko", quantity: "1 l" },
+    { name: "Chleb" },
+    { name: "mleko", quantity: "2 l" },
+    { name: "Mleko" },
+    { name: "Chleb", quantity: null },
+  ]);
+  assert.deepEqual(merged, [
+    { name: "Mleko", quantity: "1 l + 2 l", note: null },
+    { name: "Chleb", quantity: null, note: null },
+  ]);
+  const [part] = kangurParts("Lista zakupów", [{ name: "Mleko", quantity: "1 l" }, { name: "Mleko", quantity: "2 l" }]);
+  assert.equal(part.text, "Lista zakupów\n- Mleko 1 l + 2 l");
+  assert.equal(part.count, 1);
+});
+
+test("the address limit matches the largest code", async () => {
+  const { encodeQr } = await import("@/lib/marketing/qr/encode");
+  assert.ok(encodeQr("x".repeat(QR_LIMIT)));
+  assert.equal(encodeQr("x".repeat(QR_LIMIT + 1)), null);
 });

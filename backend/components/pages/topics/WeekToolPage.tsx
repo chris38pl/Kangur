@@ -37,7 +37,7 @@ export function WeekToolPage() {
     >
       <section className={styles.tool}>
         <div className={prose.wrap}>
-          <WeekCalculator slots={kangurSlots("hop-tydzien")} />
+          <WeekCalculator slots={kangurSlots("do-kangura-tydzien")} />
         </div>
       </section>
     </TopicPage>

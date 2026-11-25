@@ -23,6 +23,7 @@ import {
   type MarketingRouteId,
 } from "@/lib/marketing/routes";
 import { CHRISTMAS } from "@/lib/marketing/lists/christmas";
+import { printingIn } from "@/lib/marketing/no-printing";
 import { hreflangAlternates } from "@/lib/marketing/seo";
 import { IS_PRODUCTION_SITE, PRODUCTION_HOST, SITE_URL, absoluteUrl } from "@/lib/marketing/site";
 
@@ -216,10 +217,8 @@ for (const { id, locale, href, html } of pages) {
     const at = text.search(/[–—]/);
     fail(href, `en or em dash in copy: "...${text.slice(Math.max(0, at - 30), at + 30)}..."`);
   }
-  // A list in Kangur is shared and ticked with a thumb. Paper is the opposite of the app.
-  const paper = /\b(?:wy)?druk(?:uj\w*|owa\w*|u|iem)?\b|\bPDF\b/iu.exec(
-    locale === "pl" ? text.replace(/małym drukiem/giu, "") : "",
-  );
+  // Text that only the browser draws is checked in the sources, by no-printing.test.ts.
+  const paper = locale === "pl" ? printingIn(text) : null;
   if (paper && !["press", "privacy", "terms"].includes(id)) {
     fail(href, `printing in copy: "...${text.slice(Math.max(0, paper.index - 30), paper.index + 30)}..."`);
   }

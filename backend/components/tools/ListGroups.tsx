@@ -79,7 +79,7 @@ export function LeftToBuy({
     <div className={styles.left}>
       <p ref={textRef} tabIndex={-1} aria-live="polite">
         {ticked === 0
-          ? `${total} do kupienia. Co masz w domu, odhacz i nie kupuj.`
+          ? `${total} do kupienia. Zaznacz, co masz w domu.`
           : `Zostało ${left} z ${left + ticked}.`}
       </p>
       {ticked > 0 ? (

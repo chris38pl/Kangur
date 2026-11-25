@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import Script from "next/script";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -11,6 +12,7 @@ import {
 import { MarketingNav, MobileMenu } from "@/components/marketing/MarketingNav";
 import { SiteFonts } from "@/components/marketing/SiteFonts";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
+import { HashHistory } from "@/components/marketing/HashHistory";
 import { UtmCapture } from "@/components/marketing/UtmCapture";
 import {
   APP_LOCALE_IDS,
@@ -18,6 +20,7 @@ import {
   isAppLocale,
   withLocale,
 } from "@/lib/marketing/locale";
+import { TAKE_LIST_EARLY } from "@/lib/marketing/lists/handoff";
 import { getMessages } from "@/lib/marketing/messages";
 import { headerLinks } from "@/lib/marketing/navigation";
 import { pageMeta } from "@/lib/marketing/page-meta";
@@ -92,9 +95,14 @@ export default async function LocaleLayout({
     // Anchors glide, page changes do not.
     <html lang={locale} data-scroll-behavior="smooth">
       <body>
+        {/* A list from a code on a computer, before the router reads the address. */}
+        <Script id="lista-z-kodu" strategy="beforeInteractive">
+          {TAKE_LIST_EARLY}
+        </Script>
         <SiteFonts locale={locale} />
         <div className="mkt-shell">
           <UtmCapture />
+          <HashHistory />
           <a className="mkt-skip" href="#tresc">
             {t.skip}
           </a>

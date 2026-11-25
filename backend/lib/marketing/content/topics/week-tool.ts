@@ -4,10 +4,10 @@ import { typesetCopy } from "@/lib/marketing/typography";
 const copy: TopicCopy = {
   crumb: "Lista na tydzień",
   eyebrow: "Lista zakupów na tydzień dla jednej osoby, dwóch i rodziny",
-  lines: ["Zakupy na tydzień.", "Sałata dopiero w środę."],
+  lines: ["Zakupy na tydzień.", "W dwóch turach."],
   lead: [
     "Ustaw, ile Was jest i ile obiadów jecie w domu. Dostaniesz listę z ilościami: duże zakupy w wolny dzień i małą dokupkę kilka dni później.",
-    "Liczysz tutaj, bez konta. Na końcu kopiujesz listę, w Kangurze stukasz „Schowek” i przy lodówkach odhaczasz kciukiem.",
+    "Liczysz tutaj, bez konta. Gotową listę wczytujesz do aplikacji Kangur, a w sklepie przesuwasz kupione kciukiem.",
   ],
   sections: [
     {
@@ -24,10 +24,10 @@ const copy: TopicCopy = {
       intro: "Dla dwóch osób, z ilości, które liczy kalkulator.",
       items: [
         { title: "Makaron z mięsem i passatą", body: "Mięso mielone długo nie poczeka, więc to obiad numer jeden." },
-        { title: "Ryba z ziemniakami i marchewką", body: "Mrożona wytrzyma do dnia, w którym nic się nie chce." },
-        { title: "Kurczak z ryżem i warzywami z mrożonki", body: "Druga połowa filetu śpi już w zamrażarce." },
-        { title: "Kasza z ciecierzycą i kapustą albo brokułem", body: "Puszka, garnek i pół głowy kapusty. Ta druga połowa wróci." },
-        { title: "Ziemniaki zapiekane z tym, co zostało", body: "Ser na górę. Nikt nie zapyta, co jest pod spodem." },
+        { title: "Ryba z ziemniakami i marchewką", body: "Mrożona może poczekać do końca tygodnia." },
+        { title: "Kurczak z ryżem i warzywami z mrożonki", body: "Druga połowa filetu czeka w zamrażarce." },
+        { title: "Kasza z ciecierzycą i kapustą albo brokułem", body: "Puszka, garnek i pół głowy kapusty. Drugie pół zostaje na surówkę." },
+        { title: "Ziemniaki zapiekane z tym, co zostało", body: "Warzywa z lodówki, ser na górę i do piekarnika." },
       ],
       outro:
         "Bez mięsa: w pierwszym ser sałatkowy, w drugim twaróg z dokupki, w trzecim tofu. Wolisz swoje dania? Wpisz je w Kangurze, do pięciu naraz, a [[recipeList|zaproponuje składniki]]. Sól doda raz.",
@@ -35,7 +35,7 @@ const copy: TopicCopy = {
     {
       kind: "fact",
       tone: "tinted",
-      text: "To nie tylko Twoja sałata. W co czwartym domu czasami albo zawsze jest tak: zakupy robi się z góry, na przykład na tydzień, i część produktów psuje się, zanim zdąży się je zjeść.",
+      text: "W co czwartym domu czasami albo zawsze jest tak: zakupy robi się z góry, na przykład na tydzień, i część produktów psuje się, zanim zdąży się je zjeść.",
       source: "CBOS, sierpień 2023",
       href: "https://www.cbos.pl/SPISKOM.POL/2023/K_126_23.PDF",
     },
@@ -44,10 +44,10 @@ const copy: TopicCopy = {
       title: "Cztery zasady listy na tydzień",
       columns: 4,
       items: [
-        { title: "Najpierw szafka", body: "Otwórz ją, zanim zaczniesz pisać. Kasza zwykle już tam jest, za makaronem." },
+        { title: "Najpierw szafka", body: "Otwórz ją, zanim zaczniesz pisać. Kasza i makaron często już tam są." },
         { title: "Obiady, potem produkty", body: "Pięć dań i już wiadomo, po co ta kapusta." },
         { title: "Banany w dwóch kolorach", body: "Żółte na jutro, zielonkawe na czwartek." },
-        { title: "Zamrażarka pracuje", body: "Chleb w kromkach, mięso w porcjach. Nie wszystko naraz na blacie." },
+        { title: "Zamrażarka pracuje", body: "Chleb w kromkach, mięso w porcjach. Wyjmujesz tyle, ile trzeba." },
       ],
     },
     {
@@ -64,8 +64,7 @@ const copy: TopicCopy = {
       kind: "text",
       title: "Drugi tydzień jest łatwiejszy",
       body: [
-        "Po kilku listach w Kangurze nie zaczynasz od zera. „Poprzednie listy” zbierają produkty z pięciu ostatnich list i pokazują, które wracają najczęściej. Zostawiasz te, których trzeba. To jedno użycie AI, choć liczy sam Kangur.",
-        "Rukoli, która nie dożyła soboty, nikt nie każe kupować drugi raz.",
+        "Po kilku listach w Kangurze nie zaczynasz od zera. „Poprzednie listy” (kafelek „Historia” na ekranie Start) zbierają produkty z pięciu ostatnich list i pokazują, które wracają najczęściej. Zostawiasz te, których trzeba. To jedno użycie AI, choć liczy sam Kangur.",
       ],
       slot: "history",
       flip: true,
@@ -80,7 +79,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Jak zrobić listę zakupów na tydzień dla dwóch osób?",
-          a: "Ustaw w kalkulatorze dwie osoby i tyle obiadów, ile naprawdę jecie w domu. Potem skopiuj listę, w Kangurze stuknij „Schowek” i zróbcie z niej [[sharedList|wspólną]], żeby nikt nie kupił drugiego masła.",
+          a: "Ustaw w kalkulatorze dwie osoby i tyle obiadów, ile naprawdę jecie w domu. Potem wczytaj listę do Kangura przez „Schowek” i zróbcie z niej [[sharedList|wspólną]], żeby nikt nie kupił drugiego masła.",
         },
         {
           q: "Jak zrobić tańszą listę na tydzień?",

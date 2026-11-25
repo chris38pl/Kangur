@@ -26,7 +26,7 @@ const copy: {
   eyebrow: "Darmowe narzędzia do listy zakupów, bez konta",
   lines: ["Tu policzysz.", "W Kangurze odhaczysz."],
   lead: [
-    "Trzy narzędzia w przeglądarce. Każde kończy się listą: kopiujesz ją, w Kangurze stukasz „Schowek” i robicie zakupy razem.",
+    "Trzy narzędzia w przeglądarce. Każde kończy się gotową listą, którą wczytujesz do aplikacji Kangur i dzielisz z domownikami.",
   ],
   entries: [
     {
@@ -53,8 +53,8 @@ const copy: {
   ],
   after: {
     tag: "A potem",
-    title: "Hop do Kangura",
-    body: "Kopiujesz listę, stukasz „Schowek” i zapraszasz domowników. Reszta dzieje się w telefonach.",
+    title: "Wczytaj do Kangura",
+    body: "Kopiujesz listę, w aplikacji stukasz „Schowek” i zapraszasz domowników. Dalej lista jest wspólna, w telefonach.",
     link: "Jak działa wspólna lista",
   },
   topicsTitle: "Jak to robi Kangur",

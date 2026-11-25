@@ -60,7 +60,7 @@ const PRODUCTS = {
   tofu: p("Tofu (kostka)", "vegetables", "szt.", 1, "main"),
   hummus: p("Hummus", "vegetables", "opak.", 1, "main"),
   nuts: p("Orzechy", "snacks", "g", 100, "main"),
-  sweet: p("Coś słodkiego", "snacks", "szt.", 1, "main", "po jednym i uczciwie"),
+  sweet: p("Coś słodkiego", "snacks", "szt.", 1, "main", "po jednym na osobę"),
 
   bread2: p("Chleb świeży", "bakery", "kg", 0.5, "topup"),
   milk2: p("Mleko", "dairy", "l", 1, "topup"),
@@ -147,7 +147,7 @@ export const weekChanges = (plan: WeekPlan): Partial<WeekPlan> => ({
 export const weekTrips = (lines: readonly Line<Trip>[]): KangurPart[] =>
   [
     kangurPart("main", "Duże zakupy", "Duże zakupy na tydzień", lines.filter((line) => line.when !== "topup")),
-    kangurPart("topup", "Dokupka", "Małe zakupy w tygodniu", lines.filter((line) => line.when === "topup")),
+    kangurPart("topup", "Dokupka", "Dokupka w tygodniu", lines.filter((line) => line.when === "topup")),
   ].filter((part) => part.count > 0);
 
 /** One person eats a bag of rice for a month, so it waits in the cupboard, not in the basket. */

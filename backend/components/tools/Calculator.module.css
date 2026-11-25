@@ -299,8 +299,6 @@
 
 .checks input,
 .group input {
-  /* With a keyboard, nothing hides under the bar at the bottom of the screen. */
-  scroll-margin-bottom: 96px;
   flex: none;
   width: 22px;
   height: 22px;
@@ -349,6 +347,11 @@
   position: relative;
   scroll-margin-top: 90px;
   outline: none;
+}
+
+/* With a keyboard, nothing hides under the bar at the bottom of the screen. */
+.result :is(a, button, input, select, textarea) {
+  scroll-margin-bottom: 96px;
 }
 
 .resultHead {
@@ -497,16 +500,6 @@
   text-decoration: line-through;
 }
 
-.family {
-  margin-top: 28px;
-}
-
-.family > p {
-  max-width: 34rem;
-  margin: 0;
-  color: var(--kangur-text-body);
-}
-
 .familyShare button {
   min-height: 44px;
   margin-top: 10px;
@@ -519,12 +512,6 @@
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-}
-
-.family h3 {
-  margin: 0 0 10px;
-  font-size: 1.1rem;
-  font-weight: 800;
 }
 
 /* The name of an own dish gets a line of its own, or it would be three letters wide. */

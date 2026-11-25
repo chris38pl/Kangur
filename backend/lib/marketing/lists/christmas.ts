@@ -20,7 +20,14 @@ export type When = "early" | "weekend" | "last";
  * off, then follow the list in docs/deploy.md. `strip` is the last day the home page invites
  * people to the calculator, `over` the last day its dates are in the future.
  */
-export const CHRISTMAS = { year: 2026, strip: "2026-12-23", over: "2026-12-27" } as const;
+export const CHRISTMAS = {
+  year: 2026,
+  /** Last days of the first two trips. Later they are simply the next trip. */
+  early: "2026-12-13",
+  weekend: "2026-12-20",
+  strip: "2026-12-23",
+  over: "2026-12-27",
+} as const;
 
 type P = Product<When>;
 const p = (
@@ -594,24 +601,53 @@ export function christmasList(plan: ChristmasPlan): Line<When>[] {
 }
 
 /** When to buy what. Every date is a trip to the shop, and a list of its own in Kangur. */
-export const WHEN = typesetCopy<readonly { id: When; title: string; hint: string }[]>([
-  { id: "early", title: "Do 13 grudnia", hint: "Suche, w słoikach i puszkach. Poczeka w szafce." },
-  { id: "weekend", title: "19 i 20 grudnia", hint: "Ostatni weekend. 20 grudnia to niedziela handlowa." },
-  { id: "last", title: "22 i 23 grudnia", hint: "Świeże. Od 24 do 27 grudnia duże sklepy są zamknięte." },
-]);
+export type ShopTrip = {
+  id: string;
+  title: string;
+  hint: string;
+  /** Which products go on this trip. */
+  covers: readonly When[];
+};
+
+const EARLY: ShopTrip = { id: "early", title: "Do 13 grudnia", hint: "Suche, w słoikach i puszkach. Poczeka w szafce.", covers: ["early"] };
+const WEEKEND: ShopTrip = { id: "weekend", title: "19 i 20 grudnia", hint: "Ostatni weekend. 20 grudnia to niedziela handlowa.", covers: ["weekend"] };
+const LAST: ShopTrip = { id: "last", title: "22 i 23 grudnia", hint: "Świeże. Od 24 do 27 grudnia duże sklepy są zamknięte.", covers: ["last"] };
+const NEXT = { id: "next", title: "Najbliższe zakupy", hint: "Suche, w słoikach i puszkach. Kup je przy najbliższej okazji." } as const;
+
+/**
+ * When to buy what, seen from `today` (as "2026-12-16", null for the static page). A date that
+ * has passed becomes the next trip, so nobody gets a list called "do 13 grudnia" on the 16th.
+ */
+export function tripsOn(today: string | null): readonly ShopTrip[] {
+  const trips: ShopTrip[] =
+    today === null || today <= CHRISTMAS.early
+      ? [EARLY, WEEKEND, LAST]
+      : today <= CHRISTMAS.weekend
+        ? [{ ...NEXT, covers: ["early"] }, WEEKEND, LAST]
+        : [{ ...NEXT, hint: "Wszystko, co nie jest świeże. Kup je przy najbliższej okazji.", covers: ["early", "weekend"] }, LAST];
+  return typesetCopy(trips);
+}
 
 /** Three trips, three lists in Kangur, or one. Kangur names a list after its first line. */
 export function christmasTrips(
   plan: ChristmasPlan,
   lines: readonly Line<When>[],
+  trips: readonly ShopTrip[] = tripsOn(null),
 ): { whole: KangurPart; trips: KangurPart[] } {
   const wigilia = dishCount(plan) > 0;
   const name = wigilia ? "Zakupy na święta" : "Zakupy na zapas";
   return {
     whole: kangurPart("whole", "Wszystko", wigilia ? "Zakupy na Wigilię i święta" : "Zakupy na cztery dni bez sklepu", lines),
-    trips: WHEN.map(({ id, title }) =>
-      kangurPart(id, title, `${name} ${title.toLocaleLowerCase("pl")}`, lines.filter((line) => line.when === id)),
-    ).filter((part) => part.count > 0),
+    trips: trips
+      .map(({ id, title, covers }) =>
+        kangurPart(
+          id,
+          title,
+          id === NEXT.id ? `Najbliższe ${name.toLocaleLowerCase("pl")}` : `${name} ${title.toLocaleLowerCase("pl")}`,
+          lines.filter((line) => covers.includes(line.when)),
+        ),
+      )
+      .filter((part) => part.count > 0),
   };
 }
 
