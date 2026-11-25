@@ -8,8 +8,11 @@ type Props = {
   /** Required for images with several widths, e.g. "(max-width: 700px) 70vw, 300px". */
   sizes?: string;
   className?: string;
-  /** The largest image above the fold: fetched first, never lazy. */
-  priority?: boolean;
+  /**
+   * The largest thing on the first screen: fetched first, never lazy. "desktop" when it is
+   * on the first screen of a computer but below the fold of a phone.
+   */
+  priority?: boolean | "desktop";
 };
 
 /**
@@ -24,8 +27,10 @@ export function Picture({ image, alt, sizes, className, priority }: Props) {
       imageSizes: sizes,
       type: "image/avif",
       fetchPriority: "high",
+      ...(priority === "desktop" ? { media: "(min-width: 900px)" } : {}),
     });
   }
+  const first = priority === true;
 
   return (
     <picture>
@@ -36,9 +41,9 @@ export function Picture({ image, alt, sizes, className, priority }: Props) {
         width={image.width}
         height={image.height}
         className={className}
-        loading={priority ? "eager" : "lazy"}
+        loading={first ? "eager" : "lazy"}
         decoding="async"
-        fetchPriority={priority ? "high" : undefined}
+        fetchPriority={first ? "high" : undefined}
       />
     </picture>
   );

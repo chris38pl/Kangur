@@ -177,8 +177,7 @@ export const ROUTES: Record<MarketingRouteId, MarketingRoute> = {
     priority: 0.3,
   },
   deleteAccount: {
-    paths: inPolishAndEnglish("/delete-account"),
-    englishFallback: true,
+    paths: inAll("/delete-account"),
     languageNeutral: true,
     updatedAt: "2026-11-25",
     changeFrequency: "yearly",

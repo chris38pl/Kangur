@@ -76,7 +76,15 @@ export function MobileMenu({
   }, []);
 
   return (
-    <details className="mkt-menu" ref={ref}>
+    <details
+      className="mkt-menu"
+      ref={ref}
+      onBlur={(event) => {
+        // Focus went on to the page: the panel must not stay over it.
+        const next = event.relatedTarget;
+        if (next && !event.currentTarget.contains(next)) close();
+      }}
+    >
       <summary aria-label={label}>
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
           <path

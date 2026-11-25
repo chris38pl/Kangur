@@ -10,7 +10,7 @@ export const homeEn: HomeCopy = {
     iosSmall: "DOWNLOAD ON THE",
     chatLabel: "A sample conversation the list is made from",
     screenAlt:
-      "The same list in Kangur: 22 items, fruit and vegetables first, then dairy",
+      "The list from this conversation in Kangur: 22 items, fruit and vegetables first, then dairy",
   },
   chat: {
     contact: "Honey ❤️",
@@ -24,7 +24,7 @@ export const homeEn: HomeCopy = {
       ],
       ["them", "don’t forget anything 😘"],
       ["them", "oh and maybe some chips"],
-      ["them", "best get 2 bags of sour cream & onion"],
+      ["them", "make it 2 bags of sour cream & onion"],
       ["them", "aaand laundry detergent, we ran out"],
     ],
   },
@@ -57,12 +57,12 @@ export const homeEn: HomeCopy = {
     photo: {
       title: "The note on the fridge",
       body: "Take a photo and Kangur copies it out. Very messy handwriting can trip it up, so give the result a quick look.",
-      note: ["milk, eggs 10", "toilet paper", "chicken 1 kg ??", "butter (do we have?)", "something for dinner"],
+      note: ["milk, eggs 10", "toilet paper", "chicken 1 kg ??", "butter (any left?)", "something for dinner"],
     },
     dish: {
       title: "Tonight’s dinner",
-      body: "Type “carbonara” and “bruschetta” and get the ingredients on one list. Salt and pepper once, not twice. Untick what you already have.",
-      screenAlt: "Carbonara ingredients in Kangur, ready to be unticked",
+      body: "Type “carbonara” and “bruschetta” and get the ingredients on one list. Salt and pepper once, not twice. Uncheck what you already have.",
+      screenAlt: "Carbonara ingredients in Kangur, ready to be unchecked",
     },
     usual: {
       title: "The usual",
@@ -72,13 +72,13 @@ export const homeEn: HomeCopy = {
     },
     typed: {
       title: "Off the top of your head",
-      body: "Type it with commas, dictate it or paste text from the clipboard. Or add one by one: Kangur suggests after two letters.",
+      body: "Type it with commas, dictate it or paste text from the clipboard. Or add items one by one: after two letters Kangur makes suggestions.",
       chips: ["milk", "bread", "something sweet"],
     },
   },
   together: {
     lines: ["Two phones,", "one list."],
-    body: "Someone adds butter from the couch, someone adds coffee on the way to the store. A moment later both are on the list for both of you.",
+    body: "Someone adds butter from the couch, someone adds coffee on the way to the store. A moment later you both see both.",
     points: [
       "Invite as many people as you like, by email",
       "Invitations cost nothing",
@@ -88,22 +88,22 @@ export const homeEn: HomeCopy = {
     screenAlt: "A shared space in Kangur with the people who have access to the list",
   },
   summary: {
-    lines: ["Bell peppers?", "Not in store."],
-    body: "After shopping you see what was bought, what was missing and how long it took. Before anyone asks.",
+    lines: ["Bell peppers?", "They were out."],
+    body: "After shopping you see what was bought and what was missing. Before anyone asks.",
     screenAlt: "Shopping summary in Kangur: 18 purchased, 1 unavailable, 24 minutes",
   },
   price: {
     lines: ["What does it cost?", "Here’s the receipt."],
-    body: "Lists, your household and shopping mode are free. You only pay for unlimited AI and a longer history, once for the whole space, not per person.",
+    body: "Lists, sharing and shopping mode are free. You only pay for unlimited AI and a longer history: one monthly subscription for the whole space, not one per person.",
     receiptLabel: "Kangur prices as a receipt",
     receipt: [
       { kind: "head", text: "Kangur" },
       { kind: "item", text: "Shared lists", price: "free" },
-      { kind: "item", text: "Your household", note: "as many as you like", price: "free" },
-      { kind: "item", text: "10 AI uses to start", price: "free" },
-      { kind: "item", text: "Ads", note: "out of stock", price: "-" },
+      { kind: "item", text: "People at home", note: "as many as you like", price: "free" },
+      { kind: "item", text: "10 AI uses to start", note: "for the whole space", price: "free" },
+      { kind: "item", text: "Ads", note: "we don’t carry those", price: "-" },
       { kind: "rule" },
-      { kind: "item", text: "Premium", note: "unlimited AI, 200 lists in history", price: "see store" },
+      { kind: "item", text: "Premium, monthly", note: "unlimited AI, 200 lists in history", price: "in the app" },
       { kind: "foot", text: "The app shows the price in your currency." },
       { kind: "rule" },
       { kind: "total", text: "To start", price: "0.00" },
@@ -127,11 +127,11 @@ export const homeEn: HomeCopy = {
     items: [
       {
         q: "What is Kangur?",
-        a: "Kangur is an app for iPhone and Android for shared grocery lists. It makes a list from a chat screenshot, a photo of a note, the name of a dish, your previous lists or whatever you type, and sorts the items by store aisle. Kangur is Polish for kangaroo: the orange one in a teal hoodie on the icon.",
+        a: "Kangur is a shared grocery list app for iPhone and Android. It makes a list from a chat screenshot, a photo of a note, the name of a dish, your previous lists or whatever you type, and sorts the items by store aisle. Kangur is Polish for kangaroo: the orange one in a teal hoodie on the icon.",
       },
       {
         q: "Is Kangur free?",
-        a: "Yes, with one limit: you get 10 AI uses to start and they do not renew. Manual lists, your household and shopping mode have no limit. Premium gives you unlimited AI. [[pricing|See prices]].",
+        a: "Yes. There are two limits: 10 AI uses for the whole space, which do not renew, and the last 20 lists in history. Manual lists, sharing and shopping mode have no limit. The rest is in the [[pricing|price list]].",
       },
       {
         q: "Does the other person have to pay?",
@@ -139,15 +139,15 @@ export const homeEn: HomeCopy = {
       },
       {
         q: "Does Kangur read my messages?",
-        a: "No. It has no access to any messenger. It sees only the one image you pick from your gallery. The image goes to the AI provider (OpenAI) to read the list, and Kangur does not store it.",
+        a: "No. It has no access to any messaging app. It sees only the one image you pick from your gallery. The image goes to the AI provider (OpenAI), which reads the list from it. Kangur does not store the image.",
       },
       {
         q: "What works without signal in the store?",
-        a: "Ticking off items on an open list: changes wait on the phone and are sent later. Creating lists and AI need the internet.",
+        a: "Shopping mode on a list you already have open: you check off and add items, and the changes are sent later. New lists and AI need the internet.",
       },
       {
-        q: "Is it connected to the Kangaroo maths contest or a remote desktop program?",
-        a: "Neither. There are many kangaroos, ours only does grocery lists. It does not control your phone or computer, and nobody from Kangur will ever call you. [[safety|More about safety]].",
+        q: "Is it connected to the Math Kangaroo contest?",
+        a: "No. There are many kangaroos, and ours only does grocery lists. [[safety|How to check it is us]].",
       },
     ],
   },

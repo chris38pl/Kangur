@@ -3,13 +3,13 @@ import type { HomeCopy } from "@/lib/marketing/content/home-types";
 export const homeFr: HomeCopy = {
   hero: {
     eyebrow: "Kangur - l’appli de liste de courses partagée",
-    lines: ["La liste est dans le chat ?", "Une capture, c’est réglé."],
-    lead: "Faites une capture de la conversation. Kangur relève les produits, les range par rayon et les montre à toute la maison. Au magasin, il suffit de glisser.",
+    lines: ["La liste arrive par message ?", "Une capture, c’est réglé."],
+    lead: "Faites une capture de la conversation. Kangur relève les produits, les range par rayon et les montre à toute la maison. Au magasin, un coup de pouce suffit.",
     storesNote: "Pour iPhone et Android. Sans publicité. 10 utilisations de l’IA offertes pour commencer.",
     playSmall: "DISPONIBLE SUR",
-    iosSmall: "TÉLÉCHARGER DANS",
+    iosSmall: "TÉLÉCHARGER DANS L’",
     chatLabel: "Exemple de conversation qui devient une liste",
-    screenAlt: "La même liste dans Kangur : 22 articles, d’abord fruits et légumes, puis produits laitiers",
+    screenAlt: "La liste de cette conversation dans Kangur : 22 articles, d’abord fruits et légumes, puis produits laitiers",
   },
   chat: {
     contact: "Mon cœur ❤️",
@@ -32,24 +32,24 @@ export const homeFr: HomeCopy = {
     items: [
       {
         pill: "Étape 1",
-        title: "Une capture du chat",
-        body: "Parfois un long message avec des virgules, parfois sept avec un « eeet de la lessive » à la fin. Les deux marchent.",
+        title: "Une capture d’écran",
+        body: "Parfois un long message avec des virgules, parfois sept avec un « eeet de la lessive » à la fin. Dans les deux cas, ça marche.",
       },
       {
         pill: "Étape 2",
         title: "Kangur fait la liste",
-        body: "Il repère les produits et les quantités, et laisse « n’oublie rien 😘 » tranquille. Ce chat a donné 22 articles.",
+        body: "Il repère les produits et les quantités, et laisse « n’oublie rien 😘 » tranquille. Cette conversation a donné 22 articles.",
       },
       {
         pill: "Étape 3",
-        title: "Au magasin, on glisse",
+        title: "Au magasin, un coup de pouce",
         body: "À droite : acheté. À gauche : pas en rayon. Une main, un rayon, rayon suivant.",
       },
     ],
     screenAlt: "Mode courses dans Kangur : les concombres glissent vers la droite, achetés, au rayon Légumes",
   },
   ways: {
-    lines: ["Pas de chat ?", "Il y a d’autres moyens."],
+    lines: ["Pas de message ?", "Il y a d’autres moyens."],
     intro: "La liste n’arrive pas toujours par message. Parfois elle est sur le frigo, parfois dans la tête de quelqu’un.",
     photo: {
       title: "Le mot sur le frigo",
@@ -68,38 +68,38 @@ export const homeFr: HomeCopy = {
     },
     typed: {
       title: "De tête",
-      body: "Écrivez avec des virgules, dictez ou collez un texte. Ou ajoutez un par un : Kangur propose dès deux lettres.",
-      chips: ["lait", "pain", "un petit sucré"],
+      body: "Écrivez avec des virgules, dictez ou collez un texte. Ou ajoutez les produits un par un : Kangur fait des propositions dès la deuxième lettre.",
+      chips: ["lait", "pain", "un truc sucré"],
     },
   },
   together: {
     lines: ["Deux téléphones,", "une seule liste."],
-    body: "Quelqu’un ajoute du beurre depuis le canapé, quelqu’un du café en route vers le magasin. Un instant plus tard, les deux sont sur la liste des deux.",
+    body: "Quelqu’un ajoute du beurre depuis le canapé, quelqu’un d’autre du café sur le chemin du magasin. Un instant plus tard, tout est sur vos deux téléphones.",
     points: [
       "Invitez par e-mail autant de personnes que vous voulez",
       "Les invitations sont gratuites",
       "iPhone et Android sur la même liste",
-      "Le téléphone prévient quand quelqu’un part faire les courses",
+      "Le téléphone prévient quand quelqu’un commence les courses",
     ],
     screenAlt: "Un espace partagé dans Kangur avec les personnes qui ont accès à la liste",
   },
   summary: {
     lines: ["Des poivrons ?", "Y’en avait pas."],
-    body: "Après les courses, on voit ce qui a été acheté, ce qui manquait et combien de temps ça a pris. Avant même qu’on vous le demande.",
+    body: "Après les courses, on voit ce qui a été acheté et ce qui manquait. Avant même qu’on vous le demande.",
     screenAlt: "Récapitulatif des courses dans Kangur : 18 achetés, 1 indisponible, 24 minutes",
   },
   price: {
     lines: ["Combien ça coûte ?", "Voici le ticket."],
-    body: "Les listes, la maison et le mode courses sont gratuits. On ne paie que l’IA sans limite et un historique plus long, une fois pour tout l’espace, pas par personne.",
+    body: "Les listes, le partage et le mode courses sont gratuits. Seuls l’IA sans limite et un historique plus long sont payants : un abonnement mensuel pour tout l’espace, pas un par personne.",
     receiptLabel: "Les prix de Kangur sur un ticket de caisse",
     receipt: [
       { kind: "head", text: "Kangur" },
       { kind: "item", text: "Listes partagées", price: "0,00" },
       { kind: "item", text: "Votre foyer", note: "sans limite", price: "0,00" },
-      { kind: "item", text: "10 utilisations de l’IA", price: "0,00" },
+      { kind: "item", text: "10 utilisations de l’IA", note: "pour tout l’espace", price: "0,00" },
       { kind: "item", text: "Publicité", note: "on n’en fait pas", price: "-" },
       { kind: "rule" },
-      { kind: "item", text: "Premium", note: "IA sans limite, 200 listes dans l’historique", price: "en boutique" },
+      { kind: "item", text: "Premium, par mois", note: "IA sans limite, 200 listes dans l’historique", price: "dans l’appli" },
       { kind: "foot", text: "L’appli affiche le prix dans votre devise." },
       { kind: "rule" },
       { kind: "total", text: "Pour commencer", price: "0,00" },
@@ -109,10 +109,10 @@ export const homeFr: HomeCopy = {
   },
   maker: {
     lines: ["Qui est derrière ?", "Une personne à Poznań."],
-    body: "Kangur est fait par une entreprise d’une seule personne en Pologne, Krzysztof Krawiec Software. Pas de régie publicitaire, pas de vente de données.",
+    body: "Kangur est l’œuvre d’une entreprise individuelle polonaise, Krzysztof Krawiec Software. Pas de régie publicitaire, pas de vente de données.",
     points: [
-      { title: "Ne lit pas vos chats", body: "Il ne voit que la capture que vous choisissez." },
-      { title: "Ne connaît ni vos contacts ni votre position", body: "Il ne les demande pas : une liste de courses n’en a pas besoin." },
+      { title: "Ne lit pas vos conversations", body: "Il ne voit que la capture que vous choisissez." },
+      { title: "Ne regarde ni vos contacts ni le GPS", body: "Il ne les demande même pas : une liste de courses n’en a pas besoin." },
       { title: "N’a pas de publicité", body: "Il vit de Premium, pas de votre attention." },
     ],
     safetyLink: "Les autorisations utilisées (en anglais)",
@@ -123,11 +123,11 @@ export const homeFr: HomeCopy = {
     items: [
       {
         q: "Qu’est-ce que Kangur ?",
-        a: "Kangur est une appli pour iPhone et Android, pour des listes de courses partagées. Elle fait une liste à partir d’une capture de chat, d’une photo de papier, du nom d’un plat, de vos listes précédentes ou de ce que vous tapez, et range le tout par rayon. Kangur veut dire kangourou en polonais : l’orange au sweat turquoise sur l’icône.",
+        a: "Kangur est une appli de listes de courses partagées pour iPhone et Android. Elle fait une liste à partir d’une capture de conversation, d’une photo de note manuscrite, du nom d’un plat, de vos listes précédentes ou de ce que vous tapez, et range le tout par rayon. Kangur veut dire kangourou en polonais. C’est lui sur l’icône : pelage orange, sweat turquoise.",
       },
       {
         q: "Kangur est-il gratuit ?",
-        a: "Oui, avec une limite : vous avez 10 utilisations de l’IA au départ et elles ne se renouvellent pas. Les listes à la main, le foyer et le mode courses sont illimités. Premium donne l’IA sans limite.",
+        a: "Oui. Il y a deux limites : 10 utilisations de l’IA pour tout l’espace, qui ne se renouvellent pas, et les 20 dernières listes dans l’historique. Les listes à la main, le partage et le mode courses sont illimités. Premium donne l’IA sans limite.",
       },
       {
         q: "L’autre personne doit-elle payer ?",
@@ -135,15 +135,15 @@ export const homeFr: HomeCopy = {
       },
       {
         q: "Kangur lit-il mes messages ?",
-        a: "Non. Il n’a accès à aucune messagerie. Il ne voit que l’image que vous choisissez dans la galerie. Elle est envoyée au fournisseur d’IA (OpenAI) pour lire la liste, et Kangur ne la conserve pas.",
+        a: "Non. Il n’a accès à aucune messagerie. Il ne voit que l’image que vous choisissez dans la galerie. Elle est envoyée au fournisseur d’IA (OpenAI), qui y lit la liste. Kangur ne conserve pas l’image.",
       },
       {
         q: "Que se passe-t-il sans réseau au magasin ?",
-        a: "Cocher des produits sur une liste ouverte fonctionne : les changements attendent dans le téléphone et partent plus tard. Créer une liste et utiliser l’IA demandent internet.",
+        a: "Le mode courses sur une liste déjà ouverte : vous cochez et ajoutez, les changements partent plus tard. Pour une nouvelle liste ou l’IA, il faut internet.",
       },
       {
-        q: "Y a-t-il un lien avec le concours Kangourou ou un bureau à distance ?",
-        a: "Aucun. Il y a beaucoup de kangourous, le nôtre ne fait que des listes de courses. Il ne contrôle ni téléphone ni ordinateur, et personne chez nous ne vous appelle. [[safety|En savoir plus (en anglais)]].",
+        q: "Y a-t-il un lien avec le concours Kangourou ?",
+        a: "Aucun. Il y a beaucoup de kangourous, le nôtre ne fait que des listes de courses. [[safety|Comment nous reconnaître (en anglais)]].",
       },
     ],
   },

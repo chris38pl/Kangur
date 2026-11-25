@@ -13,16 +13,16 @@ import { homeUk } from "@/lib/marketing/content/home-uk";
 import { typesetCopy } from "@/lib/marketing/typography";
 
 const HOME: Record<AppLocale, HomeCopy> = {
-  pl: typesetCopy(homePl),
-  en: homeEn,
-  de: homeDe,
-  fr: homeFr,
-  es: homeEs,
-  it: homeIt,
-  cs: homeCs,
-  ru: homeRu,
-  uk: homeUk,
-  be: homeBe,
+  pl: typesetCopy(homePl, "pl"),
+  en: typesetCopy(homeEn, "en"),
+  de: typesetCopy(homeDe, "de"),
+  fr: typesetCopy(homeFr, "fr"),
+  es: typesetCopy(homeEs, "es"),
+  it: typesetCopy(homeIt, "it"),
+  cs: typesetCopy(homeCs, "cs"),
+  ru: typesetCopy(homeRu, "ru"),
+  uk: typesetCopy(homeUk, "uk"),
+  be: typesetCopy(homeBe, "be"),
 };
 
 export function homeCopy(locale: AppLocale): HomeCopy {

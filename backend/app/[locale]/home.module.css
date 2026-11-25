@@ -92,21 +92,20 @@
 
 /*
  * The whole story in one picture: the message, the list it became, and him. Nothing lies
- * on any text: the phone covers only the empty edge of the chat, Kangur stands below it.
+ * on any text: on phones the chat is in the flow, so a longer translation pushes the
+ * picture down; on computers the phone covers only the empty edge of the chat and Kangur
+ * stands below it.
  */
 .heroArt {
   container-type: inline-size;
   position: relative;
+  display: grid;
   width: 100%;
   max-width: 400px;
-  height: 610px;
   margin-inline: auto;
 }
 
 .heroChat {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 90%;
   font-size: 13.5px;
   transform: rotate(-2deg);
@@ -117,11 +116,11 @@
   display: none;
 }
 
+/* Overlaps only the chat's empty bottom edge; the hero cuts off its own bottom. */
 .heroPhone {
-  position: absolute;
-  top: 286px;
-  right: 0;
+  justify-self: end;
   width: 58%;
+  margin: -6px 0 -150px;
   transform: rotate(3deg);
 }
 
@@ -150,35 +149,42 @@
   }
 
   .heroArt {
+    display: block;
     align-self: end;
     justify-self: end;
     max-width: 580px;
-    height: auto;
     aspect-ratio: 580 / 640;
   }
 
   .heroChat {
+    position: absolute;
     top: 1.5%;
+    left: 0;
     width: 66%;
     padding-right: 16.5%;
     font-size: max(11px, 2.36cqw);
     transform: rotate(-3deg);
   }
 
-  .heroChat li:nth-child(3) {
-    display: list-item;
-  }
-
   .heroPhone {
+    position: absolute;
     top: 11%;
     right: 1%;
     width: 46.5%;
+    margin: 0;
   }
 
   .heroKangur {
     bottom: -5%;
     left: 7%;
     width: 30%;
+  }
+}
+
+/* Narrower pictures have no room for the third message in the longer languages. */
+@media (min-width: 1080px) {
+  .heroChat li:nth-child(3) {
+    display: list-item;
   }
 }
 

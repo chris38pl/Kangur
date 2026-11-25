@@ -16,7 +16,7 @@ export function Sticker({
   name: StickerName;
   className?: string;
   alt?: string;
-  priority?: boolean;
+  priority?: boolean | "desktop";
 }) {
   return (
     <Picture

@@ -1,0 +1,27 @@
+/* The way through the app's menus, as it looks there: one tap after another. */
+.path {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 34px;
+  max-width: none;
+  margin: 18px 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.path li {
+  position: relative;
+  margin: 0;
+  padding: 9px 18px;
+  border-radius: 12px;
+  background: var(--kangur-primary-soft);
+  color: var(--kangur-primary-deep);
+  font-weight: 700;
+}
+
+.path li + li::before {
+  content: "→";
+  position: absolute;
+  left: -27px;
+  color: var(--kangur-text-muted);
+}

@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { plainSpaces, typesetCopy, typesetPl } from "./typography";
+import { plainSpaces, typeset, typesetCopy, typesetPl } from "./typography";
 
-const N = " ";
+const N = "\u00a0";
 
 test("one-letter words stick to the next word", () => {
   assert.equal(typesetPl("Screen i po krzyku."), `Screen i${N}po krzyku.`);
@@ -24,6 +24,18 @@ test("numbers keep their unit", () => {
   assert.equal(typesetPl("1 kg mąki, 500 ml mleka"), `1${N}kg mąki, 500${N}ml mleka`);
   assert.equal(typesetPl("10 lat"), "10 lat");
   assert.equal(typesetPl("2 gramy"), "2 gramy");
+  assert.equal(typesetPl("zniknęło 10 000 zł"), `zniknęło 10${N}000${N}zł`);
+  assert.equal(typesetPl("ID 6832296080"), "ID 6832296080");
+});
+
+test("other languages keep their own rules", () => {
+  assert.equal(typeset("Ty a já v obchodě", "cs"), `Ty a${N}já v${N}obchodě`);
+  assert.equal(typeset("Сыр и масло", "ru"), `Сыр и${N}масло`);
+  assert.equal(typeset("Сир і масло", "uk"), `Сир і${N}масло`);
+  assert.equal(typeset("Сыр і масла", "be"), `Сыр і${N}масла`);
+  assert.equal(typeset("Combien ? « ici » : oui", "fr"), `Combien\u202f? «${N}ici${N}»${N}: oui`);
+  assert.equal(typeset("a b c", "en"), "a b c");
+  assert.equal(typeset("https://a.fr ok", "fr"), "https://a.fr ok");
 });
 
 test("copy objects are typeset all the way down and can be undone", () => {

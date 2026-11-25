@@ -1,8 +1,12 @@
 .band {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(150deg, #2a8f7e 0%, #1f7a6c 55%, #185f55 100%);
+  background: linear-gradient(150deg, #207b6d 0%, #1f7a6c 40%, #185f55 100%);
   color: #fff;
+}
+
+.band :focus-visible {
+  outline-color: #fff;
 }
 
 .band::before {

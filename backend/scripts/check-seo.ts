@@ -218,6 +218,11 @@ for (const { id, locale, href, html } of pages) {
   // Capitals only: "todo" is an ordinary Spanish word.
   if (/\b(TODO|FIXME|Lorem ipsum)\b/.test(text)) fail(href, "placeholder text");
 
+  const mark = /\[\[|\]\]|\*\*/.exec(text);
+  if (mark) {
+    fail(href, `unrendered mark in copy: "...${text.slice(Math.max(0, mark.index - 30), mark.index + 30)}..."`);
+  }
+
   // Internal links lead to a page, not to a redirect or a 404
   for (const a of tags(html, "a")) {
     const raw = attr(a, "href");
@@ -258,6 +263,18 @@ for (const id of ROUTE_IDS) {
 
 for (const alias of Object.keys(PATH_ALIASES)) {
   if (findRouteByPath(alias)) fail(alias, "is both an alias and a page");
+}
+
+// A page built in a language it does not have is a copy under a wrong address.
+const prerendered = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, "../.next/prerender-manifest.json"), "utf8"),
+) as { routes: Record<string, unknown> };
+const registered = new Set(
+  pages.map(({ id, locale }) => internalPath(locale, routePath(id, locale) ?? "/")),
+);
+for (const route of Object.keys(prerendered.routes)) {
+  if (/\.[a-z]+$|^\/_/.test(route)) continue;
+  if (!registered.has(route)) fail(route, "prerendered, but not a registered page");
 }
 
 const sitemapFile = path.join(APP_DIR, "sitemap.xml.body");

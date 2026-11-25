@@ -160,6 +160,27 @@ test("aliases go straight to the final page in one hop", () => {
   assert.equal(decide("/en/support"), "308 /en/contact");
   assert.equal(decide("/kontakt"), "308 /contact");
   assert.equal(decide("/regulamin", { acceptLanguage: CHROME_EN }), "308 /terms");
+  assert.equal(decide("/premium"), "308 /cennik");
+  assert.equal(decide("/en/premium"), "308 /en/pricing");
+});
+
+test("an alias of a translated page follows the visitor, and does not stick", () => {
+  assert.equal(decide("/premium", { acceptLanguage: CHROME_EN }), "307 /en/pricing");
+  assert.equal(decide("/security", { acceptLanguage: CHROME_DE }), "307 /en/safety");
+  assert.equal(decide("/premium", { userAgent: GOOGLEBOT, acceptLanguage: CHROME_EN }), "308 /cennik");
+  // No German pricing yet, no English press page yet: both may come.
+  assert.equal(decide("/de/premium"), "307 /en/pricing");
+  assert.equal(decide("/en/press"), "307 /dla-mediow");
+});
+
+test("a Polish address with a foreign slug is still Polish", () => {
+  for (const acceptLanguage of [CHROME_PL, CHROME_EN, undefined]) {
+    assert.equal(decide("/pl/pricing", { acceptLanguage }), "308 /cennik");
+    assert.equal(decide("/pl/safety", { acceptLanguage }), "308 /bezpieczenstwo");
+    assert.equal(languageOf("/pl/pricing", { acceptLanguage }), "pl");
+    assert.equal(languageOf("/pl/support", { acceptLanguage }), "pl");
+    assert.equal(languageOf("/pl/premium", { acceptLanguage }), "pl");
+  }
 });
 
 test("an unknown address is a 404 where it is, not a redirect", () => {

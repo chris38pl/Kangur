@@ -18,9 +18,10 @@ export function FaqPage({ locale }: { locale: AppLocale }) {
   const lang = legalLocale(locale);
   const c = FAQ[lang];
   const t = getMessages(locale).nav;
+  const contentLang = lang === locale ? undefined : lang;
 
   return (
-    <div data-full lang={lang === locale ? undefined : lang}>
+    <div data-full>
       {lang === locale ? (
         <JsonLd data={faqStructuredData(faqItems(lang), lang)} />
       ) : null}
@@ -29,9 +30,10 @@ export function FaqPage({ locale }: { locale: AppLocale }) {
         crumbs={[{ label: t.faq, href: routeHref("faq", locale) }]}
         lines={c.lines}
         lead={<p>{rich(c.lead, locale)}</p>}
-        art={<Sticker name="skron" className={styles.kangur} />}
+        contentLang={contentLang}
+        art={<Sticker name="skron" className={styles.kangur} priority />}
       />
-      <section className={prose.section}>
+      <section className={prose.section} lang={contentLang}>
         <div className={`${prose.wrap} ${styles.groups}`}>
           {c.groups.map((group) => (
             <div key={group.title} className={styles.group}>

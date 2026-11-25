@@ -11,7 +11,7 @@ export const homePl: HomeCopy = {
     iosSmall: "POBIERZ W",
     chatLabel: "Przykładowa rozmowa, z której powstaje lista",
     screenAlt:
-      "Ta sama lista w Kangurze: 22 pozycje, najpierw owoce i warzywa, potem nabiał",
+      "Lista z tej rozmowy w Kangurze: 22 pozycje, najpierw owoce i warzywa, potem nabiał",
   },
   chat: {
     contact: "Misiaczek ❤️",
@@ -49,7 +49,7 @@ export const homePl: HomeCopy = {
       },
     ],
     screenAlt:
-      "Nagranie trybu zakupów w Kangurze: warzywa, a potem nabiał są przesuwane w prawo jako kupione, po każdej alejce pojawia się Kangur i napis Świetnie!",
+      "Nagranie trybu zakupów w Kangurze: produkty z kolejnych alejek są przesuwane w prawo jako kupione, po każdej alejce pojawia się Kangur i napis Świetnie!",
   },
   ways: {
     lines: ["Nie ma czatu?", "Są inne sposoby."],
@@ -68,7 +68,7 @@ export const homePl: HomeCopy = {
     },
     dish: {
       title: "Danie na dziś",
-      body: "Wpisz „carbonara” i „bruschetta”, dostaniesz składniki na jednej liście. Sól i pieprz raz, a nie dwa. To, co masz w domu, odznaczasz.",
+      body: "Wpisz „carbonara” i „bruschetta”, a dostaniesz składniki na jednej liście. Sól i pieprz raz, a nie dwa. To, co masz w domu, odznaczasz.",
       screenAlt:
         "Składniki carbonary w Kangurze, sól odznaczona, przycisk Dodaj 5 produktów",
     },
@@ -86,15 +86,15 @@ export const homePl: HomeCopy = {
   },
   together: {
     lines: ["Dwa telefony,", "jedna lista."],
-    body: "Ktoś dopisuje masło z kanapy, ktoś kawę w drodze do sklepu. Po chwili jedno i drugie jest na liście u obojga.",
+    body: "Ktoś z kanapy dopisuje masło, ktoś w drodze do sklepu kawę. Po chwili jedno i drugie jest na liście u obojga.",
     points: [
-      "Zapraszasz e-mailem, ile osób chcesz",
+      "Zapraszasz e-mailem tyle osób, ile chcesz",
       "Zaproszenia nic nie kosztują",
       "iPhone i Android na jednej liście",
       "Telefon da znać, gdy ktoś zacznie zakupy",
     ],
     fact: {
-      text: "W 57% domów z co najmniej dwojgiem dorosłych codzienne zakupy robi się wspólnie albo raz robi je jedno, raz drugie. Lista nie może mieszkać w jednej głowie.",
+      text: "W 57% domów z co najmniej dwojgiem dorosłych codzienne zakupy robi się wspólnie albo raz robi je jedno, raz drugie.",
       source: "CBOS, lipiec 2026",
       href: "https://www.cbos.pl/PL/publikacje/news_tekst.php?nr=25/2026",
     },
@@ -104,22 +104,22 @@ export const homePl: HomeCopy = {
   },
   summary: {
     lines: ["Awokado?", "Nie było."],
-    body: "Po zakupach widać, co kupione, czego zabrakło i ile to trwało. Zanim ktoś zapyta.",
+    body: "Po zakupach widać, co kupione, a czego nie było. Zanim ktoś zapyta.",
     screenAlt:
       "Podsumowanie zakupów w Kangurze: awokado i bułki na czerwonej liście Czego nie było",
   },
   price: {
     lines: ["Ile to kosztuje?", "Proszę, paragon."],
-    body: "Listy, domownicy i tryb zakupów są za darmo. Płaci się tylko za AI bez limitu i dłuższą historię, i to raz za całą przestrzeń, a nie od osoby.",
+    body: "Listy, domownicy i tryb zakupów są za darmo. Płaci się tylko za AI bez limitu i dłuższą historię, i to za całą przestrzeń, a nie od osoby.",
     receiptLabel: "Cennik Kangura w formie paragonu",
     receipt: [
       { kind: "head", text: "Kangur" },
       { kind: "item", text: "Wspólne listy", price: "0,00" },
       { kind: "item", text: "Domownicy", note: "ilu chcesz", price: "0,00" },
-      { kind: "item", text: "10 użyć AI na start", price: "0,00" },
+      { kind: "item", text: "10 użyć AI na start", note: "na całą przestrzeń", price: "0,00" },
       { kind: "item", text: "Reklamy", note: "nie prowadzimy", price: "-" },
       { kind: "rule" },
-      { kind: "item", text: "Premium, pierwszy miesiąc", price: "0,00" },
+      { kind: "item", text: "Premium, pierwszy miesiąc", note: "dla nowych", price: "0,00" },
       {
         kind: "item",
         text: "Premium, każdy kolejny",
@@ -141,12 +141,12 @@ export const homePl: HomeCopy = {
         body: "Widzi tylko ten zrzut, który wybierzesz.",
       },
       {
-        title: "Nie zna kontaktów ani lokalizacji",
-        body: "Nie prosi o nie, bo do listy zakupów nie są potrzebne.",
+        title: "Nie zagląda w kontakty ani w GPS",
+        body: "O te zgody nawet nie pyta. Do listy zakupów nie są potrzebne.",
       },
       {
         title: "Nie ma reklam",
-        body: "Utrzymuje się z Premium, a nie z Twojej uwagi.",
+        body: "Zarabia tylko na Premium, a nie na Twojej uwadze.",
       },
     ],
     safetyLink: "Jakich zgód używa Kangur",
@@ -157,11 +157,11 @@ export const homePl: HomeCopy = {
     items: [
       {
         q: "Co to jest Kangur?",
-        a: "Kangur to aplikacja na iPhone’a i Androida do wspólnych list zakupów. Robi listę ze zrzutu czatu, zdjęcia kartki, nazwy dania, poprzednich list albo z tego, co wpiszesz, i układa produkty według alejek. Pomarańczowy kangur w turkusowej bluzie na ikonie to właśnie on.",
+        a: "Kangur to aplikacja na iPhone’a i Androida do wspólnych list zakupów. Robi listę ze zrzutu czatu, zdjęcia kartki, nazwy dania, poprzednich list albo z tego, co wpiszesz, i układa produkty według alejek. Kangur na ikonie to właśnie on.",
       },
       {
         q: "Czy Kangur jest za darmo?",
-        a: "Tak, z jednym limitem: na start dostajesz 10 użyć AI i ten limit się nie odnawia. Ręczne listy, domownicy i tryb zakupów limitu nie mają. AI bez limitu daje Premium. [[pricing|Zobacz cennik]].",
+        a: "Tak. Limity są dwa: 10 użyć AI na całą przestrzeń, które się nie odnawiają, i 20 ostatnich list w historii. Ręczne listy, domownicy i tryb zakupów limitu nie mają. Resztę opisuje [[pricing|cennik]].",
       },
       {
         q: "Czy druga osoba musi za coś płacić?",
@@ -169,15 +169,15 @@ export const homePl: HomeCopy = {
       },
       {
         q: "Czy Kangur czyta moje wiadomości?",
-        a: "Nie. Nie ma dostępu do żadnego komunikatora. Widzi tylko ten jeden obrazek, który wybierzesz z galerii. Obrazek trafia do dostawcy AI (OpenAI), żeby odczytać listę, a Kangur go nie zapisuje.",
+        a: "Nie. Nie ma dostępu do żadnego komunikatora. Widzi tylko ten jeden obrazek, który wybierzesz z galerii. Obrazek trafia do dostawcy AI (OpenAI), który odczytuje z niego listę. Kangur obrazka nie zapisuje.",
       },
       {
         q: "Co działa, gdy w sklepie nie ma zasięgu?",
-        a: "Odhaczanie produktów na otwartej liście: zmiany czekają w telefonie i wysyłają się później. Tworzenie list i AI potrzebują internetu.",
+        a: "Tryb zakupów na liście, którą masz już otwartą: odhaczasz i dopisujesz, a zmiany wysyłają się później. Nowe listy i AI potrzebują internetu.",
       },
       {
-        q: "Czy to ten Kangur od matematyki albo od zdalnego pulpitu?",
-        a: "Ani jeden, ani drugi. Kangurów jest sporo, nasz umie tylko listy zakupów. Nie steruje telefonem ani komputerem i nikt od nas nie dzwoni. [[safety|Więcej o bezpieczeństwie]].",
+        q: "Czy to ten Kangur od konkursu z matematyki?",
+        a: "Nie. Kangurów jest sporo, a nasz umie tylko listy zakupów. Pomarańczowy, w turkusowej bluzie. [[safety|Jak sprawdzić, że to my]].",
       },
     ],
   },

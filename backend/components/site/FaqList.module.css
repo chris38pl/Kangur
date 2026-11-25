@@ -22,8 +22,6 @@
 
 .summary:focus-visible {
   border-radius: 8px;
-  outline: 3px solid var(--kangur-primary);
-  outline-offset: 2px;
 }
 
 .question {

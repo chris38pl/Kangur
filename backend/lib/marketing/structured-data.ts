@@ -50,12 +50,12 @@ function organization(): Node {
     founder: { "@type": "Person", name: "Krzysztof Krawiec" },
     address: {
       "@type": "PostalAddress",
-      streetAddress: "ul. Sielawy 23e/19",
-      postalCode: "61-619",
-      addressLocality: "Poznań",
+      streetAddress: LEGAL_ENTITY.street,
+      postalCode: LEGAL_ENTITY.postalCode,
+      addressLocality: LEGAL_ENTITY.city,
       addressCountry: "PL",
     },
-    vatID: `PL${LEGAL_ENTITY.nip}`,
+    taxID: LEGAL_ENTITY.nip,
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",
@@ -80,7 +80,7 @@ function website(): Node {
 }
 
 /** The app itself. No ratings or user counts: the fact bank does not back any. */
-function app(locale: AppLocale): Node {
+function app(locale: AppLocale, { prices = false } = {}): Node {
   const { title, description } = pageMeta("home", locale);
   const screens = screensFor(locale);
   return {
@@ -101,33 +101,36 @@ function app(locale: AppLocale): Node {
     inLanguage: [...APP_LOCALE_IDS],
     installUrl: [APP_STORE_URL, PLAY_STORE_URL],
     sameAs: [APP_STORE_URL, PLAY_STORE_URL],
-    offers: [
-      {
-        "@type": "Offer",
-        name: "Kangur",
-        price: "0",
-        priceCurrency: "PLN",
-      },
-      ...(locale === "pl"
-        ? [
-            {
-              "@type": "Offer",
-              name: "Kangur Premium",
-              price: "9.99",
-              priceCurrency: "PLN",
-              eligibleRegion: { "@type": "Country", name: "PL" },
-              priceSpecification: {
-                "@type": "UnitPriceSpecification",
-                price: "9.99",
-                priceCurrency: "PLN",
-                unitCode: "MON",
-              },
-            },
-          ]
-        : []),
-    ],
+    // Only where a reader sees the prices too.
+    ...(prices ? { offers: offers(locale) } : {}),
     publisher: { "@id": ORGANIZATION_ID },
   };
+}
+
+function offers(locale: AppLocale): Node[] {
+  const free = {
+    "@type": "Offer",
+    name: "Kangur",
+    price: "0",
+    priceCurrency: "PLN",
+  };
+  if (locale !== "pl") return [free];
+  return [
+    free,
+    {
+      "@type": "Offer",
+      name: "Kangur Premium",
+      price: "9.99",
+      priceCurrency: "PLN",
+      eligibleRegion: { "@type": "Country", name: "PL" },
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: "9.99",
+        priceCurrency: "PLN",
+        unitCode: "MON",
+      },
+    },
+  ];
 }
 
 function webPage(
@@ -153,7 +156,12 @@ function webPage(
 
 /** Home page: who makes Kangur, the site, and the app with both store links. */
 export function homeStructuredData(locale: AppLocale): Node {
-  return graph(organization(), website(), app(locale), webPage("home", locale));
+  return graph(
+    organization(),
+    website(),
+    app(locale, { prices: true }),
+    webPage("home", locale),
+  );
 }
 
 const PAGE_TYPES: Partial<Record<MarketingRouteId, string>> = {
@@ -171,7 +179,7 @@ export function pageStructuredData(
     webPage(id, locale, PAGE_TYPES[id]),
     organization(),
     website(),
-    app(locale),
+    app(locale, { prices: id === "pricing" }),
   );
 }
 
@@ -244,7 +252,7 @@ export function faqStructuredData(
     inLanguage: locale,
     mainEntity: items.map(({ q, a }) => ({
       "@type": "Question",
-      name: q,
+      name: plainText(q),
       acceptedAnswer: { "@type": "Answer", text: plainText(a) },
     })),
   };

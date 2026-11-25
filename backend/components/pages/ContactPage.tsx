@@ -25,7 +25,7 @@ export function ContactPage({ locale }: { locale: AppLocale }) {
         eyebrow={contact}
         lines={c.lines}
         lead={<p>{c.lead}</p>}
-        art={<Sticker name="z-lista" className={styles.kangur} priority />}
+        art={<Sticker name="z-lista" className={styles.kangur} priority="desktop" />}
       >
         <FactRows rows={c.rows} locale={locale} />
       </PageHero>

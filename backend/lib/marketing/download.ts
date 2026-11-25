@@ -1,4 +1,9 @@
-import { SITE_DEFAULT_LOCALE, splitLocalePrefix, withLocale } from "@/lib/marketing/locale";
+import {
+  SITE_DEFAULT_LOCALE,
+  internalPath,
+  splitLocalePrefix,
+  withLocale,
+} from "@/lib/marketing/locale";
 import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/marketing/site";
 import { appStoreLink, playStoreLink, readUtm } from "@/lib/marketing/store-links";
 
@@ -34,7 +39,8 @@ export function downloadTarget(input: {
   }
   return {
     kind: "site",
-    path: withLocale(prefix ?? SITE_DEFAULT_LOCALE, "/"),
+    // `/pl/pobierz` says Polish, so it must not be translated on the way.
+    path: prefix ? internalPath(prefix, "/") : withLocale(SITE_DEFAULT_LOCALE, "/"),
     hash: "#pobierz",
   };
 }

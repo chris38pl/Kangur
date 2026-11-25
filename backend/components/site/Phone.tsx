@@ -29,7 +29,7 @@ type Props = {
   alt: string;
   time?: string;
   sizes?: string;
-  priority?: boolean;
+  priority?: boolean | "desktop";
   /** Show only the upper part of the screen, for cards. */
   cropped?: boolean;
   className?: string;
