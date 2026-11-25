@@ -11,6 +11,15 @@ export type MarketingRouteId =
   | "safety"
   | "about"
   | "press"
+  | "sharedList"
+  | "photoList"
+  | "recipeList"
+  | "aiList"
+  | "aisleTool"
+  | "guides"
+  | "guideChristmas"
+  | "guideWeek"
+  | "guidePrint"
   | "faq"
   | "contact"
   | "privacy"
@@ -30,6 +39,8 @@ export type MarketingRoute = {
    * prefix may be sent to their own language (`/terms` opened from the app in German).
    */
   languageNeutral?: boolean;
+  /** Articles only: the day it first went live. */
+  publishedAt?: string;
   /** Day the content last changed, feeds sitemap `lastmod`. */
   updatedAt: string;
   changeFrequency: "daily" | "weekly" | "monthly" | "yearly";
@@ -76,6 +87,63 @@ export const ROUTES: Record<MarketingRouteId, MarketingRoute> = {
     updatedAt: "2026-11-25",
     changeFrequency: "monthly",
     priority: 0.5,
+  },
+  sharedList: {
+    paths: { pl: "/wspolna-lista-zakupow" },
+    updatedAt: "2026-11-26",
+    changeFrequency: "monthly",
+    priority: 0.9,
+  },
+  photoList: {
+    paths: { pl: "/lista-zakupow-ze-zdjecia" },
+    updatedAt: "2026-11-26",
+    changeFrequency: "monthly",
+    priority: 0.9,
+  },
+  recipeList: {
+    paths: { pl: "/lista-zakupow-z-przepisu" },
+    updatedAt: "2026-11-26",
+    changeFrequency: "monthly",
+    priority: 0.8,
+  },
+  aiList: {
+    paths: { pl: "/lista-zakupow-ai" },
+    updatedAt: "2026-11-26",
+    changeFrequency: "monthly",
+    priority: 0.8,
+  },
+  aisleTool: {
+    paths: { pl: "/lista-zakupow-z-podzialem-na-kategorie" },
+    updatedAt: "2026-11-26",
+    changeFrequency: "monthly",
+    priority: 0.9,
+  },
+  guides: {
+    paths: { pl: "/poradniki" },
+    updatedAt: "2026-11-26",
+    changeFrequency: "weekly",
+    priority: 0.6,
+  },
+  guideChristmas: {
+    paths: { pl: "/poradniki/lista-zakupow-na-wigilie-i-swieta" },
+    publishedAt: "2026-11-26",
+    updatedAt: "2026-11-26",
+    changeFrequency: "weekly",
+    priority: 0.9,
+  },
+  guideWeek: {
+    paths: { pl: "/poradniki/lista-zakupow-na-tydzien" },
+    publishedAt: "2026-11-26",
+    updatedAt: "2026-11-26",
+    changeFrequency: "monthly",
+    priority: 0.8,
+  },
+  guidePrint: {
+    paths: { pl: "/poradniki/lista-zakupow-do-druku" },
+    publishedAt: "2026-11-26",
+    updatedAt: "2026-11-26",
+    changeFrequency: "monthly",
+    priority: 0.8,
   },
   faq: {
     paths: inPolishAndEnglish("/faq"),
@@ -133,6 +201,19 @@ export const PATH_ALIASES: Record<string, MarketingRouteId> = {
   "/regulamin": "terms",
   "/polityka-prywatnosci": "privacy",
   "/usun-konto": "deleteAccount",
+  "/lista-zakupow": "sharedList",
+  "/wspolna-lista": "sharedList",
+  "/lista-zakupow-ze-screena": "photoList",
+  "/lista-zakupow-ze-zrzutu": "photoList",
+  "/lista-z-przepisu": "recipeList",
+  "/alejki": "aisleTool",
+  "/blog": "guides",
+  "/wigilia": "guideChristmas",
+  "/swieta": "guideChristmas",
+  "/poradniki/lista-zakupow-na-wigilie": "guideChristmas",
+  "/poradniki/lista-zakupow-na-swieta": "guideChristmas",
+  "/lista-zakupow-na-tydzien": "guideWeek",
+  "/lista-zakupow-do-druku": "guidePrint",
 };
 
 /** Languages that have their own indexable version of the page. */

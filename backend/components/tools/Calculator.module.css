@@ -1,0 +1,398 @@
+.calculator {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 34px;
+}
+
+.form {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+.form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 18px 20px 20px;
+  border: 1px solid var(--kangur-border);
+  border-radius: 22px;
+  background: #fff;
+}
+
+.form legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.form legend + * {
+  clear: both;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.stepper p {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.stepper small {
+  color: var(--kangur-text-muted);
+}
+
+.stepperControls {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepperControls button {
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--kangur-primary-deep);
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stepperControls button:hover:not(:disabled) {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
+.stepperControls button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.stepperControls output {
+  min-width: 78px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.verdict {
+  margin: 0 0 8px;
+  color: var(--kangur-text-body);
+}
+
+.verdict strong {
+  color: var(--kangur-primary-deep);
+}
+
+.dishes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dishes li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--kangur-border);
+}
+
+.dishes label {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.dishes li[data-plan="skip"] label {
+  color: var(--kangur-text-muted);
+  font-weight: 400;
+}
+
+.dishes select {
+  flex: none;
+  width: 156px;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.dishes li[data-plan="make"] select {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
+.dishes li[data-plan="bring"] select {
+  border-color: #f0b27a;
+  background: #fdf1e6;
+}
+
+.checks {
+  display: grid;
+  gap: 2px;
+}
+
+.checks label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  cursor: pointer;
+}
+
+.checks input,
+.group input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--kangur-primary-deep);
+}
+
+.checks small {
+  display: block;
+  color: var(--kangur-text-muted);
+  line-height: 1.3;
+}
+
+.more {
+  margin-top: 8px;
+}
+
+.more summary {
+  min-height: 44px;
+  padding: 10px 0;
+  color: var(--kangur-primary-deep);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.plainButton {
+  justify-self: start;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.plainButton:hover {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
+.result {
+  scroll-margin-top: 90px;
+}
+
+.resultHead {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.resultHead h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.resultHead p {
+  margin: 0;
+  color: var(--kangur-text-body);
+}
+
+.views {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: fit-content;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--kangur-primary-soft);
+}
+
+.views button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--kangur-text-body);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.views button[aria-pressed="true"] {
+  background: #fff;
+  color: var(--kangur-text);
+  box-shadow: 0 4px 12px -6px rgba(31, 43, 69, 0.35);
+}
+
+.groups {
+  margin-bottom: 20px;
+}
+
+.group {
+  margin-bottom: 14px;
+  padding: 16px 18px 8px;
+  border: 1px solid var(--kangur-border);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 12px 28px -24px rgba(31, 43, 69, 0.4);
+  break-inside: avoid;
+}
+
+.group h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.hint {
+  margin: 2px 0 0;
+  color: var(--kangur-text-muted);
+  font-size: 0.9rem;
+}
+
+.group ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group li {
+  border-top: 1px solid var(--kangur-border);
+}
+
+.group label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.name {
+  flex: 1;
+  line-height: 1.3;
+}
+
+.name small {
+  display: block;
+  color: var(--kangur-text-muted);
+  font-size: 0.85rem;
+}
+
+.quantity {
+  flex: none;
+  color: var(--kangur-text-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.group li[data-done] .name,
+.group li[data-done] .quantity {
+  color: var(--kangur-text-muted);
+  text-decoration: line-through;
+}
+
+.family {
+  margin-top: 24px;
+}
+
+.family h3 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.kangurHint {
+  margin: 14px 0 0;
+  color: var(--kangur-text-muted);
+  font-size: 0.9rem;
+}
+
+.sheetFoot {
+  display: none;
+}
+
+@media (min-width: 980px) {
+  .calculator {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 40px;
+    align-items: start;
+  }
+}
+
+@media (min-width: 1100px) {
+  .groups {
+    columns: 2;
+    column-gap: 14px;
+  }
+}
+
+@media print {
+  .calculator {
+    display: block;
+  }
+
+  .groups {
+    columns: 2;
+    column-gap: 26px;
+  }
+
+  .group {
+    margin-bottom: 9px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .group ul {
+    margin-top: 3px;
+  }
+
+  .group label {
+    min-height: 24px;
+  }
+
+  .group input {
+    width: 15px;
+    height: 15px;
+  }
+
+  .sheetFoot {
+    display: block;
+    margin-top: 14px;
+    break-inside: avoid;
+  }
+}

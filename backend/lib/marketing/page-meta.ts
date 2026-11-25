@@ -124,6 +124,69 @@ const PAGE_META: Record<
         "How to make a list from a chat screenshot, invite your household, what Premium adds and what works on a weak signal. Answers about the Kangur grocery list.",
     },
   },
+  sharedList: {
+    pl: {
+      title: "Wspólna lista zakupów dla pary i rodziny - Kangur",
+      description:
+        "Jedna lista zakupów na iPhone’a i Androida, dla całego domu. Zapraszasz e-mailem, każdy dopisuje u siebie, a w sklepie widać, co już w koszyku.",
+    },
+  },
+  photoList: {
+    pl: {
+      title: "Lista zakupów ze zdjęcia i zrzutu ekranu - Kangur",
+      description:
+        "Zrzut czatu albo zdjęcie kartki zamienia się w listę zakupów ułożoną według alejek. Zobacz na przykładzie, co AI robi z siedmiu wiadomości.",
+    },
+  },
+  recipeList: {
+    pl: {
+      title: "Lista zakupów z przepisu - aplikacja Kangur",
+      description:
+        "Wpisz do pięciu dań, a dostaniesz składniki na jednej liście zakupów. Co się powtarza, jest raz. Odznaczasz to, co masz w domu.",
+    },
+  },
+  aiList: {
+    pl: {
+      title: "Lista zakupów z AI: co AI umie, a czego nie - Kangur",
+      description:
+        "AI w Kangurze robi listę zakupów z czatu, kartki albo nazwy dania. Nie wymyśla ilości i nie doradza. Zobacz zasady, błędy i cenę.",
+    },
+  },
+  aisleTool: {
+    pl: {
+      title: "Lista zakupów z podziałem na kategorie - narzędzie",
+      description:
+        "Wklej listę zakupów, a narzędzie podzieli ją na 24 alejki sklepu. Za darmo, bez konta, w przeglądarce. Kolejność ustawisz, listę wydrukujesz.",
+    },
+  },
+  guides: {
+    pl: {
+      title: "Poradniki o listach zakupów - Kangur",
+      description:
+        "Krótkie poradniki z narzędziami: lista zakupów na Wigilię i święta przeliczona na gości, lista na tydzień i kartki do druku.",
+    },
+  },
+  guideChristmas: {
+    pl: {
+      title: "Lista zakupów na Wigilię i święta 2026 + kalkulator",
+      description:
+        "Policz zakupy na Wigilię: dwanaście dań, liczba gości, kto co przynosi i co kupić wcześniej. Sklepy zamknięte od 24 do 27 grudnia.",
+    },
+  },
+  guideWeek: {
+    pl: {
+      title: "Lista zakupów na tydzień: dla 1, 2 osób i rodziny",
+      description:
+        "Gotowa lista zakupów na tydzień z ilościami dla jednej osoby, dwóch i rodziny. Duże zakupy, mała dokupka w środku tygodnia i druk.",
+    },
+  },
+  guidePrint: {
+    pl: {
+      title: "Lista zakupów do druku (PDF, A4) - 4 darmowe wzory",
+      description:
+        "Cztery listy zakupów do druku w PDF: z alejkami, z gotowymi produktami, na tydzień z obiadami i na Wigilię. Za darmo, bez maila.",
+    },
+  },
   contact: {
     pl: {
       title: "Kontakt - Kangur, lista zakupów z AI",

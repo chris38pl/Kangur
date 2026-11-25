@@ -1,0 +1,39 @@
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.actions button {
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.actions button:hover:not(:disabled) {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.actions .primary {
+  border-color: var(--kangur-primary-deep);
+  background: var(--kangur-primary-deep);
+  color: #fff;
+}
+
+.actions .primary:hover:not(:disabled) {
+  border-color: var(--kangur-primary-hover);
+  background: var(--kangur-primary-hover);
+}

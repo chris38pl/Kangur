@@ -1,0 +1,124 @@
+.mint {
+  background: linear-gradient(180deg, #f1faf7, #e2f4ee);
+}
+
+.split {
+  display: grid;
+  gap: 40px;
+  align-items: center;
+}
+
+.picture {
+  display: flex;
+  justify-content: center;
+}
+
+/* Numbered steps: the number hangs on a line, like aisles one after another. */
+.steps {
+  display: grid;
+  gap: 22px;
+  max-width: none;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 16px;
+  margin: 0;
+}
+
+.steps h3 {
+  margin: 5px 0 4px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.steps p {
+  margin: 0;
+}
+
+.number {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--kangur-primary-deep);
+  color: #fff;
+  font-weight: 800;
+}
+
+.plain td:last-child,
+.plain thead th:last-child {
+  background: none;
+}
+
+.fact {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 26px 30px;
+  border-left: 5px solid var(--kangur-primary);
+  border-radius: 0 20px 20px 0;
+  background: #f1faf7;
+}
+
+.fact p {
+  margin: 0;
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.45;
+}
+
+.fact footer {
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+
+.related {
+  position: relative;
+}
+
+/* The whole card is the link. */
+.related h3 a {
+  color: var(--kangur-text);
+  text-decoration: none;
+}
+
+.related h3 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+}
+
+.related:hover h3 a {
+  color: var(--kangur-primary-deep);
+  text-decoration: underline;
+}
+
+@media (min-width: 760px) {
+  .stepsWide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 26px 40px;
+  }
+}
+
+@media (min-width: 900px) {
+  .table tbody th {
+    white-space: nowrap;
+  }
+
+  .split {
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: 64px;
+  }
+
+  .flip > :first-child {
+    order: 2;
+  }
+}

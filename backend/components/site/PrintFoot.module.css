@@ -1,0 +1,20 @@
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1.5px dashed #b9c2cc;
+  color: #23303f;
+  font-size: 10pt;
+  line-height: 1.4;
+}
+
+.foot svg {
+  flex: none;
+  width: 58px;
+  height: 58px;
+}
+
+.foot p {
+  margin: 0;
+}
