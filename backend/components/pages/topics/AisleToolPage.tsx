@@ -1,14 +1,14 @@
 import { TopicPage } from "@/components/pages/TopicPage";
 import { AisleTable } from "@/components/site/AisleTable";
 import { Phone } from "@/components/site/Phone";
-import { PrintFoot } from "@/components/site/PrintFoot";
 import { Sticker } from "@/components/site/Sticker";
-import { ToolNudge } from "@/components/site/ToolNudge";
 import prose from "@/components/site/prose.module.css";
 import { AisleTool } from "@/components/tools/AisleTool";
+import { kangurSlots } from "@/components/tools/kangur-slots";
 import { buildAisleWords } from "@/lib/marketing/aisles/dictionary";
 import type { Aisle } from "@/lib/marketing/aisles/labels";
-import { AISLE_NUDGE, AISLE_SAMPLE, AISLE_TOOL } from "@/lib/marketing/content/topics/aisle-tool";
+import { AISLE_SAMPLE, AISLE_TOOL } from "@/lib/marketing/content/topics/aisle-tool";
+import { TOOLS } from "@/lib/marketing/content/topics/tools";
 import { SCREENS } from "@/lib/marketing/images.generated";
 
 import styles from "./topics.module.css";
@@ -28,8 +28,8 @@ export function AisleToolPage() {
       id="aisleTool"
       locale="pl"
       copy={AISLE_TOOL}
-      page="alejki"
-      printable
+      page="narzedzie-alejki"
+      parent={{ label: TOOLS.crumb, id: "tools" }}
       sticker="z-torba"
       art={<Sticker name="z-lista" className={`${styles.stickerLow} ${styles.toolArt}`} priority />}
       slots={{
@@ -46,12 +46,7 @@ export function AisleToolPage() {
     >
       <section className={styles.tool}>
         <div className={prose.wrap}>
-          <AisleTool
-            words={packWords()}
-            sample={AISLE_SAMPLE}
-            code={<PrintFoot />}
-            nudge={<ToolNudge {...AISLE_NUDGE} page="narzedzie-alejki" />}
-          />
+          <AisleTool words={packWords()} sample={AISLE_SAMPLE} slots={kangurSlots("hop-alejki")} />
         </div>
       </section>
     </TopicPage>

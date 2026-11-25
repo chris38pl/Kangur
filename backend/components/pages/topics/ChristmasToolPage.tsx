@@ -1,13 +1,12 @@
 import { TopicPage } from "@/components/pages/TopicPage";
 import { Phone } from "@/components/site/Phone";
 import { DishTable } from "@/components/site/DishTable";
-import { PrintFoot } from "@/components/site/PrintFoot";
 import { AfterSeason } from "@/components/site/Season";
 import { Sticker } from "@/components/site/Sticker";
-import { ToolNudge } from "@/components/site/ToolNudge";
 import prose from "@/components/site/prose.module.css";
 import { ChristmasCalculator } from "@/components/tools/ChristmasCalculator";
-import { CHRISTMAS_NUDGE, CHRISTMAS_TOOL } from "@/lib/marketing/content/topics/christmas-tool";
+import { kangurSlots } from "@/components/tools/kangur-slots";
+import { CHRISTMAS_TOOL } from "@/lib/marketing/content/topics/christmas-tool";
 import { TOOLS } from "@/lib/marketing/content/topics/tools";
 import { SHARED_SCREEN_ALT } from "@/lib/marketing/content/topics/shared-list";
 import { SCREENS } from "@/lib/marketing/images.generated";
@@ -18,7 +17,7 @@ import styles from "./topics.module.css";
 
 export function ChristmasToolPage() {
   const over = (
-    <p className={styles.over} data-noprint>
+    <p className={styles.over}>
       Święta {CHRISTMAS.year} za nami. Daty poprawimy przed następnymi, ilości zostają te same.
     </p>
   );
@@ -27,10 +26,9 @@ export function ChristmasToolPage() {
       id="christmasTool"
       locale="pl"
       copy={CHRISTMAS_TOOL}
-      page="poradnik-swieta"
+      page="narzedzie-wigilia"
       parent={{ label: TOOLS.crumb, id: "tools" }}
       tone="peach"
-      printable
       sticker="z-koszykiem"
       art={<Sticker name="z-torba" className={`${styles.stickerLow} ${styles.toolArt}`} priority />}
       slots={{
@@ -47,10 +45,7 @@ export function ChristmasToolPage() {
       <section className={styles.tool}>
         <div className={prose.wrap}>
           {isOver(CHRISTMAS.over) ? over : <AfterSeason after={CHRISTMAS.over}>{over}</AfterSeason>}
-          <ChristmasCalculator
-            code={<PrintFoot />}
-            nudge={<ToolNudge {...CHRISTMAS_NUDGE} page="kalkulator-wigilia" />}
-          />
+          <ChristmasCalculator slots={kangurSlots("hop-wigilia")} />
         </div>
       </section>
     </TopicPage>

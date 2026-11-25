@@ -64,7 +64,7 @@ const copy: TopicCopy = {
       kind: "text",
       title: "Drugi tydzień jest łatwiejszy",
       body: [
-        "Po kilku listach w Kangurze nie zaczynasz od pustej kartki. „Poprzednie listy” zbierają produkty z pięciu ostatnich list i pokazują, które wracają najczęściej. Zostawiasz te, których trzeba. To jedno użycie AI, choć liczy sam Kangur.",
+        "Po kilku listach w Kangurze nie zaczynasz od zera. „Poprzednie listy” zbierają produkty z pięciu ostatnich list i pokazują, które wracają najczęściej. Zostawiasz te, których trzeba. To jedno użycie AI, choć liczy sam Kangur.",
         "Rukoli, która nie dożyła soboty, nikt nie każe kupować drugi raz.",
       ],
       slot: "history",

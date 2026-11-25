@@ -50,20 +50,20 @@ test("a computer gets the buttons, in its language", () => {
 });
 
 test("the campaign reaches the store", () => {
-  const ios = target("/pobierz", IPHONE, "?utm_source=kartka&utm_campaign=wigilia");
-  assert.match(ios?.kind === "store" ? ios.url : "", /ct=kartka-wigilia/);
+  const ios = target("/pobierz", IPHONE, "?utm_source=plakat&utm_campaign=wigilia");
+  assert.match(ios?.kind === "store" ? ios.url : "", /ct=plakat-wigilia/);
 
-  const android = target("/pobierz", ANDROID, "?utm_source=kartka");
+  const android = target("/pobierz", ANDROID, "?utm_source=plakat");
   assert.match(
     android?.kind === "store" ? decodeURIComponent(android.url) : "",
-    /referrer=utm_source=kartka/,
+    /referrer=utm_source=plakat/,
   );
 });
 
 test("other addresses are not download links", () => {
   assert.equal(target("/", IPHONE), null);
   assert.equal(target("/pobierz-cos", IPHONE), null);
-  assert.equal(target("/poradniki/pobierz", IPHONE), null);
+  assert.equal(target("/narzedzia/pobierz", IPHONE), null);
 });
 
 test("without a campaign the store learns which page sent the visitor", () => {

@@ -1,0 +1,467 @@
+/* The end of every tool: what came out of it, and three steps that take it into the app. */
+.band {
+  --pad: 14px;
+  position: relative;
+  /* Room for the Kangur, who looks out from above the edge. */
+  margin: 94px -12px 0;
+  padding: 26px var(--pad) 26px;
+  border-radius: 30px;
+  background: linear-gradient(165deg, #eaf8f3, #cdecdf);
+  scroll-margin-top: 62px;
+}
+
+.head {
+  padding-inline: 8px;
+}
+
+.head h2 {
+  padding-right: 92px;
+  font-size: 1.66rem;
+}
+
+/* On a phone next to the heading, on a wide screen standing on the cards. */
+.kangur {
+  position: absolute;
+  top: -62px;
+  right: 14px;
+  width: 84px;
+  height: auto;
+}
+
+.arrived {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+}
+
+.arrived p {
+  margin: 0 0 8px;
+  color: var(--kangur-primary-deep);
+  font-weight: 700;
+}
+
+.arrived p:empty {
+  display: none;
+}
+
+.arrived button {
+  margin: 0 0 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips li {
+  padding: 4px 12px 5px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kangur-text);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.summary {
+  max-width: 40rem;
+  margin: 14px 0 0;
+  color: var(--kangur-text);
+  font-weight: 600;
+}
+
+.steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  padding: 20px 18px 22px;
+  border-radius: 24px;
+  background: #fff;
+}
+
+/* Two buttons next to each other need more than a card has on a phone. */
+.step :global(.mkt-stores) {
+  grid-template-columns: minmax(0, 220px);
+}
+
+.step h3 {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  margin: 0 0 12px;
+  font-size: 1.22rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.step p {
+  margin: 0 0 12px;
+  color: var(--kangur-text-body);
+}
+
+.step > :last-child,
+.more p:last-child {
+  margin-bottom: 0;
+}
+
+.number {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--kangur-primary-deep);
+  color: #fff;
+}
+
+/* A piece of the real screen, with its own pale background. */
+.screen {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 14px;
+  border: 1px solid #d9e9e4;
+  border-radius: 18px;
+}
+
+.parts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.parts li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--kangur-border);
+}
+
+.parts strong {
+  display: block;
+  line-height: 1.25;
+}
+
+.parts small {
+  color: var(--kangur-text-muted);
+  font-size: 0.9rem;
+}
+
+.button {
+  flex: none;
+  min-width: 132px;
+  min-height: 46px;
+  padding: 0 16px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.button:hover {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
+.primary {
+  border-color: var(--kangur-primary-deep);
+  background: var(--kangur-primary-deep);
+  color: #fff;
+}
+
+.primary:hover {
+  border-color: var(--kangur-primary-hover);
+  background: var(--kangur-primary-hover);
+}
+
+.wide {
+  width: 100%;
+  min-height: 52px;
+  font-size: 1.05rem;
+}
+
+.message {
+  margin: 10px 0 0;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--kangur-primary-soft);
+  font-weight: 700;
+}
+
+.step .message {
+  color: var(--kangur-text);
+}
+
+.manual {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid #8fa9a2;
+  border-radius: 14px;
+  background: #fffef9;
+  color: var(--kangur-text);
+  font: inherit;
+  /* Below 16px iPhones zoom the page in. */
+  font-size: 1rem;
+}
+
+.others {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 18px;
+  margin-top: 8px;
+}
+
+.quiet {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--kangur-primary-deep);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.quiet:hover {
+  color: var(--kangur-primary-hover);
+}
+
+.note {
+  max-width: 46rem;
+  margin: 18px 8px 0;
+  color: var(--kangur-text-body);
+  font-size: 0.92rem;
+}
+
+/* The way here from the list. */
+.hop {
+  display: none;
+}
+
+.bar {
+  position: sticky;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0 10px;
+  min-height: 54px;
+  padding: 13px 20px;
+  border-radius: 16px;
+  background: var(--kangur-primary-deep);
+  box-shadow: 0 14px 30px -12px rgba(20, 70, 60, 0.55);
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.bar:hover {
+  background: var(--kangur-primary-hover);
+  color: #fff;
+}
+
+.bar small {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.forComputer,
+.qr {
+  display: none;
+}
+
+.code {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.step .long {
+  align-self: center;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+}
+
+@media (max-width: 359px) {
+  .button {
+    min-width: 104px;
+  }
+}
+
+@media (min-width: 480px) {
+  .step :global(.mkt-stores) {
+    grid-template-columns: repeat(2, minmax(0, 176px));
+  }
+}
+
+@media (min-width: 700px) {
+  .band {
+    --pad: clamp(24px, 4vw, 52px);
+    margin-inline: 0;
+    padding-block: 38px 34px;
+  }
+
+  .head {
+    position: relative;
+    padding: 0 200px 0 0;
+  }
+
+  .head h2 {
+    padding: 0;
+    font-size: clamp(1.9rem, 4.4vw, 3rem);
+  }
+
+  .kangur {
+    top: auto;
+    right: 16px;
+    bottom: -38px;
+    width: 152px;
+  }
+
+  .step {
+    padding: 26px 28px 28px;
+  }
+
+  .note {
+    margin-inline: 0;
+  }
+}
+
+/* Words on the left, the real screen on the right. */
+@media (min-width: 760px) {
+  .band {
+    scroll-margin-top: 34px;
+  }
+
+  .step {
+    display: grid;
+    grid-template-areas: "title screen" "main screen" "more screen";
+    grid-template-rows: auto auto 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: clamp(24px, 4vw, 48px);
+  }
+
+  .step h3 {
+    grid-area: title;
+  }
+
+  .main {
+    grid-area: main;
+  }
+
+  .more {
+    grid-area: more;
+  }
+
+  .screen {
+    grid-area: screen;
+    align-self: center;
+    margin: 0;
+  }
+
+  .take {
+    grid-template-areas: "title" "main";
+    grid-template-rows: auto 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .parts,
+  .wide {
+    max-width: 34rem;
+  }
+}
+
+/* A computer: the list is here, and Kangur is in the pocket. */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
+  .bar,
+  .forPhone {
+    display: none;
+  }
+
+  .forComputer {
+    display: block;
+  }
+
+  .hop {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    min-height: 48px;
+    padding: 0 22px;
+    border-radius: 12px;
+    background: var(--kangur-primary-deep);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .hop:hover {
+    background: var(--kangur-primary-hover);
+    color: #fff;
+  }
+
+  .take {
+    grid-template-areas: "title code" "main code";
+    grid-template-columns: minmax(0, 1fr) 248px;
+  }
+
+  .qr {
+    display: grid;
+    grid-area: code;
+    align-self: center;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: 1px solid #d9e9e4;
+    border-radius: 18px;
+    background: #fff;
+  }
+
+  .step .here {
+    margin: 20px 0 4px;
+    color: var(--kangur-text);
+    font-weight: 700;
+  }
+
+  /* Here the code comes first, and copying is the other way. */
+  .primary {
+    border-color: #cfe3dd;
+    background: #fff;
+    color: var(--kangur-text);
+  }
+
+  .primary:hover {
+    border-color: var(--kangur-primary);
+    background: var(--kangur-primary-soft);
+  }
+}

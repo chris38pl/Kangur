@@ -48,6 +48,6 @@ export type TopicCopy = {
     items: readonly { id: MarketingRouteId; label: string; body: string }[];
   };
   closing?: { lines: Lines; body: string };
-  /** Who publishes the guide, as of when, and how to quote it. */
+  /** Who made the calculator, as of when, and how to quote it. */
   imprint?: string;
 };

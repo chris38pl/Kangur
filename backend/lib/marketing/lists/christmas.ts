@@ -1,7 +1,9 @@
 import type { Aisle } from "@/lib/marketing/aisles/labels";
 import { addUp, type Line, type Need, type Product } from "@/lib/marketing/lists/build";
 import { plural } from "@/lib/marketing/lists/format";
+import { kangurPart, type KangurPart } from "@/lib/marketing/lists/parts";
 import { clampInt, flags, isRecord } from "@/lib/marketing/lists/stored";
+import { typesetCopy } from "@/lib/marketing/typography";
 
 /**
  * Shopping for a Polish Christmas Eve and the days after it.
@@ -14,7 +16,7 @@ import { clampInt, flags, isRecord } from "@/lib/marketing/lists/stored";
 export type When = "early" | "weekend" | "last";
 
 /**
- * The only season the guide talks about. Next autumn: check the trading Sundays and the days
+ * The only season the calculator talks about. Next autumn: check the trading Sundays and the days
  * off, then follow the list in docs/deploy.md. `strip` is the last day the home page invites
  * people to the calculator, `over` the last day its dates are in the future.
  */
@@ -89,8 +91,9 @@ export const PRODUCTS = {
   nuts: p("Bakalie (rodzynki i orzechy)", "pantry", "g", 100, "early"),
   honey: p("Miód (słoik)", "pantry", "szt.", 1, "early"),
   buckwheat: p("Kasza gryczana", "pantry", "kg", 0.5, "early"),
-  noodles: p("Makaron łazanki 400 g", "pantry", "opak.", 1, "early"),
-  soupNoodles: p("Makaron nitki 250 g", "pantry", "opak.", 1, "early"),
+  // Not "Makaron łazanki": Kangur keeps one product of a name, and three pastas would be one.
+  noodles: p("Łazanki 400 g", "pantry", "opak.", 1, "early"),
+  soupNoodles: p("Nitki do rosołu 250 g", "pantry", "opak.", 1, "early"),
   pasta: p("Makaron 500 g", "pantry", "opak.", 1, "early"),
   yeast: p("Drożdże (kostka 100 g)", "pantry", "szt.", 1, "weekend"),
   peas: p("Groszek konserwowy (puszka)", "pantry", "szt.", 1, "early"),
@@ -460,6 +463,39 @@ export function readPlan(stored: unknown): ChristmasPlan {
   };
 }
 
+/** Only what differs from the plan everybody starts with, for the code that a phone scans. */
+export function planChanges(plan: ChristmasPlan): Partial<ChristmasPlan> {
+  const dishes = Object.fromEntries(
+    (DISHES as readonly Dish[]).flatMap((dish) => {
+      const choice = dishPlan(plan, dish);
+      return choice === dishPlan(DEFAULT_PLAN, dish) ? [] : [[dish.id, choice] as const];
+    }),
+  );
+  const extras = Object.fromEntries(
+    (EXTRAS as readonly Extra[]).flatMap((extra) => {
+      const on = extraOn(plan, extra);
+      return on === extra.on ? [] : [[extra.id, on] as const];
+    }),
+  );
+  const forgotten = Object.fromEntries(
+    FORGOTTEN.flatMap(({ id, on }) => {
+      const chosen = plan.forgotten[id] ?? on;
+      return chosen === on ? [] : [[id, chosen] as const];
+    }),
+  );
+  const { people, home, meat, seat, own } = plan;
+  return {
+    ...(people === DEFAULT_PLAN.people ? {} : { people }),
+    ...(home === DEFAULT_PLAN.home ? {} : { home }),
+    ...(meat === DEFAULT_PLAN.meat ? {} : { meat }),
+    ...(seat === DEFAULT_PLAN.seat ? {} : { seat }),
+    ...(Object.keys(dishes).length === 0 ? {} : { dishes }),
+    ...(Object.keys(extras).length === 0 ? {} : { extras }),
+    ...(Object.keys(forgotten).length === 0 ? {} : { forgotten }),
+    ...(own.length === 0 ? {} : { own }),
+  };
+}
+
 export function dishPlan(plan: ChristmasPlan, dish: Dish): DishPlan {
   return plan.dishes[dish.id] ?? (dish.starter ? "make" : "skip");
 }
@@ -557,7 +593,29 @@ export function christmasList(plan: ChristmasPlan): Line<When>[] {
   return addUp<ProductId, When>(PRODUCTS, needs);
 }
 
-/** Title of the list, on the screen, on paper and in a message. */
+/** When to buy what. Every date is a trip to the shop, and a list of its own in Kangur. */
+export const WHEN = typesetCopy<readonly { id: When; title: string; hint: string }[]>([
+  { id: "early", title: "Do 13 grudnia", hint: "Suche, w słoikach i puszkach. Poczeka w szafce." },
+  { id: "weekend", title: "19 i 20 grudnia", hint: "Ostatni weekend. 20 grudnia to niedziela handlowa." },
+  { id: "last", title: "22 i 23 grudnia", hint: "Świeże. Od 24 do 27 grudnia duże sklepy są zamknięte." },
+]);
+
+/** Three trips, three lists in Kangur, or one. Kangur names a list after its first line. */
+export function christmasTrips(
+  plan: ChristmasPlan,
+  lines: readonly Line<When>[],
+): { whole: KangurPart; trips: KangurPart[] } {
+  const wigilia = dishCount(plan) > 0;
+  const name = wigilia ? "Zakupy na święta" : "Zakupy na zapas";
+  return {
+    whole: kangurPart("whole", "Wszystko", wigilia ? "Zakupy na Wigilię i święta" : "Zakupy na cztery dni bez sklepu", lines),
+    trips: WHEN.map(({ id, title }) =>
+      kangurPart(id, title, `${name} ${title.toLocaleLowerCase("pl")}`, lines.filter((line) => line.when === id)),
+    ).filter((part) => part.count > 0),
+  };
+}
+
+/** Title of the list, on the screen and in a message. */
 export function christmasTitle(plan: ChristmasPlan): string {
   return dishCount(plan) > 0
     ? `Lista zakupów na Wigilię i święta ${CHRISTMAS.year}, ${plural(plan.people, "osoba", "osoby", "osób")}`
@@ -566,7 +624,7 @@ export function christmasTitle(plan: ChristmasPlan): string {
 
 const lower = (name: string) => name.toLocaleLowerCase("pl");
 
-/** What stands on the table and who brings what, for the printed sheet and the message. */
+/** What stands on the table and who brings what, for the end of the calculator and the message. */
 export function menu(plan: ChristmasPlan): { ours: string[]; bring: string[] } {
   const ours: string[] = [];
   const bring: string[] = [];

@@ -39,30 +39,18 @@
   margin-bottom: 14px;
 }
 
-.sheets {
-  position: relative;
-  width: 190px;
-  height: 150px;
-  margin-bottom: 0;
+/* The fourth card: where the other three lead. */
+.after {
+  padding-bottom: 28px;
 }
 
-.sheets img {
-  position: absolute;
-  top: 18px;
-  right: 0;
-  width: 116px;
+/* A piece of the real screen. */
+.screen {
+  width: 100%;
   height: auto;
-  border-radius: 5px;
-  background: #fff;
-  box-shadow: 0 16px 28px -16px rgba(31, 43, 69, 0.45);
-  transform: rotate(6deg);
-}
-
-.sheets picture:last-child img {
-  top: 10px;
-  right: auto;
-  left: 0;
-  transform: rotate(-4deg);
+  margin: 18px 0 14px;
+  border: 1px solid #eadfc4;
+  border-radius: 18px;
 }
 
 .entry h2 {
@@ -146,16 +134,31 @@
     width: 160px;
   }
 
-  .sheets {
-    right: 22px;
-    bottom: -34px;
-    width: 178px;
-    height: 220px;
+  .entry:nth-child(3),
+  .after {
+    grid-column: 1 / -1;
   }
 
-  .sheets img {
-    top: 26px;
-    width: 124px;
+  .after {
+    display: grid;
+    grid-template-areas: "tag screen" "title screen" "body screen" "link screen";
+    grid-template-rows: auto 1fr auto auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    column-gap: 40px;
+    align-items: start;
+    justify-items: start;
+    min-height: 0;
+    padding-right: 34px;
+  }
+
+  .after .screen {
+    grid-area: screen;
+    align-self: center;
+    margin: 0;
+  }
+
+  .after h2 {
+    align-self: end;
   }
 }
 
@@ -170,13 +173,40 @@
     width: 124px;
   }
 
-  .sheets {
-    right: 10px;
-    width: 132px;
+  .after {
+    padding-right: 28px;
+  }
+}
+
+/* Three tools in a row, and below them the place they all lead to. */
+@media (min-width: 1040px) {
+  .entries {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .sheets img {
-    width: 92px;
+  .entry:nth-child(3) {
+    grid-column: auto;
+  }
+
+  .entry:not(.after) {
+    padding: 32px 32px 0;
+  }
+
+  .entry:not(.after) h2 {
+    margin-top: 0;
+    padding-top: 22px;
+  }
+
+  .entry .art {
+    position: static;
+    width: 172px;
+    margin: auto 0 -12px;
+    padding-top: 18px;
+  }
+
+  .entry .whole {
+    width: 168px;
+    margin-bottom: 16px;
   }
 }
 

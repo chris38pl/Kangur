@@ -1,5 +1,6 @@
 import type { Aisle } from "@/lib/marketing/aisles/labels";
 import { addUp, type Line, type Need, type Product } from "@/lib/marketing/lists/build";
+import { kangurPart, type KangurPart } from "@/lib/marketing/lists/parts";
 import { clampInt, isRecord } from "@/lib/marketing/lists/stored";
 
 /**
@@ -130,6 +131,24 @@ export function readWeek(stored: unknown): WeekPlan {
     cupboard: typeof stored.cupboard === "boolean" ? stored.cupboard : DEFAULT_WEEK.cupboard,
   };
 }
+
+/** Only what differs from the week everybody starts with, for the code that a phone scans. */
+export const weekChanges = (plan: WeekPlan): Partial<WeekPlan> => ({
+  ...(plan.people === DEFAULT_WEEK.people ? {} : { people: plan.people }),
+  ...(plan.dinners === DEFAULT_WEEK.dinners ? {} : { dinners: plan.dinners }),
+  ...(plan.meat === DEFAULT_WEEK.meat ? {} : { meat: plan.meat }),
+  ...(plan.cupboard === DEFAULT_WEEK.cupboard ? {} : { cupboard: plan.cupboard }),
+});
+
+/**
+ * Two trips, two lists in Kangur. Never one: milk is on both, and Kangur keeps one product of a
+ * name. What is missing in the cupboard goes with the big trip.
+ */
+export const weekTrips = (lines: readonly Line<Trip>[]): KangurPart[] =>
+  [
+    kangurPart("main", "Duże zakupy", "Duże zakupy na tydzień", lines.filter((line) => line.when !== "topup")),
+    kangurPart("topup", "Dokupka", "Małe zakupy w tygodniu", lines.filter((line) => line.when === "topup")),
+  ].filter((part) => part.count > 0);
 
 /** One person eats a bag of rice for a month, so it waits in the cupboard, not in the basket. */
 const KEEPS: ReadonlySet<string> = new Set<Id>(["pasta", "rice", "groats", "oats", "nuts"]);

@@ -8,8 +8,9 @@ import { PageHero } from "@/components/site/PageHero";
 import { Picture } from "@/components/site/Picture";
 import { Sticker } from "@/components/site/Sticker";
 import prose from "@/components/site/prose.module.css";
+import { HANDOFF } from "@/lib/marketing/content/topics/handoff";
 import { TOOLS } from "@/lib/marketing/content/topics/tools";
-import { PRINTABLES } from "@/lib/marketing/druk.generated";
+import { SCREENS } from "@/lib/marketing/images.generated";
 import { routeHref, type MarketingRouteId } from "@/lib/marketing/routes";
 import { pageStructuredData } from "@/lib/marketing/structured-data";
 
@@ -20,12 +21,6 @@ const ART: Partial<Record<MarketingRouteId, ReactNode>> = {
   christmasTool: <Sticker name="z-torba" className={styles.art} />,
   weekTool: <Sticker name="z-koszykiem" className={`${styles.art} ${styles.whole}`} />,
   aisleTool: <Sticker name="z-lista" className={styles.art} />,
-  guidePrint: (
-    <span className={`${styles.art} ${styles.sheets}`}>
-      <Picture image={PRINTABLES.wigilia.preview} alt="" />
-      <Picture image={PRINTABLES.alejki.preview} alt="" />
-    </span>
-  ),
 };
 
 export function ToolsPage() {
@@ -58,6 +53,21 @@ export function ToolsPage() {
                 {ART[entry.id]}
               </li>
             ))}
+            {/* Where each of them ends, on the real Start screen. */}
+            <li className={`${styles.entry} ${styles.cream} ${styles.after}`}>
+              <Pill>{c.after.tag}</Pill>
+              <h2>{c.after.title}</h2>
+              <p>{c.after.body}</p>
+              <Picture
+                image={SCREENS.pl.startQuick}
+                alt={HANDOFF.open.alt}
+                sizes="(max-width: 759px) 86vw, 480px"
+                className={styles.screen}
+              />
+              <p>
+                <Link href={routeHref("sharedList", "pl")}>{c.after.link}</Link>
+              </p>
+            </li>
           </ul>
         </div>
       </section>
@@ -78,7 +88,7 @@ export function ToolsPage() {
         </div>
       </section>
 
-      <ClosingBand locale="pl" page="poradniki" />
+      <ClosingBand locale="pl" page="narzedzia" />
     </div>
   );
 }
