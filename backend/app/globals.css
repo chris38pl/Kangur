@@ -254,6 +254,7 @@ a:hover {
   font-size: 13px;
   line-height: 1.2;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -271,6 +272,7 @@ a:hover {
 
 .mkt-lang-option:hover {
   background: var(--kangur-bg-soft);
+  color: var(--kangur-text);
 }
 
 .mkt-lang-option.is-active {
@@ -359,7 +361,6 @@ a:hover {
   align-items: center;
   padding-top: 20px;
   padding-bottom: 36px;
-  animation: mkt-fade-up 0.7s ease both;
 }
 
 .mkt-hero-copy {
@@ -517,7 +518,6 @@ a:hover {
   display: flex;
   justify-content: center;
   align-items: center;
-  animation: mkt-fade-up 0.85s 0.1s ease both;
 }
 
 .mkt-hero-glow {
@@ -545,7 +545,6 @@ a:hover {
   margin-top: 8px;
   padding: 28px 0 48px;
   background: transparent;
-  animation: mkt-fade-up 0.7s 0.15s ease both;
 }
 
 .mkt-highlights {
@@ -950,17 +949,6 @@ a:hover {
   color: var(--kangur-text-body);
 }
 
-@keyframes mkt-fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes mkt-float {
   0%,
   100% {
@@ -1030,9 +1018,6 @@ a:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mkt-hero-section,
-  .mkt-hero-visual,
-  .mkt-highlights,
   .mkt-hero-img {
     animation: none;
   }

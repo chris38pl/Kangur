@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import {
-  APP_LOCALE_IDS,
   isAppLocale,
   withLocale,
   type AppLocale,
@@ -13,20 +12,10 @@ import { buildMarketingMetadata } from "@/lib/marketing/seo";
 
 type Props = { params: Promise<{ locale: string }> };
 
-export function generateStaticParams() {
-  return APP_LOCALE_IDS.map((locale) => ({ locale }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: raw } = await params;
   if (!isAppLocale(raw)) return {};
-  const t = getMessages(raw);
-  return buildMarketingMetadata({
-    locale: raw,
-    path: "/delete-account",
-    title: t.meta.deleteTitle,
-    description: t.meta.deleteDescription,
-  });
+  return buildMarketingMetadata("deleteAccount", raw);
 }
 
 export default async function DeleteAccountPage({ params }: Props) {

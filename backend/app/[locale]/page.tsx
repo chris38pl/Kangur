@@ -3,7 +3,6 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import {
-  APP_LOCALE_IDS,
   isAppLocale,
   type AppLocale,
 } from "@/lib/marketing/locale";
@@ -16,20 +15,10 @@ import { homeStructuredData } from "@/lib/marketing/structured-data";
 
 type Props = { params: Promise<{ locale: string }> };
 
-export function generateStaticParams() {
-  return APP_LOCALE_IDS.map((locale) => ({ locale }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: raw } = await params;
   if (!isAppLocale(raw)) return {};
-  const t = getMessages(raw);
-  return buildMarketingMetadata({
-    locale: raw,
-    path: "/",
-    title: t.meta.homeTitle,
-    description: t.meta.homeDescription,
-  });
+  return buildMarketingMetadata("home", raw);
 }
 
 const highlightIcons = [

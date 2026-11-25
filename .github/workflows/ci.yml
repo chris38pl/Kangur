@@ -31,10 +31,16 @@ jobs:
         run: pnpm exec prisma generate
       - run: pnpm lint
       - run: pnpm typecheck
+      - run: pnpm test:marketing
       - env:
           DATABASE_URL: postgresql://user:pass@localhost:5432/kangur?sslmode=require
           DIRECT_URL: postgresql://user:pass@localhost:5432/kangur?sslmode=require
+          NEXT_PUBLIC_SITE_URL: https://www.getkangur.com
         run: pnpm build
+      - name: SEO check of the built pages
+        env:
+          NEXT_PUBLIC_SITE_URL: https://www.getkangur.com
+        run: pnpm test:seo
 
   mobile:
     runs-on: ubuntu-latest

@@ -3,11 +3,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { corsHeaders, isOriginAllowed } from "@/lib/cors";
 import {
   MARKETING_LOCALE_COOKIE,
-  isAppLocale,
   isMarketingStaticAsset,
-  resolveMarketingLocale,
-  withLocale,
 } from "@/lib/marketing/locale";
+import { decideMarketingRoute } from "@/lib/marketing/routing";
 
 function applyCors(request: NextRequest, response: NextResponse) {
   const origin = request.headers.get("origin");
@@ -19,21 +17,23 @@ function applyCors(request: NextRequest, response: NextResponse) {
   return response;
 }
 
-function setLocaleCookie(response: NextResponse, locale: string) {
-  response.cookies.set(MARKETING_LOCALE_COOKIE, locale, {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-  });
-  response.headers.set("x-kangur-locale", locale);
-  return response;
-}
-
-/** Keeps the query string (utm_* from campaign links) across the locale redirect. */
-function redirectUrl(request: NextRequest, path: string): URL {
+/** The same request on another path. Keeps the query string (utm_* from campaign links). */
+function atPath(request: NextRequest, path: string): URL {
   const url = new URL(path, request.url);
   url.search = request.nextUrl.search;
   return url;
+}
+
+/** Both headers, because a privacy setting may remove one of them. */
+function isSameOrigin(request: NextRequest): boolean {
+  if (request.headers.get("sec-fetch-site") === "same-origin") return true;
+  const referer = request.headers.get("referer");
+  if (!referer) return false;
+  try {
+    return new URL(referer).host === request.headers.get("host");
+  } catch {
+    return false;
+  }
 }
 
 export function proxy(request: NextRequest) {
@@ -57,36 +57,27 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const segments = pathname.split("/").filter(Boolean);
-  const first = segments[0];
-
-  if (first && isAppLocale(first)) {
-    const response = NextResponse.next();
-    setLocaleCookie(response, first);
-    return response;
-  }
-
-  const locale = resolveMarketingLocale({
+  // No cookie is set here: pages stay identical for everyone and the CDN can keep them.
+  // The language switcher stores the visitor's choice itself.
+  const decision = decideMarketingRoute({
+    pathname,
     cookieLocale: request.cookies.get(MARKETING_LOCALE_COOKIE)?.value,
     acceptLanguage: request.headers.get("accept-language"),
     userAgent: request.headers.get("user-agent"),
+    sameOrigin: isSameOrigin(request),
   });
 
-  // Unprefixed /support → /{locale}/contact
-  if (pathname === "/support" || pathname === "/support/") {
-    const response = NextResponse.redirect(
-      redirectUrl(request, withLocale(locale, "/contact")),
-      308,
-    );
-    setLocaleCookie(response, locale);
-    return response;
+  switch (decision.kind) {
+    case "next":
+      return NextResponse.next();
+    case "rewrite":
+      return NextResponse.rewrite(atPath(request, decision.path));
+    case "redirect":
+      return NextResponse.redirect(
+        atPath(request, decision.path),
+        decision.status,
+      );
   }
-
-  const targetPath =
-    pathname === "/" ? withLocale(locale, "/") : withLocale(locale, pathname);
-  const response = NextResponse.redirect(redirectUrl(request, targetPath));
-  setLocaleCookie(response, locale);
-  return response;
 }
 
 export const config = {

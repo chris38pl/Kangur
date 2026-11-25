@@ -2,7 +2,7 @@ import { isValidElement, type ReactNode } from "react";
 
 import { LEGAL_ENTITY } from "@/lib/marketing/legal-entity";
 import { APP_LOCALE_IDS, withLocale, type AppLocale } from "@/lib/marketing/locale";
-import { getMessages } from "@/lib/marketing/messages";
+import { pageMeta } from "@/lib/marketing/page-meta";
 import { ogImage } from "@/lib/marketing/seo";
 import {
   APP_STORE_URL,
@@ -20,7 +20,7 @@ const APP_ID = `${SITE_URL}/#app`;
  * No ratings or user counts: the fact bank does not back any.
  */
 export function homeStructuredData(locale: AppLocale): Record<string, unknown> {
-  const t = getMessages(locale);
+  const { title, description } = pageMeta("home", locale);
   const pageUrl = absoluteUrl(withLocale(locale, "/"));
 
   return {
@@ -47,7 +47,9 @@ export function homeStructuredData(locale: AppLocale): Record<string, unknown> {
         "@type": "WebSite",
         "@id": WEBSITE_ID,
         url: SITE_URL,
+        // Google takes the site name from here, in this order of preference.
         name: "Kangur",
+        alternateName: ["Kangur - lista zakupów", "getkangur.com"],
         inLanguage: [...APP_LOCALE_IDS],
         publisher: { "@id": ORGANIZATION_ID },
       },
@@ -55,8 +57,8 @@ export function homeStructuredData(locale: AppLocale): Record<string, unknown> {
         "@type": "MobileApplication",
         "@id": APP_ID,
         name: "Kangur",
-        alternateName: t.meta.homeTitle,
-        description: t.meta.homeDescription,
+        alternateName: title,
+        description,
         url: pageUrl,
         image: absoluteUrl(ogImage(locale).url),
         applicationCategory: "ShoppingApplication",

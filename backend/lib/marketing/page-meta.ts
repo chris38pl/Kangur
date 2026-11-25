@@ -1,0 +1,179 @@
+import type { AppLocale } from "@/lib/marketing/locale";
+import { canonicalLocale, type MarketingRouteId } from "@/lib/marketing/routes";
+
+export type PageMeta = {
+  /** Up to 60 characters, or Google cuts it. Checked by scripts/check-seo.ts. */
+  title: string;
+  /** 70-160 characters. */
+  description: string;
+};
+
+/**
+ * What Google and link previews show for every page. "Kangur" alone means a maths contest,
+ * an animal and a scam in the news, so the title says what Kangur is: a grocery list.
+ * Claims only from the marketing fact bank.
+ */
+const PAGE_META: Record<
+  MarketingRouteId,
+  Partial<Record<AppLocale, PageMeta>>
+> = {
+  home: {
+    pl: {
+      title: "Kangur - aplikacja do wspólnej listy zakupów z AI",
+      description:
+        "Kangur to aplikacja do list zakupów na iPhone’a i Androida. Zrób listę ze zdjęcia, zrzutu czatu lub przepisu. Produkty ułożą się według alejek.",
+    },
+    en: {
+      title: "Kangur - shared grocery list app with AI",
+      description:
+        "Kangur is a grocery list app for iPhone and Android. Make a list from a photo, a chat screenshot or a recipe. Items line up by store aisle.",
+    },
+    de: {
+      title: "Kangur - App für gemeinsame Einkaufslisten mit KI",
+      description:
+        "Kangur ist eine Einkaufslisten-App für iPhone und Android. Erstelle Listen aus Foto, Chat-Screenshot oder Rezept, sortiert nach Gängen im Markt.",
+    },
+    fr: {
+      title: "Kangur - appli de liste de courses partagée avec l’IA",
+      description:
+        "Kangur est une appli de liste de courses pour iPhone et Android. Créez une liste depuis une photo, une capture de chat ou une recette, triée par rayon.",
+    },
+    es: {
+      title: "Kangur - app de lista de la compra compartida con IA",
+      description:
+        "Kangur es una app de lista de la compra para iPhone y Android. Crea una lista desde una foto, una captura de chat o una receta, ordenada por pasillos.",
+    },
+    it: {
+      title: "Kangur - app per la lista della spesa condivisa con AI",
+      description:
+        "Kangur è un’app per la lista della spesa su iPhone e Android. Crea la lista da una foto, uno screenshot della chat o una ricetta, divisa per reparti.",
+    },
+    cs: {
+      title: "Kangur - aplikace na společný nákupní seznam s AI",
+      description:
+        "Kangur je aplikace na nákupní seznamy pro iPhone a Android. Seznam vytvoříte z fotky, snímku chatu nebo receptu a položky se seřadí podle uliček.",
+    },
+    ru: {
+      title: "Kangur - приложение для общих списков покупок с AI",
+      description:
+        "Kangur - приложение для списков покупок на iPhone и Android. Список из фото, скриншота чата или рецепта, товары разложены по отделам магазина.",
+    },
+    uk: {
+      title: "Kangur - застосунок для спільних списків покупок з AI",
+      description:
+        "Kangur - застосунок для списків покупок на iPhone та Android. Список із фото, скриншота чату чи рецепта, товари розкладено за відділами магазину.",
+    },
+    be: {
+      title: "Kangur - праграма для агульных спісаў пакупак з AI",
+      description:
+        "Kangur - праграма для спісаў пакупак на iPhone і Android. Спіс з фота, скрыншота чата або рэцэпта, тавары раскладзены па аддзелах крамы.",
+    },
+  },
+  faq: {
+    pl: {
+      title: "Pytania i odpowiedzi o aplikacji Kangur",
+      description:
+        "Jak zrobić listę ze zrzutu czatu, zaprosić domownika, co daje Premium i co działa przy słabym zasięgu. Odpowiedzi o liście zakupów Kangur.",
+    },
+    en: {
+      title: "Questions and answers about the Kangur app",
+      description:
+        "How to make a list from a chat screenshot, invite your household, what Premium adds and what works on a weak signal. Answers about the Kangur grocery list.",
+    },
+  },
+  contact: {
+    pl: {
+      title: "Kontakt - Kangur, lista zakupów z AI",
+      description:
+        "Masz pytanie, pomysł albo kłopot z listą zakupów? Napisz do nas, zwykle odpowiadamy w ciągu 24-48 godzin.",
+    },
+    en: {
+      title: "Contact - Kangur, grocery list with AI",
+      description:
+        "A question, an idea or a problem with your grocery list? Write to us, we usually reply within 24-48 hours.",
+    },
+    de: {
+      title: "Kontakt - Kangur, Einkaufsliste mit KI",
+      description:
+        "Eine Frage, eine Idee oder ein Problem mit der Einkaufsliste? Schreib uns, meist antworten wir innerhalb von 24-48 Stunden.",
+    },
+    fr: {
+      title: "Contact - Kangur, liste de courses avec l’IA",
+      description:
+        "Une question, une idée ou un souci avec votre liste de courses ? Écrivez-nous, nous répondons en général sous 24 à 48 heures.",
+    },
+    es: {
+      title: "Contacto - Kangur, lista de la compra con IA",
+      description:
+        "¿Una pregunta, una idea o un problema con tu lista de la compra? Escríbenos, solemos responder en 24-48 horas.",
+    },
+    it: {
+      title: "Contatti - Kangur, lista della spesa con AI",
+      description:
+        "Una domanda, un’idea o un problema con la lista della spesa? Scrivici, di solito rispondiamo entro 24-48 ore.",
+    },
+    cs: {
+      title: "Kontakt - Kangur, nákupní seznam s AI",
+      description:
+        "Máte otázku, nápad nebo problém s nákupním seznamem? Napište nám, obvykle odpovídáme do 24-48 hodin.",
+    },
+    ru: {
+      title: "Контакты - Kangur, список покупок с AI",
+      description:
+        "Вопрос, идея или проблема со списком покупок? Напишите нам, обычно мы отвечаем в течение 24-48 часов.",
+    },
+    uk: {
+      title: "Контакти - Kangur, список покупок з AI",
+      description:
+        "Питання, ідея або проблема зі списком покупок? Напишіть нам, зазвичай ми відповідаємо протягом 24-48 годин.",
+    },
+    be: {
+      title: "Кантакты - Kangur, спіс пакупак з AI",
+      description:
+        "Пытанне, ідэя або праблема са спісам пакупак? Напішыце нам, звычайна мы адказваем на працягу 24-48 гадзін.",
+    },
+  },
+  privacy: {
+    pl: {
+      title: "Polityka prywatności aplikacji Kangur",
+      description:
+        "Polityka prywatności aplikacji Kangur - jakie dane zbieramy, w jakim celu i jakie masz prawa.",
+    },
+    en: {
+      title: "Privacy Policy of the Kangur app",
+      description:
+        "Privacy policy of Kangur, the grocery list app: what data we collect, why we need it and what your rights are.",
+    },
+  },
+  terms: {
+    pl: {
+      title: "Regulamin aplikacji Kangur",
+      description:
+        "Regulamin korzystania z aplikacji Kangur - zasady usługi, konta, Premium i odpowiedzialność.",
+    },
+    en: {
+      title: "Terms of Use of the Kangur app",
+      description:
+        "Terms for using Kangur, the grocery list app: service rules, accounts, Premium and liability.",
+    },
+  },
+  deleteAccount: {
+    pl: {
+      title: "Jak usunąć konto w aplikacji Kangur",
+      description:
+        "Usuń konto Kangur w aplikacji, krok po kroku. Co znika razem z kontem, a co może zostać, na przykład historia płatności w sklepie.",
+    },
+    en: {
+      title: "How to delete your Kangur account",
+      description:
+        "Delete your Kangur account in the app, step by step. What goes with the account and what may remain, such as payment history in the store.",
+    },
+  },
+};
+
+/** Languages without their own text describe the page they canonicalise to. */
+export function pageMeta(id: MarketingRouteId, locale: AppLocale): PageMeta {
+  const meta = PAGE_META[id][locale] ?? PAGE_META[id][canonicalLocale(id, locale)];
+  if (!meta) throw new Error(`No title and description for "${id}" in "${locale}"`);
+  return meta;
+}

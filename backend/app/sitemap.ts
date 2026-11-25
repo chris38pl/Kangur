@@ -1,38 +1,32 @@
 import type { MetadataRoute } from "next";
 
-import { withLocale } from "@/lib/marketing/locale";
-import {
-  MARKETING_PATHS,
-  contentLocales,
-  hreflangAlternates,
-} from "@/lib/marketing/seo";
-import { CONTENT_UPDATED_AT, absoluteUrl } from "@/lib/marketing/site";
+import { ROUTES, ROUTE_IDS, contentLocales, routeHref } from "@/lib/marketing/routes";
+import { hreflangAlternates } from "@/lib/marketing/seo";
+import { absoluteUrl } from "@/lib/marketing/site";
 
 /**
- * Only final, indexable URLs: no locale-less redirects, and pages that exist only in
- * pl + en are listed only in those two languages (other locales canonicalise to en).
+ * Only final, indexable URLs: no redirects, and a page is listed only in the languages
+ * it really exists in (the others canonicalise to English).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const entries: MetadataRoute.Sitemap = [];
+  return ROUTE_IDS.flatMap((id) => {
+    const { updatedAt, changeFrequency, priority } = ROUTES[id];
+    const alternates = hreflangAlternates(id);
+    const languages = alternates
+      ? Object.fromEntries(
+          Object.entries(alternates).map(([lang, href]) => [
+            lang,
+            absoluteUrl(href),
+          ]),
+        )
+      : undefined;
 
-  for (const path of MARKETING_PATHS) {
-    const languages = Object.fromEntries(
-      Object.entries(hreflangAlternates(path)).map(([lang, href]) => [
-        lang,
-        absoluteUrl(href),
-      ]),
-    );
-
-    for (const locale of contentLocales(path)) {
-      entries.push({
-        url: absoluteUrl(withLocale(locale, path)),
-        lastModified: CONTENT_UPDATED_AT,
-        changeFrequency: path === "/" ? "weekly" : "monthly",
-        priority: path === "/" ? 1 : 0.6,
-        alternates: { languages },
-      });
-    }
-  }
-
-  return entries;
+    return contentLocales(id).map((locale) => ({
+      url: absoluteUrl(routeHref(id, locale)),
+      lastModified: updatedAt,
+      changeFrequency,
+      priority,
+      ...(languages ? { alternates: { languages } } : {}),
+    }));
+  });
 }
