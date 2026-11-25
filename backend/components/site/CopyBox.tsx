@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { copyText } from "@/lib/marketing/copy-text";
 import { plainSpaces } from "@/lib/marketing/typography";
 
 import styles from "./CopyBox.module.css";
@@ -17,6 +18,7 @@ export function CopyBox({
   done: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     if (!copied) return;
@@ -24,15 +26,19 @@ export function CopyBox({
     return () => clearTimeout(timer);
   }, [copied]);
 
+  const copy = async () => {
+    if (await copyText(plainSpaces(text))) {
+      setCopied(true);
+    } else if (textRef.current) {
+      // No clipboard at all: leave the text selected, one tap away from "Copy".
+      window.getSelection()?.selectAllChildren(textRef.current);
+    }
+  };
+
   return (
     <div className={styles.box}>
-      <p>{text}</p>
-      <button
-        type="button"
-        onClick={() => {
-          void navigator.clipboard?.writeText(plainSpaces(text)).then(() => setCopied(true));
-        }}
-      >
+      <p ref={textRef}>{text}</p>
+      <button type="button" onClick={() => void copy()}>
         <span aria-live="polite">{copied ? done : label}</span>
       </button>
     </div>

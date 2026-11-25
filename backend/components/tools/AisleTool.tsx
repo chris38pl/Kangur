@@ -59,7 +59,7 @@ export function AisleTool({
     () =>
       sortByAisles(text, index).map((item) => {
         const moved = moves[keyOf(item.name)];
-        return moved ? { ...item, aisle: moved, recognised: true } : item;
+        return moved && isAisle(moved) ? { ...item, aisle: moved, recognised: true } : item;
       }),
     [text, index, moves],
   );
@@ -90,13 +90,21 @@ export function AisleTool({
     setOrder([...rest.slice(0, at), aisle, ...rest.slice(at)]);
   };
 
+  // What is already in the basket does not go any further, unless everything is.
+  const isLeft = (item: SortedItem) => !doneSet.has(keyOf(item.name));
+  const anyLeft = items.some(isLeft);
   const plainText = listToText(
     "Lista zakupów",
     groups.map(({ aisle, items: products }) => ({
       title: AISLE_LABELS[aisle],
-      lines: products,
+      lines: anyLeft ? products.filter(isLeft) : products,
     })),
   );
+
+  const showResult = () => {
+    resultRef.current?.focus({ preventScroll: true });
+    resultRef.current?.scrollIntoView({ block: "start" });
+  };
 
   return (
     <div className={styles.tool}>
@@ -119,9 +127,7 @@ export function AisleTool({
             type="button"
             className={styles.main}
             disabled={items.length === 0}
-            onClick={() =>
-              resultRef.current?.scrollIntoView({ block: "start" })
-            }
+            onClick={showResult}
           >
             Ułóż według alejek
           </button>
@@ -146,7 +152,7 @@ export function AisleTool({
         </p>
       </div>
 
-      <div className={styles.result} ref={resultRef}>
+      <div className={styles.result} ref={resultRef} tabIndex={-1}>
         {items.length === 0 ? (
           <div className={styles.empty} data-noprint>
             <p>Tu pojawią się alejki.</p>
@@ -157,6 +163,7 @@ export function AisleTool({
           </div>
         ) : (
           <>
+            <h2 className={styles.sheetTitle}>Lista zakupów</h2>
             <div className={styles.summary}>
               <p aria-live="polite">
                 <strong>{plural(items.length, "produkt", "produkty", "produktów")}</strong>
@@ -166,7 +173,9 @@ export function AisleTool({
                   : plural(groups.length, "alejce", "alejkach", "alejkach")}
                 {unknown > 0 ? (
                   <span data-noprint>
-                    . Nie znamy {unknown === 1 ? "jednego z nich" : unknown}, jest w „Inne”.
+                    {unknown === 1
+                      ? ". Nie znamy jednego z nich, jest w „Inne”."
+                      : `. Nie znamy ${unknown} z nich, są w „Inne”.`}
                   </span>
                 ) : null}
               </p>

@@ -91,6 +91,18 @@
 
 .result {
   scroll-margin-top: 90px;
+  outline: none;
+}
+
+/* Title of the printed sheet. On the screen it is there for screen readers only. */
+.sheetTitle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .empty {
@@ -282,6 +294,17 @@
 @media print {
   .tool {
     display: block;
+  }
+
+  .sheetTitle {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0 0 6px;
+    clip-path: none;
+    font-size: 19pt;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
 
   .groups {
