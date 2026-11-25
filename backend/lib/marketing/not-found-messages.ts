@@ -12,12 +12,12 @@ export const notFoundMessages: Record<
   },
   en: {
     title: "There is no such aisle",
-    body: "The page has moved, or it was never here. Head back to the entrance and grab a trolley again.",
+    body: "The page has moved, or it was never here. Head back to the entrance and grab a cart again.",
     back: "Back to home",
   },
   de: {
     title: "Diesen Gang gibt es hier nicht",
-    body: "Die Seite wurde verschoben oder es gab sie nie. Zurück zum Eingang und noch einmal den Wagen holen.",
+    body: "Die Seite wurde verschoben oder es gab sie nie. Geh zurück zum Eingang und schnapp dir noch mal einen Einkaufswagen.",
     back: "Zur Startseite",
   },
   fr: {
@@ -27,17 +27,17 @@ export const notFoundMessages: Record<
   },
   es: {
     title: "Este pasillo no existe",
-    body: "La página se ha movido o nunca ha existido. Vuelve a la entrada y coge el carro otra vez.",
+    body: "La página se ha movido o nunca ha existido. Vuelve a la entrada y hazte con otro carro.",
     back: "Volver al inicio",
   },
   it: {
-    title: "Questa corsia non c’è",
+    title: "Questo reparto non c’è",
     body: "La pagina è stata spostata o non è mai esistita. Torna all’ingresso e riprendi il carrello.",
     back: "Torna alla home",
   },
   cs: {
     title: "Tahle ulička tu není",
-    body: "Stránka byla přesunuta, nebo tu nikdy nebyla. Vraťte se ke vchodu a vezměte si košík znovu.",
+    body: "Stránka byla přesunuta, nebo tu nikdy nebyla. Vrať se ke vchodu a vezmi si košík znovu.",
     back: "Zpět na úvod",
   },
   ru: {

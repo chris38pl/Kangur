@@ -17,6 +17,13 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Names carry a hash of the content, so a new file is a new address.
+        source: "/:dir(img|og|fonts)/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
         // Staging, previews and localhost are copies of the site. Decided by host, so it
         // holds whatever environment variables a deployment has.
         source: "/:path*",

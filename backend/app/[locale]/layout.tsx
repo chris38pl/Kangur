@@ -1,12 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { LanguageSwitcher } from "@/components/marketing/LanguageSwitcher";
-import { MarketingNav } from "@/components/marketing/MarketingNav";
+import {
+  LanguageList,
+  LanguageSwitcher,
+} from "@/components/marketing/LanguageSwitcher";
+import { MarketingNav, MobileMenu } from "@/components/marketing/MarketingNav";
+import { SiteFonts } from "@/components/marketing/SiteFonts";
+import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { UtmCapture } from "@/components/marketing/UtmCapture";
 import {
   APP_LOCALE_IDS,
@@ -14,8 +18,8 @@ import {
   isAppLocale,
   withLocale,
 } from "@/lib/marketing/locale";
-import { LegalEntityLine } from "@/lib/marketing/legal-entity";
 import { getMessages } from "@/lib/marketing/messages";
+import { headerLinks } from "@/lib/marketing/navigation";
 import { pageMeta } from "@/lib/marketing/page-meta";
 import {
   APP_STORE_ID,
@@ -24,12 +28,6 @@ import {
 } from "@/lib/marketing/site";
 
 import "../globals.css";
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-jakarta",
-  display: "swap",
-});
 
 type Params = Promise<{ locale: string }>;
 
@@ -86,34 +84,23 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params;
   if (!isAppLocale(locale)) notFound();
-  const t = getMessages(locale);
-
-  const navLinks = [
-    { href: withLocale(locale, "/faq"), label: t.nav.faq },
-    { href: withLocale(locale, "/privacy"), label: t.nav.privacy },
-    { href: withLocale(locale, "/terms"), label: t.nav.terms },
-    { href: withLocale(locale, "/contact"), label: t.nav.contact },
-  ] as const;
-
-  const footerLinks = [
-    { href: withLocale(locale, "/faq"), label: t.nav.faq },
-    { href: withLocale(locale, "/privacy"), label: t.nav.privacy },
-    { href: withLocale(locale, "/terms"), label: t.nav.terms },
-    {
-      href: withLocale(locale, "/delete-account"),
-      label: t.nav.deleteAccount,
-    },
-    { href: withLocale(locale, "/contact"), label: t.nav.contact },
-  ] as const;
+  const t = getMessages(locale).nav;
+  const links = headerLinks(locale);
+  const home = withLocale(locale, "/");
 
   return (
-    <html lang={locale}>
-      <body className={jakarta.variable}>
+    // Anchors glide, page changes do not.
+    <html lang={locale} data-scroll-behavior="smooth">
+      <body>
+        <SiteFonts locale={locale} />
         <div className="mkt-shell">
           <UtmCapture />
+          <a className="mkt-skip" href="#tresc">
+            {t.skip}
+          </a>
           <header className="mkt-header">
             <div className="mkt-header-inner">
-              <Link href={withLocale(locale, "/")} className="mkt-logo">
+              <Link href={home} className="mkt-logo">
                 <Image
                   src="/kangur-logo.webp"
                   alt=""
@@ -125,45 +112,25 @@ export default async function LocaleLayout({
                 <span>Kangur</span>
               </Link>
 
-              <MarketingNav links={navLinks} ariaLabel={t.nav.mainAria} />
+              <MarketingNav links={links} ariaLabel={t.mainAria} />
 
               <div className="mkt-header-actions">
-                <LanguageSwitcher locale={locale} label={t.nav.languageAria} />
-                <a
-                  className="mkt-btn mkt-btn-nav"
-                  href={`${withLocale(locale, "/")}#pobierz`}
-                >
-                  {t.nav.download}
+                <LanguageSwitcher locale={locale} label={t.languageAria} />
+                <a className="mkt-btn mkt-btn-nav" href={`${home}#pobierz`}>
+                  {t.download}
                 </a>
+                <MobileMenu links={links} label={t.menu}>
+                  <LanguageList locale={locale} label={t.languageAria} />
+                </MobileMenu>
               </div>
             </div>
           </header>
 
-          <div className="mkt-main">{children}</div>
+          <main id="tresc" className="mkt-main">
+            {children}
+          </main>
 
-          <footer className="mkt-footer">
-            <nav className="mkt-footer-nav" aria-label={t.nav.footerAria}>
-              {footerLinks.map((link, index) => (
-                <span key={link.href} style={{ display: "contents" }}>
-                  {index > 0 ? (
-                    <span className="mkt-footer-sep" aria-hidden>
-                      ·
-                    </span>
-                  ) : null}
-                  <Link href={link.href}>{link.label}</Link>
-                </span>
-              ))}
-              <span className="mkt-footer-sep" aria-hidden>
-                ·
-              </span>
-              <span className="mkt-footer-copy">
-                {t.nav.copyright}. {t.nav.rightsReserved}.
-              </span>
-            </nav>
-            <p className="mkt-footer-entity">
-              <LegalEntityLine locale={locale} />
-            </p>
-          </footer>
+          <SiteFooter locale={locale} />
         </div>
       </body>
     </html>

@@ -5,6 +5,7 @@ import {
   MARKETING_LOCALE_COOKIE,
   isMarketingStaticAsset,
 } from "@/lib/marketing/locale";
+import { downloadTarget } from "@/lib/marketing/download";
 import { decideMarketingRoute } from "@/lib/marketing/routing";
 
 function applyCors(request: NextRequest, response: NextResponse) {
@@ -55,6 +56,24 @@ export function proxy(request: NextRequest) {
 
   if (isMarketingStaticAsset(pathname)) {
     return NextResponse.next();
+  }
+
+  const download = downloadTarget({
+    pathname,
+    search: request.nextUrl.search,
+    userAgent: request.headers.get("user-agent"),
+  });
+  if (download) {
+    const url =
+      download.kind === "store"
+        ? new URL(download.url)
+        : atPath(request, download.path);
+    if (download.kind === "site") url.hash = download.hash;
+    const response = NextResponse.redirect(url, 307);
+    // The answer depends on the phone, so nobody may reuse it.
+    response.headers.set("Cache-Control", "no-store");
+    response.headers.set("X-Robots-Tag", "noindex");
+    return response;
   }
 
   // No cookie is set here: pages stay identical for everyone and the CDN can keep them.

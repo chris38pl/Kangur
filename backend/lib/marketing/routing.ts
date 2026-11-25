@@ -57,17 +57,22 @@ const rewrite = (locale: AppLocale, path: string): RoutingDecision => ({
  *                   language: the address says Polish, so Polish it is
  *   /en/faq         English, 200
  *   /support        308 /contact
+ *   /premium        308 /cennik, or 307 to the visitor's language
  *   /anything-else  404 at that address, in the visitor's language
  */
 export function decideMarketingRoute(input: RoutingInput): RoutingDecision {
   const { prefix, path } = splitLocalePrefix(input.pathname);
 
   const alias = PATH_ALIASES[path];
-  if (alias) return permanent(bestHref(alias, prefix ?? SITE_DEFAULT_LOCALE).href);
+  if (alias) return decideAlias(alias, prefix, input);
 
   const found = findRouteByPath(path);
 
   if (prefix === SITE_DEFAULT_LOCALE) {
+    // A slug of another language (`/pl/pricing`): its Polish page, in one hop.
+    const own = found ? routePath(found.id, SITE_DEFAULT_LOCALE) : null;
+    if (own && own !== path) return permanent(withLocale(SITE_DEFAULT_LOCALE, own));
+
     const plain = decideUnprefixed(path, found, input);
     return plain.kind === "redirect" && plain.status === 307
       ? { kind: "next" }
@@ -76,6 +81,40 @@ export function decideMarketingRoute(input: RoutingInput): RoutingDecision {
 
   if (prefix) return decidePrefixed(prefix, path, found?.id ?? null);
   return decideUnprefixed(path, found, input);
+}
+
+/** The language of a visitor on an address that names none. */
+function preferredLocale(input: RoutingInput): AppLocale {
+  // A link clicked on the site means exactly the page it names. Without this, the switcher
+  // could not lead to Polish when cookies are off or the link opens in a new tab.
+  return input.sameOrigin ? SITE_DEFAULT_LOCALE : resolveMarketingLocale(input);
+}
+
+/** Short and old addresses. Permanent only when the answer is the same for everyone. */
+function decideAlias(
+  id: MarketingRouteId,
+  prefix: AppLocale | null,
+  input: RoutingInput,
+): RoutingDecision {
+  const neutral = Boolean(ROUTES[id].languageNeutral);
+
+  if (prefix === SITE_DEFAULT_LOCALE) {
+    const path = routePath(id, SITE_DEFAULT_LOCALE) ?? "/";
+    // The plain address would be translated for this visitor, and they asked for Polish.
+    return neutral && preferredLocale(input) !== SITE_DEFAULT_LOCALE
+      ? temporary(internalPath(SITE_DEFAULT_LOCALE, path))
+      : permanent(withLocale(SITE_DEFAULT_LOCALE, path));
+  }
+
+  if (prefix || neutral) {
+    const { href, hrefLang } = bestHref(id, prefix ?? SITE_DEFAULT_LOCALE);
+    // Not translated into this language yet, so the redirect must not stick.
+    return hrefLang ? temporary(href) : permanent(href);
+  }
+
+  const preferred = preferredLocale(input);
+  const { href } = bestHref(id, preferred);
+  return preferred === SITE_DEFAULT_LOCALE ? permanent(href) : temporary(href);
 }
 
 function decideUnprefixed(
@@ -88,11 +127,7 @@ function decideUnprefixed(
     return permanent(withLocale(found.locales[0], path));
   }
 
-  // A link clicked on the site means exactly the page it names. Without this, the switcher
-  // could not lead to Polish when cookies are off or the link opens in a new tab.
-  const preferred = input.sameOrigin
-    ? SITE_DEFAULT_LOCALE
-    : resolveMarketingLocale(input);
+  const preferred = preferredLocale(input);
   if (preferred === SITE_DEFAULT_LOCALE) {
     return rewrite(SITE_DEFAULT_LOCALE, path);
   }

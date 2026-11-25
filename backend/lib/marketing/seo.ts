@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { LOCALE_META, type AppLocale } from "@/lib/marketing/locale";
+import { OG_IMAGES } from "@/lib/marketing/og.generated";
 import { pageMeta } from "@/lib/marketing/page-meta";
 import {
   ROUTES,
@@ -34,14 +35,15 @@ export function ogLocale(locale: AppLocale): string {
   return LOCALE_META[locale].bcp47.replace("-", "_");
 }
 
-/** Link-preview image for a locale: 1200x630, real app screen. Source: `.marketing/app-store/og`. */
-export function ogImage(locale: AppLocale) {
+/** Link preview, 1200x630: the top of the page itself, else the one of the home page. */
+export function ogImage(id: MarketingRouteId, locale: AppLocale) {
+  const own = OG_IMAGES[`${id}/${locale}`];
   return {
-    url: `/og/${locale}.jpg`,
+    url: own ?? OG_IMAGES[`home/${locale}`],
     width: 1200,
     height: 630,
     type: "image/jpeg",
-    alt: pageMeta("home", locale).title,
+    alt: pageMeta(own ? id : "home", locale).title,
   };
 }
 
@@ -56,7 +58,7 @@ export function buildMarketingMetadata(
   const { title, description } = pageMeta(id, locale);
   const indexed = canonicalLocale(id, locale);
   const canonical = routeHref(id, indexed);
-  const image = ogImage(indexed);
+  const image = ogImage(id, indexed);
 
   return {
     title: { absolute: title },

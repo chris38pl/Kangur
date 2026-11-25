@@ -1,0 +1,105 @@
+/* Paper with a torn edge top and bottom, slightly crooked like in a pocket. */
+.receipt {
+  --tooth: 9px;
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  padding: 30px 26px 28px;
+  background: #fffdf8;
+  color: #23303f;
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  filter: drop-shadow(0 18px 26px rgba(31, 43, 69, 0.16));
+  clip-path: none;
+  transform: rotate(-1.2deg);
+}
+
+.receipt::before,
+.receipt::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: var(--tooth);
+  background:
+    linear-gradient(45deg, #fffdf8 33.33%, transparent 0) 0 0 / calc(var(--tooth) * 1.4) 100%,
+    linear-gradient(-45deg, #fffdf8 33.33%, transparent 0) 0 0 / calc(var(--tooth) * 1.4) 100%;
+}
+
+.receipt::before {
+  top: calc(var(--tooth) * -1 + 1px);
+}
+
+.receipt::after {
+  bottom: calc(var(--tooth) * -1 + 1px);
+  transform: scaleY(-1);
+}
+
+.head {
+  margin: 4px 0 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.item,
+.total {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0 0 7px;
+}
+
+.item > span:first-child,
+.total > span:first-child {
+  flex: 0 1 auto;
+}
+
+.item small {
+  display: block;
+  color: #5d6a7a;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.dots {
+  flex: 1 1 12px;
+  min-width: 12px;
+  border-bottom: 1.5px dotted #a9b3bf;
+  transform: translateY(-3px);
+}
+
+.price {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.total {
+  margin: 4px 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.rule {
+  margin: 12px 0;
+  border: 0;
+  border-top: 1.5px dashed #b9c2cc;
+}
+
+.foot {
+  margin: 8px 0 0;
+  color: #4d5a69;
+  font-size: 12.5px;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .receipt {
+    transition: transform 0.35s ease;
+  }
+
+  .receipt:hover {
+    transform: rotate(0deg);
+  }
+}

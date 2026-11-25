@@ -80,7 +80,7 @@ function AppleIcon() {
  * App Store and Google Play buttons. The visitor's own store comes first: iPhone/iPad
  * → App Store, Android → Google Play. Server HTML and desktop keep Google Play first.
  * Links carry the campaign: Apple `pt`/`ct`, Google Play `referrer` with utm_*.
- * Server HTML uses the no-UTM campaign ("landing"); the client swaps in the real one.
+ * Server HTML credits this site and `page`; the client swaps in the visitor's campaign.
  */
 export function StoreButtons({
   id,
@@ -88,12 +88,17 @@ export function StoreButtons({
   playStoreUrl,
   appStoreSmall,
   playSmall,
+  page,
+  className,
 }: {
   id?: string;
   appStoreUrl: string;
   playStoreUrl: string;
   appStoreSmall: string;
   playSmall: string;
+  /** Short name of the page, reported to the stores for visitors without a campaign. */
+  page?: string;
+  className?: string;
 }) {
   const platform = useSyncExternalStore(
     noSubscribe,
@@ -108,10 +113,14 @@ export function StoreButtons({
   const utm = parseStoredUtm(campaign);
 
   return (
-    <div className="mkt-stores" id={id} data-platform={platform ?? undefined}>
+    <div
+      className={className ? `mkt-stores ${className}` : "mkt-stores"}
+      id={id}
+      data-platform={platform ?? undefined}
+    >
       <a
         className="mkt-store-btn mkt-store-play"
-        href={playStoreLink(playStoreUrl, utm)}
+        href={playStoreLink(playStoreUrl, utm, page)}
         target="_blank"
         rel="noopener"
       >
@@ -123,7 +132,7 @@ export function StoreButtons({
       </a>
       <a
         className="mkt-store-btn mkt-store-ios"
-        href={appStoreLink(appStoreUrl, utm)}
+        href={appStoreLink(appStoreUrl, utm, page)}
         target="_blank"
         rel="noopener"
       >

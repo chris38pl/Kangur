@@ -1,12 +1,16 @@
 {
-  "name": "Kangur",
+  "id": "/",
+  "name": "Kangur - lista zakupów z AI",
   "short_name": "Kangur",
-  "description": "Wspólne listy zakupów z AI",
+  "description": "Wspólna lista zakupów na iPhone’a i Androida. Robi listę ze zrzutu czatu i układa produkty według alejek.",
+  "lang": "pl",
+  "dir": "ltr",
   "start_url": "/",
+  "scope": "/",
   "display": "browser",
   "background_color": "#FFFFFF",
   "theme_color": "#43BFA8",
-  "lang": "pl",
+  "categories": ["shopping", "food", "lifestyle"],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -17,6 +21,18 @@
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
+    }
+  ],
+  "prefer_related_applications": true,
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "app.kangur",
+      "url": "https://play.google.com/store/apps/details?id=app.kangur"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/app/id6832296080"
     }
   ]
 }

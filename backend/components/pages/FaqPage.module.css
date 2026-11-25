@@ -1,0 +1,39 @@
+.kangur {
+  align-self: flex-end;
+  width: min(300px, 70%);
+  height: auto;
+  margin-bottom: -46px;
+}
+
+.groups {
+  display: grid;
+  gap: 48px;
+}
+
+.group {
+  display: grid;
+  gap: 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+@media (min-width: 900px) {
+  .kangur {
+    margin-bottom: -66px;
+  }
+
+  .group {
+    grid-template-columns: 230px minmax(0, 1fr);
+    gap: 48px;
+  }
+
+  .title {
+    padding-top: 16px;
+  }
+}
