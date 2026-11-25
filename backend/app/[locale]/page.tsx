@@ -12,6 +12,7 @@ import { LoopVideo } from "@/components/site/LoopVideo";
 import { Notepad } from "@/components/site/Notepad";
 import { Phone } from "@/components/site/Phone";
 import { Receipt } from "@/components/site/Receipt";
+import { Season } from "@/components/site/Season";
 import { Sticker } from "@/components/site/Sticker";
 import { homeCopy } from "@/lib/marketing/content/home";
 import { SCREENS } from "@/lib/marketing/images.generated";
@@ -56,6 +57,12 @@ export default async function HomePage({ params }: Props) {
     );
   };
 
+  /** Only where the page exists in the reader's language. */
+  const more = (id: keyof NonNullable<typeof c.more>) => {
+    const label = c.more?.[id];
+    return label ? <p className={styles.more}>{link(id, label)}</p> : null;
+  };
+
   return (
     <div data-full className={styles.home}>
       <JsonLd data={homeStructuredData(locale)} />
@@ -98,6 +105,23 @@ export default async function HomePage({ params }: Props) {
           </div>
         </div>
       </section>
+
+      {c.season ? (
+        <Season until={c.season.until}>
+          <div className={styles.wrap}>
+            <div className={styles.season}>
+              <div>
+                <Headline size="md" lines={c.season.lines} />
+                <p>{c.season.body}</p>
+                <Link className={styles.seasonLink} href={bestHref(c.season.id, locale).href}>
+                  {c.season.link}
+                </Link>
+              </div>
+              <Sticker name="z-torba" className={styles.seasonKangur} />
+            </div>
+          </div>
+        </Season>
+      ) : null}
 
       <section className={styles.section} id="jak-dziala">
         <div className={styles.wrap}>
@@ -162,6 +186,8 @@ export default async function HomePage({ params }: Props) {
               <div className={styles.wayCopy}>
                 <h3>{c.ways.photo.title}</h3>
                 <p>{c.ways.photo.body}</p>
+                {more("photoList")}
+                {more("guidePrint")}
               </div>
               <div className={styles.wayNote}>
                 <Notepad lines={c.ways.photo.note} locale={locale} />
@@ -172,6 +198,7 @@ export default async function HomePage({ params }: Props) {
               <div className={styles.wayCopy}>
                 <h3>{c.ways.dish.title}</h3>
                 <p>{c.ways.dish.body}</p>
+                {more("recipeList")}
               </div>
               <Phone
                 image={screens.meal}
@@ -186,6 +213,7 @@ export default async function HomePage({ params }: Props) {
               <div className={styles.wayCopy}>
                 <h3>{c.ways.usual.title}</h3>
                 <p>{c.ways.usual.body}</p>
+                {more("guideWeek")}
               </div>
               {screens.history ? (
                 <Phone
@@ -204,6 +232,8 @@ export default async function HomePage({ params }: Props) {
               <div className={styles.wayCopy}>
                 <h3>{c.ways.typed.title}</h3>
                 <p>{c.ways.typed.body}</p>
+                {more("aisleTool")}
+                {more("aiList")}
               </div>
               <div className={styles.wayChips} aria-hidden>
                 {c.ways.typed.chips.map((chip) => (
@@ -226,6 +256,7 @@ export default async function HomePage({ params }: Props) {
                 <li key={point}>{point}</li>
               ))}
             </ul>
+            {more("sharedList")}
             {c.together.fact ? (
               <blockquote className={styles.fact}>
                 <p>{c.together.fact.text}</p>
@@ -244,14 +275,14 @@ export default async function HomePage({ params }: Props) {
           {polish && c.together.added ? (
             <div className={styles.pair}>
               <Phone
-                image={SCREENS.pl.sharedOla}
+                image={SCREENS.pl.quick}
                 alt={c.together.screenAlt}
                 className={styles.pairLeft}
                 sizes="(max-width: 700px) 46vw, 244px"
                 time="17:20"
               />
               <Phone
-                image={SCREENS.pl.sharedOla}
+                image={SCREENS.pl.quick}
                 alt=""
                 className={styles.pairRight}
                 sizes="(max-width: 700px) 46vw, 244px"

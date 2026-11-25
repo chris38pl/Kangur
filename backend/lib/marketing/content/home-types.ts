@@ -1,5 +1,6 @@
 import type { Chat } from "@/components/site/ChatCard";
 import type { ReceiptLine } from "@/components/site/Receipt";
+import type { MarketingRouteId } from "@/lib/marketing/routes";
 
 export type Lines = readonly [string, string];
 
@@ -58,6 +59,28 @@ export type HomeCopy = {
   };
   faq: { lines: Lines; items: readonly { q: string; a: string }[] };
   closing: { lines: Lines; body: string; qrLabel: string; qrHint: string };
+  /** Links to pages that only some languages have. */
+  more?: Partial<
+    Record<
+      | "photoList"
+      | "recipeList"
+      | "guideWeek"
+      | "guidePrint"
+      | "aisleTool"
+      | "aiList"
+      | "sharedList",
+      string
+    >
+  >;
+  /** A strip for a few weeks of the year. */
+  season?: {
+    id: MarketingRouteId;
+    /** Hidden after this day, also before the next deploy. */
+    until: string;
+    lines: Lines;
+    body: string;
+    link: string;
+  };
 };
 
 export type Step = { pill: string; title: string; body: string };

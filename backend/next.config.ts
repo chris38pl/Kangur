@@ -24,6 +24,17 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // A printable found on its own has no way back to us. Its place in search results
+        // belongs to the guide it comes from.
+        source: "/druk/:path*",
+        headers: [
+          {
+            key: "Link",
+            value: `<https://${PRODUCTION_HOST}/poradniki/lista-zakupow-do-druku>; rel="canonical"`,
+          },
+        ],
+      },
+      {
         // Staging, previews and localhost are copies of the site. Decided by host, so it
         // holds whatever environment variables a deployment has.
         source: "/:path*",

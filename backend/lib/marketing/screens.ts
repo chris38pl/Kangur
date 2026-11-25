@@ -1,4 +1,5 @@
 import { SCREENS, type MarketingImage } from "@/lib/marketing/images.generated";
+import { AISLE_LOOP } from "@/lib/marketing/loop.generated";
 import type { AppLocale } from "@/lib/marketing/locale";
 
 export type LocalizedScreens = {
@@ -16,11 +17,5 @@ export function screensFor(locale: AppLocale): LocalizedScreens {
   return SCREENS[locale === "be" ? "ru" : locale];
 }
 
-/** Recording of shopping mode, Polish only. Made by .marketing/06-seo/obrazy/build-loop.mjs. */
-export const AISLE_LOOP = {
-  src: "/img/wideo/alejki.0eee3516.mp4",
-  poster: "/img/wideo/alejki.69103842.webp",
-  width: 540,
-  height: 1090,
-  seconds: 10,
-} as const;
+/** Recording of shopping mode, Polish only. */
+export { AISLE_LOOP };

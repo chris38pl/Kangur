@@ -73,15 +73,27 @@ export const SCREENS = {
       "width": 720,
       "height": 1565
     },
-    "aisles": {
-      "avif": "/img/ekrany/pl/aisles-360.79bb78b9.avif 360w, /img/ekrany/pl/aisles-720.ec6ab554.avif 720w",
-      "src": "/img/ekrany/pl/aisles-720.26e14b18.webp",
-      "width": 720,
-      "height": 1565
-    },
     "start": {
       "avif": "/img/ekrany/pl/start-360.74671382.avif 360w, /img/ekrany/pl/start-720.5f31a73f.avif 720w",
       "src": "/img/ekrany/pl/start-720.71763583.webp",
+      "width": 720,
+      "height": 1565
+    },
+    "importRest": {
+      "avif": "/img/ekrany/pl/importRest-360.1f5a1f12.avif 360w, /img/ekrany/pl/importRest-720.d71a59ab.avif 720w",
+      "src": "/img/ekrany/pl/importRest-720.d3dd4ae1.webp",
+      "width": 720,
+      "height": 1565
+    },
+    "importDone": {
+      "avif": "/img/ekrany/pl/importDone-360.5d38b5d1.avif 360w, /img/ekrany/pl/importDone-720.39110955.avif 720w",
+      "src": "/img/ekrany/pl/importDone-720.34fbeae5.webp",
+      "width": 720,
+      "height": 1565
+    },
+    "quick": {
+      "avif": "/img/ekrany/pl/quick-360.9029d2a2.avif 360w, /img/ekrany/pl/quick-720.d0fd72b9.avif 720w",
+      "src": "/img/ekrany/pl/quick-720.70b3fe42.webp",
       "width": 720,
       "height": 1565
     }

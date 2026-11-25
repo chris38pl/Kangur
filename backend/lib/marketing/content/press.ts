@@ -30,8 +30,7 @@ const COPY = {
   ],
   nameTitle: "Uwaga na imię",
   name: [
-    "W czerwcu 2025 policja i media opisały mężczyznę, który dał się namówić na zainstalowanie na komputerze programu „Kangur” i stracił 10 000 zł. To nie ta aplikacja: nasz Kangur powstał rok później, jest na telefon i robi tylko listy zakupów.",
-    "Jeśli piszesz o tamtej sprawie, prosimy o jedno zdanie: „Program nie ma związku z aplikacją Kangur do list zakupów”. [[safety|Jak nas rozpoznać]].",
+    "Kangurów jest kilka: konkurs matematyczny, siłownia i program na komputer z ostrzeżenia policji z 2025 roku. Nie mamy z nimi związku. Nasz Kangur to aplikacja na telefon, powstał w 2026 roku i robi tylko listy zakupów. [[safety|Jak nas rozpoznać]].",
   ],
   ideasTitle: "Pomysły na tekst",
   ideas: [

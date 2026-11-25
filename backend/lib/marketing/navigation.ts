@@ -26,6 +26,7 @@ export function headerLinks(locale: AppLocale): NavLink[] {
   }
   return [
     how,
+    ...(locale === "pl" ? [page("guides", t.guides, locale)] : []),
     page("pricing", t.pricing, locale),
     page("safety", t.safety, locale),
     faq,
@@ -49,6 +50,25 @@ export function footerGroups(locale: AppLocale): FooterGroup[] {
         page("contact", t.contact, locale),
       ],
     },
+    // Polish only, until the same pages exist in other languages.
+    ...(locale === "pl"
+      ? [
+          {
+            title: t.lists,
+            links: [
+              page("sharedList", "Wspólna lista", locale),
+              page("photoList", "Ze zdjęcia i zrzutu", locale),
+              page("recipeList", "Z przepisu", locale),
+              page("aiList", "Z AI", locale),
+              page("aisleTool", "Podział na kategorie", locale),
+              page("guideChristmas", "Na Wigilię i święta", locale),
+              page("guideWeek", "Na tydzień", locale),
+              page("guidePrint", "Do druku", locale),
+              page("guides", t.guides, locale),
+            ],
+          },
+        ]
+      : []),
     {
       title: t.legal,
       links: [

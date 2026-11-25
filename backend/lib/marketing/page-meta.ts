@@ -124,6 +124,69 @@ const PAGE_META: Record<
         "How to make a list from a chat screenshot, invite your household, what Premium adds and what works on a weak signal. Answers about the Kangur grocery list.",
     },
   },
+  sharedList: {
+    pl: {
+      title: "Wspólna lista zakupów - aplikacja dla pary i rodziny",
+      description:
+        "Aplikacja do wspólnej listy zakupów na iPhone’a i Androida. Zapraszasz e-mailem, każdy dopisuje u siebie, w sklepie widać, co już w koszyku.",
+    },
+  },
+  photoList: {
+    pl: {
+      title: "Lista zakupów ze zdjęcia kartki albo zrzutu czatu",
+      description:
+        "Zrzut rozmowy albo zdjęcie kartki zamienia się w listę zakupów według alejek. Przykład: siedem wiadomości, 22 pozycje. I kiedy AI się myli.",
+    },
+  },
+  recipeList: {
+    pl: {
+      title: "Lista zakupów z przepisu: wpisz dania, odznacz, co masz",
+      description:
+        "Do pięciu dań naraz, składniki na jednej liście zakupów, a sól tylko raz. Odznaczasz to, co masz w domu. Własny przepis wkleisz ze schowka.",
+    },
+  },
+  aiList: {
+    pl: {
+      title: "Lista zakupów z AI w aplikacji: co umie, a czego nie",
+      description:
+        "Aplikacja, w której AI robi listę zakupów z czatu, kartki albo nazwy dania. Ilości przepisuje z tekstu, nie doradza. Zasady, błędy i cena, po ludzku.",
+    },
+  },
+  aisleTool: {
+    pl: {
+      title: "Lista zakupów z podziałem na kategorie - wklej swoją",
+      description:
+        "Wklej listę zakupów, a narzędzie ułoży ją według 24 kategorii w kolejności sklepu. Za darmo, bez konta, w przeglądarce. Potem skopiuj albo wydrukuj.",
+    },
+  },
+  guides: {
+    pl: {
+      title: "Listy zakupów: kalkulatory, szablony i narzędzia - Kangur",
+      description:
+        "Lista zakupów na Wigilię przeliczona na gości, lista na tydzień, podział na kategorie i szablony do druku. Za darmo, bez konta.",
+    },
+  },
+  guideChristmas: {
+    pl: {
+      title: "Lista zakupów na Wigilię i święta 2026 + kalkulator",
+      description:
+        "Produkty na 12 potraw z ilościami dla 1 do 30 osób, co kupić wcześniej i kto co przynosi. Boże Narodzenie 2026: duże sklepy zamknięte od 24 do 27.",
+    },
+  },
+  guideWeek: {
+    pl: {
+      title: "Lista zakupów na tydzień dla 1, 2 i 4 osób z ilościami",
+      description:
+        "Gotowa lista zakupów na tydzień: ile czego dla jednej osoby, dwóch i rodziny, także bez mięsa. Duże zakupy, mała dokupka i pięć obiadów z tej listy.",
+    },
+  },
+  guidePrint: {
+    pl: {
+      title: "Lista zakupów do druku (PDF, A4) - 7 darmowych szablonów",
+      description:
+        "Siedem szablonów listy zakupów do wydruku w PDF: pusta z kategoriami, gotowa, duże litery, z ceną, na tydzień i na Wigilię. Za darmo, bez maila.",
+    },
+  },
   contact: {
     pl: {
       title: "Kontakt - Kangur, lista zakupów z AI",

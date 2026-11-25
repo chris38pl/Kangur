@@ -16,7 +16,7 @@
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "test:locales": "tsx scripts/check-locales.ts",
     "test:unit": "node --test --experimental-strip-types lib/billing/linkedWorkspace.test.ts features/workspace/workspaceRemoval.test.ts",
-    "test:marketing": "tsx --test lib/marketing/*.test.ts lib/marketing/aisles/*.test.ts",
+    "test:marketing": "tsx --test lib/marketing/*.test.ts lib/marketing/aisles/*.test.ts lib/marketing/lists/*.test.ts",
     "test:seo": "tsx scripts/check-seo.ts",
     "seo:indexnow": "tsx scripts/indexnow.ts",
     "eval:ai": "tsx evals/runner/cli.ts",
@@ -55,5 +55,12 @@
     "prisma": "^6.19.3",
     "tsx": "^4.23.1",
     "typescript": "^5"
-  }
+  },
+  "browserslist": [
+    "chrome 100",
+    "edge 100",
+    "firefox 100",
+    "safari 15.4",
+    "ios_saf 15.4"
+  ]
 }

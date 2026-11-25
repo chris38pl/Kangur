@@ -1,0 +1,65 @@
+.nudge {
+  display: grid;
+  gap: 18px;
+  overflow: hidden;
+  margin-top: 22px;
+  padding: 24px 24px 26px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #eaf7f2, #d3efe6);
+}
+
+.nudge h3 {
+  margin: 0 0 6px;
+  color: var(--kangur-text);
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.nudge p {
+  max-width: 34rem;
+  margin: 0 0 18px;
+  color: #33415a;
+}
+
+.kangur {
+  display: none;
+}
+
+/* The card is narrower than the page, so are the two buttons in it. */
+@media (max-width: 440px) {
+  .nudge :global(.mkt-store-btn) {
+    gap: 8px;
+    padding-inline: 10px;
+  }
+
+  .nudge :global(.mkt-store-btn span) {
+    font-size: 0.94rem;
+  }
+}
+
+@media (max-width: 389px) {
+  .nudge :global(.mkt-stores) {
+    grid-template-columns: minmax(0, 200px);
+  }
+}
+
+@media (min-width: 620px) {
+  .nudge {
+    grid-template-columns: minmax(0, 1fr) 128px;
+    align-items: end;
+    padding-bottom: 0;
+  }
+
+  .nudge > div {
+    padding-bottom: 26px;
+  }
+
+  .kangur {
+    display: block;
+    width: 128px;
+    height: auto;
+    margin-bottom: -34px;
+  }
+}

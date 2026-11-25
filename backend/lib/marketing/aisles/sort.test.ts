@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { CATALOG_PRODUCTS } from "@shared/product-catalog";
+
 import { buildAisleWords } from "@/lib/marketing/aisles/dictionary";
 import {
   buildAisleIndex,
@@ -9,6 +11,7 @@ import {
   sortByAisles,
   splitList,
 } from "@/lib/marketing/aisles/sort";
+import { AISLE_TOOL } from "@/lib/marketing/content/topics/aisle-tool";
 
 const index = buildAisleIndex(buildAisleWords());
 const aisleOf = (name: string) => findAisle(index, name);
@@ -22,6 +25,12 @@ const F01: readonly [string, string][] = [
   ["karma dla pieska", "pets"], ["2 paczki cebulowych chipsów", "snacks"], ["proszek do prania", "cleaning"],
 ];
 
+test("the page says how many products the catalogue really has", () => {
+  const said = JSON.stringify(AISLE_TOOL).match(/\d{3}(?= produkt)/g) ?? [];
+  assert.equal(said.length, 2);
+  for (const number of said) assert.equal(Number(number), CATALOG_PRODUCTS.length);
+});
+
 test("the F01 list lands in the same aisles as in the app", () => {
   const items = sortByAisles(F01.map(([text]) => text).join(", "), index);
   assert.equal(items.length, F01.length);
@@ -34,7 +43,7 @@ test("quantities are kept with the product", () => {
     "jajka 10 szt\nkurczak 1kg\npassata 2x\n1,5 l mleka\nkostka masła\nmąka x 2",
     index,
   );
-  assert.deepEqual([eggs.name, eggs.quantity], ["Jajka", "10 szt"]);
+  assert.deepEqual([eggs.name, eggs.quantity], ["Jajka", "10 szt."]);
   assert.deepEqual([chicken.name, chicken.quantity], ["Kurczak", "1kg"]);
   assert.deepEqual([passata.name, passata.quantity], ["Passata", "2"]);
   assert.deepEqual([milk.name, milk.quantity, milk.aisle], ["Mleka", "1,5 l", "dairy"]);
@@ -81,9 +90,10 @@ test("poppy seeds are not flour", () => {
 });
 
 test("messy input is split the way people write", () => {
-  assert.deepEqual(splitList("- mleko\n* chleb\n[ ] masło\n1. jajka\n☐ ser"), ["mleko", "chleb", "masło", "jajka", "ser"]);
-  assert.deepEqual(splitList("mleko 1,5 l, chleb; masło"), ["mleko 1,5 l", "chleb", "masło"]);
-  assert.deepEqual(splitList("  ,, 😘 \n"), []);
+  const parts = (text: string) => splitList(text).map((part) => part.text);
+  assert.deepEqual(parts("- mleko\n* chleb\n[ ] masło\n1. jajka\n☐ ser"), ["mleko", "chleb", "masło", "jajka", "ser"]);
+  assert.deepEqual(parts("mleko 1,5 l, chleb; masło"), ["mleko 1,5 l", "chleb", "masło"]);
+  assert.deepEqual(parts("  ,, 😘 \n"), []);
 });
 
 test("small talk around the product is dropped", () => {
@@ -107,4 +117,52 @@ test("groups follow the aisle order, also a changed one", () => {
   assert.deepEqual(groupByAisle(items).map((g) => g.aisle), ["fruit", "dairy", "bakery"]);
   assert.deepEqual(groupByAisle(items, ["bakery", "dairy", "fruit"]).map((g) => g.aisle), ["bakery", "dairy", "fruit"]);
   assert.deepEqual(groupByAisle(items)[1].items.map((i) => i.name), ["Masło", "Jogurt"]);
+});
+
+test("a list copied as a list keeps its products and loses its headings", () => {
+  const copied = "Lista zakupów\n\nNABIAŁ\n- Masło (kostka) 2 szt.\n- Ser żółty, w plastrach 20 dag\n\nWARZYWA\n- Czosnek (główka) 1 szt.\n- Chleb 1,5 kg (krojony i część do zamrażarki)";
+  assert.deepEqual(
+    sortByAisles(copied, index).map(({ name, quantity }) => [name, quantity]),
+    [
+      ["Masło (kostka)", "2 szt."],
+      ["Ser żółty, w plastrach", "20 dag"],
+      ["Czosnek (główka)", "1 szt."],
+      ["Chleb", "1,5 kg (krojony i część do zamrażarki)"],
+    ],
+  );
+  // Capitals alone are not a heading, and neither is the last line.
+  assert.deepEqual(sortByAisles("MLEKO\nCHLEB", index).map((item) => item.name), ["MLEKO", "CHLEB"]);
+  assert.deepEqual(sortByAisles("- mleko\n- chleb\nMASŁO", index).length, 3);
+});
+
+test("frozen is frozen, and cubes are not always an amount", () => {
+  assert.equal(findAisle(index, "mrożone maliny"), "frozen");
+  assert.equal(findAisle(index, "fasolka mrożona"), "frozen");
+  assert.deepEqual(
+    sortByAisles("kostki rosołowe, kostka masła", index).map(({ name, quantity, aisle }) => [name, quantity, aisle]),
+    [["Kostki rosołowe", null, "pantry"], ["Masła", "1 kostka", "dairy"]],
+  );
+  assert.equal(findAisle(index, "oliwa z oliwek"), "pantry");
+});
+
+test("an amount on its own belongs to the product before it", () => {
+  const of = (text: string) => sortByAisles(text, index).map(({ name, quantity }) => [name, quantity]);
+  assert.deepEqual(of("mleko, 2 l, chleb, 1 szt., jajka, 10 szt"), [["Mleko", "2 l"], ["Chleb", "1 szt."], ["Jajka", "10 szt."]]);
+  assert.deepEqual(of("Mąka pszenna, 1,5 kg"), [["Mąka pszenna", "1,5 kg"]]);
+  assert.deepEqual(of("bakalie (rodzynki, orzechy), miód"), [["Bakalie (rodzynki, orzechy)", null], ["Miód", null]]);
+  // Also on a line of its own. With nothing before it, it is nobody's amount.
+  assert.deepEqual(of("mleko\n2 l"), [["Mleko", "2 l"]]);
+  assert.deepEqual(of("2, mleko"), [["Mleko", null]]);
+});
+
+test("what people paste together with a list", () => {
+  const names = (text: string) => sortByAisles(text, index).map((item) => item.name);
+  assert.deepEqual(names("✔️ mleko\n☑️ chleb\n○ masło\n1️⃣ ser\n→ jajka"), ["Mleko", "Chleb", "Masło", "Ser", "Jajka"]);
+  assert.deepEqual(names("4.jajka\n. ser\nmleko –"), ["Jajka", "Ser", "Mleko"]);
+  assert.deepEqual(names("Nabiał\n- mleko\n- ser\nDo sklepu:\n- chleb"), ["Mleko", "Ser", "Chleb"]);
+  assert.deepEqual(names("7 up, mleko"), ["7 up", "Mleko"]);
+  const long = "!".repeat(20000) + " mleko";
+  const started = performance.now();
+  sortByAisles([long, ".".repeat(20000), "a".repeat(20000)].join("\n"), index);
+  assert.ok(performance.now() - started < 400);
 });

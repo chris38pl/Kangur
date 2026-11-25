@@ -20,7 +20,8 @@ export function SiteFooter({ locale }: { locale: AppLocale }) {
               <ul>
                 {group.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} hrefLang={link.hrefLang}>
+                    {/* Thirty links nobody may click are not worth 139 KB of prefetching. */}
+                    <Link href={link.href} hrefLang={link.hrefLang} prefetch={false}>
                       {link.label}
                     </Link>
                   </li>

@@ -1,4 +1,5 @@
 import type { AisleWord } from "@/lib/marketing/aisles/dictionary";
+import { AISLE_LABELS } from "@/lib/marketing/aisles/labels";
 import { SHOPPING_CATEGORIES, type ShoppingCategory } from "@shared/shopping-categories";
 
 /**
@@ -142,6 +143,7 @@ export function findAisle(index: AisleIndex, name: string): ShoppingCategory | n
 
   const words = tokens(name);
   if (words.length === 0) return null;
+  if (words.some((word) => /^mroż(?:on|ąc)/u.test(word))) return "frozen";
   return (
     bestByStems(index, words, "stems") ?? bestByStems(index, words, "plainStems")
   );
@@ -154,6 +156,7 @@ const UNIT =
   "zgrzewk(?:a|i|ę)|zgrzewek|karton(?:y|ów)?|bochen(?:ek|ki|ków)|rolk(?:a|i|ę)|rolek|ząb(?:ek|ki|ków)|" +
   "tackę|tack(?:a|i)|tacek|woreczek|woreczki|kubk(?:i|ów)|kubek|plast(?:er|ry|rów)";
 const NUMBER = "\\d+(?:[.,]\\d+)?(?:\\s*-\\s*\\d+)?|pół|półtora";
+const QUANTITY_ONLY = new RegExp(`^(?:x\\s*)?(?:${NUMBER})\\s*(?:${UNIT})?$`, "iu");
 const QUANTITY_FIRST = new RegExp(`^(?:x\\s*)?(${NUMBER})\\s*(${UNIT})?(?=\\s|$)\\s*(.+)$`, "iu");
 const QUANTITY_LAST = new RegExp(`^(.+?)[\\s:,-]+(?:x\\s*)?((?:${NUMBER})\\s*(?:${UNIT})?|x\\s*\\d+)$`, "iu");
 const UNIT_FIRST = new RegExp(
@@ -161,7 +164,15 @@ const UNIT_FIRST = new RegExp(
   "iu",
 );
 
+/** "Chleb 1,5 kg (krojony)": the amount is not at the very end. */
+const NOTE = /^(.*\S)\s+(\([^()]+\))$/u;
+
 function parseQuantity(raw: string): { name: string; quantity: string | null } {
+  const noted = NOTE.exec(raw);
+  if (noted) {
+    const { name, quantity } = parseQuantity(noted[1]);
+    if (quantity) return { name, quantity: `${quantity} ${noted[2]}` };
+  }
   const first = QUANTITY_FIRST.exec(raw);
   if (first?.[3]) {
     const unit = first[2] && !/^x$/i.test(first[2]) ? ` ${first[2]}` : "";
@@ -181,49 +192,109 @@ function parseQuantity(raw: string): { name: string; quantity: string | null } {
 const LEADING_FILLER =
   /^(?:(?:a+|no|to|i|oraz|też|tez|jeszcze|może|moze|aha|ej|hej|o+|aaa+i?|weź|wez|kup|kupisz|proszę|prosze|najlepiej|plus|jakieś|jakies|jakiś|jakis|jakąś|trochę|troche)[\s,:-]+)+/iu;
 
+/** Emoji with everything that travels with them: skin tones, joiners, keycaps. */
+const EMOJI = /[0-9#*]\uFE0F?\u20E3|\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}\uFE0E\uFE0F\u200B-\u200D\u2060]/gu;
+/** Nobody writes a product longer than this, and a pasted page must not freeze a phone. */
+const LONGEST = 160;
+
 function clean(part: string): string {
   return part
-    .replace(/^[\s\-*•·–—>✓✔☐☑□▪◦]+/u, "")
+    .slice(0, LONGEST)
+    .replace(EMOJI, "")
+    .replace(/^[\s\-*•·–—>→+.✓✔☐☑□▪▢◦○●❑❏]+/u, "")
     .replace(/^\[[ xX]?\]\s*/, "")
-    .replace(/^\d+[.)]\s+/, "")
-    .replace(/\p{Extended_Pictographic}/gu, "")
-    .replace(/[!?.;:]+$/u, "")
+    .replace(/^\d+[.)]\s*(?=\p{L})/u, "")
+    .replace(/[!?.;:\s–—-]{1,40}$/u, "")
     .replace(/\s+/g, " ")
     .trim();
 }
+
+/** The dot of "szt." goes away with the other punctuation at the end of a line. */
+const tidyQuantity = (quantity: string) => quantity.replace(/(szt|opak|op)(?=$| \()/u, "$1.");
 
 function capitalise(name: string): string {
   return name ? name[0].toLocaleUpperCase("pl") + name.slice(1) : name;
 }
 
-/** Lines, commas, semicolons and bullets; "1,5 l" stays in one piece. */
-export function splitList(text: string): string[] {
-  return text
-    .split(/\r?\n|;|•|·|\t|(?<!\d),|,(?!\d)|\s\+\s/u)
-    .map(clean)
-    .filter((part) => /\p{L}/u.test(part));
+const BULLET = /^\s*(?:(?:[-*•·–—→+]|\[[ xX]?\])\s+|[✓✔☐☑□▪▢◦○●❑❏]\uFE0F?\s*)\S/u;
+const AISLE_NAMES: ReadonlySet<string> = new Set(Object.values(AISLE_LABELS).map(lower));
+/** First line of a list copied from our own tools. */
+const OWN_TITLE = /^lista zakupów(?: na (?:tydzień|wigilię|cztery dni)[^\n]*)?$/iu;
+
+/**
+ * Drops what is not a product in a list that was copied as a list: a title right above a
+ * bullet (in capitals, with a colon, or the name of an aisle), and the name of the whole list.
+ */
+function withoutHeadings(lines: readonly string[]): string[] {
+  const filled = lines.filter((line) => line.trim());
+  const heading = filled.map((line, i) => {
+    const bare = line.trim();
+    if (BULLET.test(line) || !/\p{L}/u.test(bare)) return false;
+    if (OWN_TITLE.test(bare)) return true;
+    if (!BULLET.test(filled[i + 1] ?? "")) return false;
+    return bare === bare.toLocaleUpperCase("pl") || bare.endsWith(":") || AISLE_NAMES.has(lower(bare));
+  });
+  if (heading[1] && !BULLET.test(filled[0] ?? "")) heading[0] = true;
+  return filled.filter((_, i) => !heading[i]);
+}
+
+/** A comma between digits, kept out of the way while the list is split. */
+const DECIMAL = "\u0001";
+
+/**
+ * Lines, commas and semicolons; "1,5 l" stays in one piece. A line with a bullet is one
+ * product, whatever commas are in it. `whole` tells the caller not to split it further.
+ */
+export function splitList(text: string): { text: string; whole: boolean }[] {
+  const lines = withoutHeadings(text.replace(/[\u00a0\u202f]/g, " ").split(/\r?\n/));
+  const bullets = lines.filter((line) => BULLET.test(line)).length;
+  const result: { text: string; whole: boolean }[] = [];
+  for (const line of lines) {
+    if (bullets >= 2 && BULLET.test(line)) {
+      result.push({ text: clean(line), whole: true });
+      continue;
+    }
+    const parts = line
+      .replace(/(\d),(?=\d)/g, `$1${DECIMAL}`)
+      // Not inside brackets: "bakalie (rodzynki, orzechy)" is one product.
+      .split(/;|•|·|\t|,(?![^()]*\))|\s\+\s/u);
+    for (const raw of parts) {
+      const part = clean(raw.split(DECIMAL).join(","));
+      if (!part) continue;
+      // "mleko, 2 l": the amount belongs to what stands before it.
+      if (result.length > 0 && QUANTITY_ONLY.test(part)) {
+        result[result.length - 1].text += ` ${part}`;
+      } else {
+        result.push({ text: part, whole: false });
+      }
+    }
+  }
+  return result.filter((part) => /\p{L}/u.test(part.text));
 }
 
 export function sortByAisles(text: string, index: AisleIndex): SortedItem[] {
   const items: SortedItem[] = [];
   const push = (raw: string) => {
     const trimmed = clean(raw.replace(LEADING_FILLER, ""));
-    const { name, quantity } = parseQuantity(trimmed);
+    // "Kostki rosołowe" are a product, not some cubes of "rosołowe".
+    const { name, quantity } = index.exact.has(lower(trimmed))
+      ? { name: trimmed, quantity: null }
+      : parseQuantity(trimmed);
     const bare = clean(name.replace(LEADING_FILLER, ""));
     if (!bare) return;
     const aisle = findAisle(index, bare);
     items.push({
       id: `${items.length}`,
       name: capitalise(bare),
-      quantity,
+      quantity: quantity === null ? null : tidyQuantity(quantity),
       aisle: aisle ?? "other",
       recognised: aisle !== null,
     });
   };
 
-  for (const part of splitList(text)) {
+  for (const { text: part, whole } of splitList(text)) {
     // "chleb i masło" is two products, "kapusta z grochem i grzybami" is one dish.
-    const halves = /\sze?\s/iu.test(part)
+    const halves = whole || /\sze?\s/iu.test(part)
       ? [part]
       : part.split(/\s+(?:i|oraz)\s+/iu);
     if (

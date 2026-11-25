@@ -1,0 +1,158 @@
+/* Two sheets under one magnet. */
+.fridge {
+  position: relative;
+  align-self: flex-end;
+  width: 100%;
+  max-width: 360px;
+  height: 380px;
+  margin-bottom: -44px;
+}
+
+.back,
+.front {
+  position: absolute;
+  width: 74%;
+  height: auto;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 22px 40px -20px rgba(31, 43, 69, 0.4);
+}
+
+.back {
+  top: 34px;
+  right: 0;
+  transform: rotate(5deg);
+}
+
+.front {
+  top: 14px;
+  left: 0;
+  transform: rotate(-3deg);
+}
+
+.magnet {
+  position: absolute;
+  top: 2px;
+  left: 33%;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff8f7e, #d4483a 60%, #b5382c);
+  box-shadow: 0 5px 10px rgba(31, 43, 69, 0.3);
+}
+
+.jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.jump a {
+  padding: 8px 16px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kangur-text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.jump a:hover {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
+.sheets {
+  display: grid;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sheet {
+  display: grid;
+  scroll-margin-top: 96px;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+  padding: 22px;
+  border: 1px solid var(--kangur-border);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 14px 34px -26px rgba(31, 43, 69, 0.38);
+}
+
+.preview {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--kangur-border);
+  border-radius: 8px;
+}
+
+.preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sheet h2 {
+  margin: 2px 0 6px;
+  font-size: 1.28rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.sheet p {
+  margin: 0 0 16px;
+  color: var(--kangur-text-body);
+}
+
+.button {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  padding: 11px 18px;
+  border-radius: 12px;
+  background: var(--kangur-primary-deep);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.button:hover {
+  background: var(--kangur-primary-hover);
+  color: #fff;
+}
+
+.button small {
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+@media (min-width: 900px) {
+  .fridge {
+    margin-bottom: -64px;
+  }
+
+  .sheets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sheet {
+    grid-template-columns: 178px minmax(0, 1fr);
+    padding: 26px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sheet {
+    grid-template-columns: 104px minmax(0, 1fr);
+    gap: 16px;
+    padding: 18px;
+  }
+}
