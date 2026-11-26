@@ -18,6 +18,7 @@ import {
   canonicalLocale,
   contentLocales,
   findRouteByPath,
+  isIndexed,
   routeHref,
   routePath,
   type MarketingRouteId,
@@ -132,12 +133,12 @@ for (const { id, locale, href, html } of pages) {
     descriptions.set(descriptionKey, href);
   }
 
-  // Canonical and hreflang
+  // Canonical and hreflang. A page kept out of search names no canonical at all.
   const links = tags(html, "link");
   const canonical = links.filter((t) => attr(t, "rel") === "canonical").map((t) => attr(t, "href"));
-  const expected = absoluteUrl(routeHref(id, indexed));
-  if (canonical.length !== 1 || canonical[0] !== expected) {
-    fail(href, `canonical ${JSON.stringify(canonical)}, expected ${expected}`);
+  const expected = isIndexed(id) ? [absoluteUrl(routeHref(id, indexed))] : [];
+  if (JSON.stringify(canonical) !== JSON.stringify(expected)) {
+    fail(href, `canonical ${JSON.stringify(canonical)}, expected ${JSON.stringify(expected)}`);
   }
   const alternates = Object.fromEntries(
     links
@@ -151,12 +152,16 @@ for (const { id, locale, href, html } of pages) {
     fail(href, `hreflang ${JSON.stringify(alternates)}, expected ${JSON.stringify(wanted)}`);
   }
 
-  // Indexable
-  for (const name of ["robots", "googlebot"]) {
-    const value = meta(html, "name", name);
-    if (IS_PRODUCTION_SITE && value && /noindex|none/i.test(value)) {
-      fail(href, `${name} "${value}" on the production site`);
+  // Indexable, or kept out of search on every host
+  if (isIndexed(id)) {
+    for (const name of ["robots", "googlebot"]) {
+      const value = meta(html, "name", name);
+      if (IS_PRODUCTION_SITE && value && /noindex|none/i.test(value)) {
+        fail(href, `${name} "${value}" on the production site`);
+      }
     }
+  } else if (!/noindex/i.test(meta(html, "name", "robots") ?? "")) {
+    fail(href, "no robots noindex, so search engines may show this page");
   }
 
   // Every language of the page is one link away
@@ -254,7 +259,8 @@ function resolveInternal(href: string): Page | undefined {
 }
 
 // ── The site as a whole ──────────────────────────────────────────────────────
-for (const id of ROUTE_IDS) {
+// A page reached only from an e-mail has nothing to be linked from.
+for (const id of ROUTE_IDS.filter(isIndexed)) {
   for (const locale of contentLocales(id)) {
     const href = routeHref(id, locale);
     if (id === "home") continue;
@@ -290,7 +296,7 @@ if (!fs.existsSync(sitemapFile)) {
 } else {
   const sitemap = fs.readFileSync(sitemapFile, "utf8");
   const listed = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => m[1]);
-  const expected = ROUTE_IDS.flatMap((id) =>
+  const expected = ROUTE_IDS.filter(isIndexed).flatMap((id) =>
     contentLocales(id).map((locale) => absoluteUrl(routeHref(id, locale))),
   );
   for (const url of expected) if (!listed.includes(url)) fail("/sitemap.xml", `missing ${url}`);

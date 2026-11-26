@@ -20,6 +20,7 @@ import {
   isAppLocale,
   withLocale,
 } from "@/lib/marketing/locale";
+import { TAKE_INVITE_EARLY } from "@/lib/marketing/invite";
 import { TAKE_LIST_EARLY } from "@/lib/marketing/lists/handoff";
 import { getMessages } from "@/lib/marketing/messages";
 import { headerLinks } from "@/lib/marketing/navigation";
@@ -98,6 +99,10 @@ export default async function LocaleLayout({
         {/* A list from a code on a computer, before the router reads the address. */}
         <Script id="lista-z-kodu" strategy="beforeInteractive">
           {TAKE_LIST_EARLY}
+        </Script>
+        {/* The token of an invitation, out of the address before anything can record it. */}
+        <Script id="zaproszenie" strategy="beforeInteractive">
+          {TAKE_INVITE_EARLY}
         </Script>
         <SiteFonts locale={locale} />
         <div className="mkt-shell">
