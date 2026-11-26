@@ -1,22 +1,82 @@
+import type { Metadata, Viewport } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import Script from "next/script";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { LanguageSwitcher } from "@/components/marketing/LanguageSwitcher";
-import { MarketingNav } from "@/components/marketing/MarketingNav";
+import {
+  LanguageList,
+  LanguageSwitcher,
+} from "@/components/marketing/LanguageSwitcher";
+import { MarketingNav, MobileMenu } from "@/components/marketing/MarketingNav";
+import { SiteFonts } from "@/components/marketing/SiteFonts";
+import { SiteFooter } from "@/components/marketing/SiteFooter";
+import { HashHistory } from "@/components/marketing/HashHistory";
 import { UtmCapture } from "@/components/marketing/UtmCapture";
 import {
   APP_LOCALE_IDS,
+  SITE_DEFAULT_LOCALE,
   isAppLocale,
   withLocale,
-  type AppLocale,
 } from "@/lib/marketing/locale";
-import { LegalEntityLine } from "@/lib/marketing/legal-entity";
+import { TAKE_INVITE_EARLY } from "@/lib/marketing/invite";
+import { TAKE_LIST_EARLY } from "@/lib/marketing/lists/handoff";
 import { getMessages } from "@/lib/marketing/messages";
+import { headerLinks } from "@/lib/marketing/navigation";
+import { pageMeta } from "@/lib/marketing/page-meta";
+import {
+  APP_STORE_ID,
+  IS_PRODUCTION_SITE,
+  SITE_URL,
+} from "@/lib/marketing/site";
+
+import "../globals.css";
+
+type Params = Promise<{ locale: string }>;
+
+/** Only the ten languages exist; anything else in their place is a 404. */
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   return APP_LOCALE_IDS.map((locale) => ({ locale }));
+}
+
+export const viewport: Viewport = {
+  themeColor: "#43BFA8",
+  colorScheme: "light",
+};
+
+/** Everything a page does not say itself. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Params;
+}): Promise<Metadata> {
+  const { locale: raw } = await params;
+  const locale = isAppLocale(raw) ? raw : SITE_DEFAULT_LOCALE;
+  const { title, description } = pageMeta("home", locale);
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: { default: title, template: "%s | Kangur" },
+    description,
+    applicationName: "Kangur",
+    ...(IS_PRODUCTION_SITE ? {} : { robots: { index: false, follow: false } }),
+    icons: {
+      // /favicon.ico comes from the app/favicon.ico file convention.
+      icon: [
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      apple: [
+        { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      ],
+    },
+    manifest: "/site.webmanifest",
+    // Safari on iPhone shows the native "Open in App Store" banner.
+    itunes: { appId: APP_STORE_ID },
+  };
 }
 
 export default async function LocaleLayout({
@@ -24,87 +84,68 @@ export default async function LocaleLayout({
   params,
 }: {
   children: ReactNode;
-  params: Promise<{ locale: string }>;
+  params: Params;
 }) {
-  const { locale: raw } = await params;
-  if (!isAppLocale(raw)) notFound();
-  const locale = raw as AppLocale;
-  const t = getMessages(locale);
-
-  const navLinks = [
-    { href: withLocale(locale, "/faq"), label: t.nav.faq },
-    { href: withLocale(locale, "/privacy"), label: t.nav.privacy },
-    { href: withLocale(locale, "/terms"), label: t.nav.terms },
-    { href: withLocale(locale, "/contact"), label: t.nav.contact },
-  ] as const;
-
-  const footerLinks = [
-    { href: withLocale(locale, "/faq"), label: t.nav.faq },
-    { href: withLocale(locale, "/privacy"), label: t.nav.privacy },
-    { href: withLocale(locale, "/terms"), label: t.nav.terms },
-    {
-      href: withLocale(locale, "/delete-account"),
-      label: t.nav.deleteAccount,
-    },
-    { href: withLocale(locale, "/contact"), label: t.nav.contact },
-  ] as const;
+  const { locale } = await params;
+  if (!isAppLocale(locale)) notFound();
+  const t = getMessages(locale).nav;
+  const links = headerLinks(locale);
+  const home = withLocale(locale, "/");
 
   return (
-    <div className="mkt-shell">
-      <UtmCapture />
-      <header className="mkt-header">
-        <div className="mkt-header-inner">
-          <Link href={withLocale(locale, "/")} className="mkt-logo">
-            <Image
-              src="/kangur-logo.webp"
-              alt=""
-              width={40}
-              height={40}
-              className="mkt-logo-mark"
-              priority
-            />
-            <span>Kangur</span>
-          </Link>
+    // Anchors glide, page changes do not.
+    <html lang={locale} data-scroll-behavior="smooth">
+      <body>
+        {/* A list from a code on a computer, before the router reads the address. */}
+        <Script id="lista-z-kodu" strategy="beforeInteractive">
+          {TAKE_LIST_EARLY}
+        </Script>
+        {/* The token of an invitation, out of the address before anything can record it. */}
+        <Script id="zaproszenie" strategy="beforeInteractive">
+          {TAKE_INVITE_EARLY}
+        </Script>
+        <SiteFonts locale={locale} />
+        <div className="mkt-shell">
+          <UtmCapture />
+          <HashHistory />
+          <a className="mkt-skip" href="#tresc">
+            {t.skip}
+          </a>
+          <header className="mkt-header">
+            <div className="mkt-header-inner">
+              <Link href={home} className="mkt-logo">
+                <Image
+                  src="/kangur-logo.webp"
+                  alt=""
+                  width={40}
+                  height={40}
+                  className="mkt-logo-mark"
+                  priority
+                />
+                <span>Kangur</span>
+              </Link>
 
-          <MarketingNav links={navLinks} ariaLabel={t.nav.mainAria} />
+              <MarketingNav links={links} ariaLabel={t.mainAria} />
 
-          <div className="mkt-header-actions">
-            <LanguageSwitcher locale={locale} label={t.nav.languageAria} />
-            <a
-              className="mkt-btn mkt-btn-nav"
-              href={`${withLocale(locale, "/")}#pobierz`}
-            >
-              {t.nav.download}
-            </a>
-          </div>
+              <div className="mkt-header-actions">
+                <LanguageSwitcher locale={locale} label={t.languageAria} />
+                <a className="mkt-btn mkt-btn-nav" href={`${home}#pobierz`}>
+                  {t.download}
+                </a>
+                <MobileMenu links={links} label={t.menu}>
+                  <LanguageList locale={locale} label={t.languageAria} />
+                </MobileMenu>
+              </div>
+            </div>
+          </header>
+
+          <main id="tresc" className="mkt-main">
+            {children}
+          </main>
+
+          <SiteFooter locale={locale} />
         </div>
-      </header>
-
-      <div className="mkt-main">{children}</div>
-
-      <footer className="mkt-footer">
-        <nav className="mkt-footer-nav" aria-label={t.nav.footerAria}>
-          {footerLinks.map((link, index) => (
-            <span key={link.href} style={{ display: "contents" }}>
-              {index > 0 ? (
-                <span className="mkt-footer-sep" aria-hidden>
-                  ·
-                </span>
-              ) : null}
-              <Link href={link.href}>{link.label}</Link>
-            </span>
-          ))}
-          <span className="mkt-footer-sep" aria-hidden>
-            ·
-          </span>
-          <span className="mkt-footer-copy">
-            {t.nav.copyright}. {t.nav.rightsReserved}.
-          </span>
-        </nav>
-        <p className="mkt-footer-entity">
-          <LegalEntityLine locale={locale} />
-        </p>
-      </footer>
-    </div>
+      </body>
+    </html>
   );
 }

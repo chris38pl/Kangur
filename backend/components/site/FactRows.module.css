@@ -1,0 +1,27 @@
+.rows {
+  margin: 18px 0 0;
+}
+
+.rows > div {
+  display: grid;
+  grid-template-columns: 8.6rem 1fr;
+  gap: 4px 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--kangur-border);
+}
+
+.rows dt {
+  font-weight: 700;
+}
+
+.rows dd {
+  margin: 0;
+  color: var(--kangur-text-body);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .rows > div {
+    grid-template-columns: 1fr;
+  }
+}

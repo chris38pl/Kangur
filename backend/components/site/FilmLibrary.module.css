@@ -1,0 +1,123 @@
+.library {
+  display: grid;
+  gap: clamp(40px, 6vw, 64px);
+}
+
+/* Topics: one row of pills that wraps, the chosen one in ink. */
+.topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.topics button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--kangur-border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.topics button:hover {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
+.topics button span {
+  min-width: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--kangur-bg-mint);
+  font-size: 0.8125rem;
+  line-height: 24px;
+  text-align: center;
+}
+
+.topics button[aria-pressed="true"] {
+  border-color: var(--kangur-text);
+  background: var(--kangur-text);
+  color: #fff;
+}
+
+.topics button[aria-pressed="true"] span {
+  background: rgb(255 255 255 / 18%);
+}
+
+.group {
+  display: grid;
+  gap: 8px;
+  scroll-margin-top: calc(var(--kangur-header-h) + 16px);
+}
+
+.group[hidden] {
+  display: none;
+}
+
+.group h2 {
+  margin: 0;
+}
+
+.intro {
+  margin: 0 0 18px;
+  color: var(--kangur-text-body);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+  gap: 40px 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 10px;
+  scroll-margin-top: calc(var(--kangur-header-h) + 16px);
+}
+
+.card > :not(:first-child) {
+  width: 100%;
+  max-width: 340px;
+}
+
+.card h3 {
+  margin: 8px 0 0;
+  font-size: 1.125rem;
+  line-height: 1.35;
+}
+
+.meta {
+  margin: 0;
+  color: var(--kangur-text-muted);
+  font-size: 0.9375rem;
+}
+
+.meta a {
+  color: var(--kangur-primary-deep);
+  font-weight: 600;
+}
+
+.card summary {
+  color: var(--kangur-text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.card details p {
+  margin: 6px 0 0;
+  color: var(--kangur-text-body);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}

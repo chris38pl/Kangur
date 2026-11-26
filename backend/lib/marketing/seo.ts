@@ -1,62 +1,33 @@
 import type { Metadata } from "next";
 
+import { LOCALE_META, type AppLocale } from "@/lib/marketing/locale";
+import { OG_IMAGES } from "@/lib/marketing/og.generated";
+import { pageMeta } from "@/lib/marketing/page-meta";
 import {
-  APP_LOCALE_IDS,
-  LOCALE_META,
-  legalLocale,
-  withLocale,
-  type AppLocale,
-} from "@/lib/marketing/locale";
-import { getMessages } from "@/lib/marketing/messages";
-
-export type MarketingPath =
-  | "/"
-  | "/contact"
-  | "/faq"
-  | "/privacy"
-  | "/terms"
-  | "/delete-account";
-
-export const MARKETING_PATHS: readonly MarketingPath[] = [
-  "/",
-  "/faq",
-  "/contact",
-  "/privacy",
-  "/terms",
-  "/delete-account",
-];
+  ROUTES,
+  canonicalLocale,
+  contentLocales,
+  isIndexed,
+  routeHref,
+  type MarketingRouteId,
+} from "@/lib/marketing/routes";
 
 /**
- * Pages whose body exists only in Polish and English. Other locales render the English
- * body with translated navigation, so Google should index the English URL.
+ * hreflang map for a page, relative to `metadataBase`. `x-default` (a reader whose
+ * language we do not have) is English when the page exists in English. A page in one
+ * language, or one kept out of search, has no alternates to announce.
  */
-const PL_EN_ONLY: ReadonlySet<MarketingPath> = new Set([
-  "/faq",
-  "/privacy",
-  "/terms",
-  "/delete-account",
-]);
+export function hreflangAlternates(
+  id: MarketingRouteId,
+): Record<string, string> | undefined {
+  const locales = contentLocales(id);
+  if (locales.length < 2 || !isIndexed(id)) return undefined;
 
-/** Locales that have their own indexable version of `path`. */
-export function contentLocales(path: MarketingPath): readonly AppLocale[] {
-  return PL_EN_ONLY.has(path) ? (["pl", "en"] as const) : APP_LOCALE_IDS;
-}
-
-/** The locale whose URL is canonical for `path` viewed in `locale`. */
-export function canonicalLocale(
-  locale: AppLocale,
-  path: MarketingPath,
-): AppLocale {
-  return PL_EN_ONLY.has(path) ? legalLocale(locale) : locale;
-}
-
-/** hreflang map for `path`, relative to `metadataBase`, plus x-default (English). */
-export function hreflangAlternates(path: MarketingPath): Record<string, string> {
   const languages: Record<string, string> = {};
-  for (const locale of contentLocales(path)) {
-    languages[locale] = withLocale(locale, path);
+  for (const locale of locales) {
+    languages[locale] = routeHref(id, locale);
   }
-  languages["x-default"] = withLocale("en", path);
+  if (ROUTES[id].paths.en) languages["x-default"] = routeHref(id, "en");
   return languages;
 }
 
@@ -65,39 +36,38 @@ export function ogLocale(locale: AppLocale): string {
   return LOCALE_META[locale].bcp47.replace("-", "_");
 }
 
-/** Link-preview image for a locale: 1200x630, real app screen. Source: `.marketing/app-store/og`. */
-export function ogImage(locale: AppLocale) {
+/** Link preview, 1200x630: the top of the page itself, else the one of the home page. */
+export function ogImage(id: MarketingRouteId, locale: AppLocale) {
+  const own = OG_IMAGES[`${id}/${locale}`];
   return {
-    url: `/og/${locale}.jpg`,
+    url: own ?? OG_IMAGES[`home/${locale}`],
     width: 1200,
     height: 630,
     type: "image/jpeg",
-    alt: getMessages(locale).meta.homeTitle,
+    alt: pageMeta(own ? id : "home", locale).title,
   };
 }
 
 /**
  * Full metadata for one marketing page: title, description, canonical, hreflang,
- * Open Graph and X card, all in the page's language.
+ * Open Graph and X card, all in the page's language. A page kept out of search says
+ * `noindex` instead of naming a canonical; a link preview still gets the rest.
  */
-export function buildMarketingMetadata(input: {
-  locale: AppLocale;
-  path: MarketingPath;
-  title: string;
-  description: string;
-}): Metadata {
-  const { locale, path, title, description } = input;
-  const indexed = canonicalLocale(locale, path);
-  const canonical = withLocale(indexed, path);
-  const image = ogImage(indexed);
+export function buildMarketingMetadata(
+  id: MarketingRouteId,
+  locale: AppLocale,
+): Metadata {
+  const { title, description } = pageMeta(id, locale);
+  const indexed = canonicalLocale(id, locale);
+  const canonical = routeHref(id, indexed);
+  const image = ogImage(id, indexed);
 
   return {
     title: { absolute: title },
     description,
-    alternates: {
-      canonical,
-      languages: hreflangAlternates(path),
-    },
+    ...(isIndexed(id)
+      ? { alternates: { canonical, languages: hreflangAlternates(id) } }
+      : { robots: { index: false, follow: false } }),
     openGraph: {
       type: "website",
       siteName: "Kangur",
@@ -105,7 +75,7 @@ export function buildMarketingMetadata(input: {
       title,
       description,
       locale: ogLocale(indexed),
-      alternateLocale: contentLocales(path)
+      alternateLocale: contentLocales(id)
         .filter((other) => other !== indexed)
         .map(ogLocale),
       images: [image],

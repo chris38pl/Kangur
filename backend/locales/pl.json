@@ -23,8 +23,8 @@
   "email": {
     "invite": {
       "subject": "Zaproszenie do {{workspaceName}} - Kangur",
-      "headline": "{{inviter}} zaprosił Cię do",
-      "ctaOpen": "Otwórz Kangur",
+      "headline": "{{inviter}} zaprasza Cię do",
+      "ctaOpen": "Otwórz zaproszenie",
       "ctaJoin": "Dołącz do przestrzeni",
       "bodyExisting": "Masz już konto - otwórz aplikację, aby zaakceptować zaproszenie.",
       "bodyNew": "Utwórz konto lub zaloguj się, aby dołączyć do wspólnych list zakupów.",

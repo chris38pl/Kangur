@@ -1,20 +1,23 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
-/** SSOT for Kangur legal entity on marketing / legal pages. */
+/**
+ * SSOT for Kangur legal entity on marketing / legal pages. The street is also the owner's home
+ * address, so it appears only where the law asks for it: the terms (the provider of an
+ * electronic service) and the privacy policy (the data controller). Elsewhere: the city.
+ */
 export const LEGAL_ENTITY = {
   firmName: "Krzysztof Krawiec Software",
   nip: "9721382309",
   regon: "545425000",
+  city: "Poznań",
   addressPl: "ul. Sielawy 23e/19, 61-619 Poznań",
   addressEn: "ul. Sielawy 23e/19, 61-619 Poznań, Poland",
   supportEmail: "support@getkangur.com",
 } as const;
 
-export function LegalEntityLine({ locale }: { locale: string }) {
-  const address =
-    locale === "pl" ? LEGAL_ENTITY.addressPl : LEGAL_ENTITY.addressEn;
-
+/** The footer of every page: who is behind it, without the street. */
+export function LegalEntityLine() {
   return (
     <>
       {LEGAL_ENTITY.firmName}
@@ -22,8 +25,6 @@ export function LegalEntityLine({ locale }: { locale: string }) {
       NIP {LEGAL_ENTITY.nip}
       {" · "}
       REGON {LEGAL_ENTITY.regon}
-      {" · "}
-      {address}
     </>
   );
 }

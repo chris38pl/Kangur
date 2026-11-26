@@ -148,7 +148,7 @@ export function PrivacyContent({ locale }: Props) {
   }
 
   return (
-    <article className="mkt-legal">
+    <article className="mkt-legal" lang={locale === lang ? undefined : lang}>
       <h1>Privacy Policy</h1>
       <p className="mkt-meta">
         Last updated: 26 August 2026

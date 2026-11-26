@@ -1,0 +1,46 @@
+.hero {
+  align-self: flex-end;
+  width: min(330px, 78%);
+  height: auto;
+  margin-bottom: -30px;
+}
+
+.timeline {
+  padding: 0;
+  list-style: none;
+}
+
+.timeline li {
+  position: relative;
+  margin: 0;
+  padding: 0 0 20px 30px;
+  border-left: 2px solid #bfe3d9;
+}
+
+.timeline li:last-child {
+  padding-bottom: 0;
+  border-color: transparent;
+}
+
+.timeline li::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: -8px;
+  width: 14px;
+  height: 14px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--kangur-primary-deep);
+}
+
+.timeline strong {
+  display: block;
+  font-size: 1rem;
+}
+
+@media (min-width: 900px) {
+  .hero {
+    margin-bottom: -46px;
+  }
+}

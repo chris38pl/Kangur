@@ -1,7 +1,8 @@
+import { compareReplayOrder } from "./replay";
 import type { SyncOperation } from "./types";
 
 /**
- * Compress before flush:
+ * Compress before flush (walks ops in replay order):
  * - consecutive SET_STATUS / EDIT_ITEM on same item → last wins
  * - ADD_ITEM then REMOVE_ITEM (same item) → drop both
  * - EDIT_ITEM then REMOVE_ITEM → keep REMOVE only
@@ -10,10 +11,7 @@ export function compressOperations(ops: SyncOperation[]): {
   compressed: SyncOperation[];
   ratio: number;
 } {
-  const sorted = [...ops].sort((a, b) => {
-    if (a.priority !== b.priority) return a.priority - b.priority;
-    return a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
-  });
+  const sorted = [...ops].sort(compareReplayOrder);
 
   const result: SyncOperation[] = [];
   const byItemLastIndex = new Map<string, number>();

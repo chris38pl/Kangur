@@ -1,0 +1,25 @@
+.root {
+  position: relative;
+}
+
+/* Between the clock and the icons, where a phone has nothing to say. */
+.toggle {
+  position: absolute;
+  top: 2.2%;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  border: 0;
+  border-radius: 50%;
+  background: #eef1f4;
+  color: var(--kangur-text);
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: var(--kangur-primary-soft);
+}

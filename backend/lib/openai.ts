@@ -41,9 +41,12 @@ export const IMPORT_PROPOSAL_VERSION = 4;
 export const HISTORY_PROPOSAL_TYPE = "shopping-history";
 export const HISTORY_PROPOSAL_VERSION = 7;
 
-/** Meal proposal → shopping list ingredients. */
+/**
+ * Meal proposal → shopping list ingredients.
+ * v2: one row per dish, joined at apply (MEAL_ROWS_PER_DISH_VERSION).
+ */
 export const MEAL_PROPOSAL_TYPE = "meal-proposal";
-export const MEAL_PROPOSAL_VERSION = 1;
+export const MEAL_PROPOSAL_VERSION = 2;
 
 /** @deprecated Use IMPORT_PROPOSAL_VERSION */
 export const PROMPT_VERSION = `v${IMPORT_PROPOSAL_VERSION}`;

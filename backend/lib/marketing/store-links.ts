@@ -25,7 +25,7 @@ export const APP_STORE_PROVIDER_TOKEN = "129764493";
 /** Apple's `ct` allows at most 30 characters. */
 const APPLE_CAMPAIGN_MAX = 30;
 
-/** Campaign used when the visitor came without UTM. */
+/** Source of visitors who came without UTM, e.g. from Google. */
 export const DEFAULT_CAMPAIGN = "landing";
 
 export function readUtm(search: string): Utm {
@@ -59,9 +59,22 @@ export function parseStoredUtm(raw: string | null | undefined): Utm {
   }
 }
 
-/** Apple `ct`: "<source>-<campaign>", e.g. "tiktok-start30"; "landing" without UTM. */
-export function appStoreCampaign(utm: Utm): string {
-  const raw = [utm.utm_source, utm.utm_campaign].filter(Boolean).join("-");
+/** The campaign to credit: the visitor's own, else this site and the page they were on. */
+export function creditedUtm(utm: Utm, page?: string): Utm {
+  if (hasUtm(utm)) return utm;
+  return {
+    utm_source: DEFAULT_CAMPAIGN,
+    utm_medium: "website",
+    ...(page ? { utm_campaign: page } : {}),
+  };
+}
+
+/** Apple `ct`: "<source>-<campaign>", e.g. "tiktok-start30"; "landing-cennik" without UTM. */
+export function appStoreCampaign(utm: Utm, page?: string): string {
+  const credited = creditedUtm(utm, page);
+  const raw = [credited.utm_source, credited.utm_campaign]
+    .filter(Boolean)
+    .join("-");
   const clean = raw
     .toLowerCase()
     .replace(/[^a-z0-9._-]+/g, "-")
@@ -73,11 +86,11 @@ export function appStoreCampaign(utm: Utm): string {
 }
 
 /** `https://apps.apple.com/app/apple-store/id…?pt=…&ct=…&mt=8` */
-export function appStoreLink(base: string, utm: Utm): string {
+export function appStoreLink(base: string, utm: Utm, page?: string): string {
   try {
     const url = new URL(base);
     url.searchParams.set("pt", APP_STORE_PROVIDER_TOKEN);
-    url.searchParams.set("ct", appStoreCampaign(utm));
+    url.searchParams.set("ct", appStoreCampaign(utm, page));
     url.searchParams.set("mt", "8");
     return url.toString();
   } catch {
@@ -86,13 +99,11 @@ export function appStoreLink(base: string, utm: Utm): string {
 }
 
 /** Google Play reads campaign data from `referrer` (URL-encoded utm_* pairs). */
-export function playStoreLink(base: string, utm: Utm): string {
+export function playStoreLink(base: string, utm: Utm, page?: string): string {
   try {
     const url = new URL(base);
     const referrer = new URLSearchParams(
-      hasUtm(utm)
-        ? (utm as Record<string, string>)
-        : { utm_source: DEFAULT_CAMPAIGN, utm_medium: "website" },
+      creditedUtm(utm, page) as Record<string, string>,
     );
     url.searchParams.set("referrer", referrer.toString());
     return url.toString();

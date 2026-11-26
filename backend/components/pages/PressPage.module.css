@@ -1,0 +1,82 @@
+.hero {
+  align-self: flex-end;
+  width: min(260px, 64%);
+  height: auto;
+  margin-bottom: -66px;
+}
+
+.idea {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-color: transparent;
+  background: #f1faf7;
+  box-shadow: none;
+}
+
+/* Four in December, three after: the odd one out takes the whole row. */
+.ideas > li:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.files {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 18px;
+  max-width: none;
+  margin: 24px 0 36px;
+  padding: 0;
+  list-style: none;
+}
+
+.files li {
+  margin: 0;
+}
+
+.files a {
+  display: block;
+  color: var(--kangur-text);
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.files a:hover strong {
+  color: var(--kangur-primary-deep);
+  text-decoration: underline;
+}
+
+.thumb {
+  display: grid;
+  place-items: center;
+  height: 190px;
+  margin-bottom: 10px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 28px -22px rgba(31, 43, 69, 0.45);
+}
+
+.thumb img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 162px;
+  border-radius: 8px;
+}
+
+.files strong,
+.files small {
+  display: block;
+  line-height: 1.35;
+}
+
+.files small {
+  color: var(--kangur-text-muted);
+  font-size: 0.85rem;
+}
+
+@media (min-width: 900px) {
+  .hero {
+    margin-bottom: -92px;
+  }
+}

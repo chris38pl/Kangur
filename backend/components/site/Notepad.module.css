@@ -1,0 +1,38 @@
+.pad {
+  --line: 34px;
+  position: relative;
+  padding: 24px 22px 20px 46px;
+  border-radius: 4px;
+  background:
+    linear-gradient(90deg, transparent 33px, #e9a6a0 33px, #e9a6a0 34px, transparent 34px),
+    repeating-linear-gradient(#fffdf6, #fffdf6 calc(var(--line) - 1px), #cfe0ee calc(var(--line) - 1px), #cfe0ee var(--line));
+  box-shadow: 0 18px 30px -16px rgba(31, 43, 69, 0.35);
+  color: #27447a;
+  font-size: 27px;
+  line-height: var(--line);
+  transform: rotate(2.4deg);
+}
+
+.pad p {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.pad p:nth-of-type(2) {
+  padding-left: 10px;
+}
+
+.pad p:nth-of-type(4) {
+  padding-left: 4px;
+}
+
+.magnet {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff8f7e, #d4483a 60%, #b5382c);
+  box-shadow: 0 4px 8px rgba(31, 43, 69, 0.3);
+}

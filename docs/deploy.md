@@ -16,7 +16,7 @@ Canonical env templates: [backend/.env.example](../backend/.env.example) · [mob
 | **Staging** | Pre-release tests | `https://staging-api.getkangur.com` (branch `staging`) | `kangur-staging` | Development (same project) | Test | `preview` → Google Play Closed Testing |
 | **Production** | Live | `https://api.getkangur.com` (branch `main`) | `kangur-prod` | Production instance | Live | `production` → store |
 
-**Landing (production only):** `https://getkangur.com` - `/`, `/privacy`, `/terms`, `/contact`, `/delete-account`; `/support` → `/contact`. No staging landing domain; use Vercel Preview URLs on PRs.
+**Landing:** `https://www.getkangur.com`. The same pages answer on `https://staging.getkangur.com` and on Vercel Preview URLs, where every response carries `X-Robots-Tag: noindex, nofollow` (`backend/next.config.ts`, decided by host).
 
 Sync on MVP is **HTTP polling** (`EventPollingProvider`), not Ably/Pusher. Test “realtime” = shared-list polling behaviour.
 
@@ -26,12 +26,30 @@ Sync on MVP is **HTTP polling** (`EventPollingProvider`), not Ably/Pusher. Test 
 
 | Purpose | Host / path |
 |---------|-------------|
-| Landing + legal | `https://getkangur.com` - `/{locale}/…` (pl, en, de, ru, uk, fr, es, it, cs, be); bare `/privacy` etc. redirect by cookie / `Accept-Language`; Privacy & Terms copy: PL + EN (EN fallback) |
+| Landing + legal | `https://www.getkangur.com` - Polish without a prefix (`/`, `/faq`), other languages under `/{locale}/…` (en, de, ru, uk, fr, es, it, cs, be). `/pl/…` is a 308 to the same page without the prefix. See [Landing URLs](#landing-urls) |
 | API Production | `https://api.getkangur.com` → Vercel branch `main` |
 | API Staging | `https://staging-api.getkangur.com` → Vercel branch `staging` |
-| Landing staging | **None** - Vercel Preview URL on PR |
+| Landing staging | `https://staging.getkangur.com` (branch `staging`), hidden from search engines |
 
 One Vercel project can serve all of these via domain + env mapping. PR Preview deployments stay on temporary `*.vercel.app` URLs and do **not** replace the stable staging API host.
+
+### Landing URLs
+
+Search engines must see one stable page per address, so:
+
+- A URL without a prefix answers 200 in Polish. It redirects (307) only a human arriving from outside whose own choice (cookie `kangur_lang`, set by the language switcher) or browser asks for another language, and only where the path reads the same in every language. Crawlers and links clicked on the site are never redirected by language, and `/pl/…` always ends in Polish.
+- Every page is registered in `backend/lib/marketing/routes.ts`. Navigation, hreflang, sitemap, the proxy and the SEO guard all read it. Titles and descriptions: `page-meta.ts`.
+- Pages are prerendered and set no cookie, so the CDN keeps them. Do not read `headers()` or `cookies()` in `app/[locale]`, that would make the whole site dynamic again.
+- Copy lives in `backend/lib/marketing/content/`, home page in ten languages, the other pages in the languages they exist in. Polish copy is typeset once by `typography.ts` (no one-letter word at the end of a line). Links inside copy use the marks of `rich-text.tsx`, so a page that disappears breaks the build instead of the site.
+- `public/img`, `public/og` and the matching `*.generated.ts` are made from real app screens and approved drawings by scripts in `.marketing/06-seo` (outside git). File names carry a content hash. Do not edit them by hand.
+- `/pobierz`, `/get` and `/download` send a phone to its own store and a computer to the buttons on the home page (307, never cached, never indexed). Use them in QR codes.
+- `/invite` (`/en/invite`, ...) is where the invitation e-mail leads, see [Resend](#66-resend-optional). It is `noindex` in `routes.ts`, so it has no canonical or hreflang, stays out of the sitemap and needs no links from other pages. `pnpm test:seo` checks all of that.
+- Tools (`/narzedzia`, `/lista-zakupow-na-wigilie-i-swieta`, `/lista-zakupow-na-tydzien`, `/lista-zakupow-z-podzialem-na-kategorie`) exist in Polish only. They run in the browser and keep what people type in `localStorage` under `kangur-www:`, nothing is sent. Their data and maths: `lib/marketing/lists` and `lib/marketing/aisles` (the product catalogue of the app plus everyday names), covered by `pnpm test:marketing`. Change the storage key when the shape of a saved value changes.
+- Every tool ends in the app, with `ToKangur`: copy the list, tap "Schowek" on the Start screen, invite the others. Text for Kangur comes from `lists/parts.ts`: one list per trip, no headings, up to 8000 characters, and no two products of one name, because the import keeps only the first. A computer shows a QR code with the list inside the address after `#` (`lists/handoff.ts`, `qr/encode.ts`), so it never reaches a server, and the phone that scans it opens the same list. There is no printing on the site, on purpose: `pnpm test:marketing` (the sources) and `pnpm test:seo` (the HTML) fail when it comes back.
+- The Christmas calculator is about one year. Every autumn check the trading Sundays and days off, then update `CHRISTMAS`, `WHEN` and the amounts for the days without shops in `lists/christmas.ts`, the dates in `content/topics/christmas-tool.ts`, `content/topics/tools.ts`, `page-meta.ts`, then rebuild the share image. The strip on the home page hides itself after `CHRISTMAS.strip`, the page says the holidays are over after `CHRISTMAS.over`. The address stays the same. `pnpm test:seo` warns from 15 October.
+- Browsers: the site targets Safari 15.4 and Chrome 100 (`browserslist` in `backend/package.json`). Nothing in the bundle may need more, class static blocks and regex lookbehind included, or the tools are dead there. `pnpm test:seo` looks for both.
+- After a production deploy with new or changed pages: `pnpm seo:indexnow` (dry run), then `pnpm seo:indexnow --send`. Google is told by the sitemap.
+- `pnpm test:marketing` covers every redirect. After a build, `pnpm test:seo` reads the HTML and fails on a page that stopped being static, a broken link, a wrong canonical or hreflang, a title Google would cut, an orphan page or a dash the house style forbids. Both run in CI.
 
 ### Hard rule - API host isolation
 
@@ -308,9 +326,20 @@ One OpenAI account, **two projects**:
 
 Separate API keys, usage, limits, and billing dashboards. Set `OPENAI_API_KEY` per env. Optional: `OPENAI_MODEL_TEXT`, `OPENAI_MODEL_VISION`, `AI_FREE_LIFETIME_CREDITS` (default `10`; legacy `AI_FREE_MONTHLY_CREDITS` still accepted).
 
-### 6.6 Resend (optional)
+### 6.6 Resend (required for invitations)
 
-Invite emails when `RESEND_API_KEY` + `EMAIL_FROM` are set. Without them, invites still work (accept URL returned/logged). Prefer a verified sending domain on production. `INVITE_ACCEPT_URL_BASE` defaults to `kangur://invite`.
+Invite emails go out only when `RESEND_API_KEY` + `EMAIL_FROM` are set. Without them, invitations are still created, but no e-mail goes out, and a person without an account has no other way in. Keep Resend click tracking off: it would put the invitation link through Resend's own redirect.
+
+Setup, once per Resend account:
+
+1. In Resend, add the domain `getkangur.com` (or a subdomain for sending). Resend lists DNS records: DKIM (`resend._domainkey`), and MX + SPF for the `send` subdomain.
+2. Add them in the DNS zone of `getkangur.com`, which is at OVH (nameservers `dns106.ovh.net`, `ns106.ovh.net`), not on Vercel. Leave the existing OVH MX records of the main domain as they are: the mailboxes keep working. Wait until Resend says the domain is verified.
+3. Create an API key with sending access.
+4. In Vercel, set `RESEND_API_KEY` (sensitive) and `EMAIL_FROM` (for example `Kangur <zaproszenia@getkangur.com>`, on the verified domain) for Production and Preview, then redeploy.
+
+The server logs `InviteEmailSkipped` (warning) when a key is missing, and `InviteEmailFailed` (error) with Resend's reason, such as an unverified domain, when Resend refuses. Then `emailDelivered` is false and the app tells the inviter the e-mail did not go out. Neither log line contains the link or the token.
+
+The e-mail links to the invitation page of the site, `/invite` on `NEXT_PUBLIC_SITE_URL` in the e-mail's language, with the token after `#` (`https://www.getkangur.com/invite#t=<token>`). Browsers never send that part, so the token stays out of server logs, the proxy and Referer headers, and the page takes it out of the address before any script starts (`lib/marketing/invite.ts`). The page explains the invitation, shows both stores and has a button with the app link `kangur://invite/<token>`, the link e-mails carried before. The app still opens those, so old invitations keep working. `INVITE_ACCEPT_URL_BASE` is that app link (`kangur://invite`, default), or `kangur-dev://invite` for the development build; it no longer changes the e-mail link.
 
 ### 6.7 Expo Push / EAS
 
@@ -423,7 +452,7 @@ Source of truth: [backend/.env.example](../backend/.env.example).
 | `APPLE_PRIVATE_KEY` | optional local | required for iOS IAP | required | .p8 PEM or base64 |
 | `APPLE_BUNDLE_ID` | `app.kangur` | same | same | Store bundle |
 | `APPLE_APP_APPLE_ID` | `6832296080` | same | same | Numeric App Store app id |
-| `INVITE_ACCEPT_URL_BASE` | `kangur://invite` | same | same | |
+| `INVITE_ACCEPT_URL_BASE` | `kangur://invite` (`kangur-dev://invite` with the dev build) | `kangur://invite` | same | App link behind the button of `/invite`; the e-mail always links to that page |
 | `PLATFORM_ADMIN_EMAILS` | optional | optional | optional | Bootstrap admins |
 | `POSTHOG_KEY` / `POSTHOG_HOST` | optional | Closed Testing+ | required | Product analytics (noop if unset) |
 | `ANALYTICS_ENABLED` | `0` | `1` | `1` | Force on in local; kill with `0` |
@@ -524,7 +553,6 @@ Follow [§4 Deployment order](#4-deployment-order). Bump **semver** only on prod
 ## 11. Out of scope (MVP)
 
 - Ably / Redis / object storage / Clerk webhooks
-- Staging landing domain
 - Automated CD (deploy from CI)
 - Prisma Accelerate
 

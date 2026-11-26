@@ -1,8 +1,12 @@
-import { isValidElement, type ReactNode } from "react";
-
+import type { Film } from "@/lib/marketing/films";
 import { LEGAL_ENTITY } from "@/lib/marketing/legal-entity";
 import { APP_LOCALE_IDS, withLocale, type AppLocale } from "@/lib/marketing/locale";
-import { getMessages } from "@/lib/marketing/messages";
+import { pageMeta } from "@/lib/marketing/page-meta";
+import { PROFILES } from "@/lib/marketing/profiles";
+import { plainText } from "@/lib/marketing/rich-text";
+import type { TopicCopy } from "@/lib/marketing/content/topics/types";
+import { ROUTES, routeHref, type MarketingRouteId } from "@/lib/marketing/routes";
+import { screensFor } from "@/lib/marketing/screens";
 import { ogImage } from "@/lib/marketing/seo";
 import {
   APP_STORE_URL,
@@ -11,96 +15,253 @@ import {
   absoluteUrl,
 } from "@/lib/marketing/site";
 
+type Node = Record<string, unknown>;
+
 const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 const WEBSITE_ID = `${SITE_URL}/#website`;
 const APP_ID = `${SITE_URL}/#app`;
 
-/**
- * Home page graph: who makes Kangur, the site, and the app with both store links.
- * No ratings or user counts: the fact bank does not back any.
- */
-export function homeStructuredData(locale: AppLocale): Record<string, unknown> {
-  const t = getMessages(locale);
-  const pageUrl = absoluteUrl(withLocale(locale, "/"));
+/** Says out loud what search engines confuse us with. */
+const DISAMBIGUATION: Record<"pl" | "en", string> = {
+  pl: "Aplikacja na telefon do list zakupów. Nie jest konkursem matematycznym ani programem na komputer.",
+  en: "A phone app for grocery lists. Not a maths contest and not desktop software.",
+};
 
+const graph = (...nodes: Node[]): Node => ({
+  "@context": "https://schema.org",
+  "@graph": nodes,
+});
+
+function organization(): Node {
   return {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        "@id": ORGANIZATION_ID,
-        name: "Kangur",
-        legalName: LEGAL_ENTITY.firmName,
-        url: SITE_URL,
-        logo: absoluteUrl("/icon-512.png"),
-        email: LEGAL_ENTITY.supportEmail,
-        address: {
-          "@type": "PostalAddress",
-          streetAddress: "ul. Sielawy 23e/19",
-          postalCode: "61-619",
-          addressLocality: "Poznań",
-          addressCountry: "PL",
-        },
-        vatID: `PL${LEGAL_ENTITY.nip}`,
-      },
-      {
-        "@type": "WebSite",
-        "@id": WEBSITE_ID,
-        url: SITE_URL,
-        name: "Kangur",
-        inLanguage: [...APP_LOCALE_IDS],
-        publisher: { "@id": ORGANIZATION_ID },
-      },
-      {
-        "@type": "MobileApplication",
-        "@id": APP_ID,
-        name: "Kangur",
-        alternateName: t.meta.homeTitle,
-        description: t.meta.homeDescription,
-        url: pageUrl,
-        image: absoluteUrl(ogImage(locale).url),
-        applicationCategory: "ShoppingApplication",
-        operatingSystem: "iOS, Android",
-        inLanguage: [...APP_LOCALE_IDS],
-        installUrl: [APP_STORE_URL, PLAY_STORE_URL],
-        sameAs: [APP_STORE_URL, PLAY_STORE_URL],
-        offers: {
-          "@type": "Offer",
-          price: "0",
-          priceCurrency: "PLN",
-        },
-        publisher: { "@id": ORGANIZATION_ID },
-      },
-    ],
+    "@type": "Organization",
+    "@id": ORGANIZATION_ID,
+    name: "Kangur",
+    legalName: LEGAL_ENTITY.firmName,
+    // The same person signs the stores under these names.
+    alternateName: ["Krzysztof Krawiec Labs", "getkangur"],
+    url: SITE_URL,
+    logo: {
+      "@type": "ImageObject",
+      url: absoluteUrl("/icon-512.png"),
+      width: 512,
+      height: 512,
+    },
+    email: LEGAL_ENTITY.supportEmail,
+    founder: { "@type": "Person", name: "Krzysztof Krawiec" },
+    // The city only: the street is the owner's home.
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: LEGAL_ENTITY.city,
+      addressCountry: "PL",
+    },
+    taxID: LEGAL_ENTITY.nip,
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: LEGAL_ENTITY.supportEmail,
+      availableLanguage: ["pl", "en"],
+    },
+    sameAs: PROFILES.map((profile) => profile.url),
   };
 }
 
-/** Plain text of FAQ answers, which are JSX (links, emphasis). */
-function textOf(node: ReactNode): string {
-  if (node == null || typeof node === "boolean") return "";
-  if (typeof node === "string" || typeof node === "number") return String(node);
-  if (Array.isArray(node)) return node.map(textOf).join("");
-  if (isValidElement<{ children?: ReactNode }>(node)) {
-    return textOf(node.props.children);
-  }
-  return "";
+function website(): Node {
+  return {
+    "@type": "WebSite",
+    "@id": WEBSITE_ID,
+    url: SITE_URL,
+    // Google takes the site name from here, in this order of preference.
+    name: "Kangur",
+    alternateName: ["Kangur - lista zakupów", "getkangur.com"],
+    inLanguage: [...APP_LOCALE_IDS],
+    publisher: { "@id": ORGANIZATION_ID },
+  };
 }
 
-export function faqStructuredData(
-  items: readonly { q: string; a: ReactNode }[],
+/** The app itself. No ratings or user counts: the fact bank does not back any. */
+function app(locale: AppLocale, { prices = false } = {}): Node {
+  const { title, description } = pageMeta("home", locale);
+  const screens = screensFor(locale);
+  return {
+    "@type": "MobileApplication",
+    "@id": APP_ID,
+    name: "Kangur",
+    alternateName: [title, "Kangur - lista zakupów z AI"],
+    description,
+    disambiguatingDescription: DISAMBIGUATION[locale === "pl" ? "pl" : "en"],
+    url: absoluteUrl(withLocale(locale, "/")),
+    image: absoluteUrl(ogImage("home", locale).url),
+    screenshot: [screens.import, screens.aisle, screens.meal].map((screen) =>
+      absoluteUrl(screen.src),
+    ),
+    applicationCategory: "ShoppingApplication",
+    applicationSubCategory: "Grocery list",
+    operatingSystem: "iOS, Android",
+    inLanguage: [...APP_LOCALE_IDS],
+    installUrl: [APP_STORE_URL, PLAY_STORE_URL],
+    sameAs: [APP_STORE_URL, PLAY_STORE_URL],
+    // Only where a reader sees the prices too.
+    ...(prices ? { offers: offers(locale) } : {}),
+    publisher: { "@id": ORGANIZATION_ID },
+  };
+}
+
+function offers(locale: AppLocale): Node[] {
+  const free = {
+    "@type": "Offer",
+    name: "Kangur",
+    price: "0",
+    priceCurrency: "PLN",
+  };
+  if (locale !== "pl") return [free];
+  return [
+    free,
+    {
+      "@type": "Offer",
+      name: "Kangur Premium",
+      price: "9.99",
+      priceCurrency: "PLN",
+      eligibleRegion: { "@type": "Country", name: "PL" },
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: "9.99",
+        priceCurrency: "PLN",
+        unitCode: "MON",
+      },
+    },
+  ];
+}
+
+function webPage(
+  id: MarketingRouteId,
   locale: AppLocale,
-): Record<string, unknown> {
+  type = "WebPage",
+): Node {
+  const { title, description } = pageMeta(id, locale);
+  const url = absoluteUrl(routeHref(id, locale));
+  return {
+    "@type": type,
+    "@id": `${url}#page`,
+    url,
+    name: title,
+    description,
+    inLanguage: locale,
+    isPartOf: { "@id": WEBSITE_ID },
+    about: { "@id": APP_ID },
+    publisher: { "@id": ORGANIZATION_ID },
+    dateModified: ROUTES[id].updatedAt,
+  };
+}
+
+/** Home page: who makes Kangur, the site, and the app with both store links. */
+export function homeStructuredData(locale: AppLocale): Node {
+  return graph(
+    organization(),
+    website(),
+    app(locale, { prices: true }),
+    webPage("home", locale),
+  );
+}
+
+const PAGE_TYPES: Partial<Record<MarketingRouteId, string>> = {
+  about: "AboutPage",
+  contact: "ContactPage",
+  tools: "CollectionPage",
+  films: "CollectionPage",
+};
+
+/** Pages about the app: the page, plus everything it refers to. */
+export function pageStructuredData(
+  id: MarketingRouteId,
+  locale: AppLocale,
+): Node {
+  return graph(
+    webPage(id, locale, PAGE_TYPES[id]),
+    organization(),
+    website(),
+    app(locale, { prices: id === "pricing" }),
+  );
+}
+
+/** A free tool that runs in the browser. */
+function webTool(id: MarketingRouteId, locale: AppLocale): Node {
+  const { title, description } = pageMeta(id, locale);
+  const url = absoluteUrl(routeHref(id, locale));
+  return {
+    "@type": "WebApplication",
+    "@id": `${url}#tool`,
+    name: title,
+    description,
+    url,
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Any",
+    browserRequirements: "Requires JavaScript",
+    inLanguage: locale,
+    isAccessibleForFree: true,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "PLN" },
+    publisher: { "@id": ORGANIZATION_ID },
+  };
+}
+
+const WEB_TOOLS: ReadonlySet<MarketingRouteId> = new Set(["aisleTool", "christmasTool", "weekTool"]);
+
+/** Landing pages and tools: the page, what it is, and its questions. */
+export function topicStructuredData(
+  id: MarketingRouteId,
+  locale: AppLocale,
+  copy: TopicCopy,
+  faq: readonly { q: string; a: string }[],
+): Node[] {
+  return [
+    graph(
+      webPage(id, locale, PAGE_TYPES[id]),
+      ...(WEB_TOOLS.has(id) ? [webTool(id, locale)] : []),
+      organization(),
+      website(),
+      app(locale),
+    ),
+    ...(faq.length ? [faqStructuredData(faq, locale)] : []),
+  ];
+}
+
+/**
+ * A narrated film of the app. The same `@id` on every page that shows it, so it is one
+ * video, wherever it plays: the anchor of its card on the films page.
+ */
+export function filmStructuredData(item: Film): Node {
+  return {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "@id": `${absoluteUrl(routeHref("films", "pl"))}#${item.slug}`,
+    name: item.title,
+    description: item.transcript,
+    transcript: item.transcript,
+    inLanguage: "pl",
+    thumbnailUrl: [absoluteUrl(item.poster.src)],
+    uploadDate: item.made,
+    duration: `PT${item.seconds}S`,
+    contentUrl: absoluteUrl(item.src),
+    width: item.width,
+    height: item.height,
+    isFamilyFriendly: true,
+    publisher: { "@id": ORGANIZATION_ID },
+  };
+}
+
+/** Google shows no FAQ results since 2026, but the pairs still explain the page. */
+export function faqStructuredData(
+  items: readonly { q: string; a: string }[],
+  locale: AppLocale,
+): Node {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     inLanguage: locale,
-    mainEntity: items.map((item) => ({
+    mainEntity: items.map(({ q, a }) => ({
       "@type": "Question",
-      name: item.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: textOf(item.a).replace(/\s+/g, " ").trim(),
-      },
+      name: plainText(q),
+      acceptedAnswer: { "@type": "Answer", text: plainText(a) },
     })),
   };
 }

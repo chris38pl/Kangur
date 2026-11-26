@@ -1,0 +1,38 @@
+.steps li {
+  position: relative;
+}
+
+.number {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background: var(--kangur-primary-deep);
+  color: #fff;
+  font-weight: 800;
+}
+
+.never {
+  position: relative;
+  margin-top: 130px;
+  padding: 28px 28px 20px;
+  border-radius: 28px;
+  background: linear-gradient(170deg, #eaf8f3, #d3efe6);
+}
+
+.kangur {
+  position: absolute;
+  right: 26px;
+  bottom: 100%;
+  width: 124px;
+  height: auto;
+  margin-bottom: -5px;
+}
+
+@media (min-width: 900px) {
+  .never {
+    margin-top: 96px;
+  }
+}

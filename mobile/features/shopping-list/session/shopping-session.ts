@@ -10,6 +10,9 @@ import type {
 
 type Listener = (snapshot: SessionSnapshot | null) => void;
 
+/** How long finishing waits for the queue to reach the server. */
+const FINISH_DELIVERY_TIMEOUT_MS = 8_000;
+
 const ALLOWED: Record<SessionState, SessionState[]> = {
   IDLE: ["STARTING"],
   STARTING: ["ACTIVE", "IDLE"],
@@ -157,11 +160,14 @@ class ShoppingSessionManager {
   }
 
   /**
-   * Finish shopping. When skipArchive, server already archived via ShoppingSessionService.
+   * Finish shopping. The finish is queued behind this trip's ticks and added
+   * items and replays last, so the list is archived (moved to History) only
+   * after they reached the server. With signal it is sent right away; offline
+   * it waits in the queue and the list stays hidden here until it lands.
    */
   async finish(
     listId: string,
-    options?: { skipArchive?: boolean },
+    options?: { unavailableCount?: number },
   ): Promise<SessionSnapshot> {
     let snap = this.snapshots.get(listId);
     if (!snap || snap.state !== "ACTIVE") {
@@ -181,13 +187,15 @@ class ShoppingSessionManager {
     snap = { ...snap, state: "FINISHING", updatedAt: new Date().toISOString() };
     await this.persist(snap);
 
-    if (!options?.skipArchive) {
-      await DataSyncEngine.enqueue({
-        listId,
-        action: "ARCHIVE_LIST",
-        payload: {},
-      });
-    }
+    await DataSyncEngine.enqueue({
+      listId,
+      action: "ARCHIVE_LIST",
+      payload: {
+        serverSessionId: snap.serverSessionId ?? null,
+        workspaceId: snap.workspaceId || null,
+        unavailableCount: options?.unavailableCount ?? 0,
+      },
+    });
 
     this.assertTransition(snap.state, "ENDED");
     snap = {
@@ -197,7 +205,9 @@ class ShoppingSessionManager {
       updatedAt: new Date().toISOString(),
     };
     await this.persist(snap);
-    void DataSyncEngine.flush(listId);
+    await DataSyncEngine.drain(listId, {
+      timeoutMs: FINISH_DELIVERY_TIMEOUT_MS,
+    });
     return snap;
   }
 

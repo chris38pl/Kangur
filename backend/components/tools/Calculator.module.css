@@ -1,0 +1,587 @@
+.calculator {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 34px;
+}
+
+.form {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+.form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 18px 20px 20px;
+  border: 1px solid var(--kangur-border);
+  border-radius: 22px;
+  background: #fff;
+}
+
+.form legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+/* The skip link below is out of the flow on a wide screen, so every sibling clears the legend. */
+.form legend ~ * {
+  clear: both;
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 16px;
+  padding: 8px 0;
+}
+
+.stepper p {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Under the number on a phone, where a column next to it would be four words wide. */
+.stepper small {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  color: var(--kangur-text-muted);
+  line-height: 1.35;
+}
+
+.stepperControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepperControls button {
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--kangur-primary-deep);
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stepperControls button:hover:not([aria-disabled="true"]) {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
+.stepperControls button[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.stepperControls output {
+  min-width: 78px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* On a phone the list is a long way down. With a keyboard it always is. */
+.jump {
+  display: inline-block;
+  margin: 2px 0 8px;
+  color: var(--kangur-primary-deep);
+  font-weight: 700;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.presets button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kangur-text-body);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.presets button:hover {
+  border-color: var(--kangur-primary);
+}
+
+.undo,
+.presets .undo {
+  min-height: 40px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--kangur-primary-deep);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.resetRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.presets button[aria-pressed="true"] {
+  border-color: var(--kangur-primary-deep);
+  background: var(--kangur-primary-deep);
+  color: #fff;
+}
+
+.own {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--kangur-border);
+}
+
+.own > label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.ownRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ownRow input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid #8fa9a2;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.ownName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.remove {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--kangur-text-muted);
+  font: inherit;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.remove:hover {
+  background: #fdecec;
+  color: #b3261e;
+}
+
+.ownRow input[aria-disabled="true"] {
+  background: #f3f6f5;
+}
+
+.plainButton[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.small:empty {
+  margin: 0;
+}
+
+.small {
+  margin: 8px 0 0;
+  color: var(--kangur-text-muted);
+  font-size: 0.9rem;
+}
+
+.verdict {
+  margin: 0 0 8px;
+  color: var(--kangur-text-body);
+}
+
+.verdict strong {
+  color: var(--kangur-primary-deep);
+}
+
+.dishes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dishes li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--kangur-border);
+}
+
+.dishes label {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.dishes li[data-plan="skip"] label {
+  color: var(--kangur-text-muted);
+  font-weight: 400;
+}
+
+.dishes select {
+  flex: none;
+  width: 156px;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  /* Below 16px iPhones zoom the page in. */
+  font-size: 1rem;
+}
+
+.dishes li[data-plan="make"] select {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
+.dishes li[data-plan="bring"] select {
+  border-color: #f0b27a;
+  background: #fdf1e6;
+}
+
+.checks {
+  display: grid;
+  gap: 2px;
+}
+
+.checks label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  cursor: pointer;
+}
+
+.checks input,
+.group input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--kangur-primary-deep);
+}
+
+.checks small {
+  display: block;
+  color: var(--kangur-text-muted);
+  line-height: 1.3;
+}
+
+.more {
+  margin-top: 8px;
+}
+
+.more summary {
+  min-height: 44px;
+  padding: 10px 0;
+  color: var(--kangur-primary-deep);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.plainButton {
+  justify-self: start;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.plainButton:hover {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
+.result {
+  position: relative;
+  scroll-margin-top: 90px;
+  outline: none;
+}
+
+/* With a keyboard, nothing hides under the bar at the bottom of the screen. */
+.result :is(a, button, input, select, textarea) {
+  scroll-margin-bottom: 96px;
+}
+
+.resultHead {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.resultHead h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.resultHead p {
+  margin: 0;
+  color: var(--kangur-text-body);
+}
+
+.views {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: fit-content;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--kangur-primary-soft);
+}
+
+.views button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--kangur-text-body);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.views button[aria-pressed="true"] {
+  background: var(--kangur-primary-deep);
+  color: #fff;
+}
+
+.left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+.left p {
+  outline: none;
+}
+
+.untick {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.untick:hover {
+  border-color: var(--kangur-primary);
+  background: var(--kangur-primary-soft);
+}
+
+.groups {
+  margin-bottom: 20px;
+}
+
+.group {
+  margin-bottom: 14px;
+  padding: 16px 18px 8px;
+  border: 1px solid var(--kangur-border);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 12px 28px -24px rgba(31, 43, 69, 0.4);
+  break-inside: avoid;
+}
+
+.group h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.hint {
+  margin: 2px 0 0;
+  color: var(--kangur-text-muted);
+  font-size: 0.9rem;
+}
+
+.group ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group li {
+  border-top: 1px solid var(--kangur-border);
+}
+
+.group label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.name small {
+  display: block;
+  color: var(--kangur-text-muted);
+  font-size: 0.85rem;
+}
+
+.quantity {
+  flex: none;
+  color: var(--kangur-text-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.group li[data-done] .name,
+.group li[data-done] .quantity {
+  color: var(--kangur-text-muted);
+  text-decoration: line-through;
+}
+
+.familyShare button {
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 0 18px;
+  border: 1.5px solid #cfe3dd;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--kangur-text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* The name of an own dish gets a line of its own, or it would be three letters wide. */
+@media (max-width: 480px) {
+  .own .dishes li {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+
+  .ownName {
+    flex-basis: 100%;
+  }
+
+  .own .dishes select {
+    flex: 1;
+  }
+}
+
+@media (max-width: 359px) {
+  .dishes select {
+    width: 128px;
+  }
+}
+
+@media (max-width: 380px) {
+  .stepper {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 6px;
+  }
+}
+
+@media (min-width: 560px) {
+  .stepper p {
+    align-self: end;
+  }
+
+  .stepper small {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .stepperControls {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+}
+
+@media (min-width: 980px) {
+  /* Next to the list there is nothing to jump to, except with a keyboard. */
+  .jump:not(:focus) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .calculator {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 40px;
+    align-items: start;
+  }
+}
+
+@media (min-width: 1100px) {
+  .groups {
+    columns: 2;
+    column-gap: 14px;
+  }
+}

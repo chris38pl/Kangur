@@ -1,0 +1,30 @@
+.family {
+  display: grid;
+  gap: 24px;
+  align-items: center;
+}
+
+.kangur {
+  justify-self: center;
+  width: min(250px, 62%);
+  height: auto;
+}
+
+/* Free uses next to the film that shows their counter. */
+.uses {
+  display: grid;
+  gap: 40px;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .uses {
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: 64px;
+  }
+
+  .family {
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 64px;
+  }
+}

@@ -123,6 +123,7 @@ export async function apiFetch<T>(
       ? setTimeout(() => controller.abort(), options.timeoutMs)
       : undefined;
   let res: Response;
+  let rawText: string;
   try {
     res = await fetch(url, {
       method,
@@ -130,6 +131,8 @@ export async function apiFetch<T>(
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
       signal: controller.signal,
     });
+    // expo/fetch resolves on the headers; the timeout covers the body too.
+    rawText = await res.text();
   } catch (err) {
     httpLogNetworkError({
       method,
@@ -143,7 +146,6 @@ export async function apiFetch<T>(
   }
 
   const durationMs = Date.now() - started;
-  const rawText = await res.text();
   let parsed: unknown;
   if (rawText) {
     try {
@@ -183,6 +185,8 @@ export async function apiFetch<T>(
   return parsed as T;
 }
 
-export async function fetchHealth(): Promise<{ status: string; timestamp: string }> {
-  return apiFetch("/api/health");
+export async function fetchHealth(
+  options?: { timeoutMs?: number },
+): Promise<{ status: string; timestamp: string }> {
+  return apiFetch("/api/health", { timeoutMs: options?.timeoutMs });
 }

@@ -24,6 +24,8 @@ import { SyncWorker, type SyncTransport } from "./worker";
 const DEBOUNCE_MS = 1000;
 const REFRESH_DEBOUNCE_MS = 250;
 const REFRESH_POLL_IDLE_MS = 100;
+/** A connection check with no answer by then counts as offline. */
+const PROBE_TIMEOUT_MS = 5000;
 
 export type EnqueueInput = {
   listId: string;
@@ -52,6 +54,11 @@ class DataSyncEngineImpl {
   private refreshDeferTimer: ReturnType<typeof setTimeout> | null = null;
   private refreshWaitingListId: string | null = null;
 
+  /** In-flight flush, so callers can wait for it instead of skipping. */
+  private flushing: Promise<void> | null = null;
+  /** clientId → server id for items created during this app run. */
+  private itemIdAliases = new Map<string, string>();
+
   setSyncCacheAdapter(adapter: SyncCacheAdapter): void {
     this.syncCache = adapter;
   }
@@ -67,7 +74,7 @@ class DataSyncEngineImpl {
       try {
         const { hasApiUrl, fetchHealth } = await import("@/lib/api/client");
         if (!hasApiUrl()) return true;
-        await fetchHealth();
+        await fetchHealth({ timeoutMs: PROBE_TIMEOUT_MS });
         return true;
       } catch {
         return false;
@@ -165,21 +172,26 @@ class DataSyncEngineImpl {
       id: createSyncOpId(),
       queueVersion: 1,
       listId: input.listId,
-      itemId: input.itemId,
+      // A row can still show its clientId for a moment after the server
+      // created it; send the op to the server id.
+      itemId:
+        input.action === "ADD_ITEM"
+          ? input.itemId
+          : this.resolveItemId(input.itemId),
       action: input.action,
       payload: input.payload ?? {},
       createdAt: new Date().toISOString(),
       priority: ACTION_PRIORITY[input.action],
       state: "PENDING",
     };
-    await this.queue.enqueue(op);
+    const stored = await this.queue.enqueue(op);
     const pending = await this.queue.pendingCount(input.listId);
     syncTelemetry.queueLength(pending);
     this.emit("queueChanged", { listId: input.listId, pendingCount: pending });
     if (this.connectivity.isOnline()) {
       this.scheduleFlush(input.listId);
     }
-    return op;
+    return stored;
   }
 
   async compress(listId?: string): Promise<number> {
@@ -204,7 +216,43 @@ class DataSyncEngineImpl {
     }, DEBOUNCE_MS);
   }
 
-  async flush(listId?: string): Promise<void> {
+  /** Replay queued ops. While a flush runs, callers get that flush. */
+  flush(listId?: string): Promise<void> {
+    if (this.flushing) return this.flushing;
+    this.flushing = this.runFlush(listId).finally(() => {
+      this.flushing = null;
+    });
+    return this.flushing;
+  }
+
+  /**
+   * Try to send everything queued for this list now, its finish last.
+   * Checks the connection first: the signal can be back while the app still
+   * thinks it is offline. Resolves with the number of ops still waiting, at
+   * the latest after `timeoutMs` so a weak signal does not hold the screen
+   * (the rest keeps replaying in the background).
+   */
+  async drain(listId: string, options: { timeoutMs: number }): Promise<number> {
+    const attempt = (async () => {
+      if (!this.connectivity.isOnline()) await this.connectivity.refresh();
+      // A flush already running may predate the ops just queued.
+      while (this.flushing) await this.flushing;
+      await this.flush(listId);
+    })().catch(() => undefined);
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, options.timeoutMs);
+    });
+    try {
+      await Promise.race([attempt, timeout]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+    return this.outboundBusyCount(listId);
+  }
+
+  private async runFlush(listId?: string): Promise<void> {
     if (this.worker.isRunning()) return;
     if (!this.connectivity.isOnline()) return;
 
@@ -217,13 +265,17 @@ class DataSyncEngineImpl {
     const started = Date.now();
     this.emit("syncStarted", { listId });
 
-    const { failed } = await this.worker.flush(ops, {
+    const { done } = await this.worker.flush(ops, {
+      prepare: (op) => this.prepareForSend(op),
       onOpState: async (id, state) => {
         if (state === "SYNCING" || state === "FAILED") {
           await this.queue.update(id, { state });
         }
       },
       onOpSuccess: async (op, item) => {
+        if (op.action === "ADD_ITEM" && item) {
+          await this.adoptServerItemId(op, item.id);
+        }
         // Pass live outbound ops so an older SET_STATUS success cannot revert
         // a newer PENDING/SYNCING status already chosen by the user.
         const outboundOps = await this.queue.getAll(op.listId);
@@ -235,6 +287,8 @@ class DataSyncEngineImpl {
           },
           outboundOps,
         );
+        // Confirmed: drop it now so a crash mid-flush never replays it.
+        await this.queue.remove([op.id]);
       },
       onOpFailed: (op, error) => {
         const httpStatus =
@@ -245,30 +299,37 @@ class DataSyncEngineImpl {
           httpStatus,
         });
       },
+      onOpDropped: async (op, error) => {
+        // Rejected for good (list or item gone): retrying cannot help and
+        // would hold back the finish of this list forever.
+        const httpStatus =
+          error instanceof ApiClientError ? error.status : undefined;
+        this.syncCache?.applyOperationResult(op, {
+          status: "failed",
+          error,
+          httpStatus,
+        });
+        await this.queue.remove([op.id]);
+      },
       onDone: (failedCount) => {
         syncTelemetry.failedOps(failedCount);
         syncTelemetry.syncDuration(Date.now() - started);
       },
     });
 
-    const failedSet = new Set(failed);
-    const doneIds = ops.map((o) => o.id).filter((id) => !failedSet.has(id));
-    if (doneIds.length) {
-      await this.queue.remove(doneIds);
-    }
-
     const pending = await this.queue.pendingCount(listId);
     this.emit("queueChanged", { listId, pendingCount: pending });
     this.emit("syncFinished", {
       listId,
       pendingCount: pending,
-      syncedCount: doneIds.length,
+      syncedCount: done.length,
     });
 
     // Settled reconcile: after local work lands, one GET — not poll-as-confirm.
-    if (doneIds.length > 0 && pending === 0) {
+    if (done.length > 0 && pending === 0) {
+      const doneSet = new Set(done);
       const settledListIds = new Set(
-        ops.filter((o) => !failedSet.has(o.id)).map((o) => o.listId),
+        ops.filter((o) => doneSet.has(o.id)).map((o) => o.listId),
       );
       for (const id of settledListIds) {
         this.scheduleInvalidate(id);
@@ -279,6 +340,47 @@ class DataSyncEngineImpl {
     if (pending > 0 && this.connectivity.isOnline()) {
       this.scheduleFlush(listId);
     }
+  }
+
+  /**
+   * Latest stored version of a queued op, pointed at the server id when its
+   * item was created earlier in the replay. ARCHIVE_LIST waits until nothing
+   * else for its list is queued, so finishing never overtakes a tick or an
+   * added item (they would 404 against the archived list).
+   */
+  private async prepareForSend(
+    op: SyncOperation,
+  ): Promise<SyncOperation | null> {
+    const listOps = await this.queue.getAll(op.listId);
+    const live = listOps.find((o) => o.id === op.id);
+    if (!live) return null;
+
+    if (
+      live.action === "ARCHIVE_LIST" &&
+      listOps.some((o) => o.action !== "ARCHIVE_LIST")
+    ) {
+      return null;
+    }
+
+    if (live.action === "ADD_ITEM") return live;
+    const itemId = this.resolveItemId(live.itemId);
+    return itemId === live.itemId ? live : { ...live, itemId };
+  }
+
+  /** Ops queued after an offline add still target its clientId. */
+  private async adoptServerItemId(
+    op: SyncOperation,
+    serverId: string,
+  ): Promise<void> {
+    const clientId = String(op.payload.clientId ?? op.itemId ?? "");
+    if (!clientId || clientId === serverId) return;
+    this.itemIdAliases.set(clientId, serverId);
+    await this.queue.remapItemId(op.listId, clientId, serverId);
+  }
+
+  private resolveItemId(itemId: string | undefined): string | undefined {
+    if (!itemId) return itemId;
+    return this.itemIdAliases.get(itemId) ?? itemId;
   }
 
   /**
@@ -316,10 +418,8 @@ class DataSyncEngineImpl {
   ): Promise<ShoppingItem[]> {
     const outboundOps = await this.queue.getAll(listId);
     if (!this.syncCache) {
-      const { overlayLocalOutboundStatuses } = await import(
-        "./overlay-local-ops"
-      );
-      return overlayLocalOutboundStatuses(serverItems, outboundOps);
+      const { reconcileWithOutbound } = await import("./overlay-local-ops");
+      return reconcileWithOutbound(serverItems, outboundOps);
     }
     return this.syncCache.reconcileServerSnapshot(
       listId,
@@ -414,6 +514,8 @@ class DataSyncEngineImpl {
       await this.queue.update(op.id, { state: "PENDING" });
     }
     syncTelemetry.retryCount(targets.length);
+    // Banner tap after the signal is back: re-check, or flush never runs.
+    if (!this.connectivity.isOnline()) void this.connectivity.refresh();
     this.scheduleFlush();
   }
 

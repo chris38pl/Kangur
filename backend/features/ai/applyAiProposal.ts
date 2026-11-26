@@ -4,17 +4,24 @@ import { z } from "zod";
 import { authorizeList } from "@/lib/authorize";
 import { conflict, notFound, validationError } from "@/lib/auth/errors";
 import { appendShoppingEvent } from "@/lib/events/appendShoppingEvent";
+import { MEAL_PROPOSAL_TYPE } from "@/lib/openai";
 import { prisma } from "@/lib/prisma";
 
 import { maybePublishShoppingListCreated } from "../shopping-list/maybePublishShoppingListCreated";
 import { toShoppingItemDto } from "../shopping-item/toShoppingItemDto";
 import { applyUntitledListTitleFromProposal } from "./applyUntitledListTitle";
+import { excludeRepeatedCreates } from "./excludeRepeatedCreates";
 import {
   AiProposalSchema,
   ApplyAiProposalBodySchema,
   MealProposalSchema,
   type ProposalOperation,
 } from "./schemas";
+import {
+  MEAL_ROWS_PER_DISH_VERSION,
+  joinKeptMealRows,
+} from "./mealIngredientOperations";
+import { resolveWorkspaceOutputLanguage } from "./outputLanguage";
 
 type ApplyBody = z.infer<typeof ApplyAiProposalBodySchema>;
 
@@ -48,6 +55,65 @@ function storedOperationsByRowId(
   throw validationError("Stored AI proposal is invalid.");
 }
 
+/**
+ * Meal runs since MEAL_ROWS_PER_DISH_VERSION hold one row per dish, and the
+ * rows the user kept are joined here. Older meal runs hold one row per
+ * ingredient, already joined, and are applied as stored, like an import.
+ */
+function holdsMealRowsPerDish(run: {
+  proposalType: string;
+  proposalVersion: number;
+}): boolean {
+  return (
+    run.proposalType === MEAL_PROPOSAL_TYPE &&
+    run.proposalVersion >= MEAL_ROWS_PER_DISH_VERSION
+  );
+}
+
+/**
+ * The kept rows of a meal run, one operation per ingredient. A merge joins
+ * with the list item as it is now, so an edit made during the review stays.
+ * The note "na A i B" is in the language of the user who asked for the meals,
+ * the language the dish titles were written in.
+ */
+async function keptMealOperations(input: {
+  proposal: unknown;
+  listId: string;
+  workspaceId: string;
+  requestedByUserId: string;
+  decisions: ApplyBody["operations"];
+}) {
+  const stored = MealProposalSchema.safeParse(input.proposal);
+  if (!stored.success) {
+    throw validationError("Stored AI proposal is invalid.");
+  }
+
+  const targetIds = [
+    ...new Set(
+      input.decisions.flatMap((decision) =>
+        decision.op === "merge" ? [decision.targetItemId] : [],
+      ),
+    ),
+  ];
+  const [targets, language] = await Promise.all([
+    targetIds.length > 0
+      ? prisma.shoppingItem.findMany({
+          where: { id: { in: targetIds }, listId: input.listId },
+          select: { id: true, amount: true, note: true },
+        })
+      : Promise.resolve([]),
+    resolveWorkspaceOutputLanguage(input.workspaceId, input.requestedByUserId),
+  ]);
+
+  return joinKeptMealRows({
+    meals: stored.data.meals,
+    rows: stored.data.operations,
+    decisions: input.decisions,
+    targets: new Map(targets.map((item) => [item.id, item])),
+    language,
+  });
+}
+
 export async function applyAiProposal(input: {
   listId: string;
   userId: string;
@@ -68,7 +134,7 @@ export async function applyAiProposal(input: {
 
   const byRowId = storedOperationsByRowId(run.proposal);
 
-  const rehydrated = input.body.operations.map((decision) => {
+  const decided = input.body.operations.map((decision) => {
     const stored = byRowId.get(decision.proposalRowId);
     if (!stored) {
       throw validationError("Invalid proposalRowId.", {
@@ -121,6 +187,28 @@ export async function applyAiProposal(input: {
     };
   });
 
+  // A meal run holds one row per dish. The rows the user kept become one item
+  // per ingredient, with the amounts, notes and dish names of those rows only.
+  const rehydrated: (typeof decided)[number][] = holdsMealRowsPerDish(run)
+    ? [
+        ...(
+          await keptMealOperations({
+            proposal: run.proposal,
+            listId: list.id,
+            workspaceId: list.workspaceId,
+            requestedByUserId: run.userId,
+            decisions: input.body.operations,
+          })
+        ).map((op) => ({
+          ...op,
+          name: op.name.trim(),
+          amount: capNullable(op.amount, MAX_AMOUNT_CHARS),
+          note: capNullable(op.note, MAX_NOTE_CHARS),
+        })),
+        ...decided.filter((op) => op.op === "update"),
+      ]
+    : decided;
+
   try {
     const result = await prisma.$transaction(async (tx) => {
       const claimed = await tx.aiProposalRun.updateMany({
@@ -135,7 +223,9 @@ export async function applyAiProposal(input: {
         throw conflict("AI run is no longer proposed.");
       }
 
-      const creates = rehydrated.filter((op) => op.op === "create");
+      const creates = rehydrated.flatMap((op) =>
+        op.op === "create" ? [op] : [],
+      );
       const mutations = rehydrated.filter(
         (op) => op.op === "update" || op.op === "merge",
       );
@@ -148,40 +238,19 @@ export async function applyAiProposal(input: {
         });
         let nextSort = (last?.sortOrder ?? -1) + 1;
 
-        const seen = new Set<string>();
-        const uniqueCreates = creates.filter((op) => {
-          if (op.op !== "create") return false;
-          const key = op.name.trim().toLowerCase();
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
+        // One name can hold two products ("Mleko" 2% and "Mleko" bez laktozy):
+        // only a row with the same name, amount and note is a repeat.
+        const itemsOnList = await tx.shoppingItem.findMany({
+          where: { listId: list.id, status: { not: "removed" } },
+          select: { name: true, amount: true, note: true },
         });
-
-        const existing = await tx.shoppingItem.findMany({
-          where: {
-            listId: list.id,
-            status: { not: "removed" },
-            normalizedName: { in: [...seen] },
-          },
-          select: { normalizedName: true },
-        });
-        const existingNames = new Set(
-          existing.map((row) => row.normalizedName),
-        );
-
-        const toInsert = uniqueCreates.filter((op) => {
-          if (op.op !== "create") return false;
-          return !existingNames.has(op.name.trim().toLowerCase());
-        });
+        const toInsert = excludeRepeatedCreates(creates, itemsOnList);
 
         if (toInsert.length > 0) {
           await tx.shoppingItem.createMany({
             data: toInsert.map((op) => {
               const sortOrder = nextSort;
               nextSort += 1;
-              if (op.op !== "create") {
-                throw new Error("Unexpected non-create in toInsert");
-              }
               return {
                 listId: list.id,
                 clientId: op.clientId ?? null,

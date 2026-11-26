@@ -9,6 +9,11 @@ import {
   dedupeMealIngredients,
   noteForMeals,
 } from "../features/ai/dedupeMealIngredients";
+import {
+  joinKeptMealRows,
+  keepEveryRow,
+} from "../features/ai/mealIngredientOperations";
+import type { AiOutputLanguage } from "../features/ai/outputLanguage";
 import type { MealProposalAiResponse } from "../features/ai/schemas";
 
 assert.equal(noteForMeals(["Carbonara"], "pl"), null);
@@ -68,17 +73,28 @@ const fixture: MealProposalAiResponse = {
   ],
 };
 
+/** The salt item when both dishes are kept: one row per dish, joined at apply. */
+function saltWhenBothDishesAreKept(language: AiOutputLanguage) {
+  const proposal = dedupeMealIngredients(fixture, [], language);
+  const items = joinKeptMealRows({
+    meals: proposal.meals,
+    rows: proposal.operations,
+    decisions: keepEveryRow(proposal.operations),
+    targets: new Map(),
+    language,
+  });
+  return items.find((op) => op.name === "Salz");
+}
+
 {
-  const proposal = dedupeMealIngredients(fixture, [], "de");
-  const salt = proposal.operations.find((op) => op.name === "Salz");
+  const salt = saltWhenBothDishesAreKept("de");
   assert.ok(salt);
   assert.equal(salt!.note, "für Penne Carbonara und Beef Wellington");
   assert.doesNotMatch(salt!.note ?? "", /\bna\b|\bi\b/);
 }
 
 {
-  const proposal = dedupeMealIngredients(fixture, [], "en");
-  const salt = proposal.operations.find((op) => op.name === "Salz");
+  const salt = saltWhenBothDishesAreKept("en");
   assert.equal(salt!.note, "for Penne Carbonara and Beef Wellington");
 }
 
