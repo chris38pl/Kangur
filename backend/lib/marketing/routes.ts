@@ -19,6 +19,7 @@ export type MarketingRouteId =
   | "tools"
   | "christmasTool"
   | "weekTool"
+  | "films"
   | "faq"
   | "contact"
   | "privacy"
@@ -133,6 +134,12 @@ export const ROUTES: Record<MarketingRouteId, MarketingRoute> = {
     changeFrequency: "monthly",
     priority: 0.8,
   },
+  films: {
+    paths: { pl: "/filmy" },
+    updatedAt: "2026-11-26",
+    changeFrequency: "weekly",
+    priority: 0.6,
+  },
   faq: {
     paths: inPolishAndEnglish("/faq"),
     englishFallback: true,
@@ -205,6 +212,8 @@ export const PATH_ALIASES: Record<string, MarketingRouteId> = {
   "/lista-zakupow-na-wigilie": "christmasTool",
   "/lista-zakupow-na-swieta": "christmasTool",
   "/tydzien": "weekTool",
+  "/wideo": "films",
+  "/filmiki": "films",
 };
 
 /** Languages that have their own indexable version of the page. */

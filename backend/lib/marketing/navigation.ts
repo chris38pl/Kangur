@@ -42,6 +42,8 @@ export function footerGroups(locale: AppLocale): FooterGroup[] {
       title: "Kangur",
       links: [
         { href: `${withLocale(locale, "/")}#jak-dziala`, label: t.how },
+        // The narrator speaks Polish.
+        ...(locale === "pl" ? [page("films", "Filmy", locale)] : []),
         page("pricing", t.pricing, locale),
         page("safety", t.safety, locale),
         page("about", t.about, locale),
