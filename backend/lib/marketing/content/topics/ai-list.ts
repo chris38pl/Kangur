@@ -27,6 +27,15 @@ const copy: TopicCopy = {
         "Za każdym razem produkty są już rozłożone na alejki, a alejek jest 24. „Poprzednie listy” Kangur liczy sam, bez modelu AI, choć też zużywają jedno użycie.",
     },
     {
+      kind: "text",
+      tone: "cream",
+      title: "Lista z wpisanego tekstu, krok po kroku",
+      body: [
+        "Stukasz plus na dole i wybierasz „Opisz listę”. Wpisujesz produkty po przecinku, a po „Utwórz listę” każdy trafia do swojej alejki.",
+      ],
+      film: "L04",
+    },
+    {
       kind: "cards",
       tone: "mint",
       title: "Zasady, których AI u nas pilnuje",
@@ -68,7 +77,7 @@ const copy: TopicCopy = {
       list: [
         "**Niewyraźne pismo.** Może coś pominąć, pomylić albo dopisać.",
         "**Słowa, które znaczą dwie rzeczy.** „Krem” bywa do rąk i do ciasta. Bez dopisku AI wybierze za Ciebie.",
-        "**Skróty tylko Waszego domu.** „Ten co zawsze” zna u Was każdy. AI nie.",
+        "**Skróty tylko Waszego domu.** „Ten, co zawsze” zna u Was każdy. AI nie.",
       ],
       outro:
         "Każdą pozycję zmienisz, przeniesiesz do innej alejki albo usuniesz. Gdy AI nie odpowie albo zgłosi błąd, użycie wraca. Za pomyłkę nie.",
@@ -81,7 +90,7 @@ const copy: TopicCopy = {
       items: [
         { title: "Nie wybiera sklepu", body: "I nie porównuje cen. Lista jest ta sama, gdziekolwiek idziesz." },
         { title: "Nie kupuje za Ciebie", body: "Koszyk jest prawdziwy, na kółkach albo w ręku." },
-        { title: "Nie czyta rozmów", body: "Widzi jeden obrazek albo tekst, który mu dasz. Reszta czatu jest poza kadrem." },
+        { title: "Nie wchodzi do rozmów", body: "Dostaje jeden obrazek albo tekst, który mu dasz. Reszta czatu jest poza kadrem." },
       ],
     },
     {
@@ -89,7 +98,7 @@ const copy: TopicCopy = {
       title: "A zwykły czat z AI?",
       body: [
         "Też napisze listę zakupów. Potem trzeba ją skopiować, wysłać domownikom i przewijać w sklepie między mrożonkami a kasą.",
-        "W Kangurze ta lista jest już wspólna, ułożona w alejki i do przesuwania kciukiem. AI kończy pracę, zanim wejdziesz do sklepu.",
+        "W Kangurze tę listę mają też domownicy, których zaprosisz: ułożoną w alejki i do przesuwania kciukiem. AI kończy pracę, zanim wejdziesz do sklepu.",
       ],
     },
     {
@@ -115,7 +124,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Czy AI ułoży jadłospis na tydzień?",
-          a: "Nie. Dania wymyślasz Ty, do pięciu naraz, a AI wypisuje składniki. Gdy brak pomysłu, pięć obiadów z gotową listą jest w poradniku [[guideWeek|na tydzień]].",
+          a: "Nie. Dania wymyślasz Ty, do pięciu naraz, a AI wypisuje składniki. Gdy brak pomysłu, pięć obiadów z gotową listą jest w kalkulatorze [[weekTool|na tydzień]].",
         },
         {
           q: "Czy da się używać Kangura bez AI?",

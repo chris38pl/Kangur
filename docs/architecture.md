@@ -319,7 +319,7 @@ Scenario YAML → thin Adapter (prod generator) → Evaluator (timing/seed/repea
 ## 9. Shopping Mode & Finish (client)
 
 - Entering “shop” sets UI density + optional `keepAwake`.  
-- Finish Shopping computes counts from item statuses → Summary → Archive API.  
+- Finish Shopping computes counts from item statuses → Summary → finish queued in `DataSyncEngine` behind the trip's ticks and added items (`ARCHIVE_LIST` → session finish, or `POST /lists/{id}/finish` without a session) → list archived into History. Never `DELETE` (that is the user's "Delete list").  
 - **Local-first Shopping Sync** (see §10): during an active shopping session the local cache is authoritative for the UI **unless** a remote change targets an entity with no pending local mutation. Own swipes never wait on the network; polling delivers others’ changes and settled reconcile.
 
 ---
@@ -339,6 +339,7 @@ Scenario YAML → thin Adapter (prod generator) → Evaluator (timing/seed/repea
 - **Inbound SSoT:** Realtime (remote only) → `DataSyncEngine.requestItemsRefresh` → (wait while outbound busy) → invalidate → `useShoppingItems` GET → `reconcileServerSnapshot` (merge + **last local operation wins per pending itemId**) → React Query. Realtime **never** calls `queryClient` directly. Soft toast is presentation-only.  
 - **Cache keys:** active items live at `["shopping-items", listId, "active"]`; writers (`setQueryData`, SyncCacheAdapter) must use the same key (prefix invalidate is fine).  
 - Shopping UI: do not show “Synchronizacja…” solely for own `SET_STATUS` pending/syncing; still show offline / failed / non-status pending.  
+- **Outbound replay (offline-safe finish):** ops replay in the order the user made them (`seq`), `ARCHIVE_LIST` last and only once nothing else for that list is queued. After an offline `ADD_ITEM` lands, later ops on its clientId move to the server id. A retryable failure (offline, 5xx, 401) holds the rest of that list for the next flush; a permanent rejection (400/403/404/409/410/422) is dropped so it cannot block the finish. Finishing calls `drain` (probe + flush, bounded) so a trip finished as the signal returns lands right away. GET reconcile keeps queued adds on the list. Tests: `mobile` `pnpm test:offline-finish`.  
 - Future: `WebSocketTransport` without changing `useListRealtime()`; server push for **active list only**; ETag / 304 on events.
 
 ---

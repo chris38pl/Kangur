@@ -124,6 +124,27 @@
   border-color: var(--kangur-primary);
 }
 
+.undo,
+.presets .undo {
+  min-height: 40px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--kangur-primary-deep);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.resetRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .presets button[aria-pressed="true"] {
   border-color: var(--kangur-primary-deep);
   background: var(--kangur-primary-deep);
@@ -184,6 +205,19 @@
 .remove:hover {
   background: #fdecec;
   color: #b3261e;
+}
+
+.ownRow input[aria-disabled="true"] {
+  background: #f3f6f5;
+}
+
+.plainButton[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.small:empty {
+  margin: 0;
 }
 
 .small {
@@ -315,6 +349,11 @@
   outline: none;
 }
 
+/* With a keyboard, nothing hides under the bar at the bottom of the screen. */
+.result :is(a, button, input, select, textarea) {
+  scroll-margin-bottom: 96px;
+}
+
 .resultHead {
   display: grid;
   gap: 12px;
@@ -362,18 +401,15 @@
   color: #fff;
 }
 
-/* Only on paper: what stands on the table, the number left, and the code in the corner. */
-.resultHead .menu,
-.paper,
-.code {
-  display: none;
-}
-
 .left {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 14px;
+}
+
+.left p {
+  outline: none;
 }
 
 .untick {
@@ -406,14 +442,6 @@
   background: #fff;
   box-shadow: 0 12px 28px -24px rgba(31, 43, 69, 0.4);
   break-inside: avoid;
-}
-
-.groupHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px 12px;
 }
 
 .group h3 {
@@ -472,16 +500,6 @@
   text-decoration: line-through;
 }
 
-.family {
-  margin-top: 28px;
-}
-
-.family > p {
-  max-width: 34rem;
-  margin: 0;
-  color: var(--kangur-text-body);
-}
-
 .familyShare button {
   min-height: 44px;
   margin-top: 10px;
@@ -496,10 +514,26 @@
   cursor: pointer;
 }
 
-.family h3 {
-  margin: 0 0 10px;
-  font-size: 1.1rem;
-  font-weight: 800;
+/* The name of an own dish gets a line of its own, or it would be three letters wide. */
+@media (max-width: 480px) {
+  .own .dishes li {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+
+  .ownName {
+    flex-basis: 100%;
+  }
+
+  .own .dishes select {
+    flex: 1;
+  }
+}
+
+@media (max-width: 359px) {
+  .dishes select {
+    width: 128px;
+  }
 }
 
 @media (max-width: 380px) {
@@ -549,90 +583,5 @@
   .groups {
     columns: 2;
     column-gap: 14px;
-  }
-}
-
-@media print {
-  .calculator {
-    display: block;
-  }
-
-  .resultHead {
-    gap: 4px;
-    margin-bottom: 8px;
-    padding-right: 258px;
-  }
-
-  .resultHead h2 {
-    font-size: 17pt;
-  }
-
-  .resultHead .menu {
-    display: block;
-    font-size: 8.5pt;
-    line-height: 1.35;
-  }
-
-  .paper {
-    display: inline;
-  }
-
-  .code {
-    display: block;
-    position: absolute;
-    top: 0;
-    right: 0;
-  }
-
-  .groups {
-    columns: 2;
-    column-gap: 26px;
-    margin: 0;
-  }
-
-  .group {
-    margin-bottom: 8px;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-    font-size: 10pt;
-    break-inside: auto;
-  }
-
-  .group h3,
-  .hint {
-    break-after: avoid;
-  }
-
-  .group ul {
-    margin-top: 2px;
-  }
-
-  .group li {
-    line-height: 1.25;
-    break-inside: avoid;
-  }
-
-  /* At home already: no need to buy it on paper. */
-  .group li[data-done],
-  .group[data-empty] {
-    display: none;
-  }
-
-  .group label {
-    min-height: 20px;
-    gap: 8px;
-  }
-
-  .group input {
-    width: 13px;
-    height: 13px;
-  }
-
-  .name small {
-    display: inline;
-    margin-left: 4px;
-    font-size: 8pt;
   }
 }

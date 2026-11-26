@@ -10,7 +10,7 @@ export type Product<When extends string = string> = {
   unit: "kg" | "g" | "l" | "szt." | "opak.";
   /** Amounts are rounded up to this: half a kilo, a whole can. */
   step: number;
-  /** A smaller pack for small needs: eggs come in sixes and tens. */
+  /** A smaller pack for what is left over: 24 eggs are two tens and a six. */
   small?: number;
   when: When;
   note?: string;
@@ -36,7 +36,12 @@ export type Line<When extends string = string> = {
 
 function roundUp(amount: number, { step, small }: Pick<Product, "step" | "small">): number {
   // 0.1 + 0.2 must not become the next half kilo.
-  if (small && amount <= small + 1e-9) return small;
+  if (small) {
+    const full = Math.floor(amount / step + 1e-9) * step;
+    const rest = amount - full;
+    if (rest <= 1e-9) return full;
+    return full + (rest <= small + 1e-9 ? small : step);
+  }
   return Math.ceil(amount / step - 1e-9) * step;
 }
 

@@ -7,7 +7,7 @@ const copy: TopicCopy = {
   lines: ["Wklej bałagan.", "Wyjmij alejki."],
   lead: [
     "Wklej listę z wiadomości albo notatki, a narzędzie podzieli ją na alejki: od owoców po sprzątanie. Kolejność ustawisz jak w swoim sklepie.",
-    "Działa w przeglądarce, bez konta i bez AI. Lista nie opuszcza Twojego urządzenia.",
+    "Działa w przeglądarce, bez konta, a lista zostaje na Twoim urządzeniu. Gdy alejki się zgadzają, wczytaj ją do aplikacji Kangur.",
   ],
   sections: [
     {
@@ -28,8 +28,8 @@ const copy: TopicCopy = {
           body: "Strzałkami przy alejkach. Nabiał na końcu, jeśli w Twoim sklepie stoi na końcu.",
         },
         {
-          title: "Weź listę ze sobą",
-          body: "Skopiuj, wyślij albo wydrukuj. Możesz też odhaczać tutaj, w telefonie.",
+          title: "Wczytaj do Kangura",
+          body: "Skopiuj listę, w aplikacji stuknij „Schowek” i zaproś domowników. Od tej pory macie jedną listę.",
         },
       ],
     },
@@ -37,7 +37,7 @@ const copy: TopicCopy = {
       kind: "text",
       tone: "cream",
       title: "Czego to narzędzie nie umie",
-      slot: "phone",
+      film: "L17",
       body: [
         "Zna słowa, a nie sens. „Krem” wyśle do kosmetyków, nawet jeśli miał być do ciasta. Zrzutu ekranu nie przeczyta, a druga osoba nie zobaczy Twojej listy.",
         "Resztę robi aplikacja: [[photoList|czyta zrzut czatu i zdjęcie kartki]], [[sharedList|dzieli listę z domownikami]], a w sklepie prowadzi alejka po alejce i pozwala odhaczać kciukiem.",
@@ -48,7 +48,7 @@ const copy: TopicCopy = {
       slot: "aisles",
       title: "Kategorie na liście zakupów: 24 alejki i co w nich jest",
       intro:
-        "Te same 24 alejki ma aplikacja Kangur. Przykłady pochodzą z jej katalogu, w którym są 273 produkty.",
+        "Te same 24 alejki ma aplikacja Kangur. Przykłady są z jej katalogu, w którym są 273 produkty, i ze słownika tego narzędzia.",
     },
     {
       kind: "faq",
@@ -60,7 +60,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Czy moja lista jest gdzieś wysyłana?",
-          a: "Nie. Narzędzie działa w przeglądarce, a lista zapisuje się tylko na tym urządzeniu. „Wyczyść” usuwa ją także stamtąd, a „Zapomnij poprawki” kasuje zapamiętane alejki.",
+          a: "Nie. Narzędzie działa w przeglądarce, a lista zapisuje się tylko na tym urządzeniu. „Wyczyść” usuwa ją także stamtąd, a „Zapomnij poprawki” kasuje zapamiętane alejki. Dopiero gdy wczytasz ją w Kangurze, tekst czyta AI, tak jak opisuje [[safety|strona o bezpieczeństwie]].",
         },
         {
           q: "Skąd wiadomo, co do której alejki?",
@@ -72,11 +72,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Czy mogę przenieść tę listę do Kangura?",
-          a: "Tak. Skopiuj ją i w aplikacji wybierz „Tekst ze schowka”. To jedno użycie AI.",
-        },
-        {
-          q: "Czy da się ją wydrukować?",
-          a: "Tak, przyciskiem „Drukuj”. Na papierze zostają alejki, kratki i mały kod do Kangura. Puste kartki są w poradniku [[guidePrint|Lista zakupów do druku]].",
+          a: "Tak, po to jest. Skopiuj ją i na ekranie Start w aplikacji stuknij „Schowek”. Przejdą produkty i ilości, a kolejność alejek ustawisz w Kangurze. To jedno użycie AI. Przy komputerze zeskanuj kod, ta sama lista otworzy się w telefonie.",
         },
       ],
     },
@@ -84,8 +80,8 @@ const copy: TopicCopy = {
   related: {
     title: "Z czym to połączyć",
     items: [
-      { id: "guidePrint", label: "Lista zakupów do druku", body: "Puste kartki A4 z alejkami, na lodówkę." },
-      { id: "guideChristmas", label: "Lista zakupów na Wigilię i święta", body: "Policzy produkty na liczbę gości i podzieli je na alejki." },
+      { id: "weekTool", label: "Lista zakupów na tydzień", body: "Nie masz jeszcze listy? Ta jest gotowa, z ilościami." },
+      { id: "christmasTool", label: "Lista zakupów na Wigilię i święta", body: "Policzy produkty na liczbę gości i podzieli je na alejki." },
       { id: "sharedList", label: "Wspólna lista zakupów", body: "Ta sama lista u wszystkich domowników." },
     ],
   },
@@ -96,12 +92,6 @@ const copy: TopicCopy = {
 };
 
 export const AISLE_TOOL = typesetCopy(copy);
-
-/** Below the result: the one thing a web page cannot do. */
-export const AISLE_NUDGE = typesetCopy({
-  title: "Druga osoba tej listy nie widzi.",
-  body: "W Kangurze zobaczy, dopisze i odhaczy u siebie. Skopiuj listę i wybierz „Tekst ze schowka”. To jedno z dziesięciu darmowych użyć AI.",
-});
 
 /** The same conversation as on the home page, in one go. */
 export const AISLE_SAMPLE =

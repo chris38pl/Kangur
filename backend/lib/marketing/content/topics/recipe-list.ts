@@ -7,14 +7,14 @@ const copy: TopicCopy = {
   lines: ["Dwa dania,", "jedna sól."],
   lead: [
     "Wpisujesz nazwy dań, do pięciu naraz, a Kangur proponuje składniki na jednej liście. Co się powtarza, jest raz. Odznaczasz to, co masz w domu.",
-    "Masz gotowy przepis? Skopiuj składniki i wybierz „Tekst ze schowka”.",
+    "Masz gotowy przepis? Skopiuj składniki i na ekranie Start stuknij „Schowek”.",
   ],
   stores: "Na start 10 darmowych użyć AI, wspólnych dla całego domu. Bez reklam.",
   sections: [
     {
       kind: "steps",
       title: "Jak zrobić listę zakupów z przepisu",
-      slot: "kangur",
+      film: "L06",
       items: [
         {
           title: "Wpisz dania",
@@ -62,7 +62,7 @@ const copy: TopicCopy = {
         },
         {
           title: "Nie każe kupować wody",
-          body: "Do makaronu wystarczy kran. O gazowaną do lemoniady już poprosi.",
+          body: "Do makaronu wystarczy kran. Gazowana trafia na listę tylko wtedy, gdy jest częścią dania.",
         },
       ],
     },
@@ -71,7 +71,7 @@ const copy: TopicCopy = {
       tone: "mint",
       title: "Masz gotowy przepis? Składniki ze schowka na listę",
       body: [
-        "Skopiuj listę składników ze strony albo z notatki i wybierz „Tekst ze schowka”. Kangur wypisze produkty razem z ilościami, które tam są, i rozłoży je po alejkach.",
+        "Skopiuj listę składników ze strony albo z notatki i na ekranie Start stuknij „Schowek”. Kangur wypisze produkty razem z ilościami, które tam są, i rozłoży je po alejkach.",
         "To dobry sposób na przepis babci, w którym mąki jest „ile zabierze”.",
       ],
       slot: "grandma",
@@ -98,7 +98,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Nie mam pomysłu na obiad. Co wtedy?",
-          a: "Dania wymyślasz Ty. Na brak pomysłu mamy pięć obiadów z gotową listą w poradniku [[guideWeek|na tydzień]].",
+          a: "Dania wymyślasz Ty. Na brak pomysłu mamy pięć obiadów z gotową listą w kalkulatorze [[weekTool|na tydzień]].",
         },
         {
           q: "Ile kosztuje lista z przepisu?",
@@ -110,8 +110,8 @@ const copy: TopicCopy = {
   related: {
     title: "Na większe gotowanie",
     items: [
-      { id: "guideChristmas", label: "Lista zakupów na Wigilię i święta", body: "Dwanaście dań przeliczonych na liczbę gości." },
-      { id: "guideWeek", label: "Lista zakupów na tydzień", body: "Pięć obiadów, duże zakupy i mała dokupka." },
+      { id: "christmasTool", label: "Lista zakupów na Wigilię i święta", body: "Dwanaście dań przeliczonych na liczbę gości." },
+      { id: "weekTool", label: "Lista zakupów na tydzień", body: "Pięć obiadów, duże zakupy i mała dokupka." },
       { id: "sharedList", label: "Wspólna lista zakupów", body: "Jedno gotuje, drugie kupuje, lista jest jedna." },
     ],
   },

@@ -39,7 +39,7 @@ export type HomeCopy = {
     points: readonly string[];
     fact?: { text: string; source: string; href: string };
     screenAlt: string;
-    /** Notes next to the phones: who added what. Polish has a real pair of screens. */
+    /** Notes next to the phones: where the two products came from. Polish has a real pair of screens. */
     added?: readonly [string, string];
   };
   summary: { lines: Lines; body: string; screenAlt: string };
@@ -64,8 +64,7 @@ export type HomeCopy = {
     Record<
       | "photoList"
       | "recipeList"
-      | "guideWeek"
-      | "guidePrint"
+      | "weekTool"
       | "aisleTool"
       | "aiList"
       | "sharedList",

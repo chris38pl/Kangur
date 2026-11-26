@@ -30,6 +30,7 @@ export async function getShoppingList(
   return ShoppingListSchema.parse(data);
 }
 
+/** User "Delete list": hides the list from Home and History. */
 export async function archiveShoppingList(
   token: string,
   listId: string,
@@ -37,6 +38,22 @@ export async function archiveShoppingList(
   await apiFetch<unknown>(`/api/v1/lists/${listId}`, {
     token,
     method: "DELETE",
+  });
+}
+
+/**
+ * Finish shopping without a server session id (the trip started offline):
+ * the list moves to History. With a session id use finishShoppingSession.
+ */
+export async function finishShoppingList(
+  token: string,
+  listId: string,
+  unavailableCount: number,
+): Promise<void> {
+  await apiFetch<unknown>(`/api/v1/lists/${listId}/finish`, {
+    token,
+    method: "POST",
+    body: { unavailableCount },
   });
 }
 

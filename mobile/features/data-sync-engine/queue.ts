@@ -1,4 +1,5 @@
 import { dataSyncPersistence } from "./persistence";
+import { compareReplayOrder, remapItemId } from "./replay";
 import type { SyncOperation } from "./types";
 
 /**
@@ -7,10 +8,20 @@ import type { SyncOperation } from "./types";
 export class SyncQueue {
   private ops: SyncOperation[] = [];
   private loaded = false;
+  private lastSeq = 0;
+
+  private noteSeq(ops: readonly SyncOperation[]): void {
+    for (const op of ops) {
+      if (typeof op.seq === "number" && op.seq > this.lastSeq) {
+        this.lastSeq = op.seq;
+      }
+    }
+  }
 
   async ensureLoaded(): Promise<void> {
     if (this.loaded) return;
     this.ops = await dataSyncPersistence.loadQueue();
+    this.noteSeq(this.ops);
     // Restart-safe: SYNCING → PENDING
     let changed = false;
     this.ops = this.ops.map((op) => {
@@ -26,15 +37,20 @@ export class SyncQueue {
     this.loaded = true;
   }
 
-  async enqueue(op: SyncOperation): Promise<void> {
+  /** Stores the op with the next `seq` and returns the stored copy. */
+  async enqueue(op: SyncOperation): Promise<SyncOperation> {
     await this.ensureLoaded();
-    this.ops.push(op);
+    this.lastSeq += 1;
+    const stored: SyncOperation = { ...op, seq: this.lastSeq };
+    this.ops.push(stored);
     await dataSyncPersistence.saveQueue(this.ops);
+    return stored;
   }
 
   async replaceAll(ops: SyncOperation[]): Promise<void> {
     await this.ensureLoaded();
     this.ops = ops;
+    this.noteSeq(ops);
     await dataSyncPersistence.saveQueue(this.ops);
   }
 
@@ -51,15 +67,20 @@ export class SyncQueue {
     await dataSyncPersistence.saveQueue(this.ops);
   }
 
+  /** Point queued ops on `fromId` (an item's clientId) at its server id. */
+  async remapItemId(listId: string, fromId: string, toId: string): Promise<void> {
+    await this.ensureLoaded();
+    this.ops = remapItemId(this.ops, listId, fromId, toId);
+    await dataSyncPersistence.saveQueue(this.ops);
+  }
+
+  /** Ops in replay order (see {@link compareReplayOrder}). */
   async getAll(listId?: string): Promise<SyncOperation[]> {
     await this.ensureLoaded();
     const list = listId
       ? this.ops.filter((op) => op.listId === listId)
       : [...this.ops];
-    return list.sort((a, b) => {
-      if (a.priority !== b.priority) return a.priority - b.priority;
-      return a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
-    });
+    return list.sort(compareReplayOrder);
   }
 
   async pendingCount(listId?: string): Promise<number> {

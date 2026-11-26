@@ -2,7 +2,6 @@ import type { QueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 
 import { DataSyncEngine } from "@/features/data-sync-engine";
-import { finishShoppingSession } from "@/features/notifications/api";
 import { ShoppingSession } from "@/features/shopping-list/session/shopping-session";
 import { Analytics } from "@/lib/analytics";
 import { finishTask } from "@/lib/navigation";
@@ -16,7 +15,6 @@ type CompleteArgs = {
   unavailableCount: number;
   /** Products marked bought on this trip (review prompt threshold). */
   boughtCount?: number;
-  getToken: () => Promise<string | null>;
   queryClient: QueryClient;
 };
 
@@ -31,32 +29,13 @@ export async function completeShoppingTask(args: CompleteArgs): Promise<void> {
     itemCount,
     durationSec,
     unavailableCount,
-    getToken,
     queryClient,
   } = args;
 
-  const snap = ShoppingSession.get(listId);
-  const serverSessionId = snap?.serverSessionId;
-  let archivedOnServer = false;
-
-  if (serverSessionId) {
-    try {
-      const token = await getToken();
-      if (token) {
-        await finishShoppingSession(
-          token,
-          listId,
-          serverSessionId,
-          unavailableCount,
-        );
-        archivedOnServer = true;
-      }
-    } catch (error) {
-      console.info("[shopping]", "ServerSessionFinishFailed", error);
-    }
-  }
-
-  await ShoppingSession.finish(listId, { skipArchive: archivedOnServer });
+  // The finish goes through the sync queue behind this trip's ticks and
+  // added items: archiving first would make them 404 on the archived list.
+  // Sent now when there is signal, replayed later when there is not.
+  await ShoppingSession.finish(listId, { unavailableCount });
 
   if (workspaceId) {
     Analytics.track("shopping_finished", {

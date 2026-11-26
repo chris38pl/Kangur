@@ -111,7 +111,7 @@ export const homeDe: HomeCopy = {
     lines: ["Wer steckt dahinter?", "Eine Person in Poznań."],
     body: "Hinter Kangur steht ein Ein-Personen-Unternehmen aus Polen, Krzysztof Krawiec Software. Ohne Werbeabteilung und ohne Datenverkauf.",
     points: [
-      { title: "Liest keine Chats", body: "Es sieht nur den Screenshot, den du auswählst." },
+      { title: "Hat keinen Zugriff auf Messenger", body: "Es bekommt nur den Screenshot, den du auswählst." },
       { title: "Schaut weder in Kontakte noch ins GPS", body: "Kangur fragt gar nicht danach: Für eine Einkaufsliste braucht man beides nicht." },
       { title: "Hat keine Werbung", body: "Es lebt von Premium, nicht von deiner Aufmerksamkeit." },
     ],
@@ -135,11 +135,11 @@ export const homeDe: HomeCopy = {
       },
       {
         q: "Liest Kangur meine Nachrichten?",
-        a: "Nein. Kangur hat auf keinen Messenger Zugriff. Es sieht nur das eine Bild, das du aus der Galerie wählst. Das Bild geht an den KI-Anbieter (OpenAI), der die Liste ausliest. Kangur speichert das Bild nicht.",
+        a: "Nein. Kangur hat auf keinen Messenger Zugriff. Es bekommt nur das eine Bild, das du auswählst. Das Bild geht an den KI-Anbieter (OpenAI), der die Liste ausliest. Kangur speichert das Bild nicht.",
       },
       {
         q: "Was funktioniert ohne Empfang im Laden?",
-        a: "Der Einkaufsmodus auf einer Liste, die schon offen ist: Du hakst ab und ergänzt, die Änderungen werden später gesendet. Für neue Listen und die KI brauchst du Internet.",
+        a: "Der Einkaufsmodus auf einer Liste, die schon offen ist: Du hakst ab, die Änderungen werden später gesendet. Beende den Einkauf, wenn du wieder Empfang hast. Für neue Listen und die KI brauchst du Internet.",
       },
       {
         q: "Hat das etwas mit dem Känguru-Wettbewerb zu tun?",

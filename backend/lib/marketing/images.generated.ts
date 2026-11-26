@@ -55,24 +55,6 @@ export const SCREENS = {
       "width": 720,
       "height": 1565
     },
-    "sharedTomek": {
-      "avif": "/img/ekrany/pl/sharedTomek-360.ab06539d.avif 360w, /img/ekrany/pl/sharedTomek-720.a393bf45.avif 720w",
-      "src": "/img/ekrany/pl/sharedTomek-720.02cee187.webp",
-      "width": 720,
-      "height": 1565
-    },
-    "sharedOla": {
-      "avif": "/img/ekrany/pl/sharedOla-360.ab06539d.avif 360w, /img/ekrany/pl/sharedOla-720.a393bf45.avif 720w",
-      "src": "/img/ekrany/pl/sharedOla-720.02cee187.webp",
-      "width": 720,
-      "height": 1565
-    },
-    "ways": {
-      "avif": "/img/ekrany/pl/ways-360.5a825002.avif 360w, /img/ekrany/pl/ways-720.276c17d2.avif 720w",
-      "src": "/img/ekrany/pl/ways-720.da4ffd9f.webp",
-      "width": 720,
-      "height": 1565
-    },
     "start": {
       "avif": "/img/ekrany/pl/start-360.74671382.avif 360w, /img/ekrany/pl/start-720.5f31a73f.avif 720w",
       "src": "/img/ekrany/pl/start-720.71763583.webp",
@@ -96,6 +78,18 @@ export const SCREENS = {
       "src": "/img/ekrany/pl/quick-720.70b3fe42.webp",
       "width": 720,
       "height": 1565
+    },
+    "startQuick": {
+      "avif": "/img/ekrany/pl/startQuick-480.13dd0142.avif 480w, /img/ekrany/pl/startQuick-960.a1b33603.avif 960w",
+      "src": "/img/ekrany/pl/startQuick-960.c066481e.webp",
+      "width": 960,
+      "height": 368
+    },
+    "startSpace": {
+      "avif": "/img/ekrany/pl/startSpace-480.74d90af0.avif 480w, /img/ekrany/pl/startSpace-960.6626ca9d.avif 960w",
+      "src": "/img/ekrany/pl/startSpace-960.2faf7a1d.webp",
+      "width": 960,
+      "height": 275
     }
   },
   "en": {

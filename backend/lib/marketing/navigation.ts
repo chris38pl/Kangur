@@ -26,7 +26,10 @@ export function headerLinks(locale: AppLocale): NavLink[] {
   }
   return [
     how,
-    ...(locale === "pl" ? [page("guides", t.guides, locale)] : []),
+    // Films and tools are Polish only: the narrator speaks Polish.
+    ...(locale === "pl"
+      ? [page("films", "Filmy", locale), page("tools", t.tools, locale)]
+      : []),
     page("pricing", t.pricing, locale),
     page("safety", t.safety, locale),
     faq,
@@ -42,6 +45,8 @@ export function footerGroups(locale: AppLocale): FooterGroup[] {
       title: "Kangur",
       links: [
         { href: `${withLocale(locale, "/")}#jak-dziala`, label: t.how },
+        // The narrator speaks Polish.
+        ...(locale === "pl" ? [page("films", "Filmy", locale)] : []),
         page("pricing", t.pricing, locale),
         page("safety", t.safety, locale),
         page("about", t.about, locale),
@@ -60,11 +65,10 @@ export function footerGroups(locale: AppLocale): FooterGroup[] {
               page("photoList", "Ze zdjęcia i zrzutu", locale),
               page("recipeList", "Z przepisu", locale),
               page("aiList", "Z AI", locale),
-              page("aisleTool", "Podział na kategorie", locale),
-              page("guideChristmas", "Na Wigilię i święta", locale),
-              page("guideWeek", "Na tydzień", locale),
-              page("guidePrint", "Do druku", locale),
-              page("guides", t.guides, locale),
+              page("aisleTool", "Podział listy na alejki", locale),
+              page("christmasTool", "Na Wigilię i święta", locale),
+              page("weekTool", "Na tydzień", locale),
+              page("tools", t.tools, locale),
             ],
           },
         ]

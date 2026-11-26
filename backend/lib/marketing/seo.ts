@@ -7,6 +7,7 @@ import {
   ROUTES,
   canonicalLocale,
   contentLocales,
+  isIndexed,
   routeHref,
   type MarketingRouteId,
 } from "@/lib/marketing/routes";
@@ -14,13 +15,13 @@ import {
 /**
  * hreflang map for a page, relative to `metadataBase`. `x-default` (a reader whose
  * language we do not have) is English when the page exists in English. A page in one
- * language has no alternates to announce.
+ * language, or one kept out of search, has no alternates to announce.
  */
 export function hreflangAlternates(
   id: MarketingRouteId,
 ): Record<string, string> | undefined {
   const locales = contentLocales(id);
-  if (locales.length < 2) return undefined;
+  if (locales.length < 2 || !isIndexed(id)) return undefined;
 
   const languages: Record<string, string> = {};
   for (const locale of locales) {
@@ -49,7 +50,8 @@ export function ogImage(id: MarketingRouteId, locale: AppLocale) {
 
 /**
  * Full metadata for one marketing page: title, description, canonical, hreflang,
- * Open Graph and X card, all in the page's language.
+ * Open Graph and X card, all in the page's language. A page kept out of search says
+ * `noindex` instead of naming a canonical; a link preview still gets the rest.
  */
 export function buildMarketingMetadata(
   id: MarketingRouteId,
@@ -63,14 +65,11 @@ export function buildMarketingMetadata(
   return {
     title: { absolute: title },
     description,
-    alternates: {
-      canonical,
-      languages: hreflangAlternates(id),
-    },
+    ...(isIndexed(id)
+      ? { alternates: { canonical, languages: hreflangAlternates(id) } }
+      : { robots: { index: false, follow: false } }),
     openGraph: {
-      ...(ROUTES[id].publishedAt
-        ? { type: "article" as const, publishedTime: ROUTES[id].publishedAt }
-        : { type: "website" as const }),
+      type: "website",
       siteName: "Kangur",
       url: canonical,
       title,

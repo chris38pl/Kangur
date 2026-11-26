@@ -1,7 +1,9 @@
 import type { Aisle } from "@/lib/marketing/aisles/labels";
 import { addUp, type Line, type Need, type Product } from "@/lib/marketing/lists/build";
 import { plural } from "@/lib/marketing/lists/format";
+import { kangurPart, type KangurPart } from "@/lib/marketing/lists/parts";
 import { clampInt, flags, isRecord } from "@/lib/marketing/lists/stored";
+import { typesetCopy } from "@/lib/marketing/typography";
 
 /**
  * Shopping for a Polish Christmas Eve and the days after it.
@@ -14,11 +16,18 @@ import { clampInt, flags, isRecord } from "@/lib/marketing/lists/stored";
 export type When = "early" | "weekend" | "last";
 
 /**
- * The only season the guide talks about. Next autumn: check the trading Sundays and the days
+ * The only season the calculator talks about. Next autumn: check the trading Sundays and the days
  * off, then follow the list in docs/deploy.md. `strip` is the last day the home page invites
  * people to the calculator, `over` the last day its dates are in the future.
  */
-export const CHRISTMAS = { year: 2026, strip: "2026-12-23", over: "2026-12-27" } as const;
+export const CHRISTMAS = {
+  year: 2026,
+  /** Last days of the first two trips. Later they are simply the next trip. */
+  early: "2026-12-13",
+  weekend: "2026-12-20",
+  strip: "2026-12-23",
+  over: "2026-12-27",
+} as const;
 
 type P = Product<When>;
 const p = (
@@ -55,7 +64,7 @@ export const PRODUCTS = {
   herring: p("Śledzie (płaty)", "fish", "kg", 0.25, "weekend"),
   whiteFish: p("Biała ryba (filety)", "fish", "kg", 0.25, "last", { note: "może być mrożona" }),
   roast: p("Mięso na pieczeń", "meat", "kg", 0.25, "last"),
-  soupMeat: p("Porcja rosołowa", "meat", "kg", 0.25, "weekend", { note: "do zamrażarki, rosół jest 26" }),
+  soupMeat: p("Porcja rosołowa", "meat", "kg", 0.25, "weekend", { note: "zamroź, na rosół 26 grudnia" }),
   coldCuts: p("Wędlina", "meat", "kg", 0.1, "last"),
 
   // Dairy
@@ -89,8 +98,9 @@ export const PRODUCTS = {
   nuts: p("Bakalie (rodzynki i orzechy)", "pantry", "g", 100, "early"),
   honey: p("Miód (słoik)", "pantry", "szt.", 1, "early"),
   buckwheat: p("Kasza gryczana", "pantry", "kg", 0.5, "early"),
-  noodles: p("Makaron łazanki 400 g", "pantry", "opak.", 1, "early"),
-  soupNoodles: p("Makaron nitki 250 g", "pantry", "opak.", 1, "early"),
+  // Not "Makaron łazanki": Kangur keeps one product of a name, and three pastas would be one.
+  noodles: p("Łazanki 400 g", "pantry", "opak.", 1, "early"),
+  soupNoodles: p("Nitki do rosołu 250 g", "pantry", "opak.", 1, "early"),
   pasta: p("Makaron 500 g", "pantry", "opak.", 1, "early"),
   yeast: p("Drożdże (kostka 100 g)", "pantry", "szt.", 1, "weekend"),
   peas: p("Groszek konserwowy (puszka)", "pantry", "szt.", 1, "early"),
@@ -253,7 +263,7 @@ export const DISHES = [
   {
     id: "makowiec", name: "Makowiec", starter: true,
     needs: [
-      { product: "poppyPaste", each: 0.12 }, { product: "flour", each: 0.04 }, { product: "yeast", each: 0.06 }, { product: "butter", each: 0.05 },
+      { product: "poppyPaste", each: 0.12 }, { product: "flour", each: 0.04 }, { product: "yeast", each: 0.03 }, { product: "butter", each: 0.05 },
       { product: "milk", each: 0.02 }, { product: "eggs", each: 0.25 }, { product: "sugar", each: 0.01 }, { product: "icingSugar", base: 0.4 },
     ],
     ready: { product: "readyPoppyCake", each: 0.12 },
@@ -460,6 +470,39 @@ export function readPlan(stored: unknown): ChristmasPlan {
   };
 }
 
+/** Only what differs from the plan everybody starts with, for the code that a phone scans. */
+export function planChanges(plan: ChristmasPlan): Partial<ChristmasPlan> {
+  const dishes = Object.fromEntries(
+    (DISHES as readonly Dish[]).flatMap((dish) => {
+      const choice = dishPlan(plan, dish);
+      return choice === dishPlan(DEFAULT_PLAN, dish) ? [] : [[dish.id, choice] as const];
+    }),
+  );
+  const extras = Object.fromEntries(
+    (EXTRAS as readonly Extra[]).flatMap((extra) => {
+      const on = extraOn(plan, extra);
+      return on === extra.on ? [] : [[extra.id, on] as const];
+    }),
+  );
+  const forgotten = Object.fromEntries(
+    FORGOTTEN.flatMap(({ id, on }) => {
+      const chosen = plan.forgotten[id] ?? on;
+      return chosen === on ? [] : [[id, chosen] as const];
+    }),
+  );
+  const { people, home, meat, seat, own } = plan;
+  return {
+    ...(people === DEFAULT_PLAN.people ? {} : { people }),
+    ...(home === DEFAULT_PLAN.home ? {} : { home }),
+    ...(meat === DEFAULT_PLAN.meat ? {} : { meat }),
+    ...(seat === DEFAULT_PLAN.seat ? {} : { seat }),
+    ...(Object.keys(dishes).length === 0 ? {} : { dishes }),
+    ...(Object.keys(extras).length === 0 ? {} : { extras }),
+    ...(Object.keys(forgotten).length === 0 ? {} : { forgotten }),
+    ...(own.length === 0 ? {} : { own }),
+  };
+}
+
 export function dishPlan(plan: ChristmasPlan, dish: Dish): DishPlan {
   return plan.dishes[dish.id] ?? (dish.starter ? "make" : "skip");
 }
@@ -472,6 +515,13 @@ export function onTheTable(plan: ChristmasPlan): Dish[] {
 }
 
 export const dishCount = (plan: ChristmasPlan): number => onTheTable(plan).length + plan.own.length;
+
+/** Nobody stays for the next days who was not at the table. Without a table there is no limit. */
+export const mostStaying = (plan: ChristmasPlan): number =>
+  dishCount(plan) === 0 ? HOME.max : Math.min(HOME.max, Math.max(plan.people, HOME.min));
+
+/** The number typed in is kept, so eight guests, two guests and eight again leave four at home. */
+export const staying = (plan: ChristmasPlan): number => Math.min(plan.home, mostStaying(plan));
 
 /** Somebody else's Christmas, one tap away. */
 export const PRESETS = [
@@ -513,8 +563,14 @@ export function applyPreset(plan: ChristmasPlan, id: PresetId): ChristmasPlan {
 /** The preset the plan still matches, if nobody has changed its dishes since. */
 export function activePreset(plan: ChristmasPlan): PresetId | null {
   const table = onTheTable(plan).map((dish) => dish.id);
+  const on = (id: string) => (EXTRAS as readonly Extra[]).some((extra) => extra.id === id && extraOn(plan, extra));
   const same = (id: PresetId) =>
-    PRESET_DISHES[id].length === table.length && table.every((dish) => (PRESET_DISHES[id] as readonly string[]).includes(dish));
+    PRESET_DISHES[id].length === table.length &&
+    table.every((dish) => (PRESET_DISHES[id] as readonly string[]).includes(dish)) &&
+    // "Twelve dishes" and one more is thirteen. A Wigilia without fish may have anything else.
+    (id === "no-fish" || plan.own.length === 0) &&
+    // Skipping every dish by hand leaves the wafer and nothing to eat on the 24th.
+    (id !== "no-eve" || (on("dzien-24") && !on("zwyczaje")));
   return PRESETS.find(({ id }) => same(id))?.id ?? null;
 }
 
@@ -534,7 +590,7 @@ export function christmasList(plan: ChristmasPlan): Line<When>[] {
   }
   for (const extra of EXTRAS as readonly Extra[]) {
     if (!extraOn(plan, extra)) continue;
-    const people = extra.for === "home" ? plan.home : guests;
+    const people = extra.for === "home" ? staying(plan) : guests;
     const list = plan.meat ? extra.needs : (extra.meatless?.needs ?? extra.needs);
     for (const need of list) needs.push({ need, people });
   }
@@ -544,7 +600,58 @@ export function christmasList(plan: ChristmasPlan): Line<When>[] {
   return addUp<ProductId, When>(PRODUCTS, needs);
 }
 
-/** Title of the list, on the screen, on paper and in a message. */
+/** When to buy what. Every date is a trip to the shop, and a list of its own in Kangur. */
+export type ShopTrip = {
+  id: string;
+  title: string;
+  hint: string;
+  /** Which products go on this trip. */
+  covers: readonly When[];
+};
+
+const EARLY: ShopTrip = { id: "early", title: "Do 13 grudnia", hint: "Suche, w słoikach i puszkach. Poczeka w szafce.", covers: ["early"] };
+const WEEKEND: ShopTrip = { id: "weekend", title: "19 i 20 grudnia", hint: "Ostatni weekend. 20 grudnia to niedziela handlowa.", covers: ["weekend"] };
+const LAST: ShopTrip = { id: "last", title: "22 i 23 grudnia", hint: "Świeże. Od 24 do 27 grudnia duże sklepy są zamknięte.", covers: ["last"] };
+const NEXT = { id: "next", title: "Najbliższe zakupy", hint: "Suche, w słoikach i puszkach. Kup je przy najbliższej okazji." } as const;
+
+/**
+ * When to buy what, seen from `today` (as "2026-12-16", null for the static page). A date that
+ * has passed becomes the next trip, so nobody gets a list called "do 13 grudnia" on the 16th.
+ */
+export function tripsOn(today: string | null): readonly ShopTrip[] {
+  const trips: ShopTrip[] =
+    today === null || today <= CHRISTMAS.early
+      ? [EARLY, WEEKEND, LAST]
+      : today <= CHRISTMAS.weekend
+        ? [{ ...NEXT, covers: ["early"] }, WEEKEND, LAST]
+        : [{ ...NEXT, hint: "Wszystko, co nie jest świeże. Kup je przy najbliższej okazji.", covers: ["early", "weekend"] }, LAST];
+  return typesetCopy(trips);
+}
+
+/** Three trips, three lists in Kangur, or one. Kangur names a list after its first line. */
+export function christmasTrips(
+  plan: ChristmasPlan,
+  lines: readonly Line<When>[],
+  trips: readonly ShopTrip[] = tripsOn(null),
+): { whole: KangurPart; trips: KangurPart[] } {
+  const wigilia = dishCount(plan) > 0;
+  const name = wigilia ? "Zakupy na święta" : "Zakupy na zapas";
+  return {
+    whole: kangurPart("whole", "Wszystko", wigilia ? "Zakupy na Wigilię i święta" : "Zakupy na cztery dni bez sklepu", lines),
+    trips: trips
+      .map(({ id, title, covers }) =>
+        kangurPart(
+          id,
+          title,
+          id === NEXT.id ? `Najbliższe ${name.toLocaleLowerCase("pl")}` : `${name} ${title.toLocaleLowerCase("pl")}`,
+          lines.filter((line) => covers.includes(line.when)),
+        ),
+      )
+      .filter((part) => part.count > 0),
+  };
+}
+
+/** Title of the list, on the screen and in a message. */
 export function christmasTitle(plan: ChristmasPlan): string {
   return dishCount(plan) > 0
     ? `Lista zakupów na Wigilię i święta ${CHRISTMAS.year}, ${plural(plan.people, "osoba", "osoby", "osób")}`
@@ -553,7 +660,7 @@ export function christmasTitle(plan: ChristmasPlan): string {
 
 const lower = (name: string) => name.toLocaleLowerCase("pl");
 
-/** What stands on the table and who brings what, for the printed sheet and the message. */
+/** What stands on the table and who brings what, for the end of the calculator and the message. */
 export function menu(plan: ChristmasPlan): { ours: string[]; bring: string[] } {
   const ours: string[] = [];
   const bring: string[] = [];
@@ -572,7 +679,7 @@ export function familyMessage(plan: ChristmasPlan): string | null {
     `Wigilia, przy stole ${plural(plan.people, "osoba", "osoby", "osób")}.`,
     ours.length ? `U nas będzie: ${ours.join(", ")}.` : null,
     `Do przyniesienia: ${bring.join(", ")}.`,
-    "Kto co bierze? Lista i terminy: getkangur.com/wigilia",
+    "Kto co bierze? Terminy zakupów: getkangur.com/wigilia",
   ]
     .filter(Boolean)
     .join(" ")

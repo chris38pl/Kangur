@@ -10,7 +10,7 @@
   font-weight: 700;
 }
 
-/* A sheet from a notebook: the list lands on paper before it gets its aisles. */
+/* A page from a notebook. */
 .input textarea {
   --line: 30px;
   display: block;
@@ -91,15 +91,8 @@
   outline: none;
 }
 
-/* Title of the printed sheet. On the screen it is there for screen readers only. */
-.sheetTitle {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+.result :is(a, button, input, select, textarea) {
+  scroll-margin-bottom: 96px;
 }
 
 .empty {
@@ -292,10 +285,6 @@
   font-size: 1rem;
 }
 
-.code {
-  display: none;
-}
-
 @media (min-width: 900px) {
   .tool {
     grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
@@ -317,76 +306,5 @@
   .group {
     margin-bottom: 14px;
     break-inside: avoid;
-  }
-}
-
-@media print {
-  .tool {
-    display: block;
-  }
-
-  .result {
-    position: relative;
-  }
-
-  .sheetTitle {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0 0 4px;
-    clip-path: none;
-    font-size: 19pt;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-  }
-
-  .code {
-    display: block;
-    position: absolute;
-    top: 0;
-    right: 0;
-  }
-
-  .summary {
-    min-height: 44px;
-    padding-right: 250px;
-  }
-
-  .empty {
-    min-height: 0;
-    border: 0;
-  }
-
-  .groups {
-    columns: 2;
-    column-gap: 24px;
-    display: block;
-    margin: 8px 0 0;
-  }
-
-  .group {
-    margin-bottom: 10px;
-    padding: 0;
-    border: 0;
-    box-shadow: none;
-    break-inside: auto;
-  }
-
-  .group h3 {
-    break-after: avoid;
-  }
-
-  .group li {
-    break-inside: avoid;
-  }
-
-  /* Bought already: no need to buy it on paper. */
-  .group li[data-done],
-  .group[data-empty] {
-    display: none;
-  }
-
-  .group label {
-    min-height: 26px;
   }
 }

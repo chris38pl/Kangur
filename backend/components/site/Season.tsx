@@ -2,28 +2,21 @@
 
 import { useSyncExternalStore, type ReactNode } from "react";
 
-const never = () => () => {};
+import { isOver } from "@/lib/marketing/season";
 
-/** Today in Poland, as "2026-12-24". Also for somebody who shops for Christmas from Chicago. */
-function today(): string {
-  try {
-    return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Warsaw" }).format(new Date());
-  } catch {
-    return new Date().toISOString().slice(0, 10);
-  }
-}
+const never = () => () => {};
 
 const useOver = (day: string) =>
   useSyncExternalStore(
     never,
-    () => today() > day,
+    () => isOver(day),
     () => false,
   );
 
 /**
  * Something for a few weeks of the year. It is in the static HTML, and hides itself in the
  * browser once its time has passed, so a forgotten deploy does not wish anyone a merry
- * Christmas in February.
+ * Christmas in February. The page itself leaves it out when it is built after that day.
  */
 export function Season({ until, children }: { until: string; children: ReactNode }) {
   return useOver(until) ? null : children;

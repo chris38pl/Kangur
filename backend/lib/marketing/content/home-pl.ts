@@ -12,7 +12,7 @@ export const homePl: HomeCopy = {
     iosSmall: "POBIERZ W",
     chatLabel: "Przykładowa rozmowa, z której powstaje lista",
     screenAlt:
-      "Lista z tej rozmowy w Kangurze: 22 pozycje, najpierw owoce i warzywa, potem nabiał",
+      "Lista z całej rozmowy w Kangurze: 22 pozycje, najpierw owoce i warzywa, potem nabiał",
   },
   chat: {
     contact: "Misiaczek ❤️",
@@ -101,7 +101,7 @@ export const homePl: HomeCopy = {
     },
     screenAlt:
       "Wspólna lista Szybkie zakupy na dwóch telefonach, na obu te same 10 produktów",
-    added: ["masło dodała Ola", "kawę dodał Tomek"],
+    added: ["z kanapy: masło", "z drogi: kawa"],
   },
   summary: {
     lines: ["Awokado?", "Nie było."],
@@ -138,8 +138,8 @@ export const homePl: HomeCopy = {
     body: "Kangura robi jednoosobowa firma Krzysztof Krawiec Software. Bez działu reklam i bez sprzedawania danych.",
     points: [
       {
-        title: "Nie czyta rozmów",
-        body: "Widzi tylko ten zrzut, który wybierzesz.",
+        title: "Nie łączy się z komunikatorem",
+        body: "Z rozmowy dostaje tylko zrzut, który wybierzesz.",
       },
       {
         title: "Nie zagląda w kontakty ani w GPS",
@@ -170,15 +170,15 @@ export const homePl: HomeCopy = {
       },
       {
         q: "Czy Kangur czyta moje wiadomości?",
-        a: "Nie. Nie ma dostępu do żadnego komunikatora. Widzi tylko ten jeden obrazek, który wybierzesz z galerii. Obrazek trafia do dostawcy AI (OpenAI), który odczytuje z niego listę. Kangur obrazka nie zapisuje.",
+        a: "Nie. Nie ma dostępu do żadnego komunikatora. Dostaje tylko ten jeden obrazek, który wybierzesz. Obrazek trafia do dostawcy AI (OpenAI), który odczytuje z niego listę. Kangur obrazka nie zapisuje.",
       },
       {
         q: "Co działa, gdy w sklepie nie ma zasięgu?",
-        a: "Tryb zakupów na liście, którą masz już otwartą: odhaczasz i dopisujesz, a zmiany wysyłają się później. Nowe listy i AI potrzebują internetu.",
+        a: "Tryb zakupów na liście, którą masz już otwartą: odhaczasz, a zmiany wysyłają się później. Zakupy zakończ, gdy wróci zasięg. Nowe listy i AI potrzebują internetu.",
       },
       {
         q: "Czy to ten Kangur od konkursu z matematyki?",
-        a: "Nie. Kangurów jest sporo, a nasz umie tylko listy zakupów. Pomarańczowy, w turkusowej bluzie. [[safety|Jak sprawdzić, że to my]].",
+        a: "Nie. Kangurów jest sporo, a nasz umie tylko listy zakupów. Na ikonie pomarańczowy, w turkusowej bluzie. [[safety|Jak sprawdzić, że to my]].",
       },
     ],
   },
@@ -190,18 +190,17 @@ export const homePl: HomeCopy = {
   },
   more: {
     photoList: "Lista ze zdjęcia krok po kroku",
-    guidePrint: "Wolisz papier? Siedem kartek do druku",
     recipeList: "Lista z przepisu na przykładzie",
-    guideWeek: "Gotowa lista na tydzień",
+    weekTool: "Gotowa lista na tydzień",
     aisleTool: "Wypróbuj alejki w przeglądarce",
     aiList: "Co AI umie, a czego nie",
     sharedList: "Jak działa wspólna lista",
   },
   season: {
-    id: "guideChristmas",
+    id: "christmasTool",
     until: CHRISTMAS.strip,
     lines: ["Dwanaście dań.", "Cztery dni bez sklepu."],
-    body: "Podajesz liczbę gości, a kalkulator liczy zakupy na Wigilię i święta, mówi, co kupić wcześniej, i układa wiadomość, kto co przynosi. Za darmo, bez aplikacji.",
+    body: "Podajesz liczbę gości, a kalkulator liczy zakupy na Wigilię i święta, mówi, co kupić wcześniej, i układa wiadomość, kto co przynosi. Gotową listę wczytasz do Kangura.",
     link: "Policz zakupy na Wigilię",
   },
 };

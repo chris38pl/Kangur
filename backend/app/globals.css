@@ -167,6 +167,8 @@ picture > source {
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 500;
+  /* "Jak to działa" broke in two at 940 px once "Filmy" joined the bar. */
+  white-space: nowrap;
 }
 
 .mkt-nav a:hover {
@@ -409,6 +411,7 @@ picture > source {
 
 .mkt-footer a {
   color: var(--kangur-text-body);
+  overflow-wrap: anywhere;
   text-decoration: none;
 }
 
@@ -446,7 +449,8 @@ picture > source {
   }
 
   .mkt-footer-languages ul {
-    grid-template-columns: repeat(3, max-content);
+    grid-template-columns: repeat(auto-fit, minmax(6.2rem, max-content));
+    gap: 8px 16px;
   }
 }
 
@@ -620,6 +624,13 @@ picture > source {
   color: var(--kangur-text-body);
 }
 
+/* Six Polish links on a narrow laptop: a little less air between them. */
+@media (min-width: 940px) and (max-width: 1099px) {
+  .mkt-nav {
+    gap: 18px;
+  }
+}
+
 @media (min-width: 940px) {
   .mkt-nav {
     display: flex;
@@ -649,27 +660,5 @@ picture > source {
     font-size: 13px;
     padding: 0 14px;
     min-height: 40px;
-  }
-}
-
-
-/* -- Paper: the list, and nothing else -- */
-
-@media print {
-  @page {
-    margin: 14mm;
-  }
-
-  .mkt-header,
-  .mkt-footer,
-  .mkt-skip,
-  [data-noprint] {
-    display: none !important;
-  }
-
-  body,
-  .mkt-shell {
-    min-height: 0;
-    background: #fff;
   }
 }

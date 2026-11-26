@@ -1,12 +1,15 @@
 "use client";
 
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { CopyBox } from "@/components/site/CopyBox";
-import { ListActions, ShareButton } from "@/components/tools/ListActions";
 import { LeftToBuy, ListGroups, type LineGroup } from "@/components/tools/ListGroups";
+import { ShareButton } from "@/components/tools/ShareButton";
 import { Stepper } from "@/components/tools/Stepper";
+import { HopBar, HopButton, ToKangur, type KangurSlots } from "@/components/tools/ToKangur";
+import { useCopy } from "@/components/tools/use-copy";
 import { AISLES, AISLE_ICONS, AISLE_LABELS } from "@/lib/marketing/aisles/labels";
+import { HANDOFF } from "@/lib/marketing/content/topics/handoff";
 import {
   CHRISTMAS,
   DEFAULT_PLAN,
@@ -22,28 +25,30 @@ import {
   applyPreset,
   christmasList,
   christmasTitle,
+  christmasTrips,
   dishCount,
   dishPlan,
   familyMessage,
   menu,
+  mostStaying,
+  planChanges,
   readPlan,
+  staying,
+  tripsOn,
   type ChristmasPlan,
   type Dish,
   type DishPlan,
   type OwnDish,
-  type When,
 } from "@/lib/marketing/lists/christmas";
 import { listToText, plural } from "@/lib/marketing/lists/format";
+import { packTicks, unpackTicks } from "@/lib/marketing/lists/handoff";
 import { strings } from "@/lib/marketing/lists/stored";
-import { useHydrated, useStored } from "@/lib/marketing/lists/use-stored";
+import { useArrival } from "@/lib/marketing/lists/use-arrival";
+import { hasStored, readStored, useHydrated, useStored } from "@/lib/marketing/lists/use-stored";
+import { typesetCopy } from "@/lib/marketing/typography";
+import { useToday } from "@/lib/marketing/use-today";
 
 import styles from "./Calculator.module.css";
-
-const WHEN: readonly { id: When; title: string; hint: string }[] = [
-  { id: "early", title: "Do 13 grudnia", hint: "Suche, w słoikach i puszkach. Poczeka w szafce." },
-  { id: "weekend", title: "19 i 20 grudnia", hint: "Ostatni weekend. 20 grudnia to niedziela handlowa." },
-  { id: "last", title: "22 i 23 grudnia", hint: "Świeże. Od 24 do 27 grudnia duże sklepy są zamknięte." },
-];
 
 const PLANS: readonly { id: DishPlan; label: string }[] = [
   { id: "make", label: "Robimy" },
@@ -53,36 +58,71 @@ const PLANS: readonly { id: DishPlan; label: string }[] = [
 ];
 
 const NOTHING_DONE: readonly string[] = [];
-const URL = "https://www.getkangur.com/poradniki/lista-zakupow-na-wigilie-i-swieta";
+const PLAN_KEY = "wigilia";
+// Last year's ticks must not shorten this year's list.
+const DONE_KEY = `wigilia-${CHRISTMAS.year}-kupione`;
+/** Short address: in the code to scan, and next to a list sent in a message. */
+const PATH = "/wigilia";
+const URL = `https://www.getkangur.com${PATH}`;
 
 function verdict(count: number, people: number): string {
-  if (count === 0) return "Bez Wigilii. Zostają cztery dni, kiedy duże sklepy śpią.";
-  if (people <= 3 && count > 8) return "Na tak mały stół sześć dań to i tak uczta.";
-  if (count < 12) return "Dwanaście to zwyczaj, a nie kontrola.";
-  if (count === 12) return "Dwanaście. Tradycja policzona.";
-  return "Więcej niż dwanaście. Ktoś będzie jadł na stojąco.";
+  if (count === 0) return "Bez Wigilii. Zostają śniadania i obiady na cztery dni.";
+  if (people <= 3 && count > 8) return "Na tak mały stół wystarczy sześć dań.";
+  if (count < 12) return "Dwanaście to zwyczaj, nie obowiązek.";
+  if (count === 12) return "Dwanaście, jak w tradycji.";
+  return "Więcej niż dwanaście, więc porcje mogą być mniejsze.";
 }
 
-export function ChristmasCalculator({
-  code,
-  nudge,
-}: {
-  /** Corner of the printed sheet. */
-  code?: ReactNode;
-  /** Where the list can go next. */
-  nudge?: ReactNode;
-}) {
-  const [plan, setPlan, reset] = useStored<ChristmasPlan>("wigilia", DEFAULT_PLAN, readPlan);
-  const [done, setDone, clearDone] = useStored(
-    // Last year's ticks must not shorten this year's list.
-    `wigilia-${CHRISTMAS.year}-kupione`,
-    NOTHING_DONE,
-    strings,
-  );
-  const [view, setView] = useState<"aisles" | "dates">("aisles");
+const sameTicks = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((id) => b.includes(id));
+
+export function ChristmasCalculator({ slots }: { slots: KangurSlots }) {
+  const [plan, setPlan, reset] = useStored<ChristmasPlan>(PLAN_KEY, DEFAULT_PLAN, readPlan);
+  const [done, setDone, clearDone] = useStored(DONE_KEY, NOTHING_DONE, strings);
+  const [view, setView] = useState<"dates" | "aisles">("dates");
+  /** The plan from before a preset, a reset or a scanned code. Promises are not deleted by a curious tap. */
+  const [before, setBefore] = useState<{
+    plan: ChristmasPlan;
+    done: readonly string[];
+    by: "preset" | "reset" | "code";
+  } | null>(null);
+  /** Grows with every list that comes from a computer, back to zero after a change by hand. */
+  const [arrival, setArrival] = useState(0);
+  const presetsRef = useRef<HTMLDivElement>(null);
+  const resetRef = useRef<HTMLButtonElement>(null);
   const listId = useId();
   // Until the page comes alive a choice would be lost, so the form waits.
   const ready = useHydrated();
+
+  /** A change by hand: from now on there is nothing to go back to. */
+  const change = (next: ChristmasPlan) => {
+    setBefore(null);
+    setArrival(0);
+    setPlan(next);
+  };
+  const undo = () => {
+    if (!before) return;
+    setPlan(before.plan);
+    setDone(before.done);
+    setBefore(null);
+    setArrival(0);
+    if (before.by === "preset") presetsRef.current?.querySelector("button")?.focus();
+    if (before.by === "reset") resetRef.current?.focus();
+  };
+
+  useArrival((list) => {
+    const next = readPlan(list.p);
+    const nextDone = unpackTicks(list.d, christmasList(next).map((line) => line.id));
+    const here = readStored(PLAN_KEY, DEFAULT_PLAN, readPlan);
+    const hereDone = readStored(DONE_KEY, NOTHING_DONE, strings);
+    const same =
+      JSON.stringify(planChanges(here)) === JSON.stringify(planChanges(next)) && sameTicks(hereDone, nextDone);
+    // Whatever was set on this phone can come back, ticks included.
+    setBefore((hasStored(PLAN_KEY) || hereDone.length > 0) && !same ? { plan: here, done: hereDone, by: "code" } : null);
+    setPlan(next);
+    setDone(nextDone);
+    setArrival((count) => count + 1);
+  });
 
   const lines = useMemo(() => christmasList(plan), [plan]);
   const count = dishCount(plan);
@@ -93,7 +133,12 @@ export function ChristmasCalculator({
   const preset = activePreset(plan);
   const doneSet = new Set(done);
   const left = lines.filter((line) => !doneSet.has(line.id)).length;
+  // When everything is ticked, the whole list goes out, not an empty one.
+  const toBuy = left > 0 ? lines.filter((line) => !doneSet.has(line.id)) : lines;
+  const going = new Set(toBuy.map((line) => line.id));
   const total = plural(lines.length, "produkt", "produkty", "produktów");
+  // A date that has passed becomes the next trip.
+  const trips = tripsOn(useToday());
 
   const groups: LineGroup[] = (
     view === "aisles"
@@ -103,244 +148,288 @@ export function ChristmasCalculator({
           icon: AISLE_ICONS[aisle],
           lines: lines.filter((line) => line.aisle === aisle),
         }))
-      : WHEN.map(({ id, title: name, hint }): LineGroup => ({
+      : trips.map(({ id, title: name, hint, covers }): LineGroup => ({
           key: id,
           title: name,
           hint,
-          lines: lines.filter((line) => line.when === id),
+          lines: lines.filter((line) => covers.includes(line.when)),
         }))
   ).filter((group) => group.lines.length > 0);
 
   const text = listToText(
     title,
-    groups.map((group) => ({
-      title: group.title,
-      // When everything is ticked, the whole list goes out, not an empty page.
-      lines: left > 0 ? group.lines.filter((line) => !doneSet.has(line.id)) : group.lines,
-    })),
+    groups.map((group) => ({ title: group.title, lines: group.lines.filter((line) => going.has(line.id)) })),
   );
-  const actions = (
-    <ListActions
-      title={title}
-      text={text}
-      url={URL}
-      copied={left > 0 && left < lines.length ? `Skopiowane: ${left} z ${lines.length}` : undefined}
-    />
-  );
+  const home = staying(plan);
+  const parts = christmasTrips(plan, toBuy, trips);
+  const guests = count > 0 ? plan.people : plan.home;
+  const ownOnly = plan.own.filter((dish) => dish.plan === "make").map((dish) => dish.name.toLocaleLowerCase("pl"));
 
   return (
-    <div className={styles.calculator}>
-      <form className={styles.form} data-noprint onSubmit={(event) => event.preventDefault()}>
-        <fieldset disabled={!ready}>
-          <legend>Ilu Was będzie?</legend>
-          <a className={styles.jump} href={`#${listId}`}>
-            Przejdź do listy, {total}
-          </a>
-          <Stepper
-            label="Przy stole w Wigilię"
-            hint="dwoje małych dzieci to mniej więcej jedna osoba"
-            value={plan.people}
-            unit={people}
-            {...PEOPLE}
-            onChange={(next) =>
-              setPlan({ ...plan, people: next, home: Math.min(plan.home, Math.max(next, HOME.min)) })
-            }
-          />
-          <Stepper
-            label="Zostaje na kolejne dni"
-            hint="śniadania do 27, obiady do 26 grudnia"
-            value={plan.home}
-            unit={plural(plan.home, "osoba", "osoby", "osób")}
-            {...HOME}
-            onChange={(next) => setPlan({ ...plan, home: next })}
-          />
-          <div className={styles.checks}>
-            <label>
-              <input
-                type="checkbox"
-                checked={plan.meat}
-                onChange={(event) => setPlan({ ...plan, meat: event.target.checked })}
-              />
-              <span>
-                Jemy mięso
-                <small>pieczeń, rosół i wędlina po Wigilii</small>
-              </span>
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={plan.seat}
-                onChange={(event) => setPlan({ ...plan, seat: event.target.checked })}
-              />
-              <span>
-                Dodatkowe nakrycie
-                <small>jedna porcja więcej, gdyby ktoś jednak zapukał</small>
-              </span>
-            </label>
-          </div>
-        </fieldset>
-
-        <fieldset disabled={!ready}>
-          <legend>Dania</legend>
-          <div className={styles.presets}>
-            {PRESETS.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={preset === id}
-                onClick={() => setPlan(applyPreset(plan, id))}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <p className={styles.verdict} aria-live="polite">
-            <strong>{plural(count, "danie", "dania", "dań")}.</strong> {verdict(count, plan.people)}
-          </p>
-          <ul className={styles.dishes}>
-            {(DISHES as readonly Dish[]).map((dish) => {
-              const choice = dishPlan(plan, dish);
-              const id = `danie-${dish.id}`;
-              return (
-                <li key={dish.id} data-plan={choice}>
-                  <label htmlFor={id}>{dish.name}</label>
-                  <select
-                    id={id}
-                    value={choice}
-                    onChange={(event) =>
-                      setPlan({
-                        ...plan,
-                        dishes: { ...plan.dishes, [dish.id]: event.target.value as DishPlan },
-                      })
-                    }
-                  >
-                    {PLANS.filter(({ id: option }) => option !== "buy" || dish.ready).map(
-                      ({ id: option, label }) => (
-                        <option key={option} value={option}>
-                          {label}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </li>
-              );
-            })}
-          </ul>
-          <OwnDishes own={plan.own} onChange={(own) => setPlan({ ...plan, own })} />
-        </fieldset>
-
-        <fieldset disabled={!ready}>
-          <legend>Poza daniami</legend>
-          <div className={styles.checks}>
-            {EXTRAS.map((extra) => (
-              <label key={extra.id}>
+    <>
+      <div className={styles.calculator}>
+        <form className={styles.form} onSubmit={(event) => event.preventDefault()}>
+          <fieldset disabled={!ready}>
+            <legend>Ilu Was będzie?</legend>
+            <a className={styles.jump} href={`#${listId}`}>
+              Przejdź do listy, {total}
+            </a>
+            <Stepper
+              label="Przy stole w Wigilię"
+              hint="dwoje małych dzieci to mniej więcej jedna osoba"
+              value={plan.people}
+              unit={people}
+              {...PEOPLE}
+              onChange={(next) => change({ ...plan, people: next })}
+            />
+            <Stepper
+              label="Zostaje na kolejne dni"
+              hint="śniadania i obiady po Wigilii, wybierasz je niżej"
+              value={home}
+              unit={plural(home, "osoba", "osoby", "osób")}
+              min={HOME.min}
+              max={mostStaying(plan)}
+              onChange={(next) => change({ ...plan, home: next })}
+            />
+            <div className={styles.checks}>
+              <label>
                 <input
                   type="checkbox"
-                  checked={plan.extras[extra.id] ?? extra.on}
-                  onChange={(event) =>
-                    setPlan({
-                      ...plan,
-                      extras: { ...plan.extras, [extra.id]: event.target.checked },
-                    })
-                  }
+                  checked={plan.meat}
+                  onChange={(event) => change({ ...plan, meat: event.target.checked })}
                 />
                 <span>
-                  {extra.label}
-                  <small>
-                    {!plan.meat && "meatless" in extra && "hint" in extra.meatless
-                      ? extra.meatless.hint
-                      : extra.hint}
-                  </small>
+                  Jemy mięso
+                  <small>pieczeń, rosół i wędlina po Wigilii</small>
                 </span>
               </label>
-            ))}
-          </div>
-          <details className={styles.more}>
-            <summary>O tym się zapomina</summary>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={plan.seat}
+                  onChange={(event) => change({ ...plan, seat: event.target.checked })}
+                />
+                <span>
+                  Dodatkowe nakrycie
+                  <small>jedna porcja więcej, gdyby ktoś jednak zapukał</small>
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset disabled={!ready}>
+            <legend>Dania</legend>
+            <div className={styles.presets} ref={presetsRef}>
+              {PRESETS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={preset === id}
+                  onClick={() => {
+                    // Two presets in a row still go back to what was set by hand.
+                    setBefore(before?.by === "preset" ? before : { plan, done, by: "preset" });
+                    setArrival(0);
+                    setPlan(applyPreset(plan, id));
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+              {before?.by === "preset" ? (
+                <button type="button" className={styles.undo} onClick={undo}>
+                  Cofnij
+                </button>
+              ) : null}
+            </div>
+            <p className={styles.verdict} aria-live="polite">
+              <strong>{plural(count, "danie", "dania", "dań")}.</strong> {verdict(count, plan.people)}
+            </p>
+            <ul className={styles.dishes}>
+              {(DISHES as readonly Dish[]).map((dish) => {
+                const choice = dishPlan(plan, dish);
+                const id = `danie-${dish.id}`;
+                return (
+                  <li key={dish.id} data-plan={choice}>
+                    <label htmlFor={id}>{dish.name}</label>
+                    <select
+                      id={id}
+                      value={choice}
+                      onChange={(event) =>
+                        change({
+                          ...plan,
+                          dishes: { ...plan.dishes, [dish.id]: event.target.value as DishPlan },
+                        })
+                      }
+                    >
+                      {PLANS.filter(({ id: option }) => option !== "buy" || dish.ready).map(
+                        ({ id: option, label }) => (
+                          <option key={option} value={option}>
+                            {label}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </li>
+                );
+              })}
+            </ul>
+            <OwnDishes own={plan.own} onChange={(own) => change({ ...plan, own })} />
+          </fieldset>
+
+          <fieldset disabled={!ready}>
+            <legend>Poza daniami</legend>
             <div className={styles.checks}>
-              {FORGOTTEN.map(({ id, on }) => (
-                <label key={id}>
+              {EXTRAS.map((extra) => (
+                <label key={extra.id}>
                   <input
                     type="checkbox"
-                    checked={plan.forgotten[id] ?? on}
+                    checked={plan.extras[extra.id] ?? extra.on}
                     onChange={(event) =>
-                      setPlan({
+                      change({
                         ...plan,
-                        forgotten: { ...plan.forgotten, [id]: event.target.checked },
+                        extras: { ...plan.extras, [extra.id]: event.target.checked },
                       })
                     }
                   />
-                  <span>{PRODUCTS[id].name}</span>
+                  <span>
+                    {extra.label}
+                    <small>
+                      {!plan.meat && "meatless" in extra && "hint" in extra.meatless
+                        ? extra.meatless.hint
+                        : extra.hint}
+                    </small>
+                  </span>
                 </label>
               ))}
             </div>
-          </details>
-        </fieldset>
+            <details className={styles.more}>
+              <summary>O tym się zapomina</summary>
+              <div className={styles.checks}>
+                {FORGOTTEN.map(({ id, on }) => (
+                  <label key={id}>
+                    <input
+                      type="checkbox"
+                      checked={plan.forgotten[id] ?? on}
+                      onChange={(event) =>
+                        change({
+                          ...plan,
+                          forgotten: { ...plan.forgotten, [id]: event.target.checked },
+                        })
+                      }
+                    />
+                    <span>{PRODUCTS[id].name}</span>
+                  </label>
+                ))}
+              </div>
+            </details>
+          </fieldset>
 
-        <button
-          type="button"
-          className={styles.plainButton}
-          onClick={() => {
-            reset();
-            clearDone();
-          }}
-        >
-          Zacznij od nowa
-        </button>
-      </form>
+          <div className={styles.resetRow}>
+            <button
+              ref={resetRef}
+              type="button"
+              className={styles.plainButton}
+              onClick={() => {
+                setBefore({ plan, done, by: "reset" });
+                setArrival(0);
+                reset();
+                clearDone();
+              }}
+            >
+              Zacznij od nowa
+            </button>
+            {before?.by === "reset" ? (
+              <button type="button" className={styles.undo} onClick={undo}>
+                Cofnij
+              </button>
+            ) : null}
+          </div>
+        </form>
 
-      <div className={styles.result} id={listId} tabIndex={-1}>
-        <div className={styles.resultHead}>
-          <h2>{title}</h2>
-          {count > 0 ? (
-            <p className={styles.menu}>
-              {ours.length > 0 ? <>Na stole: {ours.join(", ")}. </> : null}
-              {bring.length > 0 ? <>Przynoszą: {bring.map((name) => `${name} ..............`).join(", ")}</> : null}
-            </p>
-          ) : null}
-          <LeftToBuy total={total} left={left} ticked={lines.length - left} onUntick={clearDone} />
-          <div className={styles.code}>{code}</div>
-          {actions}
-          <div className={styles.views} role="group" aria-label="Widok listy" data-noprint>
-            <button type="button" aria-pressed={view === "aisles"} onClick={() => setView("aisles")}>
-              Według alejek
-            </button>
-            <button type="button" aria-pressed={view === "dates"} onClick={() => setView("dates")}>
-              Kiedy kupić
-            </button>
+        <div className={styles.result} id={listId} tabIndex={-1}>
+          <div>
+            <div className={styles.resultHead}>
+              <h2>{title}</h2>
+              {lines.length > 0 ? (
+                <LeftToBuy total={total} left={left} ticked={lines.length - left} onUntick={clearDone} />
+              ) : (
+                <p>Lista jest pusta. Włącz jakieś danie albo posiłek.</p>
+              )}
+              {lines.length > 0 ? <HopButton /> : null}
+              <div className={styles.views} role="group" aria-label="Widok listy">
+                <button type="button" aria-pressed={view === "dates"} onClick={() => setView("dates")}>
+                  Kiedy kupić
+                </button>
+                <button type="button" aria-pressed={view === "aisles"} onClick={() => setView("aisles")}>
+                  Według alejek
+                </button>
+              </div>
+            </div>
+
+            <ListGroups
+              groups={groups}
+              done={doneSet}
+              onToggle={(id) =>
+                setDone(doneSet.has(id) ? done.filter((other) => other !== id) : [...done, id])
+              }
+            />
+            {lines.length > 0 ? <HopBar count={toBuy.length} /> : null}
           </div>
         </div>
-
-        <ListGroups
-          groups={groups}
-          done={doneSet}
-          partTitle={view === "dates" ? title : undefined}
-          onToggle={(id) =>
-            setDone(doneSet.has(id) ? done.filter((other) => other !== id) : [...done, id])
-          }
-        />
-
-        {actions}
-        {nudge}
-
-        <div className={styles.family} data-noprint>
-          <h3>Wiadomość do rodziny</h3>
-          {message ? (
-            <>
-              <CopyBox text={message} label="Kopiuj wiadomość" done="Skopiowane" />
-              <div className={styles.familyShare}>
-                <ShareButton label="Wyślij rodzinie" title="Wigilia" text={message} />
-              </div>
-            </>
-          ) : (
-            <p>
-              Przy daniach, które ktoś przyniesie, ustaw „Ktoś przynosi”. Ułożymy wiadomość do
-              rodziny.
-            </p>
-          )}
-        </div>
       </div>
-    </div>
+
+      {lines.length > 0 ? (
+        <ToKangur
+          lines={
+            count === 0
+              ? [home === 1 ? "Oto Twój zapas." : "Oto Wasz zapas.", HANDOFF.loadIt]
+              : [plan.people === 1 ? "Oto Twoje dania." : "Oto Wasze dania.", HANDOFF.loadThem]
+          }
+          chips={[...new Set(ours)].map((text) => ({ text }))}
+          summary={typesetCopy([
+            ...(bring.length > 0 ? [`Do przyniesienia: ${bring.join(", ")}.`] : []),
+            ...(ownOnly.length > 0
+              ? [`Składników własnych dań nie znamy: ${ownOnly.join(", ")}. W Kangurze dodasz je przez „Z przepisu”.`]
+              : []),
+            `Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")} na ${plural(guests, "osobę", "osoby", "osób")}.`,
+          ])}
+          trips={parts.trips}
+          whole={parts.whole}
+          intro={HANDOFF.copy.trips[parts.trips.length]}
+          ticked={left === 0 ? "all" : left < lines.length ? "some" : "none"}
+          share={{ title, text, url: URL }}
+          path={PATH}
+          list={{ p: planChanges(plan), d: packTicks(lines.map((line) => line.id), doneSet) }}
+          store={PLAN_KEY}
+          family={
+            <>
+              <h4>{HANDOFF.family.title}</h4>
+              <p>{HANDOFF.family.body}</p>
+              {message ? <FamilyMessage text={message} /> : <p>{HANDOFF.family.empty}</p>}
+            </>
+          }
+          arrival={arrival}
+          onBack={before?.by === "code" ? undo : undefined}
+          slots={slots}
+        />
+      ) : null}
+    </>
+  );
+}
+
+/** Who brings what, ready to send. When the share sheet does not open, it is copied. */
+function FamilyMessage({ text }: { text: string }) {
+  const [state, copy] = useCopy();
+  return (
+    <>
+      <CopyBox text={text} label="Kopiuj wiadomość" done="Skopiowane" />
+      <div className={styles.familyShare}>
+        <ShareButton label="Wyślij rodzinie" title="Wigilia" text={text} onRefused={() => void copy(text)} />
+        <p role="status" className={styles.small}>
+          {state === "copied" ? "Nie udało się otworzyć wysyłania. Wiadomość jest skopiowana, wklej ją rodzinie." : null}
+        </p>
+      </div>
+    </>
   );
 }
 
@@ -354,10 +443,23 @@ function OwnDishes({
 }) {
   const [name, setName] = useState("");
   const id = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  /** Place of the dish that has just been removed: the keyboard goes to its neighbour. */
+  const removed = useRef<number | null>(null);
   const clean = name.trim();
   const full = own.length >= OWN.max;
 
+  useEffect(() => {
+    if (removed.current === null) return;
+    const crosses = listRef.current?.querySelectorAll("button") ?? [];
+    (crosses[Math.min(removed.current, crosses.length - 1)] ?? inputRef.current)?.focus();
+    removed.current = null;
+  }, [own]);
+
+  // Nothing here is ever disabled: what is disabled drops the keyboard focus.
   const add = () => {
+    inputRef.current?.focus();
     if (!clean || full) return;
     onChange([...own, { name: clean, plan: "make" }]);
     setName("");
@@ -368,10 +470,13 @@ function OwnDishes({
       <label htmlFor={id}>Dopisz swoje danie</label>
       <div className={styles.ownRow}>
         <input
+          ref={inputRef}
           id={id}
           value={name}
           maxLength={OWN.length}
-          disabled={full}
+          readOnly={full}
+          aria-disabled={full || undefined}
+          aria-describedby={full ? `${id}-full` : undefined}
           autoComplete="off"
           enterKeyHint="done"
           onChange={(event) => setName(event.target.value)}
@@ -381,13 +486,21 @@ function OwnDishes({
             add();
           }}
         />
-        <button type="button" className={styles.plainButton} disabled={!clean || full} onClick={add}>
+        <button
+          type="button"
+          className={styles.plainButton}
+          aria-disabled={!clean || full}
+          onClick={add}
+        >
           Dodaj
         </button>
       </div>
+      <p role="status" id={`${id}-full`} className={styles.small}>
+        {full ? `Najwyżej ${OWN.max} własnych dań. Usuń któreś, żeby dodać następne.` : null}
+      </p>
       {own.length > 0 ? (
         <>
-          <ul className={styles.dishes}>
+          <ul className={styles.dishes} ref={listRef}>
             {own.map((dish, index) => (
               <li key={`${index}-${dish.name}`} data-plan={dish.plan}>
                 <span className={styles.ownName}>{dish.name}</span>
@@ -411,7 +524,10 @@ function OwnDishes({
                   type="button"
                   className={styles.remove}
                   aria-label={`Usuń danie: ${dish.name}`}
-                  onClick={() => onChange(own.filter((_, i) => i !== index))}
+                  onClick={() => {
+                    removed.current = index;
+                    onChange(own.filter((_, i) => i !== index));
+                  }}
                 >
                   ×
                 </button>
@@ -419,7 +535,7 @@ function OwnDishes({
             ))}
           </ul>
           <p className={styles.small}>
-            Składników nie znamy. Zna je Kangur: wpisz nazwę w „Z przepisu”.
+            Składników nie znamy. W Kangurze wpisz nazwę w „Z przepisu”, a zaproponuje składniki.
           </p>
         </>
       ) : null}

@@ -24,7 +24,7 @@
     "invite": {
       "subject": "Einladung zu {{workspaceName}} - Kangur",
       "headline": "{{inviter}} hat dich eingeladen zu",
-      "ctaOpen": "Kangur öffnen",
+      "ctaOpen": "Einladung öffnen",
       "ctaJoin": "Workspace beitreten",
       "bodyExisting": "Du hast bereits ein Konto - öffne die App, um die Einladung anzunehmen.",
       "bodyNew": "Erstelle ein Konto oder melde dich an, um gemeinsame Einkaufslisten zu nutzen.",

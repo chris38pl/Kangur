@@ -20,6 +20,7 @@ import { isAppLocale } from "@/lib/marketing/locale";
 import { rich } from "@/lib/marketing/rich-text";
 import { bestHref, type MarketingRouteId } from "@/lib/marketing/routes";
 import { AISLE_LOOP, screensFor } from "@/lib/marketing/screens";
+import { isOver } from "@/lib/marketing/season";
 import { buildMarketingMetadata } from "@/lib/marketing/seo";
 import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/marketing/site";
 import { homeStructuredData } from "@/lib/marketing/structured-data";
@@ -106,23 +107,6 @@ export default async function HomePage({ params }: Props) {
         </div>
       </section>
 
-      {c.season ? (
-        <Season until={c.season.until}>
-          <div className={styles.wrap}>
-            <div className={styles.season}>
-              <div>
-                <Headline size="md" lines={c.season.lines} />
-                <p>{c.season.body}</p>
-                <Link className={styles.seasonLink} href={bestHref(c.season.id, locale).href}>
-                  {c.season.link}
-                </Link>
-              </div>
-              <Sticker name="z-torba" className={styles.seasonKangur} />
-            </div>
-          </div>
-        </Season>
-      ) : null}
-
       <section className={styles.section} id="jak-dziala">
         <div className={styles.wrap}>
           <Headline lines={c.steps.lines} className={styles.centered} />
@@ -187,7 +171,6 @@ export default async function HomePage({ params }: Props) {
                 <h3>{c.ways.photo.title}</h3>
                 <p>{c.ways.photo.body}</p>
                 {more("photoList")}
-                {more("guidePrint")}
               </div>
               <div className={styles.wayNote}>
                 <Notepad lines={c.ways.photo.note} locale={locale} />
@@ -213,7 +196,7 @@ export default async function HomePage({ params }: Props) {
               <div className={styles.wayCopy}>
                 <h3>{c.ways.usual.title}</h3>
                 <p>{c.ways.usual.body}</p>
-                {more("guideWeek")}
+                {more("weekTool")}
               </div>
               {screens.history ? (
                 <Phone
@@ -245,6 +228,24 @@ export default async function HomePage({ params }: Props) {
           </div>
         </div>
       </section>
+
+      {/* The season comes after the app's features, as an extra. */}
+      {c.season && !isOver(c.season.until) ? (
+        <Season until={c.season.until}>
+          <div className={`${styles.wrap} ${styles.seasonBand}`}>
+            <div className={styles.season}>
+              <div>
+                <Headline size="md" lines={c.season.lines} />
+                <p>{c.season.body}</p>
+                <Link className={styles.seasonLink} href={bestHref(c.season.id, locale).href}>
+                  {c.season.link}
+                </Link>
+              </div>
+              <Sticker name="z-torba" className={styles.seasonKangur} />
+            </div>
+          </div>
+        </Season>
+      ) : null}
 
       <section className={`${styles.section} ${styles.tinted}`}>
         <div className={`${styles.wrap} ${styles.split}`}>

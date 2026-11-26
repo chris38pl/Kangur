@@ -51,7 +51,7 @@ export function useShoppingSession(listId: string | null) {
         : Promise.resolve(),
     addItem: (item: SessionAddItem) =>
       listId ? ShoppingSession.addItem(listId, item) : Promise.resolve(),
-    finish: (options?: { skipArchive?: boolean }) =>
+    finish: (options?: { unavailableCount?: number }) =>
       listId
         ? ShoppingSession.finish(listId, options)
         : Promise.reject(new Error("No list")),

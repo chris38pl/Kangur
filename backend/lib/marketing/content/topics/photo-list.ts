@@ -6,7 +6,7 @@ const copy: TopicCopy = {
   eyebrow: "Lista zakupów ze zdjęcia i zrzutu ekranu",
   lines: ["Ktoś już to napisał.", "Nie pisz drugi raz."],
   lead: [
-    "Zrzut rozmowy albo zdjęcie kartki wystarczy. Kangur wypisze produkty z ilościami i ułoży je według alejek.",
+    "Zrzut rozmowy albo zdjęcie kartki wystarczy. Kangur wypisze produkty, z ilościami, jeśli są, i ułoży je według alejek.",
     "W naszym teście siedem wiadomości zamieniło się w 22 pozycje. Buziak na listę nie trafił.",
   ],
   stores: "Na start 10 darmowych użyć AI, wspólnych dla całego domu. Bez reklam.",
@@ -22,7 +22,7 @@ const copy: TopicCopy = {
       kind: "steps",
       tone: "mint",
       title: "Jak zrobić listę zakupów ze zdjęcia albo zrzutu",
-      slot: "start",
+      film: "L01",
       items: [
         {
           title: "Zrób zrzut albo zdjęcie",
@@ -49,7 +49,7 @@ const copy: TopicCopy = {
       items: [
         {
           title: "Zrzut czatu",
-          body: "Z dowolnego komunikatora. Kangur widzi tylko obrazek, z rozmową się nie łączy.",
+          body: "Z dowolnego komunikatora. Kangur dostaje tylko obrazek, z rozmową się nie łączy.",
         },
         {
           title: "Kartka z lodówki",
@@ -104,7 +104,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Czy da się bez zrzutu?",
-          a: "Tak. Skopiuj wiadomość i wybierz „Tekst ze schowka”, zmieści się do 8000 znaków.",
+          a: "Tak. Skopiuj wiadomość i na ekranie Start stuknij „Schowek”, zmieści się do 8000 znaków.",
         },
         {
           q: "Ile kosztuje lista ze zdjęcia?",
