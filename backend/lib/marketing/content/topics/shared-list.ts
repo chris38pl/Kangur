@@ -33,7 +33,7 @@ const copy: TopicCopy = {
         },
         {
           title: "Zaproś domowników",
-          body: "W zakładce „Przestrzeń”, pod „Zaproś do listy”, wpisz e-mail i stuknij „Wyślij zaproszenie”. Robi to właściciel przestrzeni. Druga osoba najpierw instaluje Kangura i zakłada konto na ten sam e-mail, bo zaproszenie otwiera się w aplikacji. Jest ważne 7 dni i tylko dla tego adresu.",
+          body: "W zakładce „Przestrzeń”, pod „Zaproś do listy”, wpisz e-mail i stuknij „Wyślij zaproszenie”. Robi to właściciel przestrzeni albo admin. Druga osoba najpierw instaluje Kangura i zakłada konto na ten sam e-mail, bo zaproszenie otwiera się w aplikacji. Jest ważne 7 dni i tylko dla tego adresu.",
         },
         {
           title: "Dopisujcie po swojemu",
@@ -155,8 +155,8 @@ const copy: TopicCopy = {
     title: "Skoro już robicie listę razem",
     items: [
       { id: "photoList", label: "Lista zakupów ze zdjęcia", body: "Gdy lista przyszła w wiadomości albo wisi na lodówce." },
-      { id: "guideWeek", label: "Lista zakupów na tydzień", body: "Ile kupić dla jednej osoby, dla dwóch i dla rodziny." },
-      { id: "guideChristmas", label: "Lista zakupów na Wigilię i święta", body: "Kto co robi, kto co przynosi i kiedy to kupić." },
+      { id: "weekTool", label: "Lista zakupów na tydzień", body: "Ile kupić dla jednej osoby, dla dwóch i dla rodziny." },
+      { id: "christmasTool", label: "Lista zakupów na Wigilię i święta", body: "Kto co robi, kto co przynosi i kiedy to kupić." },
     ],
   },
   closing: {

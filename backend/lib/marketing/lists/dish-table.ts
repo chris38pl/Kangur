@@ -2,7 +2,7 @@ import { DISHES, PRODUCTS, type Dish, type ProductId } from "@/lib/marketing/lis
 import { decimal } from "@/lib/marketing/lists/format";
 import { typesetPl } from "@/lib/marketing/typography";
 
-/** The table in the Christmas guide: products dish by dish, the way a cook would say it. */
+/** The table under the Christmas calculator: products dish by dish, the way a cook would say it. */
 export const TABLE_PEOPLE = 8;
 
 const nearest = (value: number, step: number) => Math.round(value / step) * step;

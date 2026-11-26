@@ -167,7 +167,7 @@ export function homeStructuredData(locale: AppLocale): Node {
 const PAGE_TYPES: Partial<Record<MarketingRouteId, string>> = {
   about: "AboutPage",
   contact: "ContactPage",
-  guides: "CollectionPage",
+  tools: "CollectionPage",
 };
 
 /** Pages about the app: the page, plus everything it refers to. */
@@ -183,25 +183,7 @@ export function pageStructuredData(
   );
 }
 
-/** Guides: who wrote it and when it last changed. */
-function article(id: MarketingRouteId, locale: AppLocale, copy: TopicCopy): Node {
-  const url = absoluteUrl(routeHref(id, locale));
-  return {
-    "@type": "Article",
-    "@id": `${url}#article`,
-    headline: plainText([copy.eyebrow, ...copy.lines].join(". ").replace(/\.\./g, ".")).slice(0, 110),
-    description: pageMeta(id, locale).description,
-    image: absoluteUrl(ogImage(id, locale).url),
-    inLanguage: locale,
-    datePublished: ROUTES[id].publishedAt,
-    dateModified: ROUTES[id].updatedAt,
-    author: { "@id": ORGANIZATION_ID },
-    publisher: { "@id": ORGANIZATION_ID },
-    mainEntityOfPage: { "@id": `${url}#page` },
-  };
-}
-
-/** The free tool that runs in the browser. */
+/** A free tool that runs in the browser. */
 function webTool(id: MarketingRouteId, locale: AppLocale): Node {
   const { title, description } = pageMeta(id, locale);
   const url = absoluteUrl(routeHref(id, locale));
@@ -221,7 +203,9 @@ function webTool(id: MarketingRouteId, locale: AppLocale): Node {
   };
 }
 
-/** Landing pages, the tool and guides: the page, what it is, and its questions. */
+const WEB_TOOLS: ReadonlySet<MarketingRouteId> = new Set(["aisleTool", "christmasTool", "weekTool"]);
+
+/** Landing pages and tools: the page, what it is, and its questions. */
 export function topicStructuredData(
   id: MarketingRouteId,
   locale: AppLocale,
@@ -231,8 +215,7 @@ export function topicStructuredData(
   return [
     graph(
       webPage(id, locale, PAGE_TYPES[id]),
-      ...(ROUTES[id].publishedAt ? [article(id, locale, copy)] : []),
-      ...(id === "aisleTool" ? [webTool(id, locale)] : []),
+      ...(WEB_TOOLS.has(id) ? [webTool(id, locale)] : []),
       organization(),
       website(),
       app(locale),

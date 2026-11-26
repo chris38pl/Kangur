@@ -78,6 +78,18 @@ export const SCREENS = {
       "src": "/img/ekrany/pl/quick-720.70b3fe42.webp",
       "width": 720,
       "height": 1565
+    },
+    "startQuick": {
+      "avif": "/img/ekrany/pl/startQuick-480.13dd0142.avif 480w, /img/ekrany/pl/startQuick-960.a1b33603.avif 960w",
+      "src": "/img/ekrany/pl/startQuick-960.c066481e.webp",
+      "width": 960,
+      "height": 368
+    },
+    "startSpace": {
+      "avif": "/img/ekrany/pl/startSpace-480.74d90af0.avif 480w, /img/ekrany/pl/startSpace-960.6626ca9d.avif 960w",
+      "src": "/img/ekrany/pl/startSpace-960.2faf7a1d.webp",
+      "width": 960,
+      "height": 275
     }
   },
   "en": {

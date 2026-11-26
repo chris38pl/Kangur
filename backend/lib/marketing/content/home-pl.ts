@@ -190,18 +190,17 @@ export const homePl: HomeCopy = {
   },
   more: {
     photoList: "Lista ze zdjęcia krok po kroku",
-    guidePrint: "Wolisz papier? Siedem kartek do druku",
     recipeList: "Lista z przepisu na przykładzie",
-    guideWeek: "Gotowa lista na tydzień",
+    weekTool: "Gotowa lista na tydzień",
     aisleTool: "Wypróbuj alejki w przeglądarce",
     aiList: "Co AI umie, a czego nie",
     sharedList: "Jak działa wspólna lista",
   },
   season: {
-    id: "guideChristmas",
+    id: "christmasTool",
     until: CHRISTMAS.strip,
     lines: ["Dwanaście dań.", "Cztery dni bez sklepu."],
-    body: "Podajesz liczbę gości, a kalkulator liczy zakupy na Wigilię i święta, mówi, co kupić wcześniej, i układa wiadomość, kto co przynosi. Za darmo, bez aplikacji.",
+    body: "Podajesz liczbę gości, a kalkulator liczy zakupy na Wigilię i święta, mówi, co kupić wcześniej, i układa wiadomość, kto co przynosi. Gotową listę wczytasz do Kangura.",
     link: "Policz zakupy na Wigilię",
   },
 };

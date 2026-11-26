@@ -653,25 +653,3 @@ picture > source {
     min-height: 40px;
   }
 }
-
-
-/* -- Paper: the list, and nothing else -- */
-
-@media print {
-  @page {
-    margin: 14mm;
-  }
-
-  .mkt-header,
-  .mkt-footer,
-  .mkt-skip,
-  [data-noprint] {
-    display: none !important;
-  }
-
-  body,
-  .mkt-shell {
-    min-height: 0;
-    background: #fff;
-  }
-}

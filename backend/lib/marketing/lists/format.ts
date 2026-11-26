@@ -14,9 +14,9 @@ export function formatLine({ name, quantity, note }: ListLine): string {
 }
 
 /**
- * Plain text for a message, a note or the "Tekst ze schowka" import in Kangur: the name of the
- * list, then groups with a heading in capitals and one product per bullet. Our own aisle tool
- * reads it back without losing anything (lists.test.ts).
+ * Plain text for people, in a message: the name of the list, then groups with a heading in
+ * capitals and one product per bullet. Our own aisle tool reads it back without losing
+ * anything (lists.test.ts). Kangur gets its own text, see parts.ts.
  */
 export function listToText(title: string, groups: readonly ListGroup[]): string {
   const blocks = groups

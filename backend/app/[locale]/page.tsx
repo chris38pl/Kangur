@@ -188,7 +188,6 @@ export default async function HomePage({ params }: Props) {
                 <h3>{c.ways.photo.title}</h3>
                 <p>{c.ways.photo.body}</p>
                 {more("photoList")}
-                {more("guidePrint")}
               </div>
               <div className={styles.wayNote}>
                 <Notepad lines={c.ways.photo.note} locale={locale} />
@@ -214,7 +213,7 @@ export default async function HomePage({ params }: Props) {
               <div className={styles.wayCopy}>
                 <h3>{c.ways.usual.title}</h3>
                 <p>{c.ways.usual.body}</p>
-                {more("guideWeek")}
+                {more("weekTool")}
               </div>
               {screens.history ? (
                 <Phone

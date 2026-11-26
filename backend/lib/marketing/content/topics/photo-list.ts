@@ -104,7 +104,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Czy da się bez zrzutu?",
-          a: "Tak. Skopiuj wiadomość i wybierz „Tekst ze schowka”, zmieści się do 8000 znaków.",
+          a: "Tak. Skopiuj wiadomość i na ekranie Start stuknij „Schowek”, zmieści się do 8000 znaków.",
         },
         {
           q: "Ile kosztuje lista ze zdjęcia?",

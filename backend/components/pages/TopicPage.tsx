@@ -43,7 +43,6 @@ export function TopicPage({
   slots = {},
   sticker,
   parent,
-  printable = false,
   children,
 }: {
   id: MarketingRouteId;
@@ -57,8 +56,6 @@ export function TopicPage({
   sticker?: StickerName;
   /** Between "Kangur" and this page in the breadcrumbs. */
   parent?: { label: string; id: MarketingRouteId };
-  /** Printing leaves only `children` on the paper. */
-  printable?: boolean;
   /** Right below the hero, e.g. a tool. */
   children?: ReactNode;
 }) {
@@ -66,7 +63,6 @@ export function TopicPage({
     section.kind === "faq" ? section.items : [],
   );
 
-  const noprint = printable || undefined;
   const { hero } = homeCopy(locale);
 
   return (
@@ -74,85 +70,81 @@ export function TopicPage({
       {topicStructuredData(id, locale, copy, faq).map((data, index) => (
         <JsonLd key={index} data={data} />
       ))}
-      <div data-noprint={noprint}>
-        <PageHero
-          locale={locale}
-          crumbs={[
-            ...(parent
-              ? [{ label: parent.label, href: routeHref(parent.id, locale) }]
-              : []),
-            { label: copy.crumb, href: routeHref(id, locale) },
-          ]}
-          eyebrow={copy.eyebrow}
-          lines={copy.lines}
-          lead={copy.lead.map((p) => (
-            <p key={p}>{rich(p, locale)}</p>
-          ))}
-          tone={tone}
-          art={art}
-        >
-          {copy.stores ? (
-            <div className={styles.stores}>
-              <StoreButtons
-                appStoreUrl={APP_STORE_URL}
-                playStoreUrl={PLAY_STORE_URL}
-                appStoreSmall={hero.iosSmall}
-                playSmall={hero.playSmall}
-                page={page}
-              />
-              <p>{copy.stores}</p>
-            </div>
-          ) : null}
-        </PageHero>
-      </div>
+      <PageHero
+        locale={locale}
+        crumbs={[
+          ...(parent
+            ? [{ label: parent.label, href: routeHref(parent.id, locale) }]
+            : []),
+          { label: copy.crumb, href: routeHref(id, locale) },
+        ]}
+        eyebrow={copy.eyebrow}
+        lines={copy.lines}
+        lead={copy.lead.map((p) => (
+          <p key={p}>{rich(p, locale)}</p>
+        ))}
+        tone={tone}
+        art={art}
+      >
+        {copy.stores ? (
+          <div className={styles.stores}>
+            <StoreButtons
+              appStoreUrl={APP_STORE_URL}
+              playStoreUrl={PLAY_STORE_URL}
+              appStoreSmall={hero.iosSmall}
+              playSmall={hero.playSmall}
+              page={page}
+            />
+            <p>{copy.stores}</p>
+          </div>
+        ) : null}
+      </PageHero>
 
       {children}
 
-      <div data-noprint={noprint}>
-        {copy.sections.map((section, index) => (
-          <Section
-            key={section.title ?? index}
-            section={section}
-            locale={locale}
-            slots={slots}
-          />
-        ))}
-
-        {copy.imprint ? (
-          <div className={prose.wrap}>
-            <p className={styles.imprint}>{copy.imprint}</p>
-          </div>
-        ) : null}
-
-        <section className={`${prose.section} ${prose.tinted}`}>
-          <div className={`${prose.wrap} ${prose.prose}`}>
-            <h2>{copy.related.title}</h2>
-            <ul className={`${prose.cards} ${prose.threeUp}`}>
-              {copy.related.items.map((item) => {
-                const { href, hrefLang } = bestHref(item.id, locale);
-                return (
-                  <li key={item.id} className={`${prose.card} ${styles.related}`}>
-                    <h3>
-                      <Link href={href} hrefLang={hrefLang}>
-                        {item.label}
-                      </Link>
-                    </h3>
-                    <p>{item.body}</p>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </section>
-
-        <ClosingBand
+      {copy.sections.map((section, index) => (
+        <Section
+          key={section.title ?? index}
+          section={section}
           locale={locale}
-          page={page}
-          sticker={sticker}
-          lines={copy.closing?.lines}
-          body={copy.closing?.body}
+          slots={slots}
         />
-      </div>
+      ))}
+
+      {copy.imprint ? (
+        <div className={prose.wrap}>
+          <p className={styles.imprint}>{copy.imprint}</p>
+        </div>
+      ) : null}
+
+      <section className={`${prose.section} ${prose.tinted}`}>
+        <div className={`${prose.wrap} ${prose.prose}`}>
+          <h2>{copy.related.title}</h2>
+          <ul className={`${prose.cards} ${prose.threeUp}`}>
+            {copy.related.items.map((item) => {
+              const { href, hrefLang } = bestHref(item.id, locale);
+              return (
+                <li key={item.id} className={`${prose.card} ${styles.related}`}>
+                  <h3>
+                    <Link href={href} hrefLang={hrefLang}>
+                      {item.label}
+                    </Link>
+                  </h3>
+                  <p>{item.body}</p>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+
+      <ClosingBand
+        locale={locale}
+        page={page}
+        sticker={sticker}
+        lines={copy.closing?.lines}
+        body={copy.closing?.body}
+      />
     </div>
   );
 }

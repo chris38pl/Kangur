@@ -26,7 +26,7 @@ export function headerLinks(locale: AppLocale): NavLink[] {
   }
   return [
     how,
-    ...(locale === "pl" ? [page("guides", t.guides, locale)] : []),
+    ...(locale === "pl" ? [page("tools", t.tools, locale)] : []),
     page("pricing", t.pricing, locale),
     page("safety", t.safety, locale),
     faq,
@@ -61,10 +61,9 @@ export function footerGroups(locale: AppLocale): FooterGroup[] {
               page("recipeList", "Z przepisu", locale),
               page("aiList", "Z AI", locale),
               page("aisleTool", "Podział listy na alejki", locale),
-              page("guideChristmas", "Na Wigilię i święta", locale),
-              page("guideWeek", "Na tydzień", locale),
-              page("guidePrint", "Do druku", locale),
-              page("guides", t.guides, locale),
+              page("christmasTool", "Na Wigilię i święta", locale),
+              page("weekTool", "Na tydzień", locale),
+              page("tools", t.tools, locale),
             ],
           },
         ]

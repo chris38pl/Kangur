@@ -1,16 +1,8 @@
 import { QR } from "@/lib/marketing/qr.generated";
 
 /** Scans to /pobierz, which opens the store of the phone that scanned it. */
-export function QrCode({
-  code = "site",
-  label,
-  className,
-}: {
-  code?: keyof typeof QR;
-  label: string;
-  className?: string;
-}) {
-  const { size, path } = QR[code];
+export function QrCode({ label, className }: { label: string; className?: string }) {
+  const { size, path } = QR.site;
   return (
     <svg
       className={className}

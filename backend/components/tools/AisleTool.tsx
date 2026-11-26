@@ -3,15 +3,15 @@
 import {
   useDeferredValue,
   useEffect,
+  useEffectEvent,
   useId,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 
-import { ListActions } from "@/components/tools/ListActions";
+import { HopBar, HopButton, ToKangur, type KangurSlots } from "@/components/tools/ToKangur";
 import { AISLES, AISLE_ICONS, AISLE_LABELS, isAisle, type Aisle } from "@/lib/marketing/aisles/labels";
 import {
   buildAisleIndex,
@@ -19,14 +19,26 @@ import {
   sortByAisles,
   type SortedItem,
 } from "@/lib/marketing/aisles/sort";
-import { listToText, plural } from "@/lib/marketing/lists/format";
+import { HANDOFF } from "@/lib/marketing/content/topics/handoff";
+import { formatLine, listToText, plural } from "@/lib/marketing/lists/format";
+import { KANGUR_LIMIT, kangurParts } from "@/lib/marketing/lists/parts";
 import { isRecord, strings } from "@/lib/marketing/lists/stored";
-import { hasStored, useStored } from "@/lib/marketing/lists/use-stored";
+import { useArrival } from "@/lib/marketing/lists/use-arrival";
+import { hasStored, readStored, useStored } from "@/lib/marketing/lists/use-stored";
+import { typesetCopy } from "@/lib/marketing/typography";
 import { mergeActiveCategoryOrder, resolveShoppingCategoryOrder } from "@shared/shopping-categories";
 
 import styles from "./AisleTool.module.css";
 
-/** Only one list lives here at a time, like a piece of paper on the fridge. */
+/** Only one list lives here at a time. */
+const TEXT_KEY = "alejki-tekst";
+const ORDER_KEY = "alejki-kolejnosc";
+const MOVES_KEY = "alejki-poprawki";
+const DONE_KEY = "alejki-kupione";
+/** Short address: in the code to scan, and next to a list sent in a message. */
+const PATH = "/alejki";
+const TITLE = "Lista zakupów";
+
 const NO_TEXT = "";
 const NO_ORDER: readonly Aisle[] = AISLES;
 const NO_MOVES: Readonly<Record<string, Aisle>> = {};
@@ -78,16 +90,12 @@ function summary(total: number, aisles: number, unknown: number): string {
 export function AisleTool({
   words,
   sample,
-  code,
-  nudge,
+  slots,
 }: {
   /** Phrases per aisle, from the app's own catalogue. */
   words: Partial<Record<Aisle, string>>;
   sample: string;
-  /** Corner of the printed sheet. */
-  code?: ReactNode;
-  /** Where the list can go next. */
-  nudge?: ReactNode;
+  slots: KangurSlots;
 }) {
   const fieldId = useId();
   const fieldRef = useRef<HTMLTextAreaElement>(null);
@@ -96,10 +104,24 @@ export function AisleTool({
   /** The product that has just changed its aisle: the keyboard goes there with it. */
   const moved = useRef<string | null>(null);
 
-  const [text, setText, clearText] = useStored("alejki-tekst", NO_TEXT, readText);
-  const [order, setOrder, clearOrder] = useStored("alejki-kolejnosc", NO_ORDER, readOrder);
-  const [moves, setMoves, clearMoves] = useStored("alejki-poprawki", NO_MOVES, readMoves);
-  const [done, setDone, clearDone] = useStored("alejki-kupione", NO_DONE, strings);
+  const [text, setText, clearText] = useStored(TEXT_KEY, NO_TEXT, readText);
+  const [order, setOrder, clearOrder] = useStored(ORDER_KEY, NO_ORDER, readOrder);
+  const [moves, setMoves, clearMoves] = useStored(MOVES_KEY, NO_MOVES, readMoves);
+  const [done, setDone, clearDone] = useStored(DONE_KEY, NO_DONE, strings);
+  /** Grows with every list that comes from a computer, back to zero after a change by hand. */
+  const [arrival, setArrival] = useState(0);
+  /** Everything that was here before a code was scanned. */
+  const [before, setBefore] = useState<{
+    text: string;
+    done: readonly string[];
+    order: readonly Aisle[];
+    moves: Readonly<Record<string, Aisle>>;
+  } | null>(null);
+  /** Typing, clearing or the sample: the list is now this person's own. */
+  const byHand = () => {
+    setArrival(0);
+    setBefore(null);
+  };
   // Typing stays quick on a phone, the aisles follow a moment later.
   const deferred = useDeferredValue(text);
 
@@ -109,11 +131,40 @@ export function AisleTool({
     if (!early) return;
     // After Back, a reload or in a restored tab the browser puts the old text there by itself.
     const [visit] = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
-    if (visit && visit.type !== "navigate" && hasStored("alejki-tekst")) return;
+    if (visit && visit.type !== "navigate" && hasStored(TEXT_KEY)) return;
     setText(early);
     // Only once, on arrival.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Safari may put the old text back into the field when React has already filled it.
+  const settle = useEffectEvent(() => {
+    const field = fieldRef.current;
+    if (field && field.value !== text) field.value = text;
+  });
+  useEffect(() => {
+    const onShow = () => settle();
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
+
+  // A list from the computer, with the aisles set there.
+  useArrival((list) => {
+    if (typeof list.t !== "string" || !list.t.trim()) return;
+    const next = list.t.slice(0, KANGUR_LIMIT);
+    const here = {
+      text: readStored(TEXT_KEY, NO_TEXT, readText),
+      done: readStored(DONE_KEY, NO_DONE, strings),
+      order: readStored(ORDER_KEY, NO_ORDER, readOrder),
+      moves: readStored(MOVES_KEY, NO_MOVES, readMoves),
+    };
+    setBefore(here.text.trim() && (here.text !== next || here.done.length > 0) ? here : null);
+    setText(next);
+    clearDone();
+    if (Array.isArray(list.o)) setOrder(readOrder(list.o.map((place) => AISLES[place])));
+    if (list.m) setMoves({ ...here.moves, ...readMoves(list.m) });
+    setArrival((count) => count + 1);
+  });
 
   const index = useMemo(
     () =>
@@ -169,14 +220,21 @@ export function AisleTool({
     setOrder(mergeActiveCategoryOrder(order, visible));
   };
 
-  // What is already in the basket does not go any further, unless everything is.
-  const plainText = listToText(
-    "Lista zakupów",
-    groups.map(({ aisle, items: products }) => ({
-      title: AISLE_LABELS[aisle],
+  // What is ticked does not go any further, unless everything is.
+  const groupsToBuy = groups
+    .map(({ aisle, items: products }) => ({
+      aisle,
       lines: left > 0 ? products.filter((item) => !doneSet.has((item as Item).key)) : products,
-    })),
+    }))
+    .filter(({ lines }) => lines.length > 0);
+  const toBuy = groupsToBuy.flatMap(({ lines }) => lines);
+  const movedHere = Object.fromEntries(
+    toBuy.flatMap((item) => {
+      const key = nameKey(item.name);
+      return Object.hasOwn(moves, key) ? [[key, moves[key]] as const] : [];
+    }),
   );
+  const trips = kangurParts(TITLE, toBuy);
 
   const showResult = () => {
     resultRef.current?.focus({ preventScroll: true });
@@ -184,224 +242,259 @@ export function AisleTool({
   };
 
   return (
-    <div className={styles.tool}>
-      <div className={styles.input} data-noprint>
-        <label htmlFor={fieldId}>Twoja lista</label>
-        <textarea
-          ref={fieldRef}
-          id={fieldId}
-          value={text}
-          onChange={(event) => {
-            setText(event.target.value);
-            // An empty field is a new list, and last week's ticks are not for it.
-            if (!event.target.value.trim()) clearDone();
-          }}
-          onPaste={({ currentTarget: { selectionStart, selectionEnd, value } }) => {
-            if (value && selectionStart === 0 && selectionEnd === value.length) clearDone();
-          }}
-          placeholder={sample}
-          rows={9}
-          maxLength={20000}
-          spellCheck={false}
-          autoCapitalize="none"
-          autoComplete="off"
-        />
-        <div className={styles.buttons}>
-          <button
-            type="button"
-            className={styles.main}
-            aria-disabled={items.length === 0}
-            onClick={() => {
-              if (items.length > 0) showResult();
+    <>
+      <div className={styles.tool}>
+        <div className={styles.input}>
+          <label htmlFor={fieldId}>Twoja lista</label>
+          <textarea
+            ref={fieldRef}
+            id={fieldId}
+            value={text}
+            onChange={(event) => {
+              byHand();
+              setText(event.target.value);
+              // An empty field is a new list, and last week's ticks are not for it.
+              if (!event.target.value.trim()) clearDone();
             }}
-          >
-            Ułóż według alejek
-          </button>
-          {text ? (
+            onPaste={({ currentTarget: { selectionStart, selectionEnd, value } }) => {
+              if (value && selectionStart === 0 && selectionEnd === value.length) clearDone();
+            }}
+            placeholder={sample}
+            rows={9}
+            maxLength={20000}
+            spellCheck={false}
+            autoCapitalize="none"
+            autoComplete="off"
+          />
+          <div className={styles.buttons}>
             <button
               type="button"
+              className={styles.main}
+              aria-disabled={items.length === 0}
               onClick={() => {
-                setCleared({ text, done });
-                clearText();
-                clearDone();
-                fieldRef.current?.focus();
+                if (items.length > 0) showResult();
               }}
             >
-              Wyczyść
+              Ułóż według alejek
             </button>
-          ) : (
-            <>
+            {text ? (
               <button
                 type="button"
                 onClick={() => {
-                  setText(sample);
+                  byHand();
+                  setCleared({ text, done });
+                  clearText();
                   clearDone();
-                  focusResult();
+                  fieldRef.current?.focus();
                 }}
               >
-                Wstaw przykład
+                Wyczyść
               </button>
-              {cleared ? (
+            ) : (
+              <>
                 <button
                   type="button"
                   onClick={() => {
-                    setText(cleared.text);
-                    setDone(cleared.done);
-                    setCleared(null);
+                    byHand();
+                    setText(sample);
+                    clearDone();
                     focusResult();
                   }}
                 >
-                  Cofnij
+                  Wstaw przykład
+                </button>
+                {cleared ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      byHand();
+                      setText(cleared.text);
+                      setDone(cleared.done);
+                      setCleared(null);
+                      focusResult();
+                    }}
+                  >
+                    Cofnij
+                  </button>
+                ) : null}
+              </>
+            )}
+          </div>
+          <p className={styles.private}>Lista zostaje na tym urządzeniu. Nic nie wysyłamy.</p>
+        </div>
+
+        <div
+          className={styles.result}
+          ref={resultRef}
+          tabIndex={-1}
+          role="region"
+          aria-label="Lista według alejek"
+        >
+          {items.length > 0 ? <h2 className="visually-hidden">{TITLE}</h2> : null}
+          <div className={styles.summary}>
+            <p role="status">
+              {summary(items.length, groups.length, unknown)}
+              {ticked > 0 ? ` Zostało ${left} z ${items.length}.` : null}
+            </p>
+            {items.length > 0 ? <HopButton /> : null}
+            <div className={styles.resets}>
+              {ticked > 0 ? (
+                <button
+                  type="button"
+                  className={styles.reset}
+                  onClick={() => {
+                    clearDone();
+                    focusResult();
+                  }}
+                >
+                  Odznacz wszystko ({ticked})
                 </button>
               ) : null}
+              {changedOrder && items.length > 0 ? (
+                <button
+                  type="button"
+                  className={styles.reset}
+                  onClick={() => {
+                    clearOrder();
+                    focusResult();
+                  }}
+                >
+                  Przywróć kolejność
+                </button>
+              ) : null}
+              {corrections > 0 ? (
+                <button
+                  type="button"
+                  className={styles.reset}
+                  onClick={() => {
+                    clearMoves();
+                    focusResult();
+                  }}
+                >
+                  Zapomnij poprawki ({corrections})
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          {items.length === 0 ? (
+            <div className={styles.empty}>
+              <p>Tu pojawią się alejki.</p>
+              <p>Wklej listę po przecinku albo w linijkach. „Aaa i proszek” też się nada.</p>
+            </div>
+          ) : (
+            <>
+              <div className={styles.groups}>
+                {groups.map(({ aisle, items: products }, position) => (
+                  <div key={aisle} className={styles.group}>
+                    <header>
+                      <h3>
+                        <span aria-hidden>{AISLE_ICONS[aisle]}</span> {AISLE_LABELS[aisle]}
+                      </h3>
+                      <span className={styles.order}>
+                        <button
+                          type="button"
+                          aria-disabled={position === 0}
+                          aria-label={`${AISLE_LABELS[aisle]}: wcześniej`}
+                          onClick={() => moveAisle(aisle, -1)}
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          aria-disabled={position === groups.length - 1}
+                          aria-label={`${AISLE_LABELS[aisle]}: później`}
+                          onClick={() => moveAisle(aisle, 1)}
+                        >
+                          ↓
+                        </button>
+                      </span>
+                    </header>
+                    <ul>
+                      {(products as Item[]).map((item) => (
+                        <li key={item.key} data-done={doneSet.has(item.key) || undefined}>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={doneSet.has(item.key)}
+                              onChange={() => toggle(item.key)}
+                            />
+                            <span>
+                              {item.name}
+                              {item.quantity ? (
+                                <>
+                                  {" "}
+                                  <small>{item.quantity}</small>
+                                </>
+                              ) : null}
+                            </span>
+                          </label>
+                          <MoveItem
+                            item={item}
+                            aisle={aisle}
+                            onMove={(next) => {
+                              moved.current = item.key;
+                              setMoves({ ...moves, [nameKey(item.name)]: next });
+                            }}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+
+              <HopBar count={toBuy.length} />
             </>
           )}
         </div>
-        <p className={styles.private}>Lista zostaje na tym urządzeniu. Nic nie wysyłamy.</p>
       </div>
 
-      <div
-        className={styles.result}
-        ref={resultRef}
-        tabIndex={-1}
-        role="region"
-        aria-label="Lista według alejek"
-      >
-        {items.length > 0 ? <h2 className={styles.sheetTitle}>Lista zakupów</h2> : null}
-        <div className={styles.summary}>
-          <p role="status">
-            <span data-noprint={ticked > 0 || undefined}>
-              {summary(items.length, groups.length, unknown)}
-              {ticked > 0 ? ` Zostało ${left} z ${items.length}.` : null}
-            </span>
-            {ticked > 0 ? (
-              <span className={styles.paper}>
-                Do kupienia: {left > 0 ? left : items.length}.
-              </span>
-            ) : null}
-          </p>
-          <div className={styles.resets} data-noprint>
-            {ticked > 0 ? (
-              <button
-                type="button"
-                className={styles.reset}
-                onClick={() => {
-                  clearDone();
-                  focusResult();
-                }}
-              >
-                Odznacz wszystko ({ticked})
-              </button>
-            ) : null}
-            {changedOrder && items.length > 0 ? (
-              <button
-                type="button"
-                className={styles.reset}
-                onClick={() => {
-                  clearOrder();
-                  focusResult();
-                }}
-              >
-                Przywróć kolejność
-              </button>
-            ) : null}
-            {corrections > 0 ? (
-              <button
-                type="button"
-                className={styles.reset}
-                onClick={() => {
-                  clearMoves();
-                  focusResult();
-                }}
-              >
-                Zapomnij poprawki ({corrections})
-              </button>
-            ) : null}
-          </div>
-        </div>
-        <div className={styles.code}>{code}</div>
-
-        {items.length === 0 ? (
-          <div className={styles.empty}>
-            <p>Tu pojawią się alejki.</p>
-            <p>Wklej listę po przecinku albo w linijkach. „Aaa i proszek” też się nada.</p>
-          </div>
-        ) : (
-          <>
-            <div className={styles.groups} data-all-done={left === 0 || undefined}>
-              {groups.map(({ aisle, items: products }, position) => (
-                <div
-                  key={aisle}
-                  className={styles.group}
-                  data-empty={products.every((item) => doneSet.has((item as Item).key)) || undefined}
-                >
-                  <header>
-                    <h3>
-                      <span aria-hidden>{AISLE_ICONS[aisle]}</span> {AISLE_LABELS[aisle]}
-                    </h3>
-                    <span className={styles.order} data-noprint>
-                      <button
-                        type="button"
-                        aria-disabled={position === 0}
-                        aria-label={`${AISLE_LABELS[aisle]}: wcześniej`}
-                        onClick={() => moveAisle(aisle, -1)}
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        aria-disabled={position === groups.length - 1}
-                        aria-label={`${AISLE_LABELS[aisle]}: później`}
-                        onClick={() => moveAisle(aisle, 1)}
-                      >
-                        ↓
-                      </button>
-                    </span>
-                  </header>
-                  <ul>
-                    {(products as Item[]).map((item) => (
-                      <li key={item.key} data-done={doneSet.has(item.key) || undefined}>
-                        <label>
-                          <input
-                            type="checkbox"
-                            checked={doneSet.has(item.key)}
-                            onChange={() => toggle(item.key)}
-                          />
-                          <span>
-                            {item.name}
-                            {item.quantity ? (
-                              <>
-                                {" "}
-                                <small>{item.quantity}</small>
-                              </>
-                            ) : null}
-                          </span>
-                        </label>
-                        <MoveItem
-                          item={item}
-                          aisle={aisle}
-                          onMove={(next) => {
-                            moved.current = item.key;
-                            setMoves({ ...moves, [nameKey(item.name)]: next });
-                          }}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-
-            <ListActions
-              text={plainText}
-              title="Lista zakupów"
-              copied={ticked > 0 && left > 0 ? `Skopiowane: ${left} z ${items.length}` : undefined}
-            />
-            {nudge}
-          </>
-        )}
-      </div>
-    </div>
+      {items.length > 0 ? (
+        <ToKangur
+          lines={["Oto Twoje alejki.", HANDOFF.loadThem]}
+          chips={groupsToBuy.map(({ aisle, lines }) => ({
+            icon: AISLE_ICONS[aisle],
+            text: `${AISLE_LABELS[aisle]}: ${lines.length}`,
+          }))}
+          summary={typesetCopy([
+            `Do kupienia: ${plural(toBuy.length, "produkt", "produkty", "produktów")}.`,
+            ...(changedOrder || corrections > 0
+              ? ["Kangur ułoży produkty w te same 24 alejki. Swoją kolejność ustawisz w nim jeszcze raz."]
+              : []),
+          ])}
+          trips={trips}
+          intro={HANDOFF.copy.parts}
+          ticked={ticked === 0 ? "none" : left > 0 ? "some" : "all"}
+          share={{
+            title: TITLE,
+            text: listToText(TITLE, groupsToBuy.map(({ aisle, lines }) => ({ title: AISLE_LABELS[aisle], lines }))),
+            url: `https://www.getkangur.com${PATH}`,
+          }}
+          path={PATH}
+          list={{
+            t: toBuy.map(formatLine).join("\n"),
+            ...(changedOrder ? { o: order.map((aisle) => AISLES.indexOf(aisle)) } : {}),
+            ...(Object.keys(movedHere).length > 0 ? { m: movedHere } : {}),
+          }}
+          store="alejki"
+          arrival={arrival}
+          onBack={
+            before
+              ? () => {
+                  setText(before.text);
+                  setDone(before.done);
+                  setOrder(before.order);
+                  setMoves(before.moves);
+                  setBefore(null);
+                  setArrival(0);
+                }
+              : undefined
+          }
+          slots={slots}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -456,7 +549,6 @@ function MoveItem({
         ref={buttonRef}
         type="button"
         className={styles.move}
-        data-noprint
         data-move={item.key}
         aria-label={`Przenieś: ${item.name}`}
         onClick={() => setOpen(true)}
@@ -470,7 +562,6 @@ function MoveItem({
     <select
       ref={selectRef}
       className={styles.aisle}
-      data-noprint
       aria-label={`Alejka: ${item.name}`}
       value={draft ?? aisle}
       onPointerDown={() => {

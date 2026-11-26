@@ -115,7 +115,7 @@ const copy: TopicCopy = {
         },
         {
           q: "Czy AI ułoży jadłospis na tydzień?",
-          a: "Nie. Dania wymyślasz Ty, do pięciu naraz, a AI wypisuje składniki. Gdy brak pomysłu, pięć obiadów z gotową listą jest w poradniku [[guideWeek|na tydzień]].",
+          a: "Nie. Dania wymyślasz Ty, do pięciu naraz, a AI wypisuje składniki. Gdy brak pomysłu, pięć obiadów z gotową listą jest w kalkulatorze [[weekTool|na tydzień]].",
         },
         {
           q: "Czy da się używać Kangura bez AI?",

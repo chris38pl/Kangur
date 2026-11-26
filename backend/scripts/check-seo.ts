@@ -23,6 +23,7 @@ import {
   type MarketingRouteId,
 } from "@/lib/marketing/routes";
 import { CHRISTMAS } from "@/lib/marketing/lists/christmas";
+import { printingIn } from "@/lib/marketing/no-printing";
 import { hreflangAlternates } from "@/lib/marketing/seo";
 import { IS_PRODUCTION_SITE, PRODUCTION_HOST, SITE_URL, absoluteUrl } from "@/lib/marketing/site";
 
@@ -216,6 +217,11 @@ for (const { id, locale, href, html } of pages) {
     const at = text.search(/[–—]/);
     fail(href, `en or em dash in copy: "...${text.slice(Math.max(0, at - 30), at + 30)}..."`);
   }
+  // Text that only the browser draws is checked in the sources, by no-printing.test.ts.
+  const paper = locale === "pl" ? printingIn(text) : null;
+  if (paper && !["press", "privacy", "terms"].includes(id)) {
+    fail(href, `printing in copy: "...${text.slice(Math.max(0, paper.index - 30), paper.index + 30)}..."`);
+  }
   // Capitals only: "todo" is an ordinary Spanish word.
   if (/\b(TODO|FIXME|Lorem ipsum)\b/.test(text)) fail(href, "placeholder text");
 
@@ -321,10 +327,10 @@ for (const id of ROUTE_IDS) {
   if (Number.isNaN(Date.parse(ROUTES[id].updatedAt))) fail(id, "updatedAt is not a date");
 }
 
-/** Every picture, recording and PDF named there has to exist. Some load only after a scroll. */
+/** Every picture and recording named there has to exist. Some load only after a scroll. */
 const missing = new Set<string>();
 function checkFiles(where: string, source: string) {
-  for (const [file] of source.matchAll(/\/(?:img|druk|og)\/[\w./-]+\.(?:avif|webp|png|jpg|svg|mp4|pdf)/g)) {
+  for (const [file] of source.matchAll(/\/(?:img|og)\/[\w./-]+\.(?:avif|webp|png|jpg|svg|mp4)/g)) {
     if (missing.has(file) || fs.existsSync(path.join(PUBLIC_DIR, file))) continue;
     missing.add(file);
     fail(where, `missing file: ${file}`);
@@ -344,7 +350,7 @@ for (const file of fs.existsSync(CHUNKS) ? fs.readdirSync(CHUNKS) : []) {
 
 // Nobody remembers in November what was written about the last December.
 if (new Date() >= new Date(`${CHRISTMAS.year + 1}-10-15`)) {
-  console.warn(`The Christmas guide still talks about ${CHRISTMAS.year}. See docs/deploy.md, "Landing URLs".`);
+  console.warn(`The Christmas calculator still talks about ${CHRISTMAS.year}. See docs/deploy.md, "Landing URLs".`);
 }
 
 if (errors.length > 0) {

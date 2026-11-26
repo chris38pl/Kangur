@@ -349,6 +349,11 @@
   outline: none;
 }
 
+/* With a keyboard, nothing hides under the bar at the bottom of the screen. */
+.result :is(a, button, input, select, textarea) {
+  scroll-margin-bottom: 96px;
+}
+
 .resultHead {
   display: grid;
   gap: 12px;
@@ -396,13 +401,6 @@
   color: #fff;
 }
 
-/* Only on paper: what stands on the table, the number left, and the code in the corner. */
-.resultHead .menu,
-.paper,
-.code {
-  display: none;
-}
-
 .left {
   display: flex;
   flex-wrap: wrap;
@@ -444,14 +442,6 @@
   background: #fff;
   box-shadow: 0 12px 28px -24px rgba(31, 43, 69, 0.4);
   break-inside: avoid;
-}
-
-.groupHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px 12px;
 }
 
 .group h3 {
@@ -510,16 +500,6 @@
   text-decoration: line-through;
 }
 
-.family {
-  margin-top: 28px;
-}
-
-.family > p {
-  max-width: 34rem;
-  margin: 0;
-  color: var(--kangur-text-body);
-}
-
 .familyShare button {
   min-height: 44px;
   margin-top: 10px;
@@ -532,12 +512,6 @@
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-}
-
-.family h3 {
-  margin: 0 0 10px;
-  font-size: 1.1rem;
-  font-weight: 800;
 }
 
 /* The name of an own dish gets a line of its own, or it would be three letters wide. */
@@ -609,105 +583,5 @@
   .groups {
     columns: 2;
     column-gap: 14px;
-  }
-}
-
-@media print {
-  .calculator {
-    display: block;
-  }
-
-  .resultHead {
-    gap: 4px;
-    margin-bottom: 8px;
-    padding-right: 258px;
-  }
-
-  .resultHead h2 {
-    font-size: 17pt;
-  }
-
-  .resultHead .menu {
-    display: block;
-    font-size: 8.5pt;
-    line-height: 1.35;
-  }
-
-  .paper {
-    display: inline;
-  }
-
-  .code {
-    display: block;
-    position: absolute;
-    top: 0;
-    right: 0;
-  }
-
-  /* The columns belong to the whole sheet: a box of columns would jump to the next page. */
-  .result {
-    columns: 2;
-    column-gap: 26px;
-  }
-
-  .result > * {
-    column-span: all;
-  }
-
-  .result > .groups {
-    column-span: none;
-    columns: auto;
-    margin: 0;
-  }
-
-  .hint {
-    font-size: 8pt;
-    line-height: 1.2;
-  }
-
-  .group {
-    margin-bottom: 8px;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-    font-size: 10pt;
-    break-inside: auto;
-  }
-
-  .group h3,
-  .hint {
-    break-after: avoid;
-  }
-
-  .group ul {
-    margin-top: 2px;
-  }
-
-  .group li {
-    line-height: 1.25;
-    break-inside: avoid;
-  }
-
-  /* At home already: no need to buy it on paper. Unless everything is, then it is a new list. */
-  .groups:not([data-all-done]) .group li[data-done],
-  .groups:not([data-all-done]) .group[data-empty] {
-    display: none;
-  }
-
-  .group label {
-    min-height: 18px;
-    gap: 8px;
-  }
-
-  .group input {
-    width: 13px;
-    height: 13px;
-  }
-
-  .name small {
-    display: inline;
-    margin-left: 4px;
-    font-size: 8pt;
   }
 }
