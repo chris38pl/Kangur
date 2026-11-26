@@ -1,4 +1,5 @@
 import type { Lines } from "@/lib/marketing/content/home-types";
+import type { FilmId } from "@/lib/marketing/films";
 import type { MarketingRouteId } from "@/lib/marketing/routes";
 
 export type Tone = "white" | "tinted" | "cream" | "mint";
@@ -17,8 +18,10 @@ export type TopicSection = Base &
         /** Name of the picture on the right (left when `flip`). */
         slot?: string;
         flip?: boolean;
+        /** A narrated film in place of the picture. Polish pages only. */
+        film?: FilmId;
       }
-    | { kind: "steps"; items: readonly Card[]; slot?: string }
+    | { kind: "steps"; items: readonly Card[]; slot?: string; film?: FilmId }
     | { kind: "cards"; items: readonly Card[]; columns?: 2 | 3 | 4 }
     | {
         kind: "table";

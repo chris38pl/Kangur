@@ -19,11 +19,13 @@ export type MarketingRouteId =
   | "tools"
   | "christmasTool"
   | "weekTool"
+  | "films"
   | "faq"
   | "contact"
   | "privacy"
   | "terms"
-  | "deleteAccount";
+  | "deleteAccount"
+  | "invite";
 
 export type MarketingRoute = {
   /** Path without the language prefix, for every language that has its own content. */
@@ -38,6 +40,11 @@ export type MarketingRoute = {
    * prefix may be sent to their own language (`/terms` opened from the app in German).
    */
   languageNeutral?: boolean;
+  /**
+   * Opened only from a link in an e-mail, so not for search: `noindex`, no canonical or
+   * hreflang, no place in the sitemap, and no page has to link to it.
+   */
+  noindex?: boolean;
   /** Day the content last changed, feeds sitemap `lastmod`. */
   updatedAt: string;
   changeFrequency: "daily" | "weekly" | "monthly" | "yearly";
@@ -133,6 +140,12 @@ export const ROUTES: Record<MarketingRouteId, MarketingRoute> = {
     changeFrequency: "monthly",
     priority: 0.8,
   },
+  films: {
+    paths: { pl: "/filmy" },
+    updatedAt: "2026-11-26",
+    changeFrequency: "weekly",
+    priority: 0.6,
+  },
   faq: {
     paths: inPolishAndEnglish("/faq"),
     englishFallback: true,
@@ -171,6 +184,15 @@ export const ROUTES: Record<MarketingRouteId, MarketingRoute> = {
     changeFrequency: "yearly",
     priority: 0.2,
   },
+  /** Where the invitation e-mail leads. The token stays in the browser: lib/marketing/invite.ts. */
+  invite: {
+    paths: inAll("/invite"),
+    languageNeutral: true,
+    noindex: true,
+    updatedAt: "2026-11-26",
+    changeFrequency: "yearly",
+    priority: 0.1,
+  },
 };
 
 export const ROUTE_IDS = Object.keys(ROUTES) as MarketingRouteId[];
@@ -205,9 +227,16 @@ export const PATH_ALIASES: Record<string, MarketingRouteId> = {
   "/lista-zakupow-na-wigilie": "christmasTool",
   "/lista-zakupow-na-swieta": "christmasTool",
   "/tydzien": "weekTool",
+  "/wideo": "films",
+  "/filmiki": "films",
 };
 
-/** Languages that have their own indexable version of the page. */
+/** A page for search engines: canonical, hreflang and a place in the sitemap. */
+export function isIndexed(id: MarketingRouteId): boolean {
+  return !ROUTES[id].noindex;
+}
+
+/** Languages that have their own version of the page. */
 export function contentLocales(id: MarketingRouteId): readonly AppLocale[] {
   return APP_LOCALE_IDS.filter((locale) => ROUTES[id].paths[locale]);
 }

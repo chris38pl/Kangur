@@ -496,6 +496,8 @@
     "inviteSentTitle": "Einladung gesendet!",
     "inviteSentBody": "Wir haben eine Einladung an {{email}} gesendet. Die Person kann beitreten, nachdem sie den Link in der Nachricht geöffnet hat.",
     "inviteResentBody": "Wir haben die Einladung an {{email}} erneut gesendet. Die Person kann beitreten, nachdem sie den Link in der Nachricht geöffnet hat.",
+    "inviteNotSentTitle": "Die E-Mail ging nicht raus",
+    "inviteNotSentBody": "Die Einladung für {{email}} ist gespeichert, aber die E-Mail konnte nicht gesendet werden. Versuch es in ein paar Minuten noch einmal. Passiert das wieder, schreib uns über „Feedback“ im Menü.",
     "inviteAlreadyMember": "Diese Person ist bereits Mitglied.",
     "inviteForbidden": "Du hast keine Berechtigung zum Einladen.",
     "inviteFailed": "Einladung konnte nicht gesendet werden.",

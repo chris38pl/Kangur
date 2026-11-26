@@ -18,6 +18,7 @@ import {
   canonicalLocale,
   contentLocales,
   findRouteByPath,
+  isIndexed,
   routeHref,
   routePath,
   type MarketingRouteId,
@@ -132,12 +133,12 @@ for (const { id, locale, href, html } of pages) {
     descriptions.set(descriptionKey, href);
   }
 
-  // Canonical and hreflang
+  // Canonical and hreflang. A page kept out of search names no canonical at all.
   const links = tags(html, "link");
   const canonical = links.filter((t) => attr(t, "rel") === "canonical").map((t) => attr(t, "href"));
-  const expected = absoluteUrl(routeHref(id, indexed));
-  if (canonical.length !== 1 || canonical[0] !== expected) {
-    fail(href, `canonical ${JSON.stringify(canonical)}, expected ${expected}`);
+  const expected = isIndexed(id) ? [absoluteUrl(routeHref(id, indexed))] : [];
+  if (JSON.stringify(canonical) !== JSON.stringify(expected)) {
+    fail(href, `canonical ${JSON.stringify(canonical)}, expected ${JSON.stringify(expected)}`);
   }
   const alternates = Object.fromEntries(
     links
@@ -151,12 +152,16 @@ for (const { id, locale, href, html } of pages) {
     fail(href, `hreflang ${JSON.stringify(alternates)}, expected ${JSON.stringify(wanted)}`);
   }
 
-  // Indexable
-  for (const name of ["robots", "googlebot"]) {
-    const value = meta(html, "name", name);
-    if (IS_PRODUCTION_SITE && value && /noindex|none/i.test(value)) {
-      fail(href, `${name} "${value}" on the production site`);
+  // Indexable, or kept out of search on every host
+  if (isIndexed(id)) {
+    for (const name of ["robots", "googlebot"]) {
+      const value = meta(html, "name", name);
+      if (IS_PRODUCTION_SITE && value && /noindex|none/i.test(value)) {
+        fail(href, `${name} "${value}" on the production site`);
+      }
     }
+  } else if (!/noindex/i.test(meta(html, "name", "robots") ?? "")) {
+    fail(href, "no robots noindex, so search engines may show this page");
   }
 
   // Every language of the page is one link away
@@ -197,6 +202,17 @@ for (const { id, locale, href, html } of pages) {
     }
   }
 
+  // Films: a file that exists, and the ones with sound wait for a tap
+  for (const video of tags(html, "video")) {
+    const src = attr(video, "src") ?? "";
+    if (!src.startsWith("/") || !fs.existsSync(path.join(PUBLIC_DIR, src))) {
+      fail(href, `video file missing: ${src}`);
+    }
+    if (!/\smuted(=|\s|>)/.test(video) && attr(video, "preload") !== "none") {
+      fail(href, `a film with sound loads before anyone taps it: ${src}`);
+    }
+  }
+
   // Structured data
   if (id === "home" && !html.includes('"@type":"WebSite"')) fail(href, "no WebSite structured data");
   if (id === "home" && !html.includes('"@type":"MobileApplication"')) fail(href, "no app structured data");
@@ -222,6 +238,8 @@ for (const { id, locale, href, html } of pages) {
   if (paper && !["press", "privacy", "terms"].includes(id)) {
     fail(href, `printing in copy: "...${text.slice(Math.max(0, paper.index - 30), paper.index + 30)}..."`);
   }
+  // The street is the owner's home: only the terms and the privacy policy have to name it.
+  if (!/^(privacy|terms)$/.test(id) && /Sielawy|61-619/.test(html)) fail(href, "the street address of the company is on the page");
   // Capitals only: "todo" is an ordinary Spanish word.
   if (/\b(TODO|FIXME|Lorem ipsum)\b/.test(text)) fail(href, "placeholder text");
 
@@ -254,7 +272,8 @@ function resolveInternal(href: string): Page | undefined {
 }
 
 // ── The site as a whole ──────────────────────────────────────────────────────
-for (const id of ROUTE_IDS) {
+// A page reached only from an e-mail has nothing to be linked from.
+for (const id of ROUTE_IDS.filter(isIndexed)) {
   for (const locale of contentLocales(id)) {
     const href = routeHref(id, locale);
     if (id === "home") continue;
@@ -290,7 +309,7 @@ if (!fs.existsSync(sitemapFile)) {
 } else {
   const sitemap = fs.readFileSync(sitemapFile, "utf8");
   const listed = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => m[1]);
-  const expected = ROUTE_IDS.flatMap((id) =>
+  const expected = ROUTE_IDS.filter(isIndexed).flatMap((id) =>
     contentLocales(id).map((locale) => absoluteUrl(routeHref(id, locale))),
   );
   for (const url of expected) if (!listed.includes(url)) fail("/sitemap.xml", `missing ${url}`);

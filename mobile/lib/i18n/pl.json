@@ -534,6 +534,8 @@
     "inviteSentTitle": "Zaproszenie wysłane!",
     "inviteSentBody": "Wysłaliśmy zaproszenie na {{email}}. Osoba może dołączyć po otwarciu linku z wiadomości.",
     "inviteResentBody": "Ponownie wysłaliśmy zaproszenie na {{email}}. Osoba może dołączyć po otwarciu linku z wiadomości.",
+    "inviteNotSentTitle": "E-mail nie wyszedł",
+    "inviteNotSentBody": "Zaproszenie dla {{email}} jest zapisane, ale e-maila nie udało się wysłać. Spróbuj jeszcze raz za kilka minut. Jeśli to się powtarza, napisz do nas przez „Opinia” w menu.",
     "inviteAlreadyMember": "Ta osoba jest już członkiem.",
     "inviteForbidden": "Nie masz uprawnień do zapraszania.",
     "inviteFailed": "Nie udało się wysłać zaproszenia.",

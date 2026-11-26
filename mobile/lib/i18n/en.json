@@ -496,6 +496,8 @@
     "inviteSentTitle": "Invitation sent!",
     "inviteSentBody": "We sent an invite to {{email}}. They can join after opening the link from the message.",
     "inviteResentBody": "We resent the invite to {{email}}. They can join after opening the link from the message.",
+    "inviteNotSentTitle": "The email did not go out",
+    "inviteNotSentBody": "The invite for {{email}} is saved, but the email could not be sent. Try again in a few minutes. If it keeps happening, tell us through “Feedback” in the menu.",
     "inviteAlreadyMember": "This person is already a member.",
     "inviteForbidden": "You don't have permission to invite.",
     "inviteFailed": "Could not send invitation.",

@@ -2,6 +2,8 @@ import { getWorkspaceIconEmoji } from "@shared/workspace-icons";
 import { Resend } from "resend";
 
 import { t } from "@/lib/i18n";
+import { resolveAppLocale } from "@/lib/locale";
+import { invitePageUrl } from "@/lib/marketing/invite";
 
 export type InviteEmailVariant = "new_user" | "existing_user";
 
@@ -15,10 +17,16 @@ export type SendInviteEmailInput = {
   locale?: string | null;
 };
 
-function buildInviteAcceptUrl(rawToken: string): string {
-  const base =
-    process.env.INVITE_ACCEPT_URL_BASE?.trim() || "kangur://invite";
-  return `${base.replace(/\/$/, "")}/${rawToken}`;
+/**
+ * The invitation page of the site, in the language of the e-mail. It works without the app,
+ * and its button opens the app link older e-mails carried (kangur://invite/<token>, from
+ * INVITE_ACCEPT_URL_BASE). The token goes after "#", so no server or log ever sees it.
+ */
+function buildInviteAcceptUrl(
+  rawToken: string,
+  locale?: string | null,
+): string {
+  return invitePageUrl(resolveAppLocale(locale), rawToken);
 }
 
 export { buildInviteAcceptUrl };
@@ -66,33 +74,51 @@ function escapeHtml(value: string): string {
 }
 
 /**
- * Sends invite email via Resend when RESEND_API_KEY is set.
- * Never logs acceptUrl / raw token (invite hygiene).
+ * Sends the invitation e-mail through Resend. `delivered` is false when nothing went out:
+ * RESEND_API_KEY or EMAIL_FROM is missing, or Resend refused the e-mail. Resend answers
+ * with an error instead of throwing, so it has to be read. The invitation itself stays and
+ * can be sent again. Never logs acceptUrl / raw token (invite hygiene).
  */
 export async function sendInviteEmail(
   input: Omit<SendInviteEmailInput, "acceptUrl"> & { rawToken: string },
 ): Promise<{ delivered: boolean }> {
-  const acceptUrl = buildInviteAcceptUrl(input.rawToken);
+  const acceptUrl = buildInviteAcceptUrl(input.rawToken, input.locale);
   const payload: SendInviteEmailInput = { ...input, acceptUrl };
 
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = process.env.EMAIL_FROM?.trim();
 
   if (!apiKey || !from) {
-    console.info("[invite]", "InviteEmailSkipped", {
+    // Expected on a laptop, a broken invitation everywhere else.
+    console.warn("[invite]", "InviteEmailSkipped", {
       to: input.to,
       variant: input.variant,
+      reason: "RESEND_API_KEY or EMAIL_FROM is not set",
     });
     return { delivered: false };
   }
 
   const resend = new Resend(apiKey);
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from,
     to: input.to,
     subject: subject(input.locale, input.workspaceName),
     html: htmlBody(payload),
   });
+
+  if (error) {
+    // "The getkangur.com domain is not verified" and the like: what to fix, no token.
+    console.error("[invite]", "InviteEmailFailed", {
+      to: input.to,
+      variant: input.variant,
+      error: {
+        name: error.name,
+        statusCode: error.statusCode,
+        message: error.message,
+      },
+    });
+    return { delivered: false };
+  }
 
   console.info("[invite]", "InviteEmailSent", {
     to: input.to,

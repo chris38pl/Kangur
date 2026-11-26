@@ -14,7 +14,7 @@ const copy: TopicCopy = {
     {
       kind: "steps",
       title: "Jak zrobić listę zakupów z przepisu",
-      slot: "kangur",
+      film: "L06",
       items: [
         {
           title: "Wpisz dania",

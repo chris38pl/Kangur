@@ -27,6 +27,15 @@ const copy: TopicCopy = {
         "Za każdym razem produkty są już rozłożone na alejki, a alejek jest 24. „Poprzednie listy” Kangur liczy sam, bez modelu AI, choć też zużywają jedno użycie.",
     },
     {
+      kind: "text",
+      tone: "cream",
+      title: "Lista z wpisanego tekstu, krok po kroku",
+      body: [
+        "Stukasz plus na dole i wybierasz „Opisz listę”. Wpisujesz produkty po przecinku, a po „Utwórz listę” każdy trafia do swojej alejki.",
+      ],
+      film: "L04",
+    },
+    {
       kind: "cards",
       tone: "mint",
       title: "Zasady, których AI u nas pilnuje",

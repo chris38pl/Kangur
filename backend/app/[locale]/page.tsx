@@ -107,23 +107,6 @@ export default async function HomePage({ params }: Props) {
         </div>
       </section>
 
-      {c.season && !isOver(c.season.until) ? (
-        <Season until={c.season.until}>
-          <div className={styles.wrap}>
-            <div className={styles.season}>
-              <div>
-                <Headline size="md" lines={c.season.lines} />
-                <p>{c.season.body}</p>
-                <Link className={styles.seasonLink} href={bestHref(c.season.id, locale).href}>
-                  {c.season.link}
-                </Link>
-              </div>
-              <Sticker name="z-torba" className={styles.seasonKangur} />
-            </div>
-          </div>
-        </Season>
-      ) : null}
-
       <section className={styles.section} id="jak-dziala">
         <div className={styles.wrap}>
           <Headline lines={c.steps.lines} className={styles.centered} />
@@ -245,6 +228,24 @@ export default async function HomePage({ params }: Props) {
           </div>
         </div>
       </section>
+
+      {/* The season comes after the app's features, as an extra. */}
+      {c.season && !isOver(c.season.until) ? (
+        <Season until={c.season.until}>
+          <div className={`${styles.wrap} ${styles.seasonBand}`}>
+            <div className={styles.season}>
+              <div>
+                <Headline size="md" lines={c.season.lines} />
+                <p>{c.season.body}</p>
+                <Link className={styles.seasonLink} href={bestHref(c.season.id, locale).href}>
+                  {c.season.link}
+                </Link>
+              </div>
+              <Sticker name="z-torba" className={styles.seasonKangur} />
+            </div>
+          </div>
+        </Season>
+      ) : null}
 
       <section className={`${styles.section} ${styles.tinted}`}>
         <div className={`${styles.wrap} ${styles.split}`}>
