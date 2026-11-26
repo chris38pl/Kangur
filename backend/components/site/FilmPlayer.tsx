@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Picture } from "@/components/site/Picture";
 import type { Film } from "@/lib/marketing/films";
@@ -16,21 +16,33 @@ type Props = {
 
 /**
  * A narrated film of the real app, in Polish like every page that has one. The page holds
- * only the cover: the film has a voice, so it starts on a tap, is fetched then, and plays
- * where it stands. Starting one stops any other film with sound.
+ * only the cover: the film has a voice, so it starts on a tap and plays where it stands.
+ * Starting one stops any other film with sound.
  */
 export function FilmPlayer({ film, sizes, className }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const coverRef = useRef<HTMLButtonElement>(null);
+  const refocus = useRef(false);
   const [state, setState] = useState<"cover" | "loading" | "playing">("cover");
+
+  useEffect(() => {
+    if (state !== "playing" || !refocus.current) return;
+    refocus.current = false;
+    videoRef.current?.focus();
+  }, [state]);
 
   const start = () => {
     const video = videoRef.current;
     if (!video) return;
+    refocus.current = coverRef.current === document.activeElement;
     setState("loading");
-    // Called right in the tap, so even Safari plays it with sound. If a browser still
+    // The file gets its address only now. WebKit starts loading a video it scrolls past,
+    // even with preload="none", and a phone should not fetch eighteen films nobody asked for.
+    // play() comes right in the tap, so even Safari plays it with sound. If a browser still
     // refuses, the cover goes and its own controls take over.
-    video.play().catch(() => setState("playing"));
+    video.src = film.src;
+    const show = () => setState("playing");
+    video.play().then(show, show);
   };
 
   return (
@@ -38,7 +50,7 @@ export function FilmPlayer({ film, sizes, className }: Props) {
       <video
         ref={videoRef}
         className={styles.video}
-        src={film.src}
+        data-src={film.src}
         width={film.width}
         height={film.height}
         preload="none"
@@ -52,12 +64,6 @@ export function FilmPlayer({ film, sizes, className }: Props) {
           for (const other of document.querySelectorAll("video")) {
             if (other !== event.currentTarget && !other.paused && !other.muted) other.pause();
           }
-        }}
-        onPlaying={(event) => {
-          if (state === "playing") return;
-          const focused = coverRef.current === document.activeElement;
-          setState("playing");
-          if (focused) event.currentTarget.focus();
         }}
       />
       {state === "playing" ? null : (
