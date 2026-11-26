@@ -50,7 +50,7 @@ export function SiteFooter({ locale }: { locale: AppLocale }) {
         </nav>
         <p className="mkt-footer-entity">
           {t.copyright}. {t.rightsReserved}.{" "}
-          <LegalEntityLine locale={locale} />
+          <LegalEntityLine />
         </p>
       </div>
     </footer>

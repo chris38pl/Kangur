@@ -222,6 +222,8 @@ for (const { id, locale, href, html } of pages) {
   if (paper && !["press", "privacy", "terms"].includes(id)) {
     fail(href, `printing in copy: "...${text.slice(Math.max(0, paper.index - 30), paper.index + 30)}..."`);
   }
+  // The street is the owner's home: only the terms and the privacy policy have to name it.
+  if (!/^(privacy|terms)$/.test(id) && /Sielawy|61-619/.test(html)) fail(href, "the street address of the company is on the page");
   // Capitals only: "todo" is an ordinary Spanish word.
   if (/\b(TODO|FIXME|Lorem ipsum)\b/.test(text)) fail(href, "placeholder text");
 
