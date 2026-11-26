@@ -1,6 +1,6 @@
 id: dedupe-owner-first-meal
 scenarioVersion: 1
-name: ownerMealId is first meal that listed the ingredient
+name: Cheese in two dishes is one list item when both dishes are kept
 adapter: meal-proposal
 input:
   locale: pl

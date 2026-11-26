@@ -1,5 +1,9 @@
 import { buildMealProposal } from "@/features/ai/buildMealProposal";
 import { dedupeMealIngredients } from "@/features/ai/dedupeMealIngredients";
+import {
+  joinKeptMealRows,
+  keepEveryRow,
+} from "@/features/ai/mealIngredientOperations";
 import type { AiOutputLanguage } from "@/features/ai/outputLanguage";
 import {
   MealProposalAiResponseSchema,
@@ -63,19 +67,36 @@ function extractUsage(raw: Record<string, unknown>): {
   };
 }
 
+/**
+ * The proposal holds one row per dish. The items judged are what lands on the
+ * list when the user keeps every dish and row: one item per ingredient, joined
+ * the way applyAiProposal joins them.
+ */
 function normalizeProposal(
   proposal: ReturnType<typeof dedupeMealIngredients>,
+  existingItems: ReturnType<typeof mapExistingItems>,
+  locale: AiOutputLanguage,
 ) {
+  const rowById = new Map(
+    proposal.operations.map((row) => [row.proposalRowId, row]),
+  );
+  const kept = joinKeptMealRows({
+    meals: proposal.meals,
+    rows: proposal.operations,
+    decisions: keepEveryRow(proposal.operations),
+    targets: new Map(existingItems.map((item) => [item.id, item])),
+    language: locale,
+  });
   return {
     shoppingContext: proposal.shoppingContext,
     meals: proposal.meals,
-    items: proposal.operations.map((op) => ({
+    items: kept.map((op) => ({
       name: op.name,
-      amount: op.amount ?? null,
-      note: op.note ?? null,
+      amount: op.amount,
+      note: op.note,
       category: op.category,
-      reason: op.reason ?? null,
-      ownerMealId: op.ownerMealId,
+      reason: rowById.get(op.proposalRowId)?.reason ?? null,
+      ownerMealId: rowById.get(op.proposalRowId)?.ownerMealId,
       op: op.op,
     })),
   };
@@ -163,7 +184,11 @@ export const mealProposalAdapter: EvalAdapter = {
       }
 
       const proposal = dedupeMealIngredients(ai, existingItems, locale);
-      const normalizedOutput = normalizeProposal(proposal);
+      const normalizedOutput = normalizeProposal(
+        proposal,
+        existingItems,
+        locale,
+      );
       const latencyMs = Date.now() - started;
 
       return {

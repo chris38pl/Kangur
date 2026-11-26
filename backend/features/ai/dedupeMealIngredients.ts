@@ -20,8 +20,10 @@ function shoppingTitleFallback(language: AiOutputLanguage): string {
 }
 
 /**
- * Cross-meal dedupe: one op per ingredient, ownerMealId = first meal.
- * The joined row keeps every dish's amount (see mealIngredientOperations).
+ * One row per dish and ingredient, ownerMealId = that dish, so the review
+ * screen shows a shared ingredient on the page of every dish that needs it.
+ * applyAiProposal joins the kept rows of one ingredient into one item
+ * (see mealIngredientOperations).
  */
 export function dedupeMealIngredients(
   ai: MealProposalAiResponse,
@@ -34,11 +36,7 @@ export function dedupeMealIngredients(
     icon: meal.icon,
   }));
 
-  const operations = mealIngredientOperations(
-    ai.meals,
-    existingItems,
-    outputLanguage,
-  );
+  const operations = mealIngredientOperations(ai.meals, existingItems);
 
   const title =
     meals.length === 1
