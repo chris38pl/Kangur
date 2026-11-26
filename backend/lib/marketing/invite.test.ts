@@ -4,6 +4,7 @@ import vm from "node:vm";
 
 import sitemap from "@/app/sitemap";
 import { buildInviteAcceptUrl, sendInviteEmail } from "@/lib/email/sendInviteEmail";
+import { t } from "@/lib/i18n";
 import { generateInviteRawToken, isValidInviteRawToken } from "@/lib/invite/token";
 import {
   APP_INVITE_BASE,
@@ -53,6 +54,18 @@ test("the page speaks the language of the e-mail", () => {
   // Unknown or missing: English, like the text of the e-mail (lib/i18n.ts).
   assert.equal(path(null), "/en/invite");
   assert.equal(path("sv"), "/en/invite");
+});
+
+test("the e-mail does not guess whether a man or a woman invites", () => {
+  for (const locale of APP_LOCALE_IDS) {
+    const headline = t(locale, "email.invite.headline", { inviter: "Ola" });
+    // "pozval(a)", "пригласил(а)" or a masculine verb: the present tense needs neither.
+    assert.doesNotMatch(
+      headline,
+      /\(\p{L}{1,2}\)|zaprosił|pozval|пригласил|запросив|запрасіў|invité|invitato/u,
+      locale,
+    );
+  }
 });
 
 test("the variable set on Vercel does not bring back a link that opens nothing", () => {
