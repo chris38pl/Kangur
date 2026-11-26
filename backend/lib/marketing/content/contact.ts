@@ -16,8 +16,7 @@ export type ContactCopy = {
 const CONTACT_EMAIL =
   process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || "contact@getkangur.com";
 const MAIL = `[[mailto:${CONTACT_EMAIL}|${CONTACT_EMAIL}]]`;
-const { firmName, nip, regon, street, postalCode, addressPl, addressEn } = LEGAL_ENTITY;
-const ADDRESS = `${street}, ${postalCode}`;
+const { firmName, nip, regon } = LEGAL_ENTITY;
 
 const COPY: Record<AppLocale, ContactCopy> = {
   pl: {
@@ -28,7 +27,7 @@ const COPY: Record<AppLocale, ContactCopy> = {
       { term: "Odpowiedź", value: "zwykle w ciągu dwóch dni" },
       { term: "Z aplikacji", value: "menu, „Opinia”, a tam „Zgłoś problem” albo „Mam pomysł”" },
       { term: "Telefon", value: "infolinii nie mamy. Jeśli ktoś dzwoni „z Kangura”, to nie my. [[safety|Jak nas rozpoznać]]" },
-      { term: "Firma", value: `${firmName}, NIP ${nip}, REGON ${regon}, ${addressPl}` },
+      { term: "Firma", value: `${firmName}, NIP ${nip}, REGON ${regon}, Poznań` },
     ],
     shortcutsTitle: "Na skróty",
     shortcuts: [
@@ -45,7 +44,7 @@ const COPY: Record<AppLocale, ContactCopy> = {
       { term: "Reply", value: "usually within two days" },
       { term: "From the app", value: "menu, “Feedback”, then “Report a problem” or “I have an idea”" },
       { term: "Phone", value: "we have no hotline. If somebody calls “from Kangur”, it is not us. [[safety|How to recognize us]]" },
-      { term: "Company", value: `${firmName}, NIP ${nip}, ${addressEn}` },
+      { term: "Company", value: `${firmName}, NIP ${nip}, Poznań, Poland` },
     ],
     shortcutsTitle: "Shortcuts",
     shortcuts: [
@@ -62,7 +61,7 @@ const COPY: Record<AppLocale, ContactCopy> = {
       { term: "Antwort", value: "meist innerhalb von zwei Tagen" },
       { term: "In der App", value: "Menü, „Feedback“, dann „Problem melden“ oder „Ich habe eine Idee“" },
       { term: "Telefon", value: "eine Hotline haben wir nicht. Ruft jemand „von Kangur“ an, sind das nicht wir. [[safety|So erkennst du uns (Englisch)]]" },
-      { term: "Firma", value: `${firmName}, NIP ${nip}, ${ADDRESS} Poznań, Polen` },
+      { term: "Firma", value: `${firmName}, NIP ${nip}, Poznań, Polen` },
     ],
     shortcutsTitle: "Abkürzungen",
     shortcuts: [
@@ -79,7 +78,7 @@ const COPY: Record<AppLocale, ContactCopy> = {
       { term: "Réponse", value: "en général sous deux jours" },
       { term: "Dans l’appli", value: "menu, « Commentaires », puis « Signaler un problème » ou « J’ai une idée »" },
       { term: "Téléphone", value: "nous n’avons pas de standard. Si quelqu’un appelle « de la part de Kangur », ce n’est pas nous. [[safety|Comment nous reconnaître (en anglais)]]" },
-      { term: "Entreprise", value: `${firmName}, NIP ${nip}, ${ADDRESS} Poznań, Pologne` },
+      { term: "Entreprise", value: `${firmName}, NIP ${nip}, Poznań, Pologne` },
     ],
     shortcutsTitle: "Raccourcis",
     shortcuts: [
@@ -96,7 +95,7 @@ const COPY: Record<AppLocale, ContactCopy> = {
       { term: "Respuesta", value: "normalmente en dos días" },
       { term: "Desde la app", value: "menú, «Comentarios», y allí «Informar de un problema» o «Tengo una idea»" },
       { term: "Teléfono", value: "no tenemos centralita. Si alguien llama «de parte de Kangur», no somos nosotros. [[safety|Cómo reconocernos (en inglés)]]" },
-      { term: "Empresa", value: `${firmName}, NIP ${nip}, ${ADDRESS} Poznań, Polonia` },
+      { term: "Empresa", value: `${firmName}, NIP ${nip}, Poznań, Polonia` },
     ],
     shortcutsTitle: "Atajos",
     shortcuts: [
@@ -113,7 +112,7 @@ const COPY: Record<AppLocale, ContactCopy> = {
       { term: "Risposta", value: "di solito entro due giorni" },
       { term: "Dall’app", value: "menu, «Feedback», poi «Segnala un problema» o «Ho un’idea»" },
       { term: "Telefono", value: "non abbiamo un centralino. Se qualcuno chiama «da Kangur», non siamo noi. [[safety|Come riconoscerci (in inglese)]]" },
-      { term: "Azienda", value: `${firmName}, NIP ${nip}, ${ADDRESS} Poznań, Polonia` },
+      { term: "Azienda", value: `${firmName}, NIP ${nip}, Poznań, Polonia` },
     ],
     shortcutsTitle: "Scorciatoie",
     shortcuts: [
@@ -130,7 +129,7 @@ const COPY: Record<AppLocale, ContactCopy> = {
       { term: "Odpověď", value: "obvykle do dvou dnů" },
       { term: "Z aplikace", value: "menu, „Zpětná vazba“ a tam „Nahlásit problém“ nebo „Mám nápad“" },
       { term: "Telefon", value: "infolinku nemáme. Když někdo volá „z Kangura“, nejsme to my. [[safety|Jak nás poznat (anglicky)]]" },
-      { term: "Firma", value: `${firmName}, NIP ${nip}, ${ADDRESS} Poznaň, Polsko` },
+      { term: "Firma", value: `${firmName}, NIP ${nip}, Poznaň, Polsko` },
     ],
     shortcutsTitle: "Zkratky",
     shortcuts: [
@@ -147,7 +146,7 @@ const COPY: Record<AppLocale, ContactCopy> = {
       { term: "Ответ", value: "обычно в течение двух дней" },
       { term: "Из приложения", value: "меню, «Обратная связь», а там «Сообщить о проблеме» или «У меня есть идея»" },
       { term: "Телефон", value: "горячей линии нет. Если звонят «из Kangur», это не мы. [[safety|Как нас узнать (на английском)]]" },
-      { term: "Компания", value: `${firmName}, NIP ${nip}, ${ADDRESS} Познань, Польша` },
+      { term: "Компания", value: `${firmName}, NIP ${nip}, Познань, Польша` },
     ],
     shortcutsTitle: "Возможно, ответ уже есть",
     shortcuts: [
@@ -164,7 +163,7 @@ const COPY: Record<AppLocale, ContactCopy> = {
       { term: "Відповідь", value: "зазвичай протягом двох днів" },
       { term: "Із застосунку", value: "меню, «Зворотний зв’язок», а там «Повідомити про проблему» або «Маю ідею»" },
       { term: "Телефон", value: "гарячої лінії немає. Якщо телефонують «з Kangur», це не ми. [[safety|Як нас упізнати (англійською)]]" },
-      { term: "Компанія", value: `${firmName}, NIP ${nip}, ${ADDRESS} Познань, Польща` },
+      { term: "Компанія", value: `${firmName}, NIP ${nip}, Познань, Польща` },
     ],
     shortcutsTitle: "Можливо, відповідь уже є",
     shortcuts: [
@@ -181,7 +180,7 @@ const COPY: Record<AppLocale, ContactCopy> = {
       { term: "Адказ", value: "звычайна на працягу двух дзён" },
       { term: "З праграмы", value: "меню, «Зваротная сувязь», а там «Паведаміць пра праблему» або «Маю ідэю»" },
       { term: "Тэлефон", value: "гарачай лініі няма. Калі тэлефануюць «з Kangur», гэта не мы. [[safety|Як нас пазнаць (па-англійску)]]" },
-      { term: "Кампанія", value: `${firmName}, NIP ${nip}, ${ADDRESS} Познань, Польшча` },
+      { term: "Кампанія", value: `${firmName}, NIP ${nip}, Познань, Польшча` },
     ],
     shortcutsTitle: "Магчыма, адказ ужо ёсць",
     shortcuts: [

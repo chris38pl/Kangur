@@ -48,10 +48,9 @@ function organization(): Node {
     },
     email: LEGAL_ENTITY.supportEmail,
     founder: { "@type": "Person", name: "Krzysztof Krawiec" },
+    // The city only: the street is the owner's home.
     address: {
       "@type": "PostalAddress",
-      streetAddress: LEGAL_ENTITY.street,
-      postalCode: LEGAL_ENTITY.postalCode,
       addressLocality: LEGAL_ENTITY.city,
       addressCountry: "PL",
     },
