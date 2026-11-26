@@ -202,14 +202,16 @@ for (const { id, locale, href, html } of pages) {
     }
   }
 
-  // Films: a file that exists, and the ones with sound wait for a tap
+  // Films: a file that exists, and the ones with sound get its address only on a tap,
+  // because WebKit loads a video it scrolls past even with preload="none"
   for (const video of tags(html, "video")) {
-    const src = attr(video, "src") ?? "";
+    const muted = /\smuted(=|\s|>)/.test(video);
+    const src = attr(video, "src") ?? attr(video, "data-src") ?? "";
     if (!src.startsWith("/") || !fs.existsSync(path.join(PUBLIC_DIR, src))) {
       fail(href, `video file missing: ${src}`);
     }
-    if (!/\smuted(=|\s|>)/.test(video) && attr(video, "preload") !== "none") {
-      fail(href, `a film with sound loads before anyone taps it: ${src}`);
+    if (!muted && (attr(video, "src") !== null || attr(video, "preload") !== "none")) {
+      fail(href, `a film with sound can load before anyone taps it: ${src}`);
     }
   }
 
