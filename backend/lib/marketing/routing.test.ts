@@ -10,6 +10,7 @@ import {
   canonicalLocale,
   contentLocales,
   findRouteByPath,
+  isIndexed,
   routeHref,
   routePath,
 } from "@/lib/marketing/routes";
@@ -244,7 +245,8 @@ test("hreflang is complete, reciprocal and never points at a redirect", () => {
   for (const id of ROUTE_IDS) {
     const alternates = hreflangAlternates(id);
     const locales = contentLocales(id);
-    if (locales.length < 2) {
+    // One language, or a page kept out of search: nothing to announce.
+    if (locales.length < 2 || !isIndexed(id)) {
       assert.equal(alternates, undefined, id);
       continue;
     }

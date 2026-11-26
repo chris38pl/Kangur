@@ -43,6 +43,7 @@ Search engines must see one stable page per address, so:
 - Copy lives in `backend/lib/marketing/content/`, home page in ten languages, the other pages in the languages they exist in. Polish copy is typeset once by `typography.ts` (no one-letter word at the end of a line). Links inside copy use the marks of `rich-text.tsx`, so a page that disappears breaks the build instead of the site.
 - `public/img`, `public/og` and the matching `*.generated.ts` are made from real app screens and approved drawings by scripts in `.marketing/06-seo` (outside git). File names carry a content hash. Do not edit them by hand.
 - `/pobierz`, `/get` and `/download` send a phone to its own store and a computer to the buttons on the home page (307, never cached, never indexed). Use them in QR codes.
+- `/invite` (`/en/invite`, ...) is where the invitation e-mail leads, see [Resend](#66-resend-optional). It is `noindex` in `routes.ts`, so it has no canonical or hreflang, stays out of the sitemap and needs no links from other pages. `pnpm test:seo` checks all of that.
 - Tools (`/narzedzia`, `/lista-zakupow-na-wigilie-i-swieta`, `/lista-zakupow-na-tydzien`, `/lista-zakupow-z-podzialem-na-kategorie`) exist in Polish only. They run in the browser and keep what people type in `localStorage` under `kangur-www:`, nothing is sent. Their data and maths: `lib/marketing/lists` and `lib/marketing/aisles` (the product catalogue of the app plus everyday names), covered by `pnpm test:marketing`. Change the storage key when the shape of a saved value changes.
 - Every tool ends in the app, with `ToKangur`: copy the list, tap "Schowek" on the Start screen, invite the others. Text for Kangur comes from `lists/parts.ts`: one list per trip, no headings, up to 8000 characters, and no two products of one name, because the import keeps only the first. A computer shows a QR code with the list inside the address after `#` (`lists/handoff.ts`, `qr/encode.ts`), so it never reaches a server, and the phone that scans it opens the same list. There is no printing on the site, on purpose: `pnpm test:marketing` (the sources) and `pnpm test:seo` (the HTML) fail when it comes back.
 - The Christmas calculator is about one year. Every autumn check the trading Sundays and days off, then update `CHRISTMAS`, `WHEN` and the amounts for the days without shops in `lists/christmas.ts`, the dates in `content/topics/christmas-tool.ts`, `content/topics/tools.ts`, `page-meta.ts`, then rebuild the share image. The strip on the home page hides itself after `CHRISTMAS.strip`, the page says the holidays are over after `CHRISTMAS.over`. The address stays the same. `pnpm test:seo` warns from 15 October.
@@ -327,7 +328,9 @@ Separate API keys, usage, limits, and billing dashboards. Set `OPENAI_API_KEY` p
 
 ### 6.6 Resend (optional)
 
-Invite emails when `RESEND_API_KEY` + `EMAIL_FROM` are set. Without them, invites still work (accept URL returned/logged). Prefer a verified sending domain on production. `INVITE_ACCEPT_URL_BASE` defaults to `kangur://invite`.
+Invite emails when `RESEND_API_KEY` + `EMAIL_FROM` are set. Without them, invitations are still created, but no e-mail goes out. Prefer a verified sending domain on production, and keep Resend click tracking off: it would put the invitation link through Resend's own redirect.
+
+The e-mail links to the invitation page of the site, `/invite` on `NEXT_PUBLIC_SITE_URL` in the e-mail's language, with the token after `#` (`https://www.getkangur.com/invite#t=<token>`). Browsers never send that part, so the token stays out of server logs, the proxy and Referer headers, and the page takes it out of the address before any script starts (`lib/marketing/invite.ts`). The page explains the invitation, shows both stores and has a button with the app link `kangur://invite/<token>`, the link e-mails carried before. The app still opens those, so old invitations keep working. `INVITE_ACCEPT_URL_BASE` is that app link (`kangur://invite`, default), or `kangur-dev://invite` for the development build; it no longer changes the e-mail link.
 
 ### 6.7 Expo Push / EAS
 
@@ -440,7 +443,7 @@ Source of truth: [backend/.env.example](../backend/.env.example).
 | `APPLE_PRIVATE_KEY` | optional local | required for iOS IAP | required | .p8 PEM or base64 |
 | `APPLE_BUNDLE_ID` | `app.kangur` | same | same | Store bundle |
 | `APPLE_APP_APPLE_ID` | `6832296080` | same | same | Numeric App Store app id |
-| `INVITE_ACCEPT_URL_BASE` | `kangur://invite` | same | same | |
+| `INVITE_ACCEPT_URL_BASE` | `kangur://invite` (`kangur-dev://invite` with the dev build) | `kangur://invite` | same | App link behind the button of `/invite`; the e-mail always links to that page |
 | `PLATFORM_ADMIN_EMAILS` | optional | optional | optional | Bootstrap admins |
 | `POSTHOG_KEY` / `POSTHOG_HOST` | optional | Closed Testing+ | required | Product analytics (noop if unset) |
 | `ANALYTICS_ENABLED` | `0` | `1` | `1` | Force on in local; kill with `0` |

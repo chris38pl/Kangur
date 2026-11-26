@@ -23,8 +23,8 @@
   "email": {
     "invite": {
       "subject": "Pozvánka do {{workspaceName}} - Kangur",
-      "headline": "{{inviter}} vás pozval(a) do",
-      "ctaOpen": "Otevřít Kangur",
+      "headline": "{{inviter}} vás zve do",
+      "ctaOpen": "Otevřít pozvánku",
       "ctaJoin": "Připojit se",
       "bodyExisting": "Už máte účet - otevřete aplikaci a přijměte pozvánku.",
       "bodyNew": "Vytvořte si účet nebo se přihlaste a používejte sdílené nákupní seznamy.",
