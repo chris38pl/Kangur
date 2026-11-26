@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { maybePublishShoppingListCreated } from "../shopping-list/maybePublishShoppingListCreated";
 import { toShoppingItemDto } from "../shopping-item/toShoppingItemDto";
 import { applyUntitledListTitleFromProposal } from "./applyUntitledListTitle";
+import { excludeRepeatedCreates } from "./excludeRepeatedCreates";
 import {
   AiProposalSchema,
   ApplyAiProposalBodySchema,
@@ -135,7 +136,9 @@ export async function applyAiProposal(input: {
         throw conflict("AI run is no longer proposed.");
       }
 
-      const creates = rehydrated.filter((op) => op.op === "create");
+      const creates = rehydrated.flatMap((op) =>
+        op.op === "create" ? [op] : [],
+      );
       const mutations = rehydrated.filter(
         (op) => op.op === "update" || op.op === "merge",
       );
@@ -148,40 +151,19 @@ export async function applyAiProposal(input: {
         });
         let nextSort = (last?.sortOrder ?? -1) + 1;
 
-        const seen = new Set<string>();
-        const uniqueCreates = creates.filter((op) => {
-          if (op.op !== "create") return false;
-          const key = op.name.trim().toLowerCase();
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
+        // One name can hold two products ("Mleko" 2% and "Mleko" bez laktozy):
+        // only a row with the same name, amount and note is a repeat.
+        const itemsOnList = await tx.shoppingItem.findMany({
+          where: { listId: list.id, status: { not: "removed" } },
+          select: { name: true, amount: true, note: true },
         });
-
-        const existing = await tx.shoppingItem.findMany({
-          where: {
-            listId: list.id,
-            status: { not: "removed" },
-            normalizedName: { in: [...seen] },
-          },
-          select: { normalizedName: true },
-        });
-        const existingNames = new Set(
-          existing.map((row) => row.normalizedName),
-        );
-
-        const toInsert = uniqueCreates.filter((op) => {
-          if (op.op !== "create") return false;
-          return !existingNames.has(op.name.trim().toLowerCase());
-        });
+        const toInsert = excludeRepeatedCreates(creates, itemsOnList);
 
         if (toInsert.length > 0) {
           await tx.shoppingItem.createMany({
             data: toInsert.map((op) => {
               const sortOrder = nextSort;
               nextSort += 1;
-              if (op.op !== "create") {
-                throw new Error("Unexpected non-create in toInsert");
-              }
               return {
                 listId: list.id,
                 clientId: op.clientId ?? null,
