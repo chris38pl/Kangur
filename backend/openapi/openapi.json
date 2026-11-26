@@ -939,6 +939,40 @@
           "alreadyFinished"
         ]
       },
+      "FinishShoppingListResponse": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "alreadyFinished": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "listId",
+          "sessionId",
+          "alreadyFinished"
+        ]
+      },
+      "FinishShoppingListBody": {
+        "type": "object",
+        "properties": {
+          "unavailableCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "unavailableCount"
+        ]
+      },
       "ShoppingListListResponse": {
         "type": "object",
         "properties": {
@@ -4808,6 +4842,81 @@
           },
           "401": {
             "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}/finish": {
+      "post": {
+        "summary": "Finish shopping without a session id and archive the list into History",
+        "description": "For trips that started offline. Closes the caller's open session on the list when there is one. Never deletes the list. Repeating it on an archived list returns alreadyFinished.",
+        "tags": [
+          "Shopping Sessions"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "listId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinishShoppingListBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinishShoppingListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "List not found or deleted",
             "content": {
               "application/json": {
                 "schema": {

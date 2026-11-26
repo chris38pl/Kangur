@@ -1,15 +1,37 @@
+import { finishShoppingSession } from "@/features/notifications/api";
 import {
   createShoppingItem,
+  listShoppingItems,
   updateShoppingItem,
 } from "@/features/shopping-item/api";
-import { archiveShoppingList } from "@/features/shopping-list/api";
+import { finishShoppingList } from "@/features/shopping-list/api";
 import type { SyncTransport } from "@/features/data-sync-engine/worker";
 import type {
   ItemStatus,
   ShoppingCategory,
   ShoppingItem,
 } from "@/features/shopping-item/schemas";
+import { ApiClientError } from "@/lib/api/client";
 import { createClientId, isLegacyLocalItemId, isUuid } from "@/lib/createClientId";
+
+function toCount(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? Math.floor(value)
+    : 0;
+}
+
+/**
+ * A retried ADD_ITEM whose first response was lost gets 409 (clientId is
+ * unique). The item is on the server already: use it.
+ */
+async function findCreatedItem(
+  token: string,
+  listId: string,
+  clientId: string,
+): Promise<ShoppingItem | null> {
+  const items = await listShoppingItems(token, listId);
+  return items.find((item) => item.clientId === clientId) ?? null;
+}
 
 /**
  * REST transport for Data Sync Engine (sequential today; batch later).
@@ -42,19 +64,28 @@ export function createRestSyncTransport(
           case "ADD_ITEM": {
             const raw = String(op.payload.clientId ?? op.itemId ?? "");
             const clientId = isUuid(raw) ? raw : createClientId();
-            item = await createShoppingItem(token, op.listId, {
-              clientId,
-              name: String(op.payload.name ?? ""),
-              amount:
-                typeof op.payload.amount === "string"
-                  ? op.payload.amount
-                  : undefined,
-              note:
-                typeof op.payload.note === "string"
-                  ? op.payload.note
-                  : undefined,
-              category: op.payload.category as ShoppingCategory,
-            });
+            try {
+              item = await createShoppingItem(token, op.listId, {
+                clientId,
+                name: String(op.payload.name ?? ""),
+                amount:
+                  typeof op.payload.amount === "string"
+                    ? op.payload.amount
+                    : undefined,
+                note:
+                  typeof op.payload.note === "string"
+                    ? op.payload.note
+                    : undefined,
+                category: op.payload.category as ShoppingCategory,
+              });
+            } catch (error) {
+              const created =
+                error instanceof ApiClientError && error.status === 409
+                  ? await findCreatedItem(token, op.listId, clientId)
+                  : null;
+              if (!created) throw error;
+              item = created;
+            }
             break;
           }
           case "EDIT_ITEM": {
@@ -89,7 +120,36 @@ export function createRestSyncTransport(
             break;
           }
           case "ARCHIVE_LIST": {
-            await archiveShoppingList(token, op.listId);
+            // Finishing a trip moves the list to History. Never DELETE here:
+            // that is the user's "Delete list" and hides it from History too.
+            const sessionId =
+              typeof op.payload.serverSessionId === "string" &&
+              op.payload.serverSessionId.length > 0
+                ? op.payload.serverSessionId
+                : null;
+            const unavailableCount = toCount(op.payload.unavailableCount);
+            let finishedBySession = false;
+            if (sessionId) {
+              try {
+                await finishShoppingSession(
+                  token,
+                  op.listId,
+                  sessionId,
+                  unavailableCount,
+                );
+                finishedBySession = true;
+              } catch (error) {
+                // Session unknown or list already archived: finish by list,
+                // which also answers "already finished".
+                if (!(error instanceof ApiClientError && error.status === 404)) {
+                  throw error;
+                }
+              }
+            }
+            if (!finishedBySession) {
+              // Trip started offline, or queued by an older build.
+              await finishShoppingList(token, op.listId, unavailableCount);
+            }
             item = null;
             break;
           }
@@ -102,7 +162,6 @@ export function createRestSyncTransport(
         DataSyncEngine.connectivity.setOnline(true);
         return item;
       } catch (error) {
-        const { ApiClientError } = await import("@/lib/api/client");
         if (
           error instanceof ApiClientError &&
           error.code === "NETWORK_ERROR"

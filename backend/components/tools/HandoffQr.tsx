@@ -12,8 +12,15 @@ const QUIET = 4;
 /** About this wide on the screen: small codes get bigger modules, dense ones stay readable. */
 const TARGET = 300;
 
-/** This very list as a code to scan. Drawn here, nothing is sent anywhere. */
-export function HandoffQr({ url }: { url: string }) {
+/** This very list, or an invitation, as a code to scan. Drawn here, nothing is sent anywhere. */
+export function HandoffQr({
+  url,
+  label = HANDOFF.qr.label,
+}: {
+  url: string;
+  /** What a screen reader says instead of the code. */
+  label?: string;
+}) {
   // Ticking a product must not wait for the code.
   const later = useDeferredValue(url);
   const code = useMemo(() => encodeQr(later), [later]);
@@ -30,7 +37,7 @@ export function HandoffQr({ url }: { url: string }) {
       width={width}
       height={width}
       role="img"
-      aria-label={HANDOFF.qr.label}
+      aria-label={label}
       shapeRendering="crispEdges"
     >
       <rect x={-QUIET} y={-QUIET} width={side} height={side} fill="#fff" />

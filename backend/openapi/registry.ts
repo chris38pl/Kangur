@@ -65,6 +65,8 @@ import {
   WorkspaceMemberListResponseSchema,
 } from "@/features/workspace/schemas";
 import {
+  FinishShoppingListBodySchema,
+  FinishShoppingListResponseSchema,
   FinishShoppingSessionBodySchema,
   FinishShoppingSessionResponseSchema,
   NotifyShoppingFinishedResponseSchema,
@@ -1060,6 +1062,51 @@ registry.registerPath({
     },
     401: {
       description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/lists/{listId}/finish",
+  summary:
+    "Finish shopping without a session id and archive the list into History",
+  description:
+    "For trips that started offline. Closes the caller's open session on the list when there is one. Never deletes the list. Repeating it on an archived list returns alreadyFinished.",
+  tags: ["Shopping Sessions"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ listId: z.string() }),
+    body: {
+      content: {
+        "application/json": { schema: FinishShoppingListBodySchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "List finished",
+      content: {
+        "application/json": { schema: FinishShoppingListResponseSchema },
+      },
+    },
+    400: {
+      description: "Invalid payload",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    404: {
+      description: "List not found or deleted",
       content: {
         "application/json": { schema: ApiErrorSchema },
       },

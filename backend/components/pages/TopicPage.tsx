@@ -4,17 +4,19 @@ import type { ReactNode } from "react";
 import { JsonLd } from "@/components/marketing/JsonLd";
 import { StoreButtons } from "@/components/marketing/StoreButtons";
 import { ClosingBand } from "@/components/site/ClosingBand";
+import { FilmFigure } from "@/components/site/FilmFigure";
 import { FaqList } from "@/components/site/FaqList";
 import { PageHero } from "@/components/site/PageHero";
 import type { StickerName } from "@/components/site/Sticker";
 import prose from "@/components/site/prose.module.css";
 import { homeCopy } from "@/lib/marketing/content/home";
 import type { TopicCopy, TopicSection } from "@/lib/marketing/content/topics/types";
+import { film } from "@/lib/marketing/films";
 import type { AppLocale } from "@/lib/marketing/locale";
 import { rich } from "@/lib/marketing/rich-text";
 import { bestHref, routeHref, type MarketingRouteId } from "@/lib/marketing/routes";
 import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/marketing/site";
-import { topicStructuredData } from "@/lib/marketing/structured-data";
+import { filmStructuredData, topicStructuredData } from "@/lib/marketing/structured-data";
 
 import styles from "./TopicPage.module.css";
 
@@ -62,6 +64,11 @@ export function TopicPage({
   const faq = copy.sections.flatMap((section) =>
     section.kind === "faq" ? section.items : [],
   );
+  const films = new Set(
+    copy.sections.flatMap((section) =>
+      (section.kind === "text" || section.kind === "steps") && section.film ? [section.film] : [],
+    ),
+  );
 
   const { hero } = homeCopy(locale);
 
@@ -69,6 +76,9 @@ export function TopicPage({
     <div data-full>
       {topicStructuredData(id, locale, copy, faq).map((data, index) => (
         <JsonLd key={index} data={data} />
+      ))}
+      {[...films].map((filmId) => (
+        <JsonLd key={filmId} data={filmStructuredData(film(filmId))} />
       ))}
       <PageHero
         locale={locale}
@@ -171,7 +181,11 @@ function Section({
 
   switch (section.kind) {
     case "text": {
-      const picture = section.slot ? slots[section.slot] : null;
+      const picture = section.film ? (
+        <FilmFigure id={section.film} />
+      ) : section.slot ? (
+        slots[section.slot]
+      ) : null;
       return (
         <section className={shell}>
           <div
@@ -204,7 +218,11 @@ function Section({
     }
 
     case "steps": {
-      const picture = section.slot ? slots[section.slot] : null;
+      const picture = section.film ? (
+        <FilmFigure id={section.film} />
+      ) : section.slot ? (
+        slots[section.slot]
+      ) : null;
       return (
         <section className={shell}>
           <div className={`${prose.wrap} ${picture ? styles.split : ""}`}>

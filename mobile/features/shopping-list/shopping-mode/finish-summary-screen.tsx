@@ -1,5 +1,5 @@
 import { getShoppingCategoryIcon } from "@shared/shopping-categories";
-import { useAuth, useUser } from "@clerk/clerk-expo";
+import { useUser } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -303,7 +303,6 @@ export function FinishSummaryScreen({
   actorDisplayName,
 }: Props) {
   const { t, i18n } = useTranslation();
-  const { getToken } = useAuth();
   const me = useMe();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
@@ -416,7 +415,6 @@ export function FinishSummaryScreen({
         durationSec,
         unavailableCount: unavailableItems.length,
         boughtCount: boughtItems.length,
-        getToken,
         queryClient,
       });
     },

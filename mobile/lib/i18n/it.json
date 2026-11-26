@@ -496,6 +496,8 @@
     "inviteSentTitle": "Invito inviato!",
     "inviteSentBody": "Abbiamo inviato un invito a {{email}}. Potrà unirsi dopo aver aperto il link nel messaggio.",
     "inviteResentBody": "Abbiamo reinviato l’invito a {{email}}. Potrà unirsi dopo aver aperto il link nel messaggio.",
+    "inviteNotSentTitle": "L'email non è partita",
+    "inviteNotSentBody": "L'invito per {{email}} è salvato, ma non è stato possibile inviare l'email. Riprova tra qualche minuto. Se succede ancora, scrivici da «Feedback» nel menu.",
     "inviteAlreadyMember": "Questa persona è già membro.",
     "inviteForbidden": "Non hai i permessi per invitare.",
     "inviteFailed": "Impossibile inviare l'invito.",

@@ -1,23 +1,27 @@
 import { JsonLd } from "@/components/marketing/JsonLd";
 import { ClosingBand } from "@/components/site/ClosingBand";
+import { FilmFigure } from "@/components/site/FilmFigure";
 import { FaqList } from "@/components/site/FaqList";
 import { PageHero } from "@/components/site/PageHero";
 import { Receipt } from "@/components/site/Receipt";
 import { Sticker } from "@/components/site/Sticker";
 import prose from "@/components/site/prose.module.css";
 import { PRICING } from "@/lib/marketing/content/pricing";
+import { film } from "@/lib/marketing/films";
 import { rich } from "@/lib/marketing/rich-text";
 import { routeHref } from "@/lib/marketing/routes";
-import { pageStructuredData } from "@/lib/marketing/structured-data";
+import { filmStructuredData, pageStructuredData } from "@/lib/marketing/structured-data";
 
 import styles from "./PricingPage.module.css";
 
 export function PricingPage({ locale }: { locale: "pl" | "en" }) {
   const c = PRICING[locale];
+  const polish = locale === "pl";
 
   return (
     <div data-full>
       <JsonLd data={pageStructuredData("pricing", locale)} />
+      {polish ? <JsonLd data={filmStructuredData(film("L35"))} /> : null}
       <PageHero
         locale={locale}
         crumbs={[{ label: c.crumb, href: routeHref("pricing", locale) }]}
@@ -62,18 +66,22 @@ export function PricingPage({ locale }: { locale: "pl" | "en" }) {
       </section>
 
       <section className={`${prose.section} ${prose.tinted}`}>
-        <div className={`${prose.wrap} ${prose.prose}`}>
-          <h2>{c.uses.title}</h2>
-          <p>{c.uses.intro}</p>
-          <ul className={`${prose.cards} ${prose.fourUp}`}>
-            {c.uses.items.map((item) => (
-              <li key={item.title} className={prose.card}>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-              </li>
-            ))}
-          </ul>
-          <p className={prose.outro}>{c.uses.outro}</p>
+        <div className={`${prose.wrap} ${polish ? styles.uses : ""}`}>
+          <div className={prose.prose}>
+            <h2>{c.uses.title}</h2>
+            <p>{c.uses.intro}</p>
+            <ul className={polish ? prose.cards : `${prose.cards} ${prose.fourUp}`}>
+              {c.uses.items.map((item) => (
+                <li key={item.title} className={prose.card}>
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
+                </li>
+              ))}
+            </ul>
+            <p className={prose.outro}>{c.uses.outro}</p>
+          </div>
+          {/* The narrator speaks Polish. */}
+          {polish ? <FilmFigure id="L35" /> : null}
         </div>
       </section>
 

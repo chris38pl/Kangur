@@ -126,6 +126,21 @@ export const FinishShoppingSessionResponseSchema = z
   })
   .openapi("FinishShoppingSessionResponse");
 
+export const FinishShoppingListBodySchema = z
+  .object({
+    unavailableCount: z.number().int().nonnegative(),
+  })
+  .openapi("FinishShoppingListBody");
+
+export const FinishShoppingListResponseSchema = z
+  .object({
+    listId: z.string(),
+    /** Session closed by this finish, null when the trip had none. */
+    sessionId: z.string().nullable(),
+    alreadyFinished: z.boolean(),
+  })
+  .openapi("FinishShoppingListResponse");
+
 export const NotifyShoppingFinishedResponseSchema = z
   .object({
     id: z.string(),

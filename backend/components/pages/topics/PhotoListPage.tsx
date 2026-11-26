@@ -56,14 +56,6 @@ export function PhotoListPage() {
             ))}
           </ol>
         ),
-        start: (
-          <Phone
-            image={SCREENS.pl.start}
-            alt="Ekran główny Kangura z szybkimi akcjami: Zrzut ekranu, Schowek, Tekst, Z przepisu"
-            className={styles.phone}
-            time="17:54"
-          />
-        ),
         kangur: <Sticker name="smutny" className={styles.sticker} />,
       }}
     />

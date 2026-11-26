@@ -22,6 +22,12 @@ export type FinishSessionInput = {
   unavailableCount: number;
 };
 
+export type FinishListInput = {
+  listId: string;
+  actorUserId: string;
+  unavailableCount: number;
+};
+
 /**
  * ShoppingSessionService - domain lifecycle.
  * Start: publish ShoppingStarted only for the first active session on the list
@@ -218,6 +224,61 @@ export async function finishShoppingSession(input: FinishSessionInput) {
     finishedAt: closed.finishedAt!.toISOString(),
     alreadyFinished: false,
   };
+}
+
+/**
+ * Finish shopping when the client has no session id: the trip started
+ * offline, or the finish was queued by app 1.0.8. Same result as a session
+ * finish: the list moves to History (archived), it is never deleted.
+ * Closes the actor's open session on the list when there is one.
+ * Safe to repeat: an already archived list is a success.
+ */
+export async function finishShoppingList(input: FinishListInput) {
+  if (
+    !Number.isFinite(input.unavailableCount) ||
+    input.unavailableCount < 0
+  ) {
+    throw validationError("unavailableCount must be a non-negative number.");
+  }
+
+  const { list } = await authorizeList(input.listId, input.actorUserId, {
+    allowArchived: true,
+  });
+
+  if (list.status === "archived") {
+    return { listId: list.id, sessionId: null, alreadyFinished: true };
+  }
+
+  const open = await prisma.shoppingSession.findFirst({
+    where: {
+      listId: list.id,
+      actorUserId: input.actorUserId,
+      finishedAt: null,
+    },
+    orderBy: { startedAt: "desc" },
+    select: { id: true },
+  });
+
+  if (open) {
+    const finished = await finishShoppingSession({
+      listId: list.id,
+      sessionId: open.id,
+      actorUserId: input.actorUserId,
+      unavailableCount: input.unavailableCount,
+    });
+    return {
+      listId: list.id,
+      sessionId: finished.id,
+      alreadyFinished: finished.alreadyFinished,
+    };
+  }
+
+  // No session: the household never got "started shopping" for this trip,
+  // so no "finished" either. The list still moves to History.
+  await archiveShoppingList(list.id, input.actorUserId, {
+    outcome: "archived",
+  });
+  return { listId: list.id, sessionId: null, alreadyFinished: false };
 }
 
 async function publishShoppingFinished(input: {

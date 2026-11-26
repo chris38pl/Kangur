@@ -16,16 +16,20 @@ type Props = {
   visible: boolean;
   email: string;
   resent?: boolean;
+  /** `emailDelivered` from the server: false when the e-mail did not go out. */
+  delivered?: boolean;
   onClose: () => void;
 };
 
 /**
- * Success feedback after sending / resending a workspace invite.
+ * Feedback after sending / resending a workspace invite. The invitation is saved either
+ * way, but "sent" is said only when the e-mail really went out.
  */
 export function InviteSentSheet({
   visible,
   email,
   resent = false,
+  delivered = true,
   onClose,
 }: Props) {
   const { t } = useTranslation();
@@ -69,7 +73,7 @@ export function InviteSentSheet({
         >
           <View style={{ alignItems: "center" }}>
             <Image
-              source={brandAssets.inviteWelcome}
+              source={delivered ? brandAssets.inviteWelcome : brandAssets.error}
               style={{
                 width: 180,
                 height: 160,
@@ -86,7 +90,9 @@ export function InviteSentSheet({
                 marginTop: spacing[4],
               }}
             >
-              {t("workspace.inviteSentTitle")}
+              {delivered
+                ? t("workspace.inviteSentTitle")
+                : t("workspace.inviteNotSentTitle")}
             </Text>
 
             <Text
@@ -98,9 +104,11 @@ export function InviteSentSheet({
                 paddingHorizontal: spacing[2],
               }}
             >
-              {resent
-                ? t("workspace.inviteResentBody", { email })
-                : t("workspace.inviteSentBody", { email })}
+              {!delivered
+                ? t("workspace.inviteNotSentBody", { email })
+                : resent
+                  ? t("workspace.inviteResentBody", { email })
+                  : t("workspace.inviteSentBody", { email })}
             </Text>
           </View>
 

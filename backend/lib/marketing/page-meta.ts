@@ -180,6 +180,13 @@ const PAGE_META: Record<
         "Gotowa lista zakupów na tydzień: ile czego dla jednej osoby, dwóch i rodziny, także bez mięsa. Duże zakupy, mała dokupka i pięć obiadów z tej listy.",
     },
   },
+  films: {
+    pl: {
+      title: "Filmy krok po kroku: jak używać listy zakupów Kangur",
+      description:
+        "Krótkie filmy z prawdziwą aplikacją: lista ze zrzutu czatu i z przepisu, wspólna lista, zakupy alejka po alejce. Każdy krótszy niż pół minuty.",
+    },
+  },
   contact: {
     pl: {
       title: "Kontakt - Kangur, lista zakupów z AI",
@@ -306,6 +313,59 @@ const PAGE_META: Record<
       title: "Як выдаліць уліковы запіс Kangur",
       description:
         "Выдаліце ўліковы запіс Kangur у праграме, крок за крокам. Што знікне, што можа застацца і чаму Premium скасоўваецца асобна.",
+    },
+  },
+  /** What a link preview shows when someone passes the invitation on. Never in search. */
+  invite: {
+    pl: {
+      title: "Zaproszenie do wspólnej listy zakupów w Kangurze",
+      description:
+        "Ktoś zaprasza Cię do wspólnej listy zakupów w Kangurze. Zainstaluj aplikację, zaloguj się adresem z zaproszenia i dołącz w ciągu 7 dni.",
+    },
+    en: {
+      title: "Invitation to a shared grocery list in Kangur",
+      description:
+        "Someone invites you to a shared grocery list in Kangur. Install the app, sign in with the invited email and join within 7 days.",
+    },
+    de: {
+      title: "Einladung zur gemeinsamen Einkaufsliste in Kangur",
+      description:
+        "Jemand lädt dich zur gemeinsamen Einkaufsliste in Kangur ein. Installiere die App, melde dich mit der eingeladenen E-Mail an und tritt in 7 Tagen bei.",
+    },
+    fr: {
+      title: "Invitation à une liste de courses partagée dans Kangur",
+      description:
+        "Quelqu’un vous invite à une liste de courses partagée dans Kangur. Installez l’appli, connectez-vous avec l’e-mail invité et rejoignez-la sous 7 jours.",
+    },
+    es: {
+      title: "Invitación a una lista de la compra compartida en Kangur",
+      description:
+        "Alguien te invita a una lista de la compra compartida en Kangur. Instala la app, inicia sesión con el correo invitado y únete en un plazo de 7 días.",
+    },
+    it: {
+      title: "Invito a una lista della spesa condivisa in Kangur",
+      description:
+        "Qualcuno ti invita a una lista della spesa condivisa in Kangur. Installa l’app, accedi con l’email invitata e unisciti entro 7 giorni.",
+    },
+    cs: {
+      title: "Pozvánka do sdíleného nákupního seznamu v Kangurovi",
+      description:
+        "Někdo tě zve do sdíleného nákupního seznamu v Kangurovi. Nainstaluj si aplikaci, přihlas se pozvaným e-mailem a připoj se do 7 dní.",
+    },
+    ru: {
+      title: "Приглашение в общий список покупок в Kangur",
+      description:
+        "Вас приглашают в общий список покупок в Kangur. Установите приложение, войдите с приглашённой почтой и присоединитесь в течение 7 дней.",
+    },
+    uk: {
+      title: "Запрошення до спільного списку покупок у Kangur",
+      description:
+        "Вас запрошують до спільного списку покупок у Kangur. Установіть застосунок, увійдіть із запрошеною поштою та приєднайтеся протягом 7 днів.",
+    },
+    be: {
+      title: "Запрашэнне ў агульны спіс пакупак у Kangur",
+      description:
+        "Вас запрашаюць у агульны спіс пакупак у Kangur. Усталюйце праграму, увайдзіце з запрошанай поштай і далучыцеся на працягу 7 дзён.",
     },
   },
 };

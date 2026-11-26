@@ -1,6 +1,5 @@
 import { TopicPage } from "@/components/pages/TopicPage";
 import { AisleTable } from "@/components/site/AisleTable";
-import { Phone } from "@/components/site/Phone";
 import { Sticker } from "@/components/site/Sticker";
 import prose from "@/components/site/prose.module.css";
 import { AisleTool } from "@/components/tools/AisleTool";
@@ -9,7 +8,6 @@ import { buildAisleWords } from "@/lib/marketing/aisles/dictionary";
 import type { Aisle } from "@/lib/marketing/aisles/labels";
 import { AISLE_SAMPLE, AISLE_TOOL } from "@/lib/marketing/content/topics/aisle-tool";
 import { TOOLS } from "@/lib/marketing/content/topics/tools";
-import { SCREENS } from "@/lib/marketing/images.generated";
 
 import styles from "./topics.module.css";
 
@@ -34,14 +32,6 @@ export function AisleToolPage() {
       art={<Sticker name="z-lista" className={`${styles.stickerLow} ${styles.toolArt}`} priority />}
       slots={{
         aisles: <AisleTable />,
-        phone: (
-          <Phone
-            image={SCREENS.pl.aisle}
-            alt="Tryb zakupów w Kangurze, alejka Warzywa: ogórki przesuwane w prawo jako kupione"
-            className={styles.phone}
-            time="18:12"
-          />
-        ),
       }}
     >
       <section className={styles.tool}>

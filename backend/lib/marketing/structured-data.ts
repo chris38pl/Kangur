@@ -1,3 +1,4 @@
+import type { Film } from "@/lib/marketing/films";
 import { LEGAL_ENTITY } from "@/lib/marketing/legal-entity";
 import { APP_LOCALE_IDS, withLocale, type AppLocale } from "@/lib/marketing/locale";
 import { pageMeta } from "@/lib/marketing/page-meta";
@@ -167,6 +168,7 @@ const PAGE_TYPES: Partial<Record<MarketingRouteId, string>> = {
   about: "AboutPage",
   contact: "ContactPage",
   tools: "CollectionPage",
+  films: "CollectionPage",
 };
 
 /** Pages about the app: the page, plus everything it refers to. */
@@ -221,6 +223,30 @@ export function topicStructuredData(
     ),
     ...(faq.length ? [faqStructuredData(faq, locale)] : []),
   ];
+}
+
+/**
+ * A narrated film of the app. The same `@id` on every page that shows it, so it is one
+ * video, wherever it plays: the anchor of its card on the films page.
+ */
+export function filmStructuredData(item: Film): Node {
+  return {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "@id": `${absoluteUrl(routeHref("films", "pl"))}#${item.slug}`,
+    name: item.title,
+    description: item.transcript,
+    transcript: item.transcript,
+    inLanguage: "pl",
+    thumbnailUrl: [absoluteUrl(item.poster.src)],
+    uploadDate: item.made,
+    duration: `PT${item.seconds}S`,
+    contentUrl: absoluteUrl(item.src),
+    width: item.width,
+    height: item.height,
+    isFamilyFriendly: true,
+    publisher: { "@id": ORGANIZATION_ID },
+  };
 }
 
 /** Google shows no FAQ results since 2026, but the pairs still explain the page. */

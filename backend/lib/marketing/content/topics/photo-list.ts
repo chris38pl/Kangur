@@ -22,7 +22,7 @@ const copy: TopicCopy = {
       kind: "steps",
       tone: "mint",
       title: "Jak zrobić listę zakupów ze zdjęcia albo zrzutu",
-      slot: "start",
+      film: "L01",
       items: [
         {
           title: "Zrób zrzut albo zdjęcie",

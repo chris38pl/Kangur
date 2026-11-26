@@ -23,8 +23,8 @@
   "email": {
     "invite": {
       "subject": "Invito a {{workspaceName}} - Kangur",
-      "headline": "{{inviter}} ti ha invitato a",
-      "ctaOpen": "Apri Kangur",
+      "headline": "{{inviter}} ti invita a",
+      "ctaOpen": "Apri l’invito",
       "ctaJoin": "Unisciti allo spazio",
       "bodyExisting": "Hai già un account - apri l’app per accettare l’invito.",
       "bodyNew": "Crea un account o accedi per usare liste della spesa condivise.",
