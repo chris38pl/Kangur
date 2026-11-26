@@ -24,6 +24,8 @@ import { SyncWorker, type SyncTransport } from "./worker";
 const DEBOUNCE_MS = 1000;
 const REFRESH_DEBOUNCE_MS = 250;
 const REFRESH_POLL_IDLE_MS = 100;
+/** A connection check with no answer by then counts as offline. */
+const PROBE_TIMEOUT_MS = 5000;
 
 export type EnqueueInput = {
   listId: string;
@@ -72,7 +74,7 @@ class DataSyncEngineImpl {
       try {
         const { hasApiUrl, fetchHealth } = await import("@/lib/api/client");
         if (!hasApiUrl()) return true;
-        await fetchHealth();
+        await fetchHealth({ timeoutMs: PROBE_TIMEOUT_MS });
         return true;
       } catch {
         return false;
