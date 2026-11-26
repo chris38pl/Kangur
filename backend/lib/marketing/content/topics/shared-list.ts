@@ -26,6 +26,7 @@ const copy: TopicCopy = {
       tone: "mint",
       title: "Jak zrobić wspólną listę zakupów",
       intro: "Raz na początku. Potem już tylko dopisujecie.",
+      film: "L25",
       items: [
         {
           title: "Załóż konto",

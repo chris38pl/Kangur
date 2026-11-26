@@ -37,7 +37,7 @@ const copy: TopicCopy = {
       kind: "text",
       tone: "cream",
       title: "Czego to narzędzie nie umie",
-      slot: "phone",
+      film: "L17",
       body: [
         "Zna słowa, a nie sens. „Krem” wyśle do kosmetyków, nawet jeśli miał być do ciasta. Zrzutu ekranu nie przeczyta, a druga osoba nie zobaczy Twojej listy.",
         "Resztę robi aplikacja: [[photoList|czyta zrzut czatu i zdjęcie kartki]], [[sharedList|dzieli listę z domownikami]], a w sklepie prowadzi alejka po alejce i pozwala odhaczać kciukiem.",

@@ -180,6 +180,13 @@ const PAGE_META: Record<
         "Gotowa lista zakupów na tydzień: ile czego dla jednej osoby, dwóch i rodziny, także bez mięsa. Duże zakupy, mała dokupka i pięć obiadów z tej listy.",
     },
   },
+  films: {
+    pl: {
+      title: "Filmy krok po kroku: jak używać listy zakupów Kangur",
+      description:
+        "Krótkie filmy z prawdziwą aplikacją: lista ze zrzutu czatu i z przepisu, wspólna lista, zakupy alejka po alejce. Każdy krótszy niż pół minuty.",
+    },
+  },
   contact: {
     pl: {
       title: "Kontakt - Kangur, lista zakupów z AI",

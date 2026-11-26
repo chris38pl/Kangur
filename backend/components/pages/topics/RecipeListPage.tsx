@@ -28,7 +28,6 @@ export function RecipeListPage() {
         />
       }
       slots={{
-        kangur: <Sticker name="skron" className={styles.sticker} />,
         example: (
           <div className={styles.example}>
             {RECIPE_EXAMPLE.map(({ dish, icon, items }, index) => (
