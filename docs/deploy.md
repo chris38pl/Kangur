@@ -335,7 +335,7 @@ Setup, once per Resend account:
 1. In Resend, add the domain `getkangur.com` (or a subdomain for sending). Resend lists DNS records: DKIM (`resend._domainkey`), and MX + SPF for the `send` subdomain.
 2. Add them in the DNS zone of `getkangur.com`, which is at OVH (nameservers `dns106.ovh.net`, `ns106.ovh.net`), not on Vercel. Leave the existing OVH MX records of the main domain as they are: the mailboxes keep working. Wait until Resend says the domain is verified.
 3. Create an API key with sending access.
-4. In Vercel, set `RESEND_API_KEY` (sensitive) and `EMAIL_FROM` (for example `Kangur <zaproszenia@getkangur.com>`, on the verified domain) for Production and Preview, then redeploy.
+4. In Vercel, set `RESEND_API_KEY` (sensitive) and `EMAIL_FROM` (for example `Kangur <invites@getkangur.com>`, on the verified domain) for Production and Preview, then redeploy.
 
 The server logs `InviteEmailSkipped` (warning) when a key is missing, and `InviteEmailFailed` (error) with Resend's reason, such as an unverified domain, when Resend refuses. Then `emailDelivered` is false and the app tells the inviter the e-mail did not go out. Neither log line contains the link or the token.
 
