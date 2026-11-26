@@ -21,13 +21,13 @@ export function PrivacyContent({ locale }: Props) {
     return (
       <article className="mkt-legal">
         <h1>Polityka prywatności</h1>
-        <p className="mkt-meta">Ostatnia aktualizacja: 26 sierpnia 2026</p>
+        <p className="mkt-meta">Ostatnia aktualizacja: 26 listopada 2026</p>
 
         <p>
           Niniejsza polityka opisuje, jak Kangur („my”, „aplikacja”) przetwarza
           dane osobowe użytkowników aplikacji mobilnej i powiązanych usług.
-          Korzystając z Kangura, potwierdzasz, że zapoznałeś(-aś) się z
-          niniejszą Polityką Prywatności.
+          Korzystając z Kangura, potwierdzasz zapoznanie się z niniejszą
+          Polityką prywatności.
         </p>
 
         <h2>1. Administrator</h2>
@@ -49,21 +49,23 @@ export function PrivacyContent({ locale }: Props) {
             zgodnie z nadanymi uprawnieniami.
           </li>
           <li>
-            <strong>Płatności:</strong> status subskrypcji Premium; płatności
-            obsługuje Stripe - nie przechowujemy pełnych danych karty.
+            <strong>Płatności:</strong> status subskrypcji Premium; w
+            aplikacji płatności obsługują Google Play i App Store, a Kangur nie
+            otrzymuje numeru karty.
           </li>
           <li>
             <strong>Techniczne:</strong> tokeny urządzeń push, logi i dane
-            diagnostyczne, informacje o awariach oraz anonimowe dane
-            analityczne dotyczące korzystania z aplikacji - w celu bezpieczeństwa,
-            jakości i stabilności działania.
+            diagnostyczne, informacje o awariach oraz statystyki użycia
+            przypisane do numeru konta, bez nazw produktów i bez nagrywania
+            ekranu - w celu bezpieczeństwa, jakości i stabilności działania.
           </li>
           <li>
             <strong>AI:</strong> treści list, tekst lub zrzuty ekranu
             przetwarzamy wyłącznie po to, by wykonać wybraną funkcję AI (np.
             rozpoznanie listy ze screena). Do modeli AI nie przekazujemy
             celowo danych identyfikujących użytkownika - wyjątkiem jest sytuacja,
-            gdy użytkownik sam umieści takie dane w przesłanej treści.
+            gdy użytkownik sam umieści takie dane w przesłanej treści. Dostawca
+            AI (OpenAI) przechowuje przesłane treści według swoich zasad.
           </li>
         </ul>
 
@@ -89,10 +91,11 @@ export function PrivacyContent({ locale }: Props) {
         <h2>4. Udostępnianie</h2>
         <p>
           Dane mogą być przetwarzane przez zaufanych dostawców wyłącznie w
-          zakresie niezbędnym do działania aplikacji. Przykłady: Clerk
-          (uwierzytelnianie), Neon (baza danych), Vercel (hosting), Stripe
-          (płatności), OpenAI (funkcje AI), Resend (e-mail). Nie sprzedajemy
-          Twoich danych osobowych.
+          zakresie niezbędnym do działania aplikacji: Clerk (logowanie), Neon
+          (baza danych), Vercel (hosting), Google Play i App Store (płatności),
+          OpenAI (funkcje AI), PostHog (statystyki), Sentry (błędy), Expo
+          (powiadomienia), UploadThing (zdjęcie w profilu i załączniki do
+          zgłoszeń), Resend (e-mail). Nie sprzedajemy Twoich danych osobowych.
         </p>
         <p>
           Niektórzy dostawcy mogą przetwarzać dane poza Europejskim Obszarem
@@ -120,10 +123,14 @@ export function PrivacyContent({ locale }: Props) {
 
         <h2>7. Strona internetowa</h2>
         <p>
-          Strona internetowa może wykorzystywać wyłącznie technologie niezbędne
-          do jej działania. Jeżeli w przyszłości wdrożymy narzędzia analityczne
-          lub marketingowe oparte na plikach cookies, zaktualizujemy tę
-          politykę.
+          Strona internetowa wykorzystuje wyłącznie technologie niezbędne do
+          jej działania. Gdy wchodzisz z linku z oznaczeniem kampanii, na
+          przykład z reklamy, strona pamięta to oznaczenie w tej karcie
+          przeglądarki, żeby przekazać je do sklepu z aplikacjami. Darmowe
+          narzędzia i kalkulatory zapisują Twoją listę tylko w pamięci Twojej
+          przeglądarki i jej nie wysyłają. Jeżeli w przyszłości wdrożymy
+          narzędzia analityczne lub marketingowe oparte na plikach cookies,
+          zaktualizujemy tę politykę.
         </p>
 
         <h2>8. Dzieci</h2>
@@ -151,7 +158,7 @@ export function PrivacyContent({ locale }: Props) {
     <article className="mkt-legal" lang={locale === lang ? undefined : lang}>
       <h1>Privacy Policy</h1>
       <p className="mkt-meta">
-        Last updated: 26 August 2026
+        Last updated: 26 November 2026
         {locale !== "en" ? <> · English</> : null}
       </p>
 
@@ -183,12 +190,14 @@ export function PrivacyContent({ locale }: Props) {
           permissions.
         </li>
         <li>
-          <strong>Payments:</strong> Premium subscription status; payments are
-          handled by Stripe - we do not store full card details.
+          <strong>Payments:</strong> Premium subscription status; in the app
+          payments are handled by Google Play and the App Store, and Kangur does
+          not receive your card number.
         </li>
         <li>
           <strong>Technical:</strong> push device tokens, diagnostic logs, crash
-          information, and anonymous usage analytics - to keep the app secure,
+          information, and usage statistics linked to the account number, without
+          product names and without screen recording - to keep the app secure,
           reliable, and improve quality.
         </li>
         <li>
@@ -196,7 +205,8 @@ export function PrivacyContent({ locale }: Props) {
           only to run the AI feature you choose (e.g. reading a list from a
           screenshot). We do not intentionally send identifying user data to AI
           models - except when the user themselves includes such data in the
-          submitted content.
+          submitted content. The AI provider (OpenAI) stores the submitted content
+          under its own rules.
         </li>
       </ul>
 
@@ -219,9 +229,11 @@ export function PrivacyContent({ locale }: Props) {
       <h2>4. Sharing</h2>
       <p>
         Data may be processed by trusted providers only as needed to run the
-        app. Examples: Clerk (authentication), Neon (database), Vercel
-        (hosting), Stripe (payments), OpenAI (AI features), Resend (email). We
-        do not sell your personal data.
+        app: Clerk (sign-in), Neon (database), Vercel (hosting), Google Play and
+        the App Store (payments), OpenAI (AI features), PostHog (statistics),
+        Sentry (errors), Expo (notifications), UploadThing (profile picture and
+        attachments to reports), Resend (email). We do not sell your personal
+        data.
       </p>
       <p>
         Some providers may process data outside the European Economic Area. In
@@ -248,9 +260,13 @@ export function PrivacyContent({ locale }: Props) {
 
       <h2>7. Website</h2>
       <p>
-        The website may use only technologies that are necessary for it to work.
-        If we later introduce analytics or marketing tools that use cookies, we
-        will update this policy.
+        The website uses only technologies that are necessary for it to work.
+        When you come from a link with a campaign tag, for example from an ad,
+        the website remembers the tag in that browser tab to pass it on to the
+        app store. The free tools and calculators keep your list only in the
+        memory of your browser and do not send it. If we later introduce
+        analytics or marketing tools that use cookies, we will update this
+        policy.
       </p>
 
       <h2>8. Children</h2>

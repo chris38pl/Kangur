@@ -165,7 +165,7 @@ export const ROUTES: Record<MarketingRouteId, MarketingRoute> = {
     paths: inPolishAndEnglish("/privacy"),
     englishFallback: true,
     languageNeutral: true,
-    updatedAt: "2026-11-25",
+    updatedAt: "2026-11-26",
     changeFrequency: "yearly",
     priority: 0.3,
   },
