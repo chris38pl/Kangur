@@ -167,6 +167,8 @@ picture > source {
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 500;
+  /* "Jak to działa" broke in two at 940 px once "Filmy" joined the bar. */
+  white-space: nowrap;
 }
 
 .mkt-nav a:hover {
@@ -620,6 +622,13 @@ picture > source {
 .mkt-notfound p {
   margin: 0 0 24px;
   color: var(--kangur-text-body);
+}
+
+/* Six Polish links on a narrow laptop: a little less air between them. */
+@media (min-width: 940px) and (max-width: 1099px) {
+  .mkt-nav {
+    gap: 18px;
+  }
 }
 
 @media (min-width: 940px) {

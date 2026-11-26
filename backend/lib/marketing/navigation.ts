@@ -26,7 +26,10 @@ export function headerLinks(locale: AppLocale): NavLink[] {
   }
   return [
     how,
-    ...(locale === "pl" ? [page("tools", t.tools, locale)] : []),
+    // Films and tools are Polish only: the narrator speaks Polish.
+    ...(locale === "pl"
+      ? [page("films", "Filmy", locale), page("tools", t.tools, locale)]
+      : []),
     page("pricing", t.pricing, locale),
     page("safety", t.safety, locale),
     faq,
