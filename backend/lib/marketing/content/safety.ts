@@ -91,6 +91,7 @@ const COPY: Record<"pl" | "en", SafetyCopy> = {
         { term: "Strona", value: "getkangur.com, innych nie mamy" },
         { term: "TikTok", value: "[[https://www.tiktok.com/@getkangur|@getkangur]]" },
         { term: "Kontakt", value: "contact@getkangur.com i support@getkangur.com" },
+        { term: "E-maile", value: "zaproszenia z invites@getkangur.com, kody do logowania z notifications@getkangur.com" },
       ],
     },
     never: {
@@ -206,6 +207,7 @@ const COPY: Record<"pl" | "en", SafetyCopy> = {
         { term: "Website", value: "getkangur.com, we have no other" },
         { term: "TikTok", value: "[[https://www.tiktok.com/@getkangur|@getkangur]]" },
         { term: "Contact", value: "contact@getkangur.com and support@getkangur.com" },
+        { term: "Emails", value: "invitations from invites@getkangur.com, sign-in codes from notifications@getkangur.com" },
       ],
     },
     never: {
