@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import {
   patchShoppingListItemCount,
+  refreshWorkspaceListIndex,
   resolveWorkspaceIdForList,
   scheduleRefreshWorkspaceListIndex,
 } from "../shopping-list/refresh-workspace-list-index";
@@ -13,7 +14,7 @@ import type { ShoppingItem } from "../shopping-item/schemas";
 
 import {
   materializeSuccessfulItem,
-  overlayLocalOutboundStatuses,
+  reconcileWithOutbound,
 } from "./overlay-local-ops";
 import { resolveServerUpdate } from "./resolve-server-update";
 import type { SyncOperation } from "./types";
@@ -88,7 +89,9 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
         const clientId = String(
           operation.payload.clientId ?? operation.itemId ?? "",
         );
-        this.replaceOptimisticItem(operation.listId, clientId, result.item);
+        // The server creates items as pending; keep a tick queued behind it.
+        const item = materializeSuccessfulItem(result.item, outboundOps);
+        this.replaceOptimisticItem(operation.listId, clientId, item);
         this.touchListIndex(operation.listId, 1);
         return;
       }
@@ -99,9 +102,19 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
         this.touchListIndex(operation.listId, -1);
         return;
       }
-      case "ARCHIVE_LIST":
-        // No-op on active shopping-items cache.
+      case "ARCHIVE_LIST": {
+        // Trip finished on the server (maybe long after an offline finish):
+        // Home drops the list, History shows it.
+        const workspaceId = resolveWorkspaceIdForList(
+          this.queryClient,
+          operation.listId,
+          typeof operation.payload.workspaceId === "string"
+            ? operation.payload.workspaceId
+            : null,
+        );
+        void refreshWorkspaceListIndex(this.queryClient, workspaceId);
         return;
+      }
       default:
         return;
     }
@@ -114,7 +127,7 @@ export class ReactQuerySyncCacheAdapter implements SyncCacheAdapter {
   ): ShoppingItem[] {
     // Return reconciled rows; React Query queryFn (or caller) owns the write.
     void listId;
-    return overlayLocalOutboundStatuses(serverItems, outboundOps);
+    return reconcileWithOutbound(serverItems, outboundOps);
   }
 
   /** Home counts non-removed items. Shopping-mode adds/removes go through the engine, not useCreateShoppingItem. */
