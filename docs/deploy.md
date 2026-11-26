@@ -326,9 +326,18 @@ One OpenAI account, **two projects**:
 
 Separate API keys, usage, limits, and billing dashboards. Set `OPENAI_API_KEY` per env. Optional: `OPENAI_MODEL_TEXT`, `OPENAI_MODEL_VISION`, `AI_FREE_LIFETIME_CREDITS` (default `10`; legacy `AI_FREE_MONTHLY_CREDITS` still accepted).
 
-### 6.6 Resend (optional)
+### 6.6 Resend (required for invitations)
 
-Invite emails when `RESEND_API_KEY` + `EMAIL_FROM` are set. Without them, invitations are still created, but no e-mail goes out. Prefer a verified sending domain on production, and keep Resend click tracking off: it would put the invitation link through Resend's own redirect.
+Invite emails go out only when `RESEND_API_KEY` + `EMAIL_FROM` are set. Without them, invitations are still created, but no e-mail goes out, and a person without an account has no other way in. Keep Resend click tracking off: it would put the invitation link through Resend's own redirect.
+
+Setup, once per Resend account:
+
+1. In Resend, add the domain `getkangur.com` (or a subdomain for sending). Resend lists DNS records: DKIM (`resend._domainkey`), and MX + SPF for the `send` subdomain.
+2. Add them in the DNS zone of `getkangur.com`, which is at OVH (nameservers `dns106.ovh.net`, `ns106.ovh.net`), not on Vercel. Leave the existing OVH MX records of the main domain as they are: the mailboxes keep working. Wait until Resend says the domain is verified.
+3. Create an API key with sending access.
+4. In Vercel, set `RESEND_API_KEY` (sensitive) and `EMAIL_FROM` (for example `Kangur <zaproszenia@getkangur.com>`, on the verified domain) for Production and Preview, then redeploy.
+
+The server logs `InviteEmailSkipped` (warning) when a key is missing, and `InviteEmailFailed` (error) with Resend's reason, such as an unverified domain, when Resend refuses. Then `emailDelivered` is false and the app tells the inviter the e-mail did not go out. Neither log line contains the link or the token.
 
 The e-mail links to the invitation page of the site, `/invite` on `NEXT_PUBLIC_SITE_URL` in the e-mail's language, with the token after `#` (`https://www.getkangur.com/invite#t=<token>`). Browsers never send that part, so the token stays out of server logs, the proxy and Referer headers, and the page takes it out of the address before any script starts (`lib/marketing/invite.ts`). The page explains the invitation, shows both stores and has a button with the app link `kangur://invite/<token>`, the link e-mails carried before. The app still opens those, so old invitations keep working. `INVITE_ACCEPT_URL_BASE` is that app link (`kangur://invite`, default), or `kangur-dev://invite` for the development build; it no longer changes the e-mail link.
 

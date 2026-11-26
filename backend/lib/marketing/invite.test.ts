@@ -171,14 +171,42 @@ test("the early script leaves other pages and other anchors alone", () => {
   }
 });
 
-test("the token never reaches the logs, also when no e-mail goes out", async () => {
-  const lines: string[] = [];
-  const info = console.info;
-  const key = process.env.RESEND_API_KEY;
-  delete process.env.RESEND_API_KEY;
-  console.info = (...args: unknown[]) => {
-    lines.push(JSON.stringify(args));
+/**
+ * sendInviteEmail with Resend answering `answer`, without the network: what went to
+ * Resend, what came back and every log line. "no keys" is a deployment without them.
+ */
+async function sendWith(
+  answer: Response | Error | "no keys",
+  variant: "new_user" | "existing_user" = "new_user",
+) {
+  const saved = {
+    fetch: globalThis.fetch,
+    key: process.env.RESEND_API_KEY,
+    from: process.env.EMAIL_FROM,
+    info: console.info,
+    warn: console.warn,
+    error: console.error,
   };
+  const sent: Record<string, unknown>[] = [];
+  const logs: string[] = [];
+  if (answer === "no keys") {
+    delete process.env.RESEND_API_KEY;
+    delete process.env.EMAIL_FROM;
+  } else {
+    process.env.RESEND_API_KEY = "re_test_not_a_real_key";
+    process.env.EMAIL_FROM = "Kangur <test@example.com>";
+  }
+  globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+    sent.push(JSON.parse(String(init?.body)));
+    if (answer instanceof Error) throw answer;
+    return answer === "no keys" ? new Response(null, { status: 500 }) : answer;
+  }) as typeof fetch;
+  const record = (...args: unknown[]) => {
+    logs.push(JSON.stringify(args));
+  };
+  console.info = record;
+  console.warn = record;
+  console.error = record;
   try {
     const result = await sendInviteEmail({
       to: "domownik@example.com",
@@ -186,16 +214,77 @@ test("the token never reaches the logs, also when no e-mail goes out", async () 
       workspaceName: "Dom",
       workspaceIcon: "home",
       rawToken: TOKEN,
-      variant: "new_user",
+      variant,
       locale: "pl",
     });
-    assert.deepEqual(result, { delivered: false });
+    return { result, sent, logs };
   } finally {
-    console.info = info;
-    if (key !== undefined) process.env.RESEND_API_KEY = key;
+    globalThis.fetch = saved.fetch;
+    console.info = saved.info;
+    console.warn = saved.warn;
+    console.error = saved.error;
+    for (const [name, value] of [
+      ["RESEND_API_KEY", saved.key],
+      ["EMAIL_FROM", saved.from],
+    ] as const) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
   }
-  assert.ok(lines.length > 0);
-  for (const line of lines) assert.ok(!line.includes(TOKEN), line);
+}
+
+const json = (status: number, body: unknown) =>
+  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+
+test("an e-mail Resend takes carries the page link and the neutral copy", async () => {
+  const { result, sent, logs } = await sendWith(json(200, { id: "test" }), "existing_user");
+  assert.deepEqual(result, { delivered: true });
+  assert.equal(sent.length, 1);
+  const html = String(sent[0].html);
+  assert.ok(html.includes(`href="${SITE_URL}/invite#t=${TOKEN}"`), html);
+  assert.ok(html.includes("Ola zaprasza Cię do"), html);
+  assert.ok(html.includes("Otwórz zaproszenie"), html);
+  assert.ok(logs.some((line) => line.includes("InviteEmailSent")));
+});
+
+test("an e-mail Resend refuses is not reported as sent", async () => {
+  const { result, logs } = await sendWith(
+    json(403, {
+      statusCode: 403,
+      name: "validation_error",
+      message: "The example.com domain is not verified.",
+    }),
+  );
+  assert.deepEqual(result, { delivered: false });
+  assert.ok(logs.some((line) => line.includes("InviteEmailFailed") && line.includes("not verified")));
+  assert.ok(!logs.some((line) => line.includes("InviteEmailSent")));
+});
+
+test("no connection to Resend is not reported as sent", async () => {
+  const { result, logs } = await sendWith(new TypeError("fetch failed"));
+  assert.deepEqual(result, { delivered: false });
+  assert.ok(logs.some((line) => line.includes("InviteEmailFailed")));
+});
+
+test("without the keys nothing is sent, and the log says why", async () => {
+  const { result, sent, logs } = await sendWith("no keys");
+  assert.deepEqual(result, { delivered: false });
+  assert.equal(sent.length, 0);
+  assert.ok(logs.some((line) => line.includes("InviteEmailSkipped") && line.includes("RESEND_API_KEY")));
+});
+
+test("the token never reaches the logs, whatever Resend answers", async () => {
+  const answers = [
+    json(200, { id: "test" }),
+    json(422, { statusCode: 422, name: "validation_error", message: "Invalid `to` field." }),
+    new TypeError("fetch failed"),
+    "no keys" as const,
+  ];
+  for (const answer of answers) {
+    const { logs } = await sendWith(answer);
+    assert.ok(logs.length > 0);
+    for (const line of logs) assert.ok(!line.includes(TOKEN), line);
+  }
 });
 
 test("the invitation follows the reader's language and stays out of search", () => {

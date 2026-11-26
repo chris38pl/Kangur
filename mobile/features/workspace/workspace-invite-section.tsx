@@ -54,6 +54,7 @@ export function WorkspaceInviteSection({
   const [sentSheet, setSentSheet] = useState<{
     email: string;
     resent: boolean;
+    delivered: boolean;
   } | null>(null);
 
   const invitationsQuery = useWorkspaceInvitations(workspaceId, canManage);
@@ -77,6 +78,7 @@ export function WorkspaceInviteSection({
         setSentSheet({
           email: trimmed,
           resent: result.status === "resent",
+          delivered: result.emailDelivered,
         });
       },
       onError: (err) => {
@@ -248,6 +250,7 @@ export function WorkspaceInviteSection({
         visible={sentSheet != null}
         email={sentSheet?.email ?? ""}
         resent={sentSheet?.resent ?? false}
+        delivered={sentSheet?.delivered ?? true}
         onClose={() => setSentSheet(null)}
       />
     </View>
