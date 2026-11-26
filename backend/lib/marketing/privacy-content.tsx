@@ -21,7 +21,7 @@ export function PrivacyContent({ locale }: Props) {
     return (
       <article className="mkt-legal">
         <h1>Polityka prywatności</h1>
-        <p className="mkt-meta">Ostatnia aktualizacja: 25 listopada 2026</p>
+        <p className="mkt-meta">Ostatnia aktualizacja: 26 listopada 2026</p>
 
         <p>
           Niniejsza polityka opisuje, jak Kangur („my”, „aplikacja”) przetwarza
@@ -158,7 +158,7 @@ export function PrivacyContent({ locale }: Props) {
     <article className="mkt-legal" lang={locale === lang ? undefined : lang}>
       <h1>Privacy Policy</h1>
       <p className="mkt-meta">
-        Last updated: 25 November 2026
+        Last updated: 26 November 2026
         {locale !== "en" ? <> · English</> : null}
       </p>
 
