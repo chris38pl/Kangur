@@ -70,6 +70,27 @@ export const FILM_FILES = {
       height: 1280
     }
   },
+  L03: {
+    id: "L03",
+    slug: "skopiuj-i-gotowe",
+    part: "A",
+    name: "Skopiuj i gotowe",
+    title: "Lista zakupów z tekstu w schowku",
+    transcript: "Masz listę w mailu albo w notatkach? Skopiuj ją całą. W Kangurze stuknij plus na dole, a potem Tekst ze schowka. Kangur sam rozdziela produkty i układa je po alejkach. Kopiujesz tekst i masz gotową listę.",
+    seconds: 17,
+    made: "2026-11-26T17:35:08.984Z",
+    version: 1,
+    src: "/img/filmy/skopiuj-i-gotowe.e33c6dd1.mp4",
+    kb: 1235,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/skopiuj-i-gotowe-360.ca0a2cde.avif 360w, /img/filmy/skopiuj-i-gotowe-720.64c7585e.avif 720w",
+      src: "/img/filmy/skopiuj-i-gotowe-720.b82e8954.webp",
+      width: 720,
+      height: 1280
+    }
+  },
   L04: {
     id: "L04",
     slug: "wszystko-po-przecinku",
@@ -87,6 +108,27 @@ export const FILM_FILES = {
     poster: {
       avif: "/img/filmy/wszystko-po-przecinku-360.e72555aa.avif 360w, /img/filmy/wszystko-po-przecinku-720.3382bbf2.avif 720w",
       src: "/img/filmy/wszystko-po-przecinku-720.38873053.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L05: {
+    id: "L05",
+    slug: "kartka-z-lodowki",
+    part: "A",
+    name: "Kartka z lodówki",
+    title: "Lista zakupów ze zdjęcia kartki",
+    transcript: "Lista wisi na lodówce? Zrób jej zdjęcie. Potem stuknij plus na dole, wybierz Obraz, a na końcu wskaż zdjęcie w galerii. Kangur odczyta kartkę i zrobi z niej listę. Sprawdź jeszcze, czy wszystko się zgadza, i lista jest w telefonie.",
+    seconds: 19,
+    made: "2026-11-26T21:03:40.779Z",
+    version: 1,
+    src: "/img/filmy/kartka-z-lodowki.40fc9014.mp4",
+    kb: 1525,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/kartka-z-lodowki-360.3f7188ef.avif 360w, /img/filmy/kartka-z-lodowki-720.90729d69.avif 720w",
+      src: "/img/filmy/kartka-z-lodowki-720.a44eef2a.webp",
       width: 720,
       height: 1280
     }
@@ -154,6 +196,27 @@ export const FILM_FILES = {
       height: 1280
     }
   },
+  L09: {
+    id: "L09",
+    slug: "dopiski",
+    part: "A",
+    name: "Dopiski",
+    title: "Jak dopisać produkty do gotowej listy zakupów",
+    transcript: "Lista gotowa, a ktoś przysyła dopiski? Otwórz ją i rozwiń Dodaj z AI, potem wklej tekst i stuknij Dodaj do listy. Nowe produkty dołączają do starych, każdy w swojej alejce. Wszystko zostaje na jednej liście.",
+    seconds: 19,
+    made: "2026-11-26T20:28:02.625Z",
+    version: 1,
+    src: "/img/filmy/dopiski.03d97fe8.mp4",
+    kb: 1180,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/dopiski-360.906f5459.avif 360w, /img/filmy/dopiski-720.9cb7c343.avif 720w",
+      src: "/img/filmy/dopiski-720.0aaac332.webp",
+      width: 720,
+      height: 1280
+    }
+  },
   L10: {
     id: "L10",
     slug: "to-co-zawsze",
@@ -175,6 +238,48 @@ export const FILM_FILES = {
       height: 1280
     }
   },
+  L11: {
+    id: "L11",
+    slug: "gwiazdka-dla-listy",
+    part: "A",
+    name: "Gwiazdka dla listy",
+    title: "Ulubione listy zakupów z gwiazdką",
+    transcript: "Masz listę, która się sprawdza? Daj jej gwiazdkę. Otwórz Listy i przy tych zakupach stuknij gwiazdkę z prawej. Kangur chętniej sięgnie po nie, gdy będzie układał propozycję z poprzednich list. Gwiazdką oznaczysz do pięciu list.",
+    seconds: 17,
+    made: "2026-11-26T21:43:37.913Z",
+    version: 1,
+    src: "/img/filmy/gwiazdka-dla-listy.2ebc0447.mp4",
+    kb: 1224,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/gwiazdka-dla-listy-360.6aea3a42.avif 360w, /img/filmy/gwiazdka-dla-listy-720.c87f24e9.avif 720w",
+      src: "/img/filmy/gwiazdka-dla-listy-720.56d18f0d.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L12: {
+    id: "L12",
+    slug: "kilka-liter",
+    part: "B",
+    name: "Kilka liter",
+    title: "Szybkie dodawanie produktów z podpowiedzi",
+    transcript: "Nie musisz pisać całych nazw. Na liście rozwiń Dodaj pozycję ręcznie, wpisz kilka pierwszych liter i stuknij podpowiedź. Produkt jest na liście razem z alejką. Kilka liter zamiast całej nazwy.",
+    seconds: 16,
+    made: "2026-11-26T17:42:01.292Z",
+    version: 1,
+    src: "/img/filmy/kilka-liter.8342cf42.mp4",
+    kb: 857,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/kilka-liter-360.20931b9a.avif 360w, /img/filmy/kilka-liter-720.6c33c41d.avif 720w",
+      src: "/img/filmy/kilka-liter-720.c757b0c7.webp",
+      width: 720,
+      height: 1280
+    }
+  },
   L13: {
     id: "L13",
     slug: "ktora-smietana",
@@ -192,6 +297,69 @@ export const FILM_FILES = {
     poster: {
       avif: "/img/filmy/ktora-smietana-360.db567898.avif 360w, /img/filmy/ktora-smietana-720.71a409fa.avif 720w",
       src: "/img/filmy/ktora-smietana-720.9920f5a0.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L14: {
+    id: "L14",
+    slug: "zmiana-planow",
+    part: "B",
+    name: "Zmiana planów",
+    title: "Jak zmienić ilość albo usunąć produkt z listy",
+    transcript: "Miało być jedno mleko, będą trzy? Przy produkcie stuknij trzy kropki, popraw ilość na trzy i stuknij Zapisz. W tym samym oknie zmienisz nazwę i notatkę albo usuniesz produkt. Wszystkie poprawki są w jednym miejscu.",
+    seconds: 19,
+    made: "2026-11-26T21:50:58.214Z",
+    version: 1,
+    src: "/img/filmy/zmiana-planow.ba479b94.mp4",
+    kb: 1220,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/zmiana-planow-360.b33c9f5d.avif 360w, /img/filmy/zmiana-planow-720.1e40116c.avif 720w",
+      src: "/img/filmy/zmiana-planow-720.d09de5fd.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L15: {
+    id: "L15",
+    slug: "nazwa-listy",
+    part: "B",
+    name: "Nazwa listy",
+    title: "Jak zmienić nazwę listy zakupów",
+    transcript: "Masz pięć list i każda nazywa się Zakupy? Otwórz listę i stuknij jej nazwę na górze. Wpisz nową, na przykład Wigilia, i stuknij Zapisz. Każda lista ma swoją nazwę i łatwo ją znaleźć.",
+    seconds: 17,
+    made: "2026-11-26T21:56:08.085Z",
+    version: 1,
+    src: "/img/filmy/nazwa-listy.fe11d945.mp4",
+    kb: 945,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/nazwa-listy-360.e2e86226.avif 360w, /img/filmy/nazwa-listy-720.ae73515a.avif 720w",
+      src: "/img/filmy/nazwa-listy-720.5f4ed6d6.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L16: {
+    id: "L16",
+    slug: "alejki-albo-data",
+    part: "B",
+    name: "Alejki albo data",
+    title: "Lista zakupów według alejek albo według daty",
+    transcript: "Szukasz tego, co doszło na listę jako ostatnie? Nad produktami są dwie ikony. Jedna układa listę według alejek. Druga według daty, od najnowszych. W domu sprawdzasz po dacie, w sklepie idziesz po alejkach.",
+    seconds: 17,
+    made: "2026-11-26T22:00:54.168Z",
+    version: 1,
+    src: "/img/filmy/alejki-albo-data.ee7be2ba.mp4",
+    kb: 1022,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/alejki-albo-data-360.af8d13d5.avif 360w, /img/filmy/alejki-albo-data-720.caf6151f.avif 720w",
+      src: "/img/filmy/alejki-albo-data-720.0c97eb94.webp",
       width: 720,
       height: 1280
     }
@@ -238,6 +406,48 @@ export const FILM_FILES = {
       height: 1280
     }
   },
+  L19: {
+    id: "L19",
+    slug: "twoja-trasa",
+    part: "C",
+    name: "Twoja trasa",
+    title: "Jak ustawić alejki w kolejności swojego sklepu",
+    transcript: "W Twoim sklepie pieczywo jest na końcu? W zakupach przytrzymaj uchwyt przy alejce, przeciągnij ją w dół i puść. Tak samo z każdą inną. Lista idzie w kolejności Twojego sklepu.",
+    seconds: 15,
+    made: "2026-11-27T10:19:56.887Z",
+    version: 1,
+    src: "/img/filmy/twoja-trasa.a7e01c1f.mp4",
+    kb: 729,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/twoja-trasa-360.dfc24d87.avif 360w, /img/filmy/twoja-trasa-720.542c5696.avif 720w",
+      src: "/img/filmy/twoja-trasa-720.9e1db3b4.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L20: {
+    id: "L20",
+    slug: "cala-lista-naraz",
+    part: "C",
+    name: "Cała lista naraz",
+    title: "Zakupy z pełnej listy zamiast alejek",
+    transcript: "Wolisz widzieć wszystko naraz? W zakupach stuknij ikonę pełnej listy. Stuknij produkt raz: kupiony. Drugi raz: nie było. Trzeci raz: wraca do kupienia. Do alejek wrócisz drugą ikoną.",
+    seconds: 17,
+    made: "2026-11-26T17:44:14.285Z",
+    version: 1,
+    src: "/img/filmy/cala-lista-naraz.41b08fda.mp4",
+    kb: 803,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/cala-lista-naraz-360.6c18526e.avif 360w, /img/filmy/cala-lista-naraz-720.340de70e.avif 720w",
+      src: "/img/filmy/cala-lista-naraz-720.006dc886.webp",
+      width: 720,
+      height: 1280
+    }
+  },
   L21: {
     id: "L21",
     slug: "jeszcze-musztarda",
@@ -255,6 +465,48 @@ export const FILM_FILES = {
     poster: {
       avif: "/img/filmy/jeszcze-musztarda-360.8760b227.avif 360w, /img/filmy/jeszcze-musztarda-720.082a1634.avif 720w",
       src: "/img/filmy/jeszcze-musztarda-720.15020504.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L22: {
+    id: "L22",
+    slug: "cofniecie-pomylki",
+    part: "C",
+    name: "Cofnięcie pomyłki",
+    title: "Jak cofnąć odhaczony produkt w trakcie zakupów",
+    transcript: "Palec pojechał za daleko? Na dole alejki jest sekcja Kupione. Znajdź tam masło, stuknij je raz, a wróci na listę. Każde odhaczenie możesz cofnąć.",
+    seconds: 13,
+    made: "2026-11-26T20:31:24.185Z",
+    version: 1,
+    src: "/img/filmy/cofniecie-pomylki.7c6fc3f2.mp4",
+    kb: 702,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/cofniecie-pomylki-360.ba25a437.avif 360w, /img/filmy/cofniecie-pomylki-720.a14adcd3.avif 720w",
+      src: "/img/filmy/cofniecie-pomylki-720.67f364bb.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L23: {
+    id: "L23",
+    slug: "przerwa-w-zakupach",
+    part: "C",
+    name: "Przerwa w zakupach",
+    title: "Jak wrócić do przerwanych zakupów",
+    transcript: "Ktoś zadzwonił w połowie zakupów? Nic nie przepada. Wróć na Start i znajdź sekcję Kontynuuj zakupy. Stuknij Wznów i gotowe. Widzisz, co już w koszyku, a co zostało. Kończysz zakupy tam, gdzie była przerwa.",
+    seconds: 18,
+    made: "2026-11-26T17:37:37.893Z",
+    version: 1,
+    src: "/img/filmy/przerwa-w-zakupach.5d19ced4.mp4",
+    kb: 963,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/przerwa-w-zakupach-360.448d359b.avif 360w, /img/filmy/przerwa-w-zakupach-720.52077075.avif 720w",
+      src: "/img/filmy/przerwa-w-zakupach-720.f69de83a.webp",
       width: 720,
       height: 1280
     }
@@ -364,6 +616,90 @@ export const FILM_FILES = {
       height: 1280
     }
   },
+  L29: {
+    id: "L29",
+    slug: "kto-ma-dostep",
+    part: "D",
+    name: "Kto ma dostęp",
+    title: "Kto ma dostęp do Twojej listy zakupów",
+    transcript: "Kto widzi Twoje listy? Otwórz Przestrzeń i znajdź Dostęp do listy. Są tam wszyscy. Właściciel może usunąć osobę, a zaproszenie, które czeka, cofnąć. Ty decydujesz, kto ma dostęp.",
+    seconds: 16,
+    made: "2026-11-26T22:05:49.901Z",
+    version: 1,
+    src: "/img/filmy/kto-ma-dostep.d7230829.mp4",
+    kb: 1175,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/kto-ma-dostep-360.589ee2f4.avif 360w, /img/filmy/kto-ma-dostep-720.6f88bc78.avif 720w",
+      src: "/img/filmy/kto-ma-dostep-720.18393637.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L30: {
+    id: "L30",
+    slug: "dzwonek",
+    part: "D",
+    name: "Dzwonek",
+    title: "Powiadomienia o zakupach we wspólnej liście",
+    transcript: "Ktoś poszedł do sklepu, ale kto? Na Starcie stuknij dzwonek. Zobaczysz, kto zaczął zakupy, kto je skończył i ilu produktów zabrakło. Wiesz, co się dzieje z zakupami.",
+    seconds: 14,
+    made: "2026-11-26T17:39:49.194Z",
+    version: 1,
+    src: "/img/filmy/dzwonek.a282af40.mp4",
+    kb: 715,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/dzwonek-360.c296935b.avif 360w, /img/filmy/dzwonek-720.31a759a7.avif 720w",
+      src: "/img/filmy/dzwonek-720.d04b3e82.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L31: {
+    id: "L31",
+    slug: "cisza",
+    part: "D",
+    name: "Cisza",
+    title: "Jak wyłączyć powiadomienia w Kangurze",
+    transcript: "Potrzebujesz ciszy? Otwórz Profil, wejdź w Powiadomienia i zaznacz Wyłącz wszystkie powiadomienia. Masz spokój. Listy działają dalej, a powiadomienia włączysz w tym samym miejscu.",
+    seconds: 15,
+    made: "2026-11-26T20:34:18.296Z",
+    version: 1,
+    src: "/img/filmy/cisza.91307b21.mp4",
+    kb: 863,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/cisza-360.eafe8752.avif 360w, /img/filmy/cisza-720.159b845e.avif 720w",
+      src: "/img/filmy/cisza-720.6ad374e1.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L32: {
+    id: "L32",
+    slug: "szukanie-w-listach",
+    part: "E",
+    name: "Szukanie w listach",
+    title: "Jak znaleźć produkt w starych listach zakupów",
+    transcript: "Na której liście były serwetki? Nie musisz pamiętać. Otwórz Listy i na górze wpisz nazwę produktu. Kangur pokaże listy, na których był. Szukać możesz też po nazwie listy.",
+    seconds: 15,
+    made: "2026-11-26T20:37:25.049Z",
+    version: 1,
+    src: "/img/filmy/szukanie-w-listach.87ed620a.mp4",
+    kb: 881,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/szukanie-w-listach-360.20103e04.avif 360w, /img/filmy/szukanie-w-listach-720.3928e13b.avif 720w",
+      src: "/img/filmy/szukanie-w-listach-720.6b22b429.webp",
+      width: 720,
+      height: 1280
+    }
+  },
   L33: {
     id: "L33",
     slug: "powtorka",
@@ -385,6 +721,27 @@ export const FILM_FILES = {
       height: 1280
     }
   },
+  L34: {
+    id: "L34",
+    slug: "dziesiec-jezykow",
+    part: "E",
+    name: "Dziesięć języków",
+    title: "Jak zmienić język w aplikacji Kangur",
+    transcript: "Kangur mówi w dziesięciu językach. Otwórz Profil, stuknij Język aplikacji i wybierz ten, który lubisz. Cała aplikacja zmienia język. Każda osoba może mieć inny, a lista jest wspólna.",
+    seconds: 16,
+    made: "2026-11-26T20:40:39.047Z",
+    version: 1,
+    src: "/img/filmy/dziesiec-jezykow.c44c9941.mp4",
+    kb: 897,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/dziesiec-jezykow-360.7b5ab73d.avif 360w, /img/filmy/dziesiec-jezykow-720.d5f112fc.avif 720w",
+      src: "/img/filmy/dziesiec-jezykow-720.2c4e7d96.webp",
+      width: 720,
+      height: 1280
+    }
+  },
   L35: {
     id: "L35",
     slug: "dziesiec-na-start",
@@ -402,6 +759,27 @@ export const FILM_FILES = {
     poster: {
       avif: "/img/filmy/dziesiec-na-start-360.831383ef.avif 360w, /img/filmy/dziesiec-na-start-720.1ff61b7d.avif 720w",
       src: "/img/filmy/dziesiec-na-start-720.db2a1e52.webp",
+      width: 720,
+      height: 1280
+    }
+  },
+  L36: {
+    id: "L36",
+    slug: "jedno-premium",
+    part: "E",
+    name: "Jedno Premium",
+    title: "Kangur Premium dla całej przestrzeni",
+    transcript: "Jedno Premium, cały dom. Otwórz Profil, a potem Subskrypcja i płatności. Premium działa dla całej przestrzeni: AI bez limitu i do dwustu list w historii. Pierwszy miesiąc za darmo, potem 9,99 zł miesięcznie. Odnawia się, aż anulujesz.",
+    seconds: 21,
+    made: "2026-11-26T17:46:35.610Z",
+    version: 1,
+    src: "/img/filmy/jedno-premium.ee3ca0fe.mp4",
+    kb: 1115,
+    width: 720,
+    height: 1280,
+    poster: {
+      avif: "/img/filmy/jedno-premium-360.b8c15173.avif 360w, /img/filmy/jedno-premium-720.c7644386.avif 720w",
+      src: "/img/filmy/jedno-premium-720.0a7d1c9a.webp",
       width: 720,
       height: 1280
     }

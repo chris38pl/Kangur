@@ -142,7 +142,7 @@ export const ROUTES: Record<MarketingRouteId, MarketingRoute> = {
   },
   films: {
     paths: { pl: "/filmy" },
-    updatedAt: "2026-11-26",
+    updatedAt: "2026-11-27",
     changeFrequency: "weekly",
     priority: 0.6,
   },
