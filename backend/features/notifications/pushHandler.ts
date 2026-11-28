@@ -1,7 +1,25 @@
+import {
+  clientSupports,
+  normalizeClientVersion,
+  type ClientFeature,
+} from "@/lib/clientVersion";
 import type { DomainEvent } from "@/lib/events/DomainEventBus";
 import { domainEventBus } from "@/lib/events/DomainEventBus";
 import { pushProvider } from "@/lib/notifications/PushProvider";
 import { prisma } from "@/lib/prisma";
+
+/** Notification types a device gets as a push only from this app version (PushDevice.appVersion). */
+const PUSH_FEATURE_BY_TYPE: Partial<Record<string, ClientFeature>> = {
+  WORKSPACE_MEMBER_JOINED: "memberJoinedNotifications",
+};
+
+export function deviceGetsPush(
+  notificationType: string,
+  appVersion: string | null,
+): boolean {
+  const feature = PUSH_FEATURE_BY_TYPE[notificationType];
+  return !feature || clientSupports(normalizeClientVersion(appVersion), feature);
+}
 
 /**
  * Reacts to NotificationCreatedEvent only - never called from NotificationRepository.
@@ -14,10 +32,13 @@ export async function handleNotificationCreated(
       userId: event.recipientUserId,
       disabledAt: null,
     },
-    select: { expoToken: true },
+    select: { expoToken: true, appVersion: true },
   });
 
-  const tokens = devices.map((d) => d.expoToken).filter(Boolean);
+  const tokens = devices
+    .filter((d) => deviceGetsPush(event.notificationType, d.appVersion))
+    .map((d) => d.expoToken)
+    .filter(Boolean);
   if (tokens.length === 0) return;
 
   const result = await pushProvider.send({

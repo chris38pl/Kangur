@@ -64,6 +64,25 @@ export function hasApiUrl(): boolean {
   return Boolean(process.env.EXPO_PUBLIC_API_URL?.trim());
 }
 
+/**
+ * The server shows new kinds of data (link invitations, new notification types) only to
+ * apps that say they know them. App 1.0.8 said nothing; every later version sends its
+ * version on every request. Set once at startup (app/_layout.tsx), so this file stays free
+ * of native modules for node tests.
+ */
+export const APP_VERSION_HEADER = "X-Kangur-App-Version";
+
+let appVersion: string | null = null;
+
+export function setApiAppVersion(version: string | null | undefined): void {
+  const value = version?.trim();
+  appVersion = value && /^\d+\.\d+\.\d+$/.test(value) ? value : null;
+}
+
+export function appVersionHeaders(): Record<string, string> {
+  return appVersion ? { [APP_VERSION_HEADER]: appVersion } : {};
+}
+
 type ApiFetchOptions = {
   token?: string | null;
   deviceLocale?: string | null;
@@ -99,6 +118,7 @@ export async function apiFetch<T>(
   const url = `${base}${path}`;
   const headers: Record<string, string> = {
     Accept: "application/json",
+    ...appVersionHeaders(),
   };
 
   if (options.token) {

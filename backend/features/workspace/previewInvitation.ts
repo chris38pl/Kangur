@@ -1,17 +1,42 @@
-import { notFound, forbidden, validationError } from "@/lib/auth/errors";
-import { resolveAuthProvider } from "@/lib/auth/resolveAuthProvider";
-import { displayNameFromEmail } from "@/lib/displayName";
+import type { InvitationKind } from "@prisma/client";
+
+import type { ClientVersion } from "@/lib/clientVersion";
 import { normalizeEmail } from "@/lib/email/normalizeEmail";
+import { resolveAppLocale } from "@/lib/locale";
 import {
-  hashInviteToken,
-  isValidInviteRawToken,
-} from "@/lib/invite/token";
+  isPrivateRelayEmail,
+  resolveDisplayName,
+} from "@/lib/names/displayName";
+import { nameWords } from "@/lib/names/words";
 import { prisma } from "@/lib/prisma";
+
+import {
+  invitationGate,
+  invitationGoneError,
+  needsAddressCheck,
+  wrongAccountError,
+} from "./invitationAccess";
+import {
+  accountOwnsAddress,
+  capabilityOf,
+  defaultInvitationDeps,
+  findInvitation,
+  type InvitationCapability,
+  type InvitationDeps,
+} from "./invitationDeps";
+import { MEMBER_USER_SELECT } from "./listWorkspaceMembers";
+import { memberLabels, sortMembers } from "./presentMembers";
+
+/** Avatars on the "Join" screen. */
+const PREVIEW_MEMBERS = 8;
 
 export type InvitationPreview = {
   invitationId: string;
+  kind: InvitationKind;
   createdAt: string;
   inviterDisplayName: string;
+  inviterHasName: boolean;
+  differentEmail: { invitedEmail: string; accountEmail: string } | null;
   workspace: {
     id: string;
     name: string;
@@ -25,111 +50,120 @@ export type InvitationPreview = {
   alreadyMember: boolean;
 };
 
-const invitationInclude = {
-  workspace: true,
-  invitedBy: true,
-} as const;
-
-async function loadInvitation(input: {
-  rawToken?: string;
-  invitationId?: string;
-}) {
-  if (input.rawToken) {
-    const token = input.rawToken.trim();
-    if (!isValidInviteRawToken(token)) {
-      throw notFound("Invitation expired.", { reason: "expired" });
-    }
-    const invitation = await prisma.invitation.findUnique({
-      where: { tokenHash: hashInviteToken(token) },
-      include: invitationInclude,
-    });
-    if (!invitation) {
-      throw notFound("Invitation expired.", { reason: "expired" });
-    }
-    return invitation;
-  }
-
-  if (input.invitationId) {
-    const invitation = await prisma.invitation.findUnique({
-      where: { id: input.invitationId.trim() },
-      include: invitationInclude,
-    });
-    if (!invitation) {
-      throw notFound("Invitation expired.", { reason: "expired" });
-    }
-    return invitation;
-  }
-
-  throw validationError("Provide exactly one of token or invitationId.");
-}
+export type InvitationViewer = {
+  id: string;
+  email: string;
+  locale: string | null;
+  clerkId: string;
+};
 
 /**
- * Preview for invitees (by deep-link token or invitationId from in-app notification).
- * Does not require workspace membership.
+ * "Kasia invites you to Dom Krawców" for the person holding the invitation, before they
+ * join. Does not require workspace membership. A used link opened by someone else is gone
+ * ("used"), not "you are already here".
  */
-export async function previewInvitation(input: {
-  rawToken?: string;
-  invitationId?: string;
-  userId: string;
-  userEmail: string;
-  clerkId: string;
-}): Promise<InvitationPreview> {
-  const invitation = await loadInvitation({
-    rawToken: input.rawToken,
-    invitationId: input.invitationId,
+export async function previewInvitation(
+  input: InvitationCapability & {
+    viewer: InvitationViewer;
+    /** The asking app (lib/clientVersion.ts); missing means app 1.0.8. */
+    client?: ClientVersion;
+  },
+  deps: InvitationDeps = defaultInvitationDeps,
+): Promise<InvitationPreview> {
+  const { via, where } = capabilityOf(input);
+  const invitation = await findInvitation(prisma, where, {
+    workspace: true,
+    invitedBy: { select: MEMBER_USER_SELECT },
   });
 
-  if (invitation.status === "revoked") {
-    throw notFound("Invitation expired.", { reason: "revoked" });
-  }
+  const viewer = input.viewer;
+  const membership = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId: invitation.workspaceId,
+        userId: viewer.id,
+      },
+    },
+  });
 
-  if (invitation.status === "pending" && invitation.expiresAt < new Date()) {
-    throw notFound("Invitation expired.", { reason: "expired" });
-  }
+  const gate = invitationGate({
+    status: invitation.status,
+    expiresAt: invitation.expiresAt,
+    isMember: Boolean(membership),
+    now: deps.now(),
+  });
+  if (gate.kind === "gone") throw invitationGoneError(gate.reason);
 
-  if (normalizeEmail(invitation.email) !== normalizeEmail(input.userEmail)) {
-    const provider = await resolveAuthProvider(input.clerkId);
-    throw forbidden("Invitation belongs to a different email.", {
-      reason: "email_mismatch",
-      currentEmail: input.userEmail,
-      provider,
+  if (
+    gate.kind === "open" &&
+    needsAddressCheck(via) &&
+    !(await accountOwnsAddress(invitation.email, viewer, deps))
+  ) {
+    throw wrongAccountError({
+      email: viewer.email,
+      provider: await deps.authProvider(viewer.clerkId),
+      client: input.client,
+      locale: viewer.locale,
     });
   }
 
-  const [members, memberCount, membership] = await Promise.all([
-    prisma.workspaceMember.findMany({
-      where: { workspaceId: invitation.workspaceId },
-      include: { user: true },
-      orderBy: { joinedAt: "asc" },
-      take: 8,
-    }),
-    prisma.workspaceMember.count({
-      where: { workspaceId: invitation.workspaceId },
-    }),
-    prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: invitation.workspaceId,
-          userId: input.userId,
-        },
-      },
-    }),
-  ]);
+  const rows = await prisma.workspaceMember.findMany({
+    where: { workspaceId: invitation.workspaceId },
+    include: { user: { select: MEMBER_USER_SELECT } },
+  });
+  const words = nameWords(resolveAppLocale(viewer.locale));
+  const labels = memberLabels(rows, words);
+  const inviterName = resolveDisplayName(invitation.invitedBy);
 
   return {
     invitationId: invitation.id,
+    kind: invitation.kind,
     createdAt: invitation.createdAt.toISOString(),
-    inviterDisplayName: displayNameFromEmail(invitation.invitedBy.email),
+    inviterDisplayName:
+      labels.get(invitation.invitedByUserId) ?? inviterName ?? words.fallback,
+    inviterHasName: inviterName !== null,
+    differentEmail: await differentAccountEmail(invitation.email, viewer, deps),
     workspace: {
       id: invitation.workspace.id,
       name: invitation.workspace.name,
       icon: invitation.workspace.icon,
     },
-    memberCount,
-    members: members.map((m) => ({
-      userId: m.userId,
-      displayName: displayNameFromEmail(m.user.email),
-    })),
-    alreadyMember: Boolean(membership) || invitation.status === "accepted",
+    memberCount: rows.length,
+    members: sortMembers(rows)
+      .slice(0, PREVIEW_MEMBERS)
+      .map((row) => ({
+        userId: row.userId,
+        displayName: labels.get(row.userId) ?? words.fallback,
+      })),
+    alreadyMember: gate.kind === "already_member",
   };
+}
+
+/**
+ * The line about another address, only when the invited address is not this account's at
+ * all: neither its Kangur address nor an extra one verified in Clerk. Clerk is asked only
+ * when the line would otherwise show.
+ */
+async function differentAccountEmail(
+  invitedEmail: string | null,
+  viewer: InvitationViewer,
+  deps: InvitationDeps,
+): Promise<InvitationPreview["differentEmail"]> {
+  const line = differentEmail(invitedEmail, viewer.email);
+  if (!line) return null;
+  return (await accountOwnsAddress(invitedEmail, viewer, deps)) ? null : line;
+}
+
+/**
+ * "The invitation was for kasia@gmail.com. You will join as jan@gmail.com." Only when both
+ * are real addresses: an account whose address Apple hides sees no such line.
+ */
+export function differentEmail(
+  invitedEmail: string | null,
+  accountEmail: string,
+): InvitationPreview["differentEmail"] {
+  if (!invitedEmail) return null;
+  if (isPrivateRelayEmail(invitedEmail) || isPrivateRelayEmail(accountEmail)) return null;
+  if (normalizeEmail(invitedEmail) === normalizeEmail(accountEmail)) return null;
+  return { invitedEmail: normalizeEmail(invitedEmail), accountEmail: normalizeEmail(accountEmail) };
 }

@@ -1,34 +1,50 @@
 {
+  "names": {
+    "fallback": "Домочадец",
+    "since": "с {{date}}",
+    "hiddenAppleAddress": "адрес, скрытый Apple"
+  },
   "notifications": {
     "listCreated": {
-      "title": "{{actor}} создал(а) список {{listName}}"
+      "body": "{{actor}}: новый список · {{listName}}",
+      "bodyNoName": "Новый список · {{listName}}"
     },
     "listDeleted": {
-      "title": "{{actor}} удалил(а) список {{listName}}"
+      "body": "{{actor}}: список удалён · {{listName}}",
+      "bodyNoName": "Список удалён · {{listName}}"
     },
     "shoppingStarted": {
-      "title": "{{actor}} начал(а) покупки"
+      "body": "{{actor}}: покупки начаты · {{listName}}",
+      "bodyNoName": "Покупки начаты · {{listName}}"
     },
     "shoppingFinished": {
-      "title": "{{actor}} закончил(а) покупки",
-      "allBought": "Все товары куплены",
-      "unavailableOne": "1 товар был недоступен",
-      "unavailableMany": "{{count}} товаров были недоступны"
+      "body_one": "{{actor}}: покупки завершены, {{bought}} из {{count}} товара",
+      "body_other": "{{actor}}: покупки завершены, {{bought}} из {{count}} товаров",
+      "bodyNoName_one": "Покупки завершены, {{bought}} из {{count}} товара",
+      "bodyNoName_other": "Покупки завершены, {{bought}} из {{count}} товаров",
+      "bodyEmpty": "{{actor}}: покупки завершены",
+      "bodyEmptyNoName": "Покупки завершены"
     },
     "invite": {
-      "title": "{{actor}} пригласил(а) вас в {{workspaceName}}",
-      "body": "Присоединяйтесь, чтобы вместе составлять списки покупок."
+      "title": "Приглашение в {{workspaceName}}",
+      "body": "{{actor}} приглашает вас к общим спискам покупок.",
+      "bodyNoName": "Присоединяйтесь, чтобы вместе составлять списки покупок."
+    },
+    "memberJoined": {
+      "body": "Новый участник: {{name}}",
+      "bodyNoName": "Новый участник в пространстве"
     }
   },
   "email": {
     "invite": {
       "subject": "Вас пригласили в {{workspaceName}} - Kangur",
       "headline": "{{inviter}} приглашает вас в",
+      "headlineNoName": "Приглашение в пространство в Kangur",
       "ctaOpen": "Открыть приглашение",
       "ctaJoin": "Присоединиться",
       "bodyExisting": "У вас уже есть аккаунт - откройте приложение, чтобы принять приглашение.",
       "bodyNew": "Создайте аккаунт или войдите, чтобы пользоваться общими списками покупок.",
-      "expiry": "Ссылка действительна 7 дней."
+      "expiry": "Ссылка работает один раз и действует 7 дней."
     }
   }
 }

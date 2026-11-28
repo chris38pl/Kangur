@@ -26,6 +26,8 @@ import {
   typography,
 } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
+import { useMe } from "@/features/auth/useMe";
+import { NameSheet } from "@/features/profile/name-sheet";
 import {
   EmailOnlyPasswordRow,
   LoginMethodsSection,
@@ -38,12 +40,15 @@ import {
 function InfoRow({
   label,
   value,
+  hint,
   trailing,
   showDivider,
   onPress,
 }: {
   label: string;
   value: string;
+  /** A quiet line under the value. */
+  hint?: string;
   trailing?: ReactNode;
   showDivider?: boolean;
   onPress?: () => void;
@@ -78,6 +83,11 @@ function InfoRow({
         >
           {value}
         </Text>
+        {hint ? (
+          <Text style={{ ...typography.caption, color: theme.textMuted, marginTop: 2 }}>
+            {hint}
+          </Text>
+        ) : null}
       </View>
       {trailing}
     </View>
@@ -122,18 +132,21 @@ export function AccountDetailsScreen() {
   const { user, isLoaded } = useUser();
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
+  const [nameOpen, setNameOpen] = useState(false);
+  const me = useMe();
 
   const showSoon = () => setComingSoonOpen(true);
 
-  const displayName =
-    user?.fullName?.trim() ||
-    [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
-    t("profile.nameUnset");
+  // The name the household sees, kept in Kangur (not the Clerk profile).
+  const myName = me.data?.displayName ?? null;
 
-  const email =
+  const clerkEmail =
     user?.primaryEmailAddress?.emailAddress ??
     user?.emailAddresses?.[0]?.emailAddress ??
     "-";
+  const emailHidden =
+    me.data?.emailHidden ?? clerkEmail.toLowerCase().endsWith("@privaterelay.appleid.com");
+  const email = emailHidden ? t("profile.emailHiddenValue") : clerkEmail;
 
   const isEmailOnlyAuth =
     Boolean(user?.passwordEnabled) &&
@@ -291,10 +304,11 @@ export function AccountDetailsScreen() {
 
         <Card>
           <InfoRow
-            label={t("profile.fullName")}
-            value={displayName}
+            label={t("name.fieldLabelProfile")}
+            value={myName ?? t("name.add")}
+            hint={t("name.profileHint")}
             showDivider
-            onPress={showSoon}
+            onPress={() => setNameOpen(true)}
             trailing={
               <ProfileIconChevronRight color={theme.textMuted} size={16} />
             }
@@ -302,6 +316,7 @@ export function AccountDetailsScreen() {
           <InfoRow
             label={t("profile.emailLabel")}
             value={email}
+            hint={emailHidden ? t("profile.emailHiddenHint") : undefined}
             showDivider={isEmailOnlyAuth}
             onPress={showSoon}
             trailing={
@@ -313,6 +328,13 @@ export function AccountDetailsScreen() {
 
         <LoginMethodsSection />
       </ScrollView>
+
+      <NameSheet
+        visible={nameOpen}
+        place="profile"
+        currentName={myName}
+        onClose={() => setNameOpen(false)}
+      />
 
       <FeedbackSheet
         visible={comingSoonOpen}

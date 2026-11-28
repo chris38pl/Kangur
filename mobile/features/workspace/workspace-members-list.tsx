@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 
+import { NameBanner } from "./name-banner";
 import { RemoveMemberSheet } from "./remove-member-sheet";
 import type { WorkspaceMember } from "./schemas";
 import { useRemoveMember } from "./useWorkspaceInvites";
@@ -62,6 +63,8 @@ export function WorkspaceMembersList({
   const [removeTarget, setRemoveTarget] = useState<WorkspaceMember | null>(
     null,
   );
+  const me = members.find((member) => member.userId === currentUserId);
+  const askForName = members.length > 1 && me?.hasName === false;
 
   return (
     <View style={{ marginTop: spacing[6] }}>
@@ -80,6 +83,8 @@ export function WorkspaceMembersList({
           {t("workspace.peopleCount", { count: members.length })}
         </Text>
       </View>
+
+      {!loading ? <NameBanner visible={askForName} /> : null}
 
       {loading ? (
         <ActivityIndicator

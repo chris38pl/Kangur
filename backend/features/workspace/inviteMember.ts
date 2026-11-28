@@ -1,7 +1,11 @@
-import type { WorkspaceRole } from "@prisma/client";
+import type { User, WorkspaceRole } from "@prisma/client";
 
 import { canCreateInvitation } from "@/features/workspace/canCreateInvitation";
 import { ensureNotificationHandlersRegistered } from "@/features/notifications/registerHandlers";
+import {
+  clerkDirectory,
+  type ClerkDirectory,
+} from "@/lib/auth/clerkDirectory";
 import {
   conflict,
   validationError,
@@ -15,33 +19,55 @@ import {
   hashInviteToken,
   inviteExpiresAt,
 } from "@/lib/invite/token";
+import { resolveDisplayName } from "@/lib/names/displayName";
 import { prisma } from "@/lib/prisma";
 
 import type { InviteMemberResult } from "./schemas";
-
-function displayNameFromEmail(email: string): string {
-  const local = email.split("@")[0]?.trim() || email;
-  if (!local) return email;
-  return local.charAt(0).toUpperCase() + local.slice(1);
-}
 
 const INVITE_ROLES = new Set<WorkspaceRole>(["admin", "member"]);
 
 export type InviteMemberInput = {
   workspaceId: string;
-  actorUserId: string;
-  actorEmail: string;
-  actorLocale: string | null;
+  actor: Pick<User, "id" | "email" | "locale" | "displayName">;
   email: string;
   role?: WorkspaceRole;
 };
 
+/**
+ * The Kangur account behind an address: any address verified in Clerk, not only the main
+ * one, then the address Kangur keeps. Clerk out of reach is not fatal: the invitation still
+ * goes out by e-mail.
+ */
+export async function findAccountByEmail(
+  email: string,
+  directory: ClerkDirectory = clerkDirectory,
+): Promise<User | null> {
+  try {
+    const clerkIds = await directory.usersWithVerifiedEmail(email);
+    if (clerkIds.length > 0) {
+      const user = await prisma.user.findFirst({
+        where: { clerkId: { in: clerkIds } },
+        orderBy: { createdAt: "asc" },
+      });
+      if (user) return user;
+    }
+  } catch (error) {
+    console.warn("[invite]", "ClerkLookupFailed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+  return prisma.user.findFirst({
+    where: { email: { equals: email, mode: "insensitive" } },
+  });
+}
+
 export async function inviteMember(
   input: InviteMemberInput,
+  directory: ClerkDirectory = clerkDirectory,
 ): Promise<InviteMemberResult> {
   const { workspace, membership } = await authorize(
     input.workspaceId,
-    input.actorUserId,
+    input.actor.id,
   );
   requireRole(
     membership,
@@ -55,7 +81,7 @@ export async function inviteMember(
     throw validationError("Enter a valid email address.");
   }
 
-  if (email === normalizeEmail(input.actorEmail)) {
+  if (email === normalizeEmail(input.actor.email)) {
     throw validationError("You cannot invite yourself.");
   }
 
@@ -64,9 +90,10 @@ export async function inviteMember(
     throw validationError("Unknown role.");
   }
 
-  const existingUser = await prisma.user.findFirst({
-    where: { email: { equals: email, mode: "insensitive" } },
-  });
+  const existingUser = await findAccountByEmail(email, directory);
+  if (existingUser?.id === input.actor.id) {
+    throw validationError("You cannot invite yourself.");
+  }
 
   if (existingUser) {
     const alreadyMember = await prisma.workspaceMember.findUnique({
@@ -87,6 +114,7 @@ export async function inviteMember(
   const pending = await prisma.invitation.findFirst({
     where: {
       workspaceId: input.workspaceId,
+      kind: "email",
       email,
       status: "pending",
     },
@@ -95,7 +123,8 @@ export async function inviteMember(
   const rawToken = generateInviteRawToken();
   const tokenHash = hashInviteToken(rawToken);
   const expiresAt = inviteExpiresAt();
-  const inviterName = displayNameFromEmail(input.actorEmail);
+  // Null: the e-mail says "an invitation to …" instead of "Kasia invites you to …".
+  const inviterName = resolveDisplayName(input.actor);
   const variant = existingUser ? "existing_user" : "new_user";
 
   let invitationId: string;
@@ -108,7 +137,7 @@ export async function inviteMember(
         tokenHash,
         expiresAt,
         role,
-        invitedByUserId: input.actorUserId,
+        invitedByUserId: input.actor.id,
       },
     });
     invitationId = updated.id;
@@ -122,12 +151,13 @@ export async function inviteMember(
     const created = await prisma.invitation.create({
       data: {
         workspaceId: input.workspaceId,
+        kind: "email",
         email,
         role,
         tokenHash,
         status: "pending",
         expiresAt,
-        invitedByUserId: input.actorUserId,
+        invitedByUserId: input.actor.id,
       },
     });
     invitationId = created.id;
@@ -146,7 +176,7 @@ export async function inviteMember(
     workspaceIcon: workspace.icon,
     rawToken,
     variant,
-    locale: input.actorLocale,
+    locale: input.actor.locale,
   });
 
   ensureNotificationHandlersRegistered();
@@ -156,16 +186,15 @@ export async function inviteMember(
     workspaceName: workspace.name,
     workspaceIcon: workspace.icon,
     invitationId,
-    inviteeEmail: email,
-    actorUserId: input.actorUserId,
-    actorDisplayName: inviterName,
+    inviteeUserId: existingUser?.id ?? null,
+    actorUserId: input.actor.id,
   });
 
   const { Analytics } = await import("@/lib/analytics");
   Analytics.track(
     "invitation_sent",
     { workspace_id: input.workspaceId },
-    input.actorUserId,
+    input.actor.id,
   );
 
   return {

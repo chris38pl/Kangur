@@ -1,4 +1,4 @@
-import type { AppLocale } from "@/lib/marketing/locale";
+import { SITE_DEFAULT_LOCALE, type AppLocale } from "@/lib/marketing/locale";
 import { routeHref } from "@/lib/marketing/routes";
 import { absoluteUrl } from "@/lib/marketing/site";
 
@@ -29,6 +29,16 @@ export const inviteHash = (token: string): string => `${MARK}${token}`;
 /** The address in the e-mail: the page in the e-mail's language, with the token after "#". */
 export function invitePageUrl(locale: AppLocale, token: string): string {
   return absoluteUrl(routeHref("invite", locale)) + inviteHash(token);
+}
+
+/**
+ * A link invitation (code on the screen, or the share sheet): nobody knows the language of
+ * the person who opens it, so the address has no language prefix and the site sends the
+ * visitor to their own. With the app installed, the phone opens the app right away
+ * (Universal Links, App Links: app/.well-known).
+ */
+export function inviteLinkUrl(token: string): string {
+  return absoluteUrl(routeHref("invite", SITE_DEFAULT_LOCALE)) + inviteHash(token);
 }
 
 export function readInviteHash(hash: string): string | null {

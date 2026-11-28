@@ -1,11 +1,14 @@
 import { authorize, requireRole } from "@/lib/authorize";
+import type { ClientVersion } from "@/lib/clientVersion";
 import { prisma } from "@/lib/prisma";
 
+import { presentInvitations } from "./presentInvitations";
 import type { InvitationDTO } from "./schemas";
 
 export async function listInvitations(
   workspaceId: string,
   userId: string,
+  client: ClientVersion,
 ): Promise<InvitationDTO[]> {
   const { membership } = await authorize(workspaceId, userId);
   requireRole(
@@ -34,12 +37,5 @@ export async function listInvitations(
     orderBy: { createdAt: "desc" },
   });
 
-  return rows.map((row) => ({
-    id: row.id,
-    email: row.email,
-    role: row.role,
-    status: row.status,
-    expiresAt: row.expiresAt.toISOString(),
-    createdAt: row.createdAt.toISOString(),
-  }));
+  return presentInvitations(rows, client);
 }

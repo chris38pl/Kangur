@@ -3,7 +3,9 @@ import { apiFetch } from "@/lib/api/client";
 import {
   AcceptInvitationResultSchema,
   InvitationListSchema,
+  InvitationPeekSchema,
   InvitationPreviewSchema,
+  InviteLinkResultSchema,
   InviteMemberResultSchema,
   WorkspaceListSchema,
   WorkspaceMemberListSchema,
@@ -11,6 +13,7 @@ import {
   type AcceptInvitationResult,
   type Invitation,
   type InvitationPreview,
+  type InviteLinkResult,
   type InviteMemberResult,
   type Workspace,
   type WorkspaceMember,
@@ -190,4 +193,31 @@ export async function previewInvitation(
     body,
   });
   return InvitationPreviewSchema.parse(data);
+}
+
+/** A one-time link without an address, for a code on the screen or the share sheet. */
+export async function createInviteLink(
+  token: string,
+  workspaceId: string,
+  channel: "code" | "share",
+): Promise<InviteLinkResult> {
+  const data = await apiFetch<unknown>(
+    `/api/v1/workspaces/${workspaceId}/invite-links`,
+    {
+      token,
+      method: "POST",
+      body: { channel },
+    },
+  );
+  return InviteLinkResultSchema.parse(data);
+}
+
+/** Before sign-in: the address an e-mail invitation went to, to fill in the form. */
+export async function peekInvitation(rawToken: string): Promise<string | null> {
+  const data = await apiFetch<unknown>("/api/v1/invitations/peek", {
+    method: "POST",
+    body: { token: rawToken },
+    timeoutMs: 8000,
+  });
+  return InvitationPeekSchema.parse(data).invitedEmail;
 }

@@ -22,3 +22,19 @@ export async function updateMeLocale(
   });
   return MeSchema.parse(data);
 }
+
+/**
+ * The name other people see. Null removes it. Kangur keeps it; nothing goes to Clerk.
+ * The server refuses an address (details.reason "name_email") or more than 30 characters.
+ */
+export async function updateMeDisplayName(
+  token: string,
+  displayName: string | null,
+): Promise<MeUser> {
+  const data = await apiFetch<unknown>("/api/v1/me", {
+    method: "PATCH",
+    token,
+    body: { displayName },
+  });
+  return MeSchema.parse(data);
+}

@@ -38,6 +38,8 @@ export function visualForNotification(
       return { background: "#9BC4E8", iconColor: "#FFFFFF", kind: "list" };
     case "SHOPPING_LIST_DELETED":
       return { background: "#F0A8A0", iconColor: "#FFFFFF", kind: "list" };
+    case "WORKSPACE_MEMBER_JOINED":
+      return { background: "#A8D8B9", iconColor: "#FFFFFF", kind: "invite" };
     default:
       return { background: "#9FE0D0", iconColor: "#FFFFFF", kind: "cart" };
   }

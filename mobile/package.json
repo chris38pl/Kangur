@@ -1,7 +1,7 @@
 {
   "name": "mobile",
   "main": "index.js",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "engines": {
@@ -23,6 +23,7 @@
     "test:status-race": "node --test --experimental-strip-types --import ./scripts/node-test-register.mjs features/data-sync-engine/status-race.test.ts",
     "test:offline-finish": "node --test --experimental-transform-types --import ./scripts/node-test-register.mjs features/data-sync-engine/offline-finish.test.ts",
     "test:reconnect": "node --test --experimental-transform-types --import ./scripts/node-test-register.mjs features/data-sync-engine/reconnect.test.ts",
+    "test:invites": "node --test --experimental-strip-types --import ./scripts/node-test-register.mjs lib/invite/invite-links.test.ts lib/invite/app-links-config.test.ts features/workspace/invite-contract.test.ts",
     "test:workspace-removal": "node --test --experimental-strip-types features/workspace/workspace-removal.test.ts",
     "test:install-referrer": "node --test --experimental-strip-types lib/analytics/install-referrer-parse.test.ts",
     "test:premium-offer": "node --test --experimental-strip-types features/billing/premium-offer-eligibility.test.ts",

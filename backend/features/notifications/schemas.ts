@@ -10,6 +10,8 @@ export const NotificationTypeSchema = z
     "SHOPPING_FINISHED",
     "SHOPPING_LIST_CREATED",
     "SHOPPING_LIST_DELETED",
+    /** Not sent to apps before 1.0.9: their schema knows only the five types above. */
+    "WORKSPACE_MEMBER_JOINED",
   ])
   .openapi("NotificationType");
 

@@ -1,105 +1,49 @@
-import { useState, type RefObject } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { useState } from "react";
+import { Alert, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
-import { ApiClientError } from "@/lib/api/client";
+import { intlLocaleTag } from "@/lib/i18n/locales";
 
+import { InviteSheet } from "./invite-sheet";
 import { RevokeInviteSheet } from "./revoke-invite-sheet";
-import { InviteSentSheet } from "./invite-sent-sheet";
 import type { Invitation } from "./schemas";
 import {
-  useCreateInvitation,
   useRevokeInvitation,
   useWorkspaceInvitations,
 } from "./useWorkspaceInvites";
 
-type FieldFocusHandlers = {
-  onFocus: () => void;
-  onBlur: () => void;
-};
-
 type Props = {
-  workspaceId: string;
+  workspace: { id: string; name: string };
   canManage: boolean;
-  /** Keep invite email + send CTA above the keyboard (same pattern as auth). */
-  emailFieldRef?: RefObject<View | null>;
-  emailFocus?: FieldFocusHandlers;
-  formBlockRef?: (node: View | null) => void;
 };
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function formatDay(iso: string, locale: string): string {
+  try {
+    return new Intl.DateTimeFormat(intlLocaleTag(locale), {
+      day: "numeric",
+      month: "long",
+    }).format(new Date(iso));
+  } catch {
+    return iso.slice(0, 10);
+  }
+}
 
-export function WorkspaceInviteSection({
-  workspaceId,
-  canManage,
-  emailFieldRef,
-  emailFocus,
-  formBlockRef,
-}: Props) {
-  const { t } = useTranslation();
+/** "Invite" for owners and admins, and the invitations that still wait. */
+export function WorkspaceInviteSection({ workspace, canManage }: Props) {
+  const { t, i18n } = useTranslation();
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
-  const [email, setEmail] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<Invitation | null>(null);
-  const [sentSheet, setSentSheet] = useState<{
-    email: string;
-    resent: boolean;
-    delivered: boolean;
-  } | null>(null);
 
-  const invitationsQuery = useWorkspaceInvitations(workspaceId, canManage);
-  const createMutation = useCreateInvitation(workspaceId);
-  const revokeMutation = useRevokeInvitation(workspaceId);
+  const invitationsQuery = useWorkspaceInvitations(workspace.id, canManage);
+  const revokeMutation = useRevokeInvitation(workspace.id);
 
   if (!canManage) {
     return null;
   }
-
-  const sendInvite = () => {
-    const trimmed = email.trim();
-    if (!EMAIL_RE.test(trimmed)) {
-      Alert.alert(t("workspace.inviteInvalidEmail"));
-      return;
-    }
-
-    createMutation.mutate(trimmed, {
-      onSuccess: (result) => {
-        setEmail("");
-        setSentSheet({
-          email: trimmed,
-          resent: result.status === "resent",
-          delivered: result.emailDelivered,
-        });
-      },
-      onError: (err) => {
-        if (err instanceof ApiClientError) {
-          if (err.status === 409) {
-            Alert.alert(t("workspace.inviteAlreadyMember"));
-            return;
-          }
-          if (err.status === 400) {
-            Alert.alert(err.message || t("workspace.inviteInvalidEmail"));
-            return;
-          }
-          if (err.status === 403) {
-            Alert.alert(t("workspace.inviteForbidden"));
-            return;
-          }
-        }
-        Alert.alert(t("workspace.inviteFailed"));
-      },
-    });
-  };
 
   const confirmRevoke = () => {
     if (!revokeTarget) return;
@@ -112,75 +56,40 @@ export function WorkspaceInviteSection({
     });
   };
 
-  const fieldStyle = {
-    borderWidth: 1,
-    borderColor: theme.border,
-    backgroundColor: theme.surface,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing[3],
-    paddingVertical: Platform.OS === "ios" ? spacing[3] : spacing[2] + 2,
-    color: theme.text,
-    ...typography.body,
-  } as const;
-
   const pending = invitationsQuery.data ?? [];
+  const labelOf = (invitation: Invitation) =>
+    invitation.kind === "link" || !invitation.email
+      ? t("workspace.pendingLink", { date: formatDay(invitation.expiresAt, i18n.language) })
+      : invitation.email;
 
   return (
     <View style={{ marginTop: spacing[6] }}>
       <Text style={{ ...typography.headline, color: theme.text }}>
         {t("workspace.inviteTitle")}
       </Text>
+      <Text style={{ ...typography.caption, color: theme.textMuted, marginTop: spacing[1] }}>
+        {t("workspace.inviteLead")}
+      </Text>
 
-      <View ref={formBlockRef} collapsable={false}>
-        <View
-          ref={emailFieldRef}
-          collapsable={false}
-          style={{ marginTop: spacing[3] }}
-        >
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder={t("workspace.inviteEmailPlaceholder")}
-            placeholderTextColor={theme.textMuted}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="email"
-            textContentType="emailAddress"
-            onFocus={emailFocus?.onFocus}
-            onBlur={emailFocus?.onBlur}
-            style={fieldStyle}
-          />
-        </View>
-
-        <Pressable
-          onPress={sendInvite}
-          disabled={createMutation.isPending}
-          accessibilityRole="button"
-          style={{
-            marginTop: spacing[3],
-            backgroundColor: theme.primary,
-            borderRadius: radius.md,
-            paddingVertical: spacing[4],
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: spacing[2],
-            opacity: createMutation.isPending ? 0.7 : 1,
-          }}
-        >
-          {createMutation.isPending ? (
-            <ActivityIndicator color={theme.onPrimary} />
-          ) : (
-            <>
-              <Text style={{ fontSize: 16, color: theme.onPrimary }}>✈️</Text>
-              <Text style={{ ...typography.label, color: theme.onPrimary }}>
-                {t("workspace.inviteSend")}
-              </Text>
-            </>
-          )}
-        </Pressable>
-      </View>
+      <Pressable
+        onPress={() => setSheetOpen(true)}
+        accessibilityRole="button"
+        style={{
+          marginTop: spacing[3],
+          backgroundColor: theme.primary,
+          borderRadius: radius.md,
+          paddingVertical: spacing[4],
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: spacing[2],
+        }}
+      >
+        <Text style={{ fontSize: 16, color: theme.onPrimary }}>✈️</Text>
+        <Text style={{ ...typography.label, color: theme.onPrimary }}>
+          {t("workspace.inviteButton")}
+        </Text>
+      </Pressable>
 
       {pending.length > 0 ? (
         <View style={{ marginTop: spacing[5] }}>
@@ -207,7 +116,7 @@ export function WorkspaceInviteSection({
                     minWidth: 0,
                   }}
                 >
-                  {invitation.email}
+                  {labelOf(invitation)}
                 </Text>
                 <Pressable
                   onPress={() => setRevokeTarget(invitation)}
@@ -238,7 +147,11 @@ export function WorkspaceInviteSection({
 
       <RevokeInviteSheet
         visible={revokeTarget != null}
-        email={revokeTarget?.email ?? ""}
+        body={
+          revokeTarget?.kind === "link" || !revokeTarget?.email
+            ? t("workspace.revokeLinkBody")
+            : t("workspace.revokeInviteBody", { email: revokeTarget.email })
+        }
         busy={revokeMutation.isPending}
         onCancel={() => {
           if (!revokeMutation.isPending) setRevokeTarget(null);
@@ -246,12 +159,10 @@ export function WorkspaceInviteSection({
         onConfirm={confirmRevoke}
       />
 
-      <InviteSentSheet
-        visible={sentSheet != null}
-        email={sentSheet?.email ?? ""}
-        resent={sentSheet?.resent ?? false}
-        delivered={sentSheet?.delivered ?? true}
-        onClose={() => setSentSheet(null)}
+      <InviteSheet
+        visible={sheetOpen}
+        workspace={workspace}
+        onClose={() => setSheetOpen(false)}
       />
     </View>
   );

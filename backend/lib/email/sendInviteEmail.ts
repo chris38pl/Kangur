@@ -7,9 +7,16 @@ import { invitePageUrl } from "@/lib/marketing/invite";
 
 export type InviteEmailVariant = "new_user" | "existing_user";
 
+/**
+ * Replies to an invitation reach a mailbox someone reads: invites@ only sends. The same
+ * Reply-To is set in the Clerk e-mail templates.
+ */
+export const INVITE_REPLY_TO = "contact@getkangur.com";
+
 export type SendInviteEmailInput = {
   to: string;
-  inviterName: string;
+  /** Null for an inviter without a name: "an invitation to …" instead of "X invites you to". */
+  inviterName: string | null;
   workspaceName: string;
   workspaceIcon: string;
   acceptUrl: string;
@@ -43,9 +50,11 @@ function htmlBody(input: SendInviteEmailInput): string {
     input.variant === "existing_user"
       ? t(locale, "email.invite.ctaOpen")
       : t(locale, "email.invite.ctaJoin");
-  const headline = t(locale, "email.invite.headline", {
-    inviter: escapeHtml(input.inviterName),
-  });
+  const headline = input.inviterName
+    ? t(locale, "email.invite.headline", {
+        inviter: escapeHtml(input.inviterName),
+      })
+    : t(locale, "email.invite.headlineNoName");
   const body =
     input.variant === "existing_user"
       ? t(locale, "email.invite.bodyExisting")
@@ -102,6 +111,7 @@ export async function sendInviteEmail(
   const { error } = await resend.emails.send({
     from,
     to: input.to,
+    replyTo: INVITE_REPLY_TO,
     subject: subject(input.locale, input.workspaceName),
     html: htmlBody(payload),
   });

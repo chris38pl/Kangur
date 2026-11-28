@@ -1,22 +1,31 @@
-import type { WorkspaceRole } from "@prisma/client";
+import type { InvitationKind, WorkspaceRole } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 
-import {
-  conflict,
-  forbidden,
-  notFound,
-  validationError,
-} from "@/lib/auth/errors";
-import {
-  resolveAuthProvider,
-  type AuthProvider,
-} from "@/lib/auth/resolveAuthProvider";
+import { ensureNotificationHandlersRegistered } from "@/features/notifications/registerHandlers";
+import { canCreateInvitation } from "@/features/workspace/canCreateInvitation";
+import { conflict, notFound } from "@/lib/auth/errors";
+import type { AuthProvider } from "@/lib/auth/resolveAuthProvider";
+import type { ClientVersion } from "@/lib/clientVersion";
 import { normalizeEmail } from "@/lib/email/normalizeEmail";
-import {
-  hashInviteToken,
-  isValidInviteRawToken,
-} from "@/lib/invite/token";
+import { domainEventBus } from "@/lib/events/DomainEventBus";
+import { isPrivateRelayEmail } from "@/lib/names/displayName";
 import { prisma } from "@/lib/prisma";
+
+import {
+  invitationGate,
+  invitationGoneError,
+  needsAddressCheck,
+  wrongAccountError,
+} from "./invitationAccess";
+import {
+  accountOwnsAddress,
+  capabilityOf,
+  defaultInvitationDeps,
+  findInvitation,
+  type InvitationCapability,
+  type InvitationDeps,
+} from "./invitationDeps";
+import type { InvitationViewer } from "./previewInvitation";
 
 export type AcceptInvitationResult = {
   workspace: {
@@ -28,208 +37,241 @@ export type AcceptInvitationResult = {
   alreadyMember: boolean;
 };
 
-export type AcceptInvitationInput = {
-  rawToken?: string;
-  invitationId?: string;
-  userId: string;
-  userEmail: string;
-  clerkId: string;
+export type AcceptInvitationInput = InvitationCapability & {
+  viewer: InvitationViewer;
+  /** The asking app (lib/clientVersion.ts); missing means app 1.0.8. */
+  client?: ClientVersion;
 };
 
 export type { AuthProvider };
 
-async function findInvitationByCapability(
-  tx: Prisma.TransactionClient,
-  input: { rawToken?: string; invitationId?: string },
-) {
-  if (input.rawToken) {
-    const token = input.rawToken.trim();
-    if (!isValidInviteRawToken(token)) {
-      throw notFound("Invitation expired.", { reason: "expired" });
-    }
-    return tx.invitation.findUnique({
-      where: { tokenHash: hashInviteToken(token) },
-      include: { workspace: true },
-    });
-  }
+/** A serializable transaction that lost a race is tried again; the second try sees the winner. */
+const MAX_ATTEMPTS = 3;
 
-  if (input.invitationId) {
-    return tx.invitation.findUnique({
-      where: { id: input.invitationId.trim() },
-      include: { workspace: true },
-    });
-  }
+type Joined = AcceptInvitationResult & {
+  invitation: {
+    id: string;
+    kind: InvitationKind;
+    email: string | null;
+    invitedByUserId: string;
+  };
+  /** A member opened an address invitation that still waits (see closeOwnAddressInvitation). */
+  pendingForMember: boolean;
+};
 
-  throw validationError("Provide exactly one of token or invitationId.");
+function isSerializationFailure(error: unknown): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034"
+  );
 }
 
+/**
+ * Joins the workspace with a one-time invitation (see invitationAccess.ts). Two people with
+ * one link at the same moment: the status flips pending → accepted once, under a
+ * serializable transaction, so exactly one of them gets in.
+ */
 export async function acceptInvitation(
   input: AcceptInvitationInput,
+  deps: InvitationDeps = defaultInvitationDeps,
 ): Promise<AcceptInvitationResult> {
   if (!input.rawToken?.trim() && !input.invitationId?.trim()) {
     throw notFound("Invitation expired.", { reason: "expired" });
   }
+  const { via, where } = capabilityOf(input);
+  const viewer = input.viewer;
 
-  const userEmail = normalizeEmail(input.userEmail);
-  const provider = await resolveAuthProvider(input.clerkId);
-
-  try {
-    const result = await prisma.$transaction(
-      async (tx) => {
-        const invitation = await findInvitationByCapability(tx, {
-          rawToken: input.rawToken,
-          invitationId: input.invitationId,
-        });
-
-        if (!invitation) {
-          throw notFound("Invitation expired.", { reason: "expired" });
-        }
-
-        if (invitation.status === "accepted") {
-          const existing = await tx.workspaceMember.findUnique({
-            where: {
-              workspaceId_userId: {
-                workspaceId: invitation.workspaceId,
-                userId: input.userId,
-              },
-            },
-          });
-          if (existing) {
-            return {
-              workspace: {
-                id: invitation.workspace.id,
-                name: invitation.workspace.name,
-                icon: invitation.workspace.icon,
-              },
-              role: existing.role,
-              alreadyMember: true,
-            };
-          }
-          throw conflict("Invitation already accepted.", {
-            reason: "already_accepted",
-            workspaceId: invitation.workspace.id,
-            workspaceName: invitation.workspace.name,
-            workspaceIcon: invitation.workspace.icon,
-          });
-        }
-
-        if (invitation.status === "revoked") {
-          throw notFound("Invitation expired.", { reason: "revoked" });
-        }
-
-        const now = new Date();
-        if (invitation.expiresAt < now) {
-          await tx.invitation.updateMany({
-            where: { id: invitation.id, status: "pending" },
-            data: { status: "revoked" },
-          });
-          throw notFound("Invitation expired.", { reason: "expired" });
-        }
-
-        if (normalizeEmail(invitation.email) !== userEmail) {
-          throw forbidden("Invitation belongs to a different email.", {
-            reason: "email_mismatch",
-            currentEmail: userEmail,
-            provider,
-          });
-        }
-
-        const existingMembership = await tx.workspaceMember.findUnique({
-          where: {
-            workspaceId_userId: {
-              workspaceId: invitation.workspaceId,
-              userId: input.userId,
-            },
-          },
-        });
-
-        if (existingMembership) {
-          await tx.invitation.updateMany({
-            where: { id: invitation.id, status: "pending" },
-            data: { status: "accepted", acceptedAt: now },
-          });
-          return {
-            workspace: {
-              id: invitation.workspace.id,
-              name: invitation.workspace.name,
-              icon: invitation.workspace.icon,
-            },
-            role: existingMembership.role,
-            alreadyMember: true,
-          };
-        }
-
-        const accepted = await tx.invitation.updateMany({
-          where: {
-            id: invitation.id,
-            status: "pending",
-            expiresAt: { gte: now },
-          },
-          data: {
-            status: "accepted",
-            acceptedAt: now,
-          },
-        });
-
-        if (accepted.count === 0) {
-          throw notFound("Invitation expired.", { reason: "revoked" });
-        }
-
-        await tx.workspaceMember.create({
-          data: {
-            workspaceId: invitation.workspaceId,
-            userId: input.userId,
-            role: invitation.role === "owner" ? "member" : invitation.role,
-          },
-        });
-
-        console.info("[invite]", "INVITE_ACCEPTED", {
-          invitationId: invitation.id,
-          workspaceId: invitation.workspaceId,
-          userId: input.userId,
-        });
-
-        return {
-          workspace: {
-            id: invitation.workspace.id,
-            name: invitation.workspace.name,
-            icon: invitation.workspace.icon,
-          },
-          role: invitation.role === "owner" ? "member" : invitation.role,
-          alreadyMember: false as const,
-        };
+  // Clerk is asked outside the transaction; the transaction re-checks the state itself.
+  if (needsAddressCheck(via)) {
+    const invitation = await findInvitation(prisma, where, {});
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: { workspaceId: invitation.workspaceId, userId: viewer.id },
       },
-      {
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-      },
-    );
-
-    if (!result.alreadyMember) {
-      const { Analytics } = await import("@/lib/analytics");
-      Analytics.track(
-        "invitation_accepted",
-        { workspace_id: result.workspace.id },
-        input.userId,
-      );
-    }
-
-    return result;
-  } catch (error) {
+      select: { id: true },
+    });
+    const gate = invitationGate({
+      status: invitation.status,
+      expiresAt: invitation.expiresAt,
+      isMember: Boolean(membership),
+      now: deps.now(),
+    });
     if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
+      gate.kind === "open" &&
+      !(await accountOwnsAddress(invitation.email, viewer, deps))
     ) {
-      const invitation = await findInvitationByCapability(prisma, {
-        rawToken: input.rawToken,
-        invitationId: input.invitationId,
-      });
-      throw conflict("You already belong to this workspace.", {
-        reason: "already_member",
-        workspaceId: invitation?.workspaceId,
-        workspaceName: invitation?.workspace.name,
-        workspaceIcon: invitation?.workspace.icon,
+      throw wrongAccountError({
+        email: viewer.email,
+        provider: await deps.authProvider(viewer.clerkId),
+        client: input.client,
+        locale: viewer.locale,
       });
     }
-    throw error;
   }
+
+  let joined: Joined | null = null;
+  for (let attempt = 1; !joined; attempt += 1) {
+    try {
+      joined = await joinOnce(where, viewer.id, deps.now());
+    } catch (error) {
+      if (isSerializationFailure(error) && attempt < MAX_ATTEMPTS) continue;
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        const invitation = await prisma.invitation.findUnique({
+          where,
+          include: { workspace: true },
+        });
+        throw conflict("You already belong to this workspace.", {
+          reason: "already_member",
+          workspaceId: invitation?.workspaceId,
+          workspaceName: invitation?.workspace.name,
+          workspaceIcon: invitation?.workspace.icon,
+        });
+      }
+      throw error;
+    }
+  }
+
+  if (joined.alreadyMember) {
+    await closeOwnAddressInvitation(joined, viewer, deps);
+  } else {
+    await afterJoin(joined, viewer);
+  }
+
+  return {
+    workspace: joined.workspace,
+    role: joined.role,
+    alreadyMember: joined.alreadyMember,
+  };
+}
+
+async function joinOnce(
+  where: Prisma.InvitationWhereUniqueInput,
+  userId: string,
+  now: Date,
+): Promise<Joined> {
+  return prisma.$transaction(
+    async (tx) => {
+      const invitation = await findInvitation(tx, where, { workspace: true });
+      const workspace = {
+        id: invitation.workspace.id,
+        name: invitation.workspace.name,
+        icon: invitation.workspace.icon,
+      };
+      const meta = {
+        id: invitation.id,
+        kind: invitation.kind,
+        email: invitation.email,
+        invitedByUserId: invitation.invitedByUserId,
+      };
+
+      const membership = await tx.workspaceMember.findUnique({
+        where: {
+          workspaceId_userId: { workspaceId: invitation.workspaceId, userId },
+        },
+      });
+
+      const gate = invitationGate({
+        status: invitation.status,
+        expiresAt: invitation.expiresAt,
+        isMember: Boolean(membership),
+        now,
+      });
+      if (gate.kind === "gone") throw invitationGoneError(gate.reason);
+
+      if (gate.kind === "already_member" && membership) {
+        // Nothing is used up here. A link stays for whoever it was meant for; an address
+        // invitation is closed after the transaction, only if it is this person's address.
+        return {
+          workspace,
+          role: membership.role,
+          alreadyMember: true,
+          invitation: meta,
+          pendingForMember: invitation.kind === "email" && invitation.status === "pending",
+        };
+      }
+
+      // The same limits as for sending it (Premium caps later), checked again on joining.
+      await canCreateInvitation(invitation.workspace);
+
+      const accepted = await tx.invitation.updateMany({
+        where: {
+          id: invitation.id,
+          status: "pending",
+          expiresAt: { gte: now },
+        },
+        data: { status: "accepted", acceptedAt: now },
+      });
+      if (accepted.count === 0) {
+        const current = await tx.invitation.findUnique({
+          where: { id: invitation.id },
+          select: { status: true },
+        });
+        throw invitationGoneError(current?.status === "revoked" ? "revoked" : "used");
+      }
+
+      const role: WorkspaceRole = invitation.role === "owner" ? "member" : invitation.role;
+      await tx.workspaceMember.create({
+        data: { workspaceId: invitation.workspaceId, userId, role },
+      });
+
+      console.info("[invite]", "INVITE_ACCEPTED", {
+        invitationId: invitation.id,
+        workspaceId: invitation.workspaceId,
+        userId,
+        kind: invitation.kind,
+      });
+
+      return { workspace, role, alreadyMember: false, invitation: meta, pendingForMember: false };
+    },
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  );
+}
+
+/**
+ * A member opened an address invitation that still waits. It is theirs (their Kangur
+ * address or one verified in Clerk): done, it leaves the inviter's list. Someone else's,
+ * forwarded to a member: it stays for its person.
+ */
+async function closeOwnAddressInvitation(
+  joined: Joined,
+  viewer: InvitationViewer,
+  deps: InvitationDeps,
+): Promise<void> {
+  if (!joined.pendingForMember) return;
+  if (!(await accountOwnsAddress(joined.invitation.email, viewer, deps))) return;
+  await prisma.invitation.updateMany({
+    where: { id: joined.invitation.id, status: "pending" },
+    data: { status: "accepted", acceptedAt: deps.now() },
+  });
+}
+
+async function afterJoin(joined: Joined, viewer: InvitationViewer): Promise<void> {
+  const { Analytics } = await import("@/lib/analytics");
+  const workspaceId = joined.workspace.id;
+  Analytics.track("invitation_accepted", { workspace_id: workspaceId }, viewer.id);
+  if (joined.invitation.kind === "link") {
+    Analytics.track("invite_link_joined", { workspace_id: workspaceId }, viewer.id);
+  } else if (
+    joined.invitation.email &&
+    normalizeEmail(joined.invitation.email) !== normalizeEmail(viewer.email)
+  ) {
+    Analytics.track(
+      "invite_joined_other_email",
+      { workspace_id: workspaceId, relay: isPrivateRelayEmail(viewer.email) },
+      viewer.id,
+    );
+  }
+
+  ensureNotificationHandlersRegistered();
+  await domainEventBus.publish({
+    type: "WorkspaceMemberJoined",
+    workspaceId,
+    workspaceName: joined.workspace.name,
+    workspaceIcon: joined.workspace.icon,
+    invitationId: joined.invitation.id,
+    inviterUserId: joined.invitation.invitedByUserId,
+    memberUserId: viewer.id,
+  });
 }

@@ -3,6 +3,7 @@ import { Redirect, Stack } from "expo-router";
 import { useEffect } from "react";
 
 import { bootLog } from "@/lib/boot-diagnostics";
+import { pendingInvitePath } from "@/lib/invite/pending-invite";
 
 export default function AuthLayout() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -19,7 +20,8 @@ export default function AuthLayout() {
   }
 
   if (isSignedIn) {
-    return <Redirect href={"/(tabs)" as never} />;
+    // Signed in on the way to an invitation: back to "Join", not to Home.
+    return <Redirect href={(pendingInvitePath() ?? "/(tabs)") as never} />;
   }
 
   return (

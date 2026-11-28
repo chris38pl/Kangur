@@ -32,6 +32,7 @@ import {
   MailIcon,
 } from "@/features/auth/auth-icons";
 import { logAuthSuccess, runClerkOAuth } from "@/features/auth/oauth";
+import { useInvitedEmailPrefill } from "@/features/auth/useInvitedEmailPrefill";
 import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -67,6 +68,7 @@ export function SignUpScreen() {
   const [step, setStep] = useState<Step>("landing");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  useInvitedEmailPrefill(setEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState("");

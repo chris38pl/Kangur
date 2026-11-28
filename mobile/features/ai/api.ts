@@ -1,6 +1,11 @@
 import { fetch as expoFetch } from "expo/fetch";
 
-import { apiFetch, ApiClientError, type ApiErrorCode } from "@/lib/api/client";
+import {
+  apiFetch,
+  ApiClientError,
+  appVersionHeaders,
+  type ApiErrorCode,
+} from "@/lib/api/client";
 import {
   httpLogNetworkError,
   httpLogRequest,
@@ -47,6 +52,7 @@ export async function ingestAi(
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
+        ...appVersionHeaders(),
       },
       body: formData,
     });

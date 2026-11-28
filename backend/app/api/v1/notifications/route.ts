@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 
 import { notificationRepository } from "@/features/notifications/notificationRepository";
+import {
+  hiddenNotificationTypes,
+  presentNotifications,
+} from "@/features/notifications/presentNotifications";
 import { NotificationListResponseSchema } from "@/features/notifications/schemas";
 import { ensureNotificationHandlersRegistered } from "@/features/notifications/registerHandlers";
 import { ApiError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
+import { readClientVersion } from "@/lib/clientVersion";
 import { assertRateLimit } from "@/lib/rateLimit";
 
 export async function GET(request: Request) {
@@ -12,28 +17,16 @@ export async function GET(request: Request) {
     ensureNotificationHandlersRegistered();
     const { user } = await requireUser(request);
     assertRateLimit("notifications", user.id);
+    const client = readClientVersion(request);
+    const hiddenTypes = hiddenNotificationTypes(client);
     const [rows, unreadCount] = await Promise.all([
-      notificationRepository.listForUser(user.id),
-      notificationRepository.unreadCount(user.id),
+      notificationRepository.listForUser(user.id, { hiddenTypes }),
+      notificationRepository.unreadCount(user.id, { hiddenTypes }),
     ]);
 
     const body = NotificationListResponseSchema.parse({
       unreadCount,
-      notifications: rows.map((row) => ({
-        id: row.id,
-        type: row.type,
-        status: row.status,
-        title: row.title,
-        body: row.body,
-        actorUserId: row.actorUserId,
-        workspaceId: row.workspaceId,
-        sourceId: row.sourceId,
-        payloadType: row.payloadType,
-        payloadSchemaVersion: row.payloadSchemaVersion,
-        payload: row.payload,
-        createdAt: row.createdAt.toISOString(),
-        readAt: row.readAt?.toISOString() ?? null,
-      })),
+      notifications: presentNotifications(rows, client),
     });
 
     return NextResponse.json(body);

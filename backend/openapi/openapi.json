@@ -95,6 +95,15 @@
           "platformRole": {
             "$ref": "#/components/schemas/PlatformRole"
           },
+          "displayName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "emailHidden": {
+            "type": "boolean"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -110,6 +119,8 @@
           "email",
           "locale",
           "platformRole",
+          "displayName",
+          "emailHidden",
           "createdAt",
           "updatedAt"
         ]
@@ -175,11 +186,15 @@
               "cs",
               "be"
             ]
+          },
+          "displayName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200
           }
-        },
-        "required": [
-          "locale"
-        ]
+        }
       },
       "WorkspaceListResponse": {
         "type": "object",
@@ -333,11 +348,17 @@
             "type": "string"
           },
           "email": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "email"
           },
           "displayName": {
             "type": "string"
+          },
+          "hasName": {
+            "type": "boolean"
           },
           "role": {
             "$ref": "#/components/schemas/WorkspaceRole"
@@ -352,6 +373,7 @@
           "userId",
           "email",
           "displayName",
+          "hasName",
           "role",
           "joinedAt"
         ]
@@ -394,8 +416,14 @@
           "id": {
             "type": "string"
           },
+          "kind": {
+            "$ref": "#/components/schemas/InvitationKind"
+          },
           "email": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "email"
           },
           "role": {
@@ -420,11 +448,19 @@
         },
         "required": [
           "id",
+          "kind",
           "email",
           "role",
           "status",
           "expiresAt",
           "createdAt"
+        ]
+      },
+      "InvitationKind": {
+        "type": "string",
+        "enum": [
+          "email",
+          "link"
         ]
       },
       "InviteMemberResult": {
@@ -487,6 +523,64 @@
           "email"
         ]
       },
+      "InviteLinkResult": {
+        "type": "object",
+        "properties": {
+          "invitation": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "link"
+                ]
+              },
+              "role": {
+                "$ref": "#/components/schemas/WorkspaceRole"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "role",
+              "expiresAt"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "invitation",
+          "url"
+        ]
+      },
+      "CreateInviteLinkBody": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "$ref": "#/components/schemas/InviteLinkChannel"
+          },
+          "role": {
+            "$ref": "#/components/schemas/InviteRole"
+          }
+        }
+      },
+      "InviteLinkChannel": {
+        "type": "string",
+        "enum": [
+          "code",
+          "share"
+        ]
+      },
       "AcceptInvitationResponse": {
         "type": "object",
         "properties": {
@@ -541,11 +635,37 @@
           "invitationId": {
             "type": "string"
           },
+          "kind": {
+            "$ref": "#/components/schemas/InvitationKind"
+          },
           "createdAt": {
             "type": "string"
           },
           "inviterDisplayName": {
             "type": "string"
+          },
+          "inviterHasName": {
+            "type": "boolean"
+          },
+          "differentEmail": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "invitedEmail": {
+                "type": "string",
+                "format": "email"
+              },
+              "accountEmail": {
+                "type": "string",
+                "format": "email"
+              }
+            },
+            "required": [
+              "invitedEmail",
+              "accountEmail"
+            ]
           },
           "workspace": {
             "type": "object",
@@ -594,8 +714,11 @@
         },
         "required": [
           "invitationId",
+          "kind",
           "createdAt",
           "inviterDisplayName",
+          "inviterHasName",
+          "differentEmail",
           "workspace",
           "memberCount",
           "members",
@@ -614,6 +737,33 @@
             "minLength": 1
           }
         }
+      },
+      "InvitationPeekResponse": {
+        "type": "object",
+        "properties": {
+          "invitedEmail": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email"
+          }
+        },
+        "required": [
+          "invitedEmail"
+        ]
+      },
+      "InvitationPeekBody": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "token"
+        ]
       },
       "NotificationListResponse": {
         "type": "object",
@@ -711,7 +861,8 @@
           "SHOPPING_STARTED",
           "SHOPPING_FINISHED",
           "SHOPPING_LIST_CREATED",
-          "SHOPPING_LIST_DELETED"
+          "SHOPPING_LIST_DELETED",
+          "WORKSPACE_MEMBER_JOINED"
         ]
       },
       "NotificationStatus": {
@@ -3460,7 +3611,7 @@
       },
       "patch": {
         "summary": "Update current user profile",
-        "description": "Currently supports updating app language (locale).",
+        "description": "App language (locale) and the name other people see (displayName: 1 to 30 characters, not an address; null removes it). The name stays in Kangur and is never written to Clerk. 400 VALIDATION_ERROR with details.reason name_email, name_too_long or name_empty.",
         "tags": [
           "Auth"
         ],
@@ -3893,6 +4044,7 @@
     "/api/v1/workspaces/{workspaceId}/members": {
       "get": {
         "summary": "List members of a workspace",
+        "description": "displayName is the name, told apart for two of one name, or the fallback word (hasName false). Never an Apple relay address: email is null for such a member for apps 1.0.9+, and a reserved address for older apps, which require one and never show it.",
         "tags": [
           "Workspaces"
         ],
@@ -4087,6 +4239,7 @@
     "/api/v1/workspaces/{workspaceId}/invitations": {
       "get": {
         "summary": "List pending workspace invitations",
+        "description": "Link invitations (kind link, email null) only for apps that send X-Kangur-App-Version 1.0.9 or newer. Without the header the list holds e-mail invitations only, as app 1.0.8 expects.",
         "tags": [
           "Workspaces"
         ],
@@ -4221,6 +4374,92 @@
         }
       }
     },
+    "/api/v1/workspaces/{workspaceId}/invite-links": {
+      "post": {
+        "summary": "Create a one-time invitation link without an address",
+        "description": "For a code on the screen or the share sheet. Works once and for 7 days, like an e-mail invitation; owners and admins only; at most 20 links per workspace in 24 hours (429 RATE_LIMITED). The token is only in the returned url, after #.",
+        "tags": [
+          "Workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInviteLinkBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Link created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteLinkResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many links today",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/workspaces/{workspaceId}/invitations/{invitationId}": {
       "delete": {
         "summary": "Revoke a pending invitation",
@@ -4290,6 +4529,7 @@
     "/api/v1/invitations/accept": {
       "post": {
         "summary": "Accept a workspace invitation by token",
+        "description": "The token is a one-time key: whoever holds it and is signed in joins, whatever the account address. By invitationId (from an in-app notification) the invitation address must be one of the account addresses verified in Clerk, else 403 email_mismatch, never with an Apple relay address. 404 reasons: expired, revoked, used (someone already joined with this link).",
         "tags": [
           "Workspaces"
         ],
@@ -4413,7 +4653,47 @@
             }
           },
           "404": {
-            "description": "Expired or revoked",
+            "description": "Expired, revoked or used",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invitations/peek": {
+      "post": {
+        "summary": "The address an e-mail invitation went to, before sign-in",
+        "description": "Public. Fills in the e-mail sign-in form on the invitation path. Null for a link, an invitation that no longer works, or an Apple relay address.",
+        "tags": [
+          "Workspaces"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationPeekBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The invited address, or null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationPeekResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
             "content": {
               "application/json": {
                 "schema": {
@@ -4428,6 +4708,7 @@
     "/api/v1/notifications": {
       "get": {
         "summary": "List notifications for the current user",
+        "description": "WORKSPACE_MEMBER_JOINED only for apps that send X-Kangur-App-Version 1.0.9 or newer; unreadCount counts only what the app is sent.",
         "tags": [
           "Notifications"
         ],

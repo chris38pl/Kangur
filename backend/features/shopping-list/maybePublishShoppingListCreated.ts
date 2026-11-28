@@ -1,5 +1,4 @@
 import { ensureNotificationHandlersRegistered } from "@/features/notifications/registerHandlers";
-import { displayNameFromEmail } from "@/lib/displayName";
 import { domainEventBus } from "@/lib/events/DomainEventBus";
 import { prisma } from "@/lib/prisma";
 
@@ -28,10 +27,6 @@ export async function maybePublishShoppingListCreated(input: {
   });
   if (itemCount === 0) return;
 
-  const actor = await prisma.user.findUniqueOrThrow({
-    where: { id: input.actorUserId },
-  });
-
   ensureNotificationHandlersRegistered();
   await domainEventBus.publish({
     type: "ShoppingListCreated",
@@ -41,6 +36,5 @@ export async function maybePublishShoppingListCreated(input: {
     listEmoji: list.emoji,
     itemCount,
     actorUserId: input.actorUserId,
-    actorDisplayName: displayNameFromEmail(actor.email),
   });
 }

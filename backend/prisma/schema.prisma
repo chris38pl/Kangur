@@ -1,4 +1,5 @@
-// Kangur domain identity. Profile UI (name, avatar) stays in Clerk.
+// Kangur domain identity. The avatar stays in Clerk. The name other people see lives here
+// (User.displayName): copied once from Clerk, changed only in Kangur.
 
 generator client {
   provider = "prisma-client-js"
@@ -25,6 +26,18 @@ enum InvitationStatus {
   pending
   accepted
   revoked
+}
+
+/** `email`: sent to an address. `link`: no address, shown as a code or shared by the inviter. */
+enum InvitationKind {
+  email
+  link
+}
+
+/** `provider`: copied from Clerk (sign-up form, Apple, Google). `user`: typed in Kangur. */
+enum DisplayNameSource {
+  provider
+  user
 }
 
 enum ShoppingMode {
@@ -107,6 +120,8 @@ enum NotificationType {
   SHOPPING_FINISHED
   SHOPPING_LIST_CREATED
   SHOPPING_LIST_DELETED
+  /** Shown to app 1.0.9 and newer only (lib/clientVersion.ts). */
+  WORKSPACE_MEMBER_JOINED
 }
 
 enum NotificationStatus {
@@ -140,6 +155,12 @@ model User {
   email        String
   locale       String?
   platformRole PlatformRole @default(USER)
+  /** What other people see. Null: lib/names/displayName.ts falls back, never to an Apple relay address. */
+  displayName       String?
+  /** Null until a name came from Clerk or was typed in Kangur. A `user` name is never replaced by the Clerk one. */
+  displayNameSource DisplayNameSource?
+  /** First letter of the Clerk last name, only to tell apart two people of one name. */
+  lastNameInitial   String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -196,7 +217,9 @@ model WorkspaceMember {
 model Invitation {
   id              String           @id @default(cuid())
   workspaceId     String
-  email           String
+  kind            InvitationKind   @default(email)
+  /** Null for `link` invitations. */
+  email           String?
   role            WorkspaceRole    @default(member)
   tokenHash       String           @unique
   status          InvitationStatus @default(pending)
