@@ -67,6 +67,12 @@ import { useAiCredits } from "@/features/billing/useAiCredits";
 import { PremiumHintRow } from "@/features/billing/premium-hint-row";
 import { CategoryChips } from "@/features/shopping-item/category-chips";
 import { getCategoryBadgeColors } from "@/features/shopping-item/category-badge-colors";
+import {
+  detailFieldAfterPick,
+  editNameAfterPick,
+  pickCatalogProduct,
+  type CatalogPick,
+} from "@/features/shopping-item/catalog-pick";
 import { ProductNameFieldWithClear, ProductNameSuggestions } from "@/features/shopping-item/product-name-suggestions";
 import {
   ItemsSortToggle,
@@ -217,6 +223,10 @@ export default function ShoppingListScreen() {
   const [note, setNote] = useState("");
   const [category, setCategory] = useState<ShoppingCategory>("other");
   const [categoryChipsKey, setCategoryChipsKey] = useState(0);
+  const manualAmountInputRef = useRef<TextInput>(null);
+  const manualNoteInputRef = useRef<TextInput>(null);
+  /** A held catalog suggestion waiting in the manual add form. */
+  const catalogPickRef = useRef<CatalogPick | null>(null);
   type FooterToast =
     | {
         kind: "added" | "updated" | "removed";
@@ -511,6 +521,24 @@ export default function ShoppingListScreen() {
   const onManualItemAdded = useCallback(() => {
     // Manual add: show newest activity first so the new row is on top.
     setItemsSortMode("date");
+  }, []);
+
+  const onManualNameChange = useCallback(
+    (next: string) => {
+      setName(next);
+      const pick = catalogPickRef.current;
+      if (!pick) return;
+      const after = editNameAfterPick(pick, next, category);
+      catalogPickRef.current = after.pick;
+      setCategory(after.category);
+    },
+    [category],
+  );
+
+  const onManualCategoryChange = useCallback((next: ShoppingCategory) => {
+    // A chip chosen by hand outlives the held product's category.
+    catalogPickRef.current = null;
+    setCategory(next);
   }, []);
 
   const onItemsSortModeChange = useCallback(
@@ -1934,13 +1962,13 @@ export default function ShoppingListScreen() {
                   <ProductNameFieldWithClear
                     query={name}
                     focused={nameFieldFocused}
-                    onClear={() => setName("")}
+                    onClear={() => onManualNameChange("")}
                     style={{ marginTop: spacing[3] }}
                   >
                     {(clearVisible) => (
                       <TextInput
                         value={name}
-                        onChangeText={setName}
+                        onChangeText={onManualNameChange}
                         onFocus={() => {
                           if (nameBlurHideTimerRef.current) {
                             clearTimeout(nameBlurHideTimerRef.current);
@@ -1983,6 +2011,7 @@ export default function ShoppingListScreen() {
                         clearTimeout(nameBlurHideTimerRef.current);
                         nameBlurHideTimerRef.current = null;
                       }
+                      catalogPickRef.current = null;
                       setNameFieldFocused(false);
                       Keyboard.dismiss();
                       const locale = resolveAppLocale(i18n.language);
@@ -2002,6 +2031,7 @@ export default function ShoppingListScreen() {
                         {
                           onSuccess: () => {
                             onManualItemAdded();
+                            catalogPickRef.current = null;
                             setName("");
                             setAmount("");
                             setNote("");
@@ -2021,6 +2051,32 @@ export default function ShoppingListScreen() {
                         },
                       );
                     }}
+                    onPick={(product: CatalogProduct) => {
+                      if (createItem.isPending) return;
+                      if (nameBlurHideTimerRef.current) {
+                        clearTimeout(nameBlurHideTimerRef.current);
+                        nameBlurHideTimerRef.current = null;
+                      }
+                      setNameFieldFocused(false);
+                      const locale = resolveAppLocale(i18n.language);
+                      const picked = pickCatalogProduct(
+                        resolveCatalogLabel(product, locale),
+                        product.category as ShoppingCategory,
+                        category,
+                      );
+                      catalogPickRef.current = picked.pick;
+                      setName(picked.name);
+                      setCategory(picked.category);
+                      const detailInputRef =
+                        detailFieldAfterPick(amount, note) === "note"
+                          ? manualNoteInputRef
+                          : manualAmountInputRef;
+                      // Next frame: the list is gone and the field sits right
+                      // under the name. The keyboard stays up.
+                      requestAnimationFrame(() =>
+                        detailInputRef.current?.focus(),
+                      );
+                    }}
                   />
 
                   <View
@@ -2032,6 +2088,7 @@ export default function ShoppingListScreen() {
                     }}
                   >
                     <TextInput
+                      ref={manualAmountInputRef}
                       value={amount}
                       onChangeText={setAmount}
                       onFocus={() => onComposerFieldFocus("manual")}
@@ -2051,6 +2108,7 @@ export default function ShoppingListScreen() {
                       }}
                     />
                     <TextInput
+                      ref={manualNoteInputRef}
                       value={note}
                       onChangeText={setNote}
                       onFocus={() => onComposerFieldFocus("manual")}
@@ -2075,7 +2133,7 @@ export default function ShoppingListScreen() {
                     <CategoryChips
                       key={categoryChipsKey}
                       value={category}
-                      onChange={setCategory}
+                      onChange={onManualCategoryChange}
                     />
                   </View>
 
@@ -2098,6 +2156,7 @@ export default function ShoppingListScreen() {
                         {
                           onSuccess: () => {
                             onManualItemAdded();
+                            catalogPickRef.current = null;
                             setName("");
                             setAmount("");
                             setNote("");

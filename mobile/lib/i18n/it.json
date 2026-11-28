@@ -175,6 +175,10 @@
     "categoryOrderMoveDown": "Sposta categoria giù",
     "categoryOrderHintWeb": "Usa le frecce per impostare l'ordine dei corridoi in negozio."
   },
+  "catalogHold": {
+    "hint": "Tieni premuto per aggiungere quantità o nota",
+    "actionA11y": "Aggiungi quantità o nota"
+  },
   "shoppingMode": {
     "title": "Spesa",
     "categoryTitle": "Reparto",

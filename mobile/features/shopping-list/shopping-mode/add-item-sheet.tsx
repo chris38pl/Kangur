@@ -13,6 +13,12 @@ import { useTranslation } from "react-i18next";
 import { useColorScheme } from "@/components/useColorScheme";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { CategoryChips } from "@/features/shopping-item/category-chips";
+import {
+  detailFieldAfterPick,
+  editNameAfterPick,
+  pickCatalogProduct,
+  type CatalogPick,
+} from "@/features/shopping-item/catalog-pick";
 import { ProductNameFieldWithClear, ProductNameSuggestions } from "@/features/shopping-item/product-name-suggestions";
 import type { ShoppingCategory } from "@/features/shopping-item/schemas";
 import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
@@ -47,6 +53,10 @@ export function AddItemSheet({
   const keyboardHeight = useKeyboardHeight(visible);
   const bottomPad = useSheetBottomPadding(spacing[4] + spacing[2], keyboardHeight);
   const nameRef = useRef<TextInput>(null);
+  const amountRef = useRef<TextInput>(null);
+  const noteRef = useRef<TextInput>(null);
+  /** A held catalog suggestion waiting for an amount or a note. */
+  const catalogPickRef = useRef<CatalogPick | null>(null);
 
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -72,11 +82,47 @@ export function AddItemSheet({
   }, []);
 
   const reset = () => {
+    catalogPickRef.current = null;
     setName("");
     setAmount("");
     setNote("");
     setCategory(defaultCategory);
     setNameFieldFocused(false);
+  };
+
+  const changeName = (next: string) => {
+    setName(next);
+    const pick = catalogPickRef.current;
+    if (!pick) return;
+    const after = editNameAfterPick(pick, next, category);
+    catalogPickRef.current = after.pick;
+    setCategory(after.category);
+  };
+
+  const changeCategory = (next: ShoppingCategory) => {
+    // A chip chosen by hand outlives the held product's category.
+    catalogPickRef.current = null;
+    setCategory(next);
+  };
+
+  const pickProduct = (product: CatalogProduct) => {
+    if (nameBlurHideTimerRef.current) {
+      clearTimeout(nameBlurHideTimerRef.current);
+      nameBlurHideTimerRef.current = null;
+    }
+    setNameFieldFocused(false);
+    const picked = pickCatalogProduct(
+      resolveCatalogLabel(product, resolveAppLocale(i18n.language)),
+      product.category as ShoppingCategory,
+      category,
+    );
+    catalogPickRef.current = picked.pick;
+    setName(picked.name);
+    setCategory(picked.category);
+    const detailRef =
+      detailFieldAfterPick(amount, note) === "note" ? noteRef : amountRef;
+    // Next frame: the list is gone and the field sits right under the name.
+    requestAnimationFrame(() => detailRef.current?.focus());
   };
 
   const close = () => {
@@ -158,14 +204,14 @@ export function AddItemSheet({
             <ProductNameFieldWithClear
               query={name}
               focused={nameFieldFocused}
-              onClear={() => setName("")}
+              onClear={() => changeName("")}
               style={{ marginTop: spacing[4] }}
             >
               {(clearVisible) => (
                 <TextInput
                   ref={nameRef}
                   value={name}
-                  onChangeText={setName}
+                  onChangeText={changeName}
                   onFocus={() => {
                     if (nameBlurHideTimerRef.current) {
                       clearTimeout(nameBlurHideTimerRef.current);
@@ -183,6 +229,7 @@ export function AddItemSheet({
                   placeholderTextColor={theme.textMuted}
                   returnKeyType="next"
                   blurOnSubmit={false}
+                  onSubmitEditing={() => amountRef.current?.focus()}
                   style={{
                     ...fieldStyle,
                     marginTop: 0,
@@ -213,6 +260,7 @@ export function AddItemSheet({
                 Keyboard.dismiss();
                 onClose();
               }}
+              onPick={pickProduct}
             />
             <View
               style={{
@@ -223,12 +271,14 @@ export function AddItemSheet({
               }}
             >
               <TextInput
+                ref={amountRef}
                 value={amount}
                 onChangeText={setAmount}
                 placeholder={t("list.amountPlaceholderShort")}
                 placeholderTextColor={theme.textMuted}
                 returnKeyType="next"
                 blurOnSubmit={false}
+                onSubmitEditing={() => noteRef.current?.focus()}
                 style={{
                   ...fieldStyle,
                   marginTop: 0,
@@ -238,6 +288,7 @@ export function AddItemSheet({
                 }}
               />
               <TextInput
+                ref={noteRef}
                 value={note}
                 onChangeText={setNote}
                 placeholder={t("list.notePlaceholderShort")}
@@ -255,7 +306,7 @@ export function AddItemSheet({
             </View>
 
             <View style={{ marginTop: spacing[5] }}>
-              <CategoryChips value={category} onChange={setCategory} />
+              <CategoryChips value={category} onChange={changeCategory} />
             </View>
 
             <Pressable

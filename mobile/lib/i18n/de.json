@@ -175,6 +175,10 @@
     "categoryOrderMoveDown": "Kategorie nach unten",
     "categoryOrderHintWeb": "Mit den Pfeilen die Gangreihenfolge für den Laden festlegen."
   },
+  "catalogHold": {
+    "hint": "Halte gedrückt, um Menge oder Notiz hinzuzufügen",
+    "actionA11y": "Menge oder Notiz hinzufügen"
+  },
   "shoppingMode": {
     "title": "Einkaufen",
     "categoryTitle": "Gang",

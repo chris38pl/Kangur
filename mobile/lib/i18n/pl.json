@@ -187,6 +187,10 @@
     "categoryOrderMoveDown": "Przenieś kategorię w dół",
     "categoryOrderHintWeb": "Użyj strzałek, żeby ustawić kolejność alejek w sklepie."
   },
+  "catalogHold": {
+    "hint": "Przytrzymaj, żeby dopisać ilość lub notatkę",
+    "actionA11y": "Dopisz ilość lub notatkę"
+  },
   "shoppingMode": {
     "title": "Zakupy",
     "categoryTitle": "Alejka",
