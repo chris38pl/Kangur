@@ -24,9 +24,7 @@ export async function POST(request: Request) {
     const result = await acceptInvitation({
       rawToken: parsed.data.token,
       invitationId: parsed.data.invitationId,
-      userId: user.id,
-      userEmail: user.email,
-      clerkId,
+      viewer: { id: user.id, email: user.email, locale: user.locale, clerkId },
     });
 
     const body = AcceptInvitationResponseSchema.parse(result);

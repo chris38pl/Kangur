@@ -36,6 +36,14 @@ function appEnv(): "development" | "preview" | "production" {
   return process.env.NODE_ENV === "production" ? "production" : "development";
 }
 
+/**
+ * Invitation links of the site open the app right away (Universal Links, App Links), when
+ * the site vouches for it: backend/app/.well-known. Only the www host, which every link we
+ * make uses: the bare domain redirects, and neither Apple nor Android follow a redirect
+ * there. The development build keeps the browser, so a store app on the same phone wins.
+ */
+const SITE_HOST = "www.getkangur.com";
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const env = appEnv();
   const isDevApp = env === "development";
@@ -45,7 +53,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: isDevApp ? "Kangur DEV" : "Kangur",
     slug: "kangur",
     owner: "chris38pl",
-    version: "1.0.8",
+    // The server tells app versions apart by this (X-Kangur-App-Version).
+    version: "1.0.9",
     orientation: "portrait",
     icon: isDevApp
       ? "./assets/images/icon-dev.png"
@@ -59,6 +68,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         : "./assets/images/icon-ios.png",
       bundleIdentifier: isDevApp ? "app.kangur.dev" : "app.kangur",
       usesAppleSignIn: true,
+      associatedDomains: isDevApp ? [] : [`applinks:${SITE_HOST}`],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
@@ -79,6 +89,19 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         monochromeImage: "./assets/images/android-icon-monochrome.png",
       },
       predictiveBackGestureEnabled: false,
+      intentFilters: isDevApp
+        ? []
+        : [
+            {
+              action: "VIEW",
+              autoVerify: true,
+              data: [
+                { scheme: "https", host: SITE_HOST, path: "/invite" },
+                { scheme: "https", host: SITE_HOST, pathPattern: "/../invite" },
+              ],
+              category: ["BROWSABLE", "DEFAULT"],
+            },
+          ],
       permissions: ["android.permission.RECORD_AUDIO"],
       // The Expo template asks to draw over other apps for the developer overlay. Released
       // builds do not need it, and in Poland it is known as a permission scammers ask for.

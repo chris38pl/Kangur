@@ -20,6 +20,10 @@ export type SaveNotificationInput = {
   payload: Prisma.InputJsonValue;
 };
 
+function typeFilter(hiddenTypes: NotificationType[] | undefined) {
+  return hiddenTypes && hiddenTypes.length > 0 ? { type: { notIn: hiddenTypes } } : {};
+}
+
 /** Pure persistence - no event side-effects. */
 export const notificationRepository = {
   async save(input: SaveNotificationInput): Promise<Notification> {
@@ -40,20 +44,30 @@ export const notificationRepository = {
     });
   },
 
-  async listForUser(userId: string, limit = 50) {
+  /** `hiddenTypes`: types the asking app does not know (lib/clientVersion.ts). */
+  async listForUser(
+    userId: string,
+    options: { limit?: number; hiddenTypes?: NotificationType[] } = {},
+  ) {
     return prisma.notification.findMany({
-      where: { recipientUserId: userId, archivedAt: null },
+      where: {
+        recipientUserId: userId,
+        archivedAt: null,
+        ...typeFilter(options.hiddenTypes),
+      },
       orderBy: { createdAt: "desc" },
-      take: limit,
+      take: options.limit ?? 50,
     });
   },
 
-  async unreadCount(userId: string) {
+  /** Counts only what the app can show, or its badge would promise rows it hides. */
+  async unreadCount(userId: string, options: { hiddenTypes?: NotificationType[] } = {}) {
     return prisma.notification.count({
       where: {
         recipientUserId: userId,
         archivedAt: null,
         status: "UNREAD",
+        ...typeFilter(options.hiddenTypes),
       },
     });
   },

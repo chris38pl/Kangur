@@ -2,7 +2,6 @@ import { archiveShoppingList } from "@/features/shopping-list/archiveShoppingLis
 import { ensureNotificationHandlersRegistered } from "@/features/notifications/registerHandlers";
 import { notFound, validationError } from "@/lib/auth/errors";
 import { authorizeList } from "@/lib/authorize";
-import { displayNameFromEmail } from "@/lib/displayName";
 import { domainEventBus } from "@/lib/events/DomainEventBus";
 import { getMetrics } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
@@ -70,10 +69,6 @@ export async function startShoppingSession(input: StartSessionInput) {
     select: { id: true },
   });
 
-  const actor = await prisma.user.findUniqueOrThrow({
-    where: { id: input.actorUserId },
-  });
-
   const session = await prisma.shoppingSession.create({
     data: {
       listId: list.id,
@@ -104,7 +99,6 @@ export async function startShoppingSession(input: StartSessionInput) {
       listEmoji: list.emoji,
       sessionId: session.id,
       actorUserId: input.actorUserId,
-      actorDisplayName: displayNameFromEmail(actor.email),
     });
   }
 
@@ -288,10 +282,6 @@ async function publishShoppingFinished(input: {
   actorUserId: string;
   unavailableCount: number;
 }) {
-  const actor = await prisma.user.findUniqueOrThrow({
-    where: { id: input.actorUserId },
-  });
-
   const items = await prisma.shoppingItem.findMany({
     where: {
       listId: input.list.id,
@@ -312,7 +302,6 @@ async function publishShoppingFinished(input: {
     listEmoji: input.list.emoji,
     sessionId: input.sessionId,
     actorUserId: input.actorUserId,
-    actorDisplayName: displayNameFromEmail(actor.email),
     unavailableCount: input.unavailableCount,
     boughtCount,
     itemCount,

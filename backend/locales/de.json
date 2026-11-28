@@ -1,34 +1,49 @@
 {
+  "names": {
+    "fallback": "Haushaltsmitglied",
+    "since": "seit {{date}}"
+  },
   "notifications": {
     "listCreated": {
-      "title": "{{actor}} hat die Liste {{listName}} erstellt"
+      "body": "{{actor}}: neue Liste · {{listName}}",
+      "bodyNoName": "Neue Liste · {{listName}}"
     },
     "listDeleted": {
-      "title": "{{actor}} hat die Liste {{listName}} gelöscht"
+      "body": "{{actor}}: Liste gelöscht · {{listName}}",
+      "bodyNoName": "Liste gelöscht · {{listName}}"
     },
     "shoppingStarted": {
-      "title": "{{actor}} hat mit dem Einkaufen begonnen"
+      "body": "{{actor}}: Einkauf gestartet · {{listName}}",
+      "bodyNoName": "Einkauf gestartet · {{listName}}"
     },
     "shoppingFinished": {
-      "title": "{{actor}} hat den Einkauf beendet",
-      "allBought": "Alle Produkte gekauft",
-      "unavailableOne": "1 Produkt war nicht verfügbar",
-      "unavailableMany": "{{count}} Produkte waren nicht verfügbar"
+      "body_one": "{{actor}}: Einkauf erledigt, {{bought}} von {{count}} Produkt",
+      "body_other": "{{actor}}: Einkauf erledigt, {{bought}} von {{count}} Produkten",
+      "bodyNoName_one": "Einkauf erledigt, {{bought}} von {{count}} Produkt",
+      "bodyNoName_other": "Einkauf erledigt, {{bought}} von {{count}} Produkten",
+      "bodyEmpty": "{{actor}}: Einkauf erledigt",
+      "bodyEmptyNoName": "Einkauf erledigt"
     },
     "invite": {
-      "title": "{{actor}} hat dich zu {{workspaceName}} eingeladen",
-      "body": "Tritt bei, um gemeinsam Einkaufslisten zu erstellen."
+      "title": "Einladung zu {{workspaceName}}",
+      "body": "{{actor}} lädt dich zu gemeinsamen Einkaufslisten ein.",
+      "bodyNoName": "Tritt bei, um gemeinsam Einkaufslisten zu erstellen."
+    },
+    "memberJoined": {
+      "body": "Neu dabei: {{name}}",
+      "bodyNoName": "Eine neue Person ist dem Bereich beigetreten"
     }
   },
   "email": {
     "invite": {
       "subject": "Einladung zu {{workspaceName}} - Kangur",
-      "headline": "{{inviter}} hat dich eingeladen zu",
+      "headline": "{{inviter}} lädt dich ein zu",
+      "headlineNoName": "Eine Einladung zu einem Bereich in Kangur",
       "ctaOpen": "Einladung öffnen",
-      "ctaJoin": "Workspace beitreten",
+      "ctaJoin": "Bereich beitreten",
       "bodyExisting": "Du hast bereits ein Konto - öffne die App, um die Einladung anzunehmen.",
       "bodyNew": "Erstelle ein Konto oder melde dich an, um gemeinsame Einkaufslisten zu nutzen.",
-      "expiry": "Dieser Link ist 7 Tage gültig."
+      "expiry": "Dieser Link funktioniert einmal und ist 7 Tage gültig."
     }
   }
 }

@@ -9,6 +9,7 @@ import {
 } from "@/features/workspace/schemas";
 import { ApiError, validationError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
+import { readClientVersion } from "@/lib/clientVersion";
 import { assertRateLimit } from "@/lib/rateLimit";
 
 type RouteContext = {
@@ -19,7 +20,11 @@ export async function GET(request: Request, context: RouteContext) {
   try {
     const { workspaceId } = await context.params;
     const { user } = await requireUser(request);
-    const invitations = await listInvitations(workspaceId, user.id);
+    const invitations = await listInvitations(
+      workspaceId,
+      user.id,
+      readClientVersion(request),
+    );
     const body = InvitationListResponseSchema.parse({ invitations });
     return NextResponse.json(body);
   } catch (error) {
@@ -49,9 +54,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const result = await inviteMember({
       workspaceId,
-      actorUserId: user.id,
-      actorEmail: user.email,
-      actorLocale: user.locale,
+      actor: user,
       email: parsed.data.email,
       role: parsed.data.role,
     });

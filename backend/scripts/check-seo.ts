@@ -301,7 +301,8 @@ const registered = new Set(
   pages.map(({ id, locale }) => internalPath(locale, routePath(id, locale) ?? "/")),
 );
 for (const route of Object.keys(prerendered.routes)) {
-  if (/\.[a-z]+$|^\/_/.test(route)) continue;
+  // Files, not pages: /robots.txt, and /.well-known for Universal Links and App Links.
+  if (/\.[a-z]+$|^\/_|^\/\.well-known\//.test(route)) continue;
   if (!registered.has(route)) fail(route, "prerendered, but not a registered page");
 }
 

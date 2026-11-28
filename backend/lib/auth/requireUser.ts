@@ -32,10 +32,20 @@ function isClerkRateLimit(error: unknown): boolean {
   return false;
 }
 
-async function resolvePrimaryEmail(
+/**
+ * The Clerk profile at the first sign-in: primary address and the name. Apple gives the
+ * name only at the first sign-in and Clerk keeps it on the user (firstName / lastName); the
+ * Apple external account holds nothing by then (checked 28 XI 2026).
+ */
+async function resolveClerkProfile(
   clerkId: string,
   secretKey: string,
-): Promise<{ email: string; emailVerified: boolean }> {
+): Promise<{
+  email: string;
+  emailVerified: boolean;
+  firstName: string | null;
+  lastName: string | null;
+}> {
   const clerk = createClerkClient({ secretKey });
   try {
     const clerkUser = await clerk.users.getUser(clerkId);
@@ -51,6 +61,8 @@ async function resolvePrimaryEmail(
     return {
       email: primary.emailAddress,
       emailVerified: primary.verification?.status === "verified",
+      firstName: clerkUser.firstName,
+      lastName: clerkUser.lastName,
     };
   } catch (error) {
     if (isClerkRateLimit(error)) {
@@ -101,15 +113,16 @@ export async function requireUser(
       user = existing;
     }
   } else {
-    const { email, emailVerified } = await resolvePrimaryEmail(
-      identity.clerkId,
-      secretKey,
-    );
+    const profile = await resolveClerkProfile(identity.clerkId, secretKey);
     user = await upsertUser({
       clerkId: identity.clerkId,
-      email,
-      emailVerified,
+      email: profile.email,
+      emailVerified: profile.emailVerified,
       deviceLocale,
+      providerName: {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+      },
     });
   }
 

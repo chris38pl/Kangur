@@ -1,34 +1,49 @@
 {
+  "names": {
+    "fallback": "Miembro del hogar",
+    "since": "desde el {{date}}"
+  },
   "notifications": {
     "listCreated": {
-      "title": "{{actor}} creó la lista {{listName}}"
+      "body": "{{actor}}: nueva lista · {{listName}}",
+      "bodyNoName": "Nueva lista · {{listName}}"
     },
     "listDeleted": {
-      "title": "{{actor}} eliminó la lista {{listName}}"
+      "body": "{{actor}}: lista eliminada · {{listName}}",
+      "bodyNoName": "Lista eliminada · {{listName}}"
     },
     "shoppingStarted": {
-      "title": "{{actor}} empezó a comprar"
+      "body": "{{actor}}: compra iniciada · {{listName}}",
+      "bodyNoName": "Compra iniciada · {{listName}}"
     },
     "shoppingFinished": {
-      "title": "{{actor}} terminó de comprar",
-      "allBought": "Todos los productos comprados",
-      "unavailableOne": "1 producto no estaba disponible",
-      "unavailableMany": "{{count}} productos no estaban disponibles"
+      "body_one": "{{actor}}: compra terminada, {{bought}} de {{count}} producto",
+      "body_other": "{{actor}}: compra terminada, {{bought}} de {{count}} productos",
+      "bodyNoName_one": "Compra terminada, {{bought}} de {{count}} producto",
+      "bodyNoName_other": "Compra terminada, {{bought}} de {{count}} productos",
+      "bodyEmpty": "{{actor}}: compra terminada",
+      "bodyEmptyNoName": "Compra terminada"
     },
     "invite": {
-      "title": "{{actor}} te invitó a {{workspaceName}}",
-      "body": "Únete para crear listas de la compra juntos."
+      "title": "Invitación a {{workspaceName}}",
+      "body": "{{actor}} te invita a compartir listas de la compra.",
+      "bodyNoName": "Únete para crear listas de la compra en común."
+    },
+    "memberJoined": {
+      "body": "Nueva persona: {{name}}",
+      "bodyNoName": "Una persona nueva se ha unido al espacio"
     }
   },
   "email": {
     "invite": {
       "subject": "Invitación a {{workspaceName}} - Kangur",
-      "headline": "{{inviter}} te ha invitado a",
+      "headline": "{{inviter}} te invita a",
+      "headlineNoName": "Una invitación a un espacio en Kangur",
       "ctaOpen": "Abrir la invitación",
       "ctaJoin": "Unirse al espacio",
       "bodyExisting": "Ya tienes una cuenta - abre la app para aceptar la invitación.",
       "bodyNew": "Crea una cuenta o inicia sesión para usar listas de la compra compartidas.",
-      "expiry": "Este enlace caduca en 7 días."
+      "expiry": "Este enlace funciona una vez y caduca en 7 días."
     }
   }
 }

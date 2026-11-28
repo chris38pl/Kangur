@@ -1,34 +1,49 @@
 {
+  "names": {
+    "fallback": "Дамачадзец",
+    "since": "з {{date}}"
+  },
   "notifications": {
     "listCreated": {
-      "title": "{{actor}} стварыў(ла) спіс {{listName}}"
+      "body": "{{actor}}: новы спіс · {{listName}}",
+      "bodyNoName": "Новы спіс · {{listName}}"
     },
     "listDeleted": {
-      "title": "{{actor}} выдаліў(ла) спіс {{listName}}"
+      "body": "{{actor}}: спіс выдалены · {{listName}}",
+      "bodyNoName": "Спіс выдалены · {{listName}}"
     },
     "shoppingStarted": {
-      "title": "{{actor}} пачаў(ла) пакупкі"
+      "body": "{{actor}}: пакупкі пачаты · {{listName}}",
+      "bodyNoName": "Пакупкі пачаты · {{listName}}"
     },
     "shoppingFinished": {
-      "title": "{{actor}} скончыў(ла) пакупкі",
-      "allBought": "Усе тавары куплены",
-      "unavailableOne": "1 тавар быў недаступны",
-      "unavailableMany": "{{count}} тавараў былі недаступныя"
+      "body_one": "{{actor}}: пакупкі завершаны, {{bought}} з {{count}} тавару",
+      "body_other": "{{actor}}: пакупкі завершаны, {{bought}} з {{count}} тавараў",
+      "bodyNoName_one": "Пакупкі завершаны, {{bought}} з {{count}} тавару",
+      "bodyNoName_other": "Пакупкі завершаны, {{bought}} з {{count}} тавараў",
+      "bodyEmpty": "{{actor}}: пакупкі завершаны",
+      "bodyEmptyNoName": "Пакупкі завершаны"
     },
     "invite": {
-      "title": "{{actor}} запрасіў(ла) вас у {{workspaceName}}",
-      "body": "Далучайцеся, каб разам складаць спісы пакупак."
+      "title": "Запрашэнне ў {{workspaceName}}",
+      "body": "{{actor}} запрашае вас да агульных спісаў пакупак.",
+      "bodyNoName": "Далучайцеся, каб разам складаць спісы пакупак."
+    },
+    "memberJoined": {
+      "body": "Новы ўдзельнік: {{name}}",
+      "bodyNoName": "Новы ўдзельнік у прасторы"
     }
   },
   "email": {
     "invite": {
       "subject": "Запрашэнне ў {{workspaceName}} - Kangur",
       "headline": "{{inviter}} запрашае вас у",
+      "headlineNoName": "Запрашэнне ў прастору ў Kangur",
       "ctaOpen": "Адкрыць запрашэнне",
       "ctaJoin": "Далучыцца",
       "bodyExisting": "У вас ужо ёсць акаўнт - адкрыйце дадатак, каб прыняць запрашэнне.",
       "bodyNew": "Стварыце акаўнт або ўвайдзіце, каб карыстацца агульнымі спісамі пакупак.",
-      "expiry": "Спасылка дзейнічае 7 дзён."
+      "expiry": "Спасылка працуе адзін раз і дзейнічае 7 дзён."
     }
   }
 }

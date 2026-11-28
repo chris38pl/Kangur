@@ -5,18 +5,19 @@ import { brandAssets } from "@/design-system/brand-assets";
 
 type Props = {
   visible: boolean;
-  email: string;
+  /** "Revoke the invitation for …?" or, for a link, "nobody will join with it". */
+  body: string;
   busy?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 };
 
 /**
- * Confirm sheet when revoking a pending workspace invitation.
+ * Confirm sheet when revoking a pending workspace invitation or link.
  */
 export function RevokeInviteSheet({
   visible,
-  email,
+  body,
   busy = false,
   onCancel,
   onConfirm,
@@ -28,7 +29,7 @@ export function RevokeInviteSheet({
       visible={visible}
       image={brandAssets.deleteList}
       title={t("workspace.revokeInviteTitle")}
-      body={t("workspace.revokeInviteBody", { email })}
+      body={body}
       primaryLabel={t("workspace.revokeInviteConfirm")}
       onPrimary={onConfirm}
       secondaryLabel={t("workspace.cancel")}

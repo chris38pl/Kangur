@@ -11,7 +11,7 @@ import { assertRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
   try {
-    const { user } = await requireUser(request);
+    const { user, clerkId } = await requireUser(request);
     assertRateLimit("invitations", user.id);
     const json: unknown = await request.json();
     const parsed = InvitationPreviewBodySchema.safeParse(json);
@@ -24,9 +24,7 @@ export async function POST(request: Request) {
     const result = await previewInvitation({
       rawToken: parsed.data.token,
       invitationId: parsed.data.invitationId,
-      userId: user.id,
-      userEmail: user.email,
-      clerkId: user.clerkId,
+      viewer: { id: user.id, email: user.email, locale: user.locale, clerkId },
     });
 
     const body = InvitationPreviewResponseSchema.parse(result);

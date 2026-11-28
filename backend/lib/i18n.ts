@@ -1,5 +1,6 @@
 import {
   DEFAULT_LOCALE,
+  intlLocaleTag,
   resolveAppLocale,
   type AppLocale,
 } from "@/lib/locale";
@@ -83,6 +84,24 @@ export function t(
   }
 
   return key;
+}
+
+/**
+ * A message that changes with a number: `{key}_{one|few|many|other}` by the language's plural
+ * rules, falling back to `{key}_other`. `count` is passed to the message as {{count}}.
+ */
+export function tCount(
+  locale: string | null | undefined,
+  key: string,
+  count: number,
+  vars?: Record<string, string | number>,
+): string {
+  const code = resolveAppLocale(locale);
+  const form = new Intl.PluralRules(intlLocaleTag(code)).select(count);
+  const withCount = { ...vars, count };
+  const exact = lookup(CATALOGS[code], `${key}_${form}`);
+  if (exact != null) return interpolate(exact, withCount);
+  return t(code, `${key}_other`, withCount);
 }
 
 export function getBackendCatalog(locale: AppLocale): Catalog {

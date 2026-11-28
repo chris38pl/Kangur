@@ -2,22 +2,32 @@ import type { NotificationType, Prisma } from "@prisma/client";
 
 import type { DomainEvent } from "@/lib/events/DomainEventBus";
 import { domainEventBus } from "@/lib/events/DomainEventBus";
-import { normalizeEmail } from "@/lib/email/normalizeEmail";
-import { t } from "@/lib/i18n";
 import { resolveAppLocale, type AppLocale } from "@/lib/locale";
+import { resolveDisplayName } from "@/lib/names/displayName";
+import { nameWords } from "@/lib/names/words";
 import { prisma } from "@/lib/prisma";
+import { memberLabels, type MemberRow } from "@/features/workspace/presentMembers";
 
 import { notificationRepository } from "./notificationRepository";
+import {
+  invitationText,
+  listCreatedText,
+  listDeletedText,
+  memberJoinedText,
+  shoppingFinishedText,
+  shoppingStartedText,
+  type NotificationText,
+} from "./notificationText";
 import {
   getOrCreateNotificationPreferences,
   prefAllowsType,
 } from "./preferences";
 
 /**
- * NotificationHandler - logical steps (TODO extract later):
+ * NotificationHandler - logical steps:
  * 1. RecipientResolver
  * 2. PreferenceFilter
- * 3. NotificationFactory (title/body/payload)
+ * 3. NotificationFactory (title/body/payload, per recipient: language and the actor's name)
  * 4. Repository.save (pure)
  * 5. publish NotificationCreatedEvent
  */
@@ -31,7 +41,7 @@ export async function handleDomainEventForNotifications(
       await handleInvitationCreated(event);
       break;
     case "ShoppingListCreated":
-      await handleWorkspaceMembersEvent(event, {
+      await notifyWorkspaceMembers(event, {
         type: "SHOPPING_LIST_CREATED",
         sourceId: event.listId,
         payloadType: "LIST",
@@ -40,19 +50,14 @@ export async function handleDomainEventForNotifications(
           listName: event.listName,
           listEmoji: event.listEmoji,
           itemCount: event.itemCount,
-          actorDisplayName: event.actorDisplayName,
           workspaceId: event.workspaceId,
         },
-        title: (locale) =>
-          t(locale, "notifications.listCreated.title", {
-            actor: event.actorDisplayName,
-            listName: event.listName,
-          }),
-        body: () => event.listName,
+        text: (locale, workspaceName, actor) =>
+          listCreatedText(locale, { workspaceName, actor, listName: event.listName }),
       });
       break;
     case "ShoppingListDeleted":
-      await handleWorkspaceMembersEvent(event, {
+      await notifyWorkspaceMembers(event, {
         type: "SHOPPING_LIST_DELETED",
         sourceId: event.listId,
         payloadType: "WORKSPACE",
@@ -60,19 +65,14 @@ export async function handleDomainEventForNotifications(
           listId: event.listId,
           listName: event.listName,
           listEmoji: event.listEmoji,
-          actorDisplayName: event.actorDisplayName,
           workspaceId: event.workspaceId,
         },
-        title: (locale) =>
-          t(locale, "notifications.listDeleted.title", {
-            actor: event.actorDisplayName,
-            listName: event.listName,
-          }),
-        body: () => event.listName,
+        text: (locale, workspaceName, actor) =>
+          listDeletedText(locale, { workspaceName, actor, listName: event.listName }),
       });
       break;
     case "ShoppingStarted":
-      await handleWorkspaceMembersEvent(event, {
+      await notifyWorkspaceMembers(event, {
         type: "SHOPPING_STARTED",
         sourceId: event.sessionId,
         payloadType: "SHOPPING",
@@ -85,17 +85,13 @@ export async function handleDomainEventForNotifications(
           workspaceId: event.workspaceId,
           workspaceName: event.workspaceName,
           workspaceIcon: event.workspaceIcon,
-          actorDisplayName: event.actorDisplayName,
         },
-        title: (locale) =>
-          t(locale, "notifications.shoppingStarted.title", {
-            actor: event.actorDisplayName,
-          }),
-        body: () => event.listName,
+        text: (locale, workspaceName, actor) =>
+          shoppingStartedText(locale, { workspaceName, actor, listName: event.listName }),
       });
       break;
     case "ShoppingFinished":
-      await handleWorkspaceMembersEvent(event, {
+      await notifyWorkspaceMembers(event, {
         type: "SHOPPING_FINISHED",
         sourceId: event.sessionId,
         payloadType: "SHOPPING",
@@ -111,56 +107,105 @@ export async function handleDomainEventForNotifications(
           workspaceId: event.workspaceId,
           workspaceName: event.workspaceName,
           workspaceIcon: event.workspaceIcon,
-          actorDisplayName: event.actorDisplayName,
         },
-        title: (locale) =>
-          t(locale, "notifications.shoppingFinished.title", {
-            actor: event.actorDisplayName,
+        text: (locale, workspaceName, actor) =>
+          shoppingFinishedText(locale, {
+            workspaceName,
+            actor,
+            boughtCount: event.boughtCount,
+            itemCount: event.itemCount,
           }),
-        body: (locale) => {
-          if (event.unavailableCount <= 0) {
-            return t(locale, "notifications.shoppingFinished.allBought");
-          }
-          if (event.unavailableCount === 1) {
-            return t(locale, "notifications.shoppingFinished.unavailableOne");
-          }
-          return t(locale, "notifications.shoppingFinished.unavailableMany", {
-            count: event.unavailableCount,
-          });
-        },
       });
+      break;
+    case "WorkspaceMemberJoined":
+      await handleMemberJoined(event);
       break;
     default:
       break;
   }
 }
 
+const PERSON_SELECT = {
+  id: true,
+  email: true,
+  displayName: true,
+  lastNameInitial: true,
+  locale: true,
+} as const;
+
+type Person = MemberRow & { user: MemberRow["user"] & { locale: string | null } };
+
+async function loadPeople(workspaceId: string): Promise<Person[]> {
+  return prisma.workspaceMember.findMany({
+    where: { workspaceId },
+    include: { user: { select: PERSON_SELECT } },
+  });
+}
+
+/** Labels of one workspace in the language of each recipient, computed once per language. */
+function labelsByLocale(people: readonly Person[]) {
+  const cache = new Map<AppLocale, { labels: Map<string, string>; fallback: string }>();
+  return (locale: AppLocale) => {
+    let entry = cache.get(locale);
+    if (!entry) {
+      const words = nameWords(locale);
+      entry = { labels: memberLabels(people, words), fallback: words.fallback };
+      cache.set(locale, entry);
+    }
+    return entry;
+  };
+}
+
+/** The actor as the recipient sees them; null when they have no name and the text leaves it out. */
+function nameFor(
+  people: readonly Person[],
+  userId: string,
+  labels: Map<string, string>,
+): string | null {
+  const person = people.find((p) => p.userId === userId);
+  if (!person || resolveDisplayName(person.user) === null) return null;
+  return labels.get(userId) ?? null;
+}
+
+async function alreadyNotified(
+  recipientUserId: string,
+  type: NotificationType,
+  sourceId: string,
+): Promise<boolean> {
+  const existing = await prisma.notification.findFirst({
+    where: { recipientUserId, type, sourceId, archivedAt: null },
+    select: { id: true },
+  });
+  return Boolean(existing);
+}
+
 async function handleInvitationCreated(
   event: Extract<DomainEvent, { type: "InvitationCreated" }>,
 ): Promise<void> {
-  const email = normalizeEmail(event.inviteeEmail);
-  const invitee = await prisma.user.findFirst({
-    where: { email: { equals: email, mode: "insensitive" } },
-  });
+  if (!event.inviteeUserId) return;
+  const [invitee, actor] = await Promise.all([
+    prisma.user.findUnique({ where: { id: event.inviteeUserId } }),
+    prisma.user.findUnique({ where: { id: event.actorUserId }, select: PERSON_SELECT }),
+  ]);
   if (!invitee) return;
 
   const prefs = await getOrCreateNotificationPreferences(invitee.id);
   if (!prefAllowsType(prefs, "WORKSPACE_INVITATION")) return;
 
   const locale = resolveAppLocale(invitee.locale);
-  const title = t(locale, "notifications.invite.title", {
-    actor: event.actorDisplayName,
+  // The invitee knows nobody in the workspace yet: the plain name, no telling apart.
+  const actorName = actor ? resolveDisplayName(actor) : null;
+  const text = invitationText(locale, {
     workspaceName: event.workspaceName,
+    actor: actorName,
   });
-  const body = t(locale, "notifications.invite.body");
 
   await saveAndPublish({
     recipientUserId: invitee.id,
     actorUserId: event.actorUserId,
     workspaceId: event.workspaceId,
     type: "WORKSPACE_INVITATION",
-    title,
-    body,
+    ...text,
     sourceId: event.invitationId,
     payloadType: "INVITE",
     payload: {
@@ -168,12 +213,13 @@ async function handleInvitationCreated(
       workspaceId: event.workspaceId,
       workspaceName: event.workspaceName,
       workspaceIcon: event.workspaceIcon,
-      actorDisplayName: event.actorDisplayName,
+      actorDisplayName: actorName ?? nameWords(locale).fallback,
+      actorHasName: actorName !== null,
     },
   });
 }
 
-async function handleWorkspaceMembersEvent(
+async function notifyWorkspaceMembers(
   event: Extract<
     DomainEvent,
     | { type: "ShoppingListCreated" }
@@ -185,46 +231,78 @@ async function handleWorkspaceMembersEvent(
     type: NotificationType;
     sourceId: string;
     payloadType: "LIST" | "SHOPPING" | "WORKSPACE";
-    payload: Prisma.InputJsonValue;
-    title: (locale: AppLocale) => string;
-    body: (locale: AppLocale) => string;
+    payload: Record<string, Prisma.InputJsonValue>;
+    text: (locale: AppLocale, workspaceName: string, actor: string | null) => NotificationText;
   },
 ): Promise<void> {
-  const members = await prisma.workspaceMember.findMany({
-    where: {
-      workspaceId: event.workspaceId,
-      userId: { not: event.actorUserId },
-    },
-    include: { user: true },
-  });
+  const [people, workspace] = await Promise.all([
+    loadPeople(event.workspaceId),
+    prisma.workspace.findUnique({
+      where: { id: event.workspaceId },
+      select: { name: true },
+    }),
+  ]);
+  const workspaceName = workspace?.name ?? "";
+  const labelsFor = labelsByLocale(people);
 
-  for (const member of members) {
+  for (const member of people) {
+    if (member.userId === event.actorUserId) continue;
     const prefs = await getOrCreateNotificationPreferences(member.userId);
     if (!prefAllowsType(prefs, spec.type)) continue;
-
-    const existing = await prisma.notification.findFirst({
-      where: {
-        recipientUserId: member.userId,
-        type: spec.type,
-        sourceId: spec.sourceId,
-        archivedAt: null,
-      },
-    });
-    if (existing) continue;
+    if (await alreadyNotified(member.userId, spec.type, spec.sourceId)) continue;
 
     const locale = resolveAppLocale(member.user.locale);
+    const { labels, fallback } = labelsFor(locale);
+    const actor = nameFor(people, event.actorUserId, labels);
     await saveAndPublish({
       recipientUserId: member.userId,
       actorUserId: event.actorUserId,
       workspaceId: event.workspaceId,
       type: spec.type,
-      title: spec.title(locale),
-      body: spec.body(locale),
+      ...spec.text(locale, workspaceName, actor),
       sourceId: spec.sourceId,
       payloadType: spec.payloadType,
-      payload: spec.payload,
+      // App 1.0.8 screens print actorDisplayName as it is.
+      payload: { ...spec.payload, actorDisplayName: actor ?? fallback, actorHasName: actor !== null },
     });
   }
+}
+
+async function handleMemberJoined(
+  event: Extract<DomainEvent, { type: "WorkspaceMemberJoined" }>,
+): Promise<void> {
+  if (event.inviterUserId === event.memberUserId) return;
+  const people = await loadPeople(event.workspaceId);
+  const inviter = people.find((p) => p.userId === event.inviterUserId);
+  // An inviter who left or was removed hears nothing.
+  if (!inviter) return;
+
+  const prefs = await getOrCreateNotificationPreferences(inviter.userId);
+  if (!prefAllowsType(prefs, "WORKSPACE_MEMBER_JOINED")) return;
+  if (await alreadyNotified(inviter.userId, "WORKSPACE_MEMBER_JOINED", event.invitationId)) return;
+
+  const locale = resolveAppLocale(inviter.user.locale);
+  const { labels, fallback } = labelsByLocale(people)(locale);
+  const member = nameFor(people, event.memberUserId, labels);
+
+  await saveAndPublish({
+    recipientUserId: inviter.userId,
+    actorUserId: event.memberUserId,
+    workspaceId: event.workspaceId,
+    type: "WORKSPACE_MEMBER_JOINED",
+    ...memberJoinedText(locale, { workspaceName: event.workspaceName, member }),
+    sourceId: event.invitationId,
+    payloadType: "WORKSPACE",
+    payload: {
+      workspaceId: event.workspaceId,
+      workspaceName: event.workspaceName,
+      workspaceIcon: event.workspaceIcon,
+      invitationId: event.invitationId,
+      memberUserId: event.memberUserId,
+      memberDisplayName: member ?? fallback,
+      memberHasName: member !== null,
+    },
+  });
 }
 
 async function saveAndPublish(input: {
@@ -243,6 +321,7 @@ async function saveAndPublish(input: {
     type: "NotificationCreated",
     notificationId: row.id,
     recipientUserId: row.recipientUserId,
+    notificationType: row.type,
     title: row.title,
     body: row.body,
     payloadType: row.payloadType,
@@ -258,6 +337,7 @@ export function registerNotificationHandler(): void {
     "ShoppingListDeleted",
     "ShoppingStarted",
     "ShoppingFinished",
+    "WorkspaceMemberJoined",
   ] as const) {
     domainEventBus.subscribe(type, async (event) => {
       await handleDomainEventForNotifications(event);

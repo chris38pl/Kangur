@@ -33,6 +33,7 @@ import {
   MailFieldIcon,
 } from "@/features/auth/auth-icons";
 import { logAuthSuccess, runClerkOAuth } from "@/features/auth/oauth";
+import { useInvitedEmailPrefill } from "@/features/auth/useInvitedEmailPrefill";
 import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -139,6 +140,7 @@ export function SignInScreen() {
 
   const [step, setStep] = useState<Step>("credentials");
   const [email, setEmail] = useState("");
+  useInvitedEmailPrefill(setEmail);
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);

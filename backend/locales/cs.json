@@ -1,34 +1,49 @@
 {
+  "names": {
+    "fallback": "Člen domácnosti",
+    "since": "od {{date}}"
+  },
   "notifications": {
     "listCreated": {
-      "title": "{{actor}} vytvořil(a) seznam {{listName}}"
+      "body": "{{actor}}: nový seznam · {{listName}}",
+      "bodyNoName": "Nový seznam · {{listName}}"
     },
     "listDeleted": {
-      "title": "{{actor}} smazal(a) seznam {{listName}}"
+      "body": "{{actor}}: seznam smazán · {{listName}}",
+      "bodyNoName": "Seznam smazán · {{listName}}"
     },
     "shoppingStarted": {
-      "title": "{{actor}} začal(a) nakupovat"
+      "body": "{{actor}}: nákup zahájen · {{listName}}",
+      "bodyNoName": "Nákup zahájen · {{listName}}"
     },
     "shoppingFinished": {
-      "title": "{{actor}} dokončil(a) nákup",
-      "allBought": "Všechny produkty koupeny",
-      "unavailableOne": "1 produkt nebyl k dispozici",
-      "unavailableMany": "{{count}} produktů nebylo k dispozici"
+      "body_one": "{{actor}}: nákup dokončen, {{bought}} z {{count}} produktu",
+      "body_other": "{{actor}}: nákup dokončen, {{bought}} z {{count}} produktů",
+      "bodyNoName_one": "Nákup dokončen, {{bought}} z {{count}} produktu",
+      "bodyNoName_other": "Nákup dokončen, {{bought}} z {{count}} produktů",
+      "bodyEmpty": "{{actor}}: nákup dokončen",
+      "bodyEmptyNoName": "Nákup dokončen"
     },
     "invite": {
-      "title": "{{actor}} vás pozval(a) do {{workspaceName}}",
-      "body": "Připojte se a vytvářejte nákupní seznamy společně."
+      "title": "Pozvánka do {{workspaceName}}",
+      "body": "{{actor}} vás zve ke společným nákupním seznamům.",
+      "bodyNoName": "Připojte se a vytvářejte nákupní seznamy společně."
+    },
+    "memberJoined": {
+      "body": "Nová osoba: {{name}}",
+      "bodyNoName": "Do prostoru se připojila nová osoba"
     }
   },
   "email": {
     "invite": {
       "subject": "Pozvánka do {{workspaceName}} - Kangur",
       "headline": "{{inviter}} vás zve do",
+      "headlineNoName": "Pozvánka do prostoru v aplikaci Kangur",
       "ctaOpen": "Otevřít pozvánku",
       "ctaJoin": "Připojit se",
       "bodyExisting": "Už máte účet - otevřete aplikaci a přijměte pozvánku.",
       "bodyNew": "Vytvořte si účet nebo se přihlaste a používejte sdílené nákupní seznamy.",
-      "expiry": "Tento odkaz vyprší za 7 dní."
+      "expiry": "Tento odkaz funguje jednou a vyprší za 7 dní."
     }
   }
 }

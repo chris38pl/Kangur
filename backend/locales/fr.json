@@ -1,34 +1,49 @@
 {
+  "names": {
+    "fallback": "Membre du foyer",
+    "since": "depuis le {{date}}"
+  },
   "notifications": {
     "listCreated": {
-      "title": "{{actor}} a créé la liste {{listName}}"
+      "body": "{{actor}} : nouvelle liste · {{listName}}",
+      "bodyNoName": "Nouvelle liste · {{listName}}"
     },
     "listDeleted": {
-      "title": "{{actor}} a supprimé la liste {{listName}}"
+      "body": "{{actor}} : liste supprimée · {{listName}}",
+      "bodyNoName": "Liste supprimée · {{listName}}"
     },
     "shoppingStarted": {
-      "title": "{{actor}} a commencé les courses"
+      "body": "{{actor}} : courses commencées · {{listName}}",
+      "bodyNoName": "Courses commencées · {{listName}}"
     },
     "shoppingFinished": {
-      "title": "{{actor}} a terminé les courses",
-      "allBought": "Tous les produits achetés",
-      "unavailableOne": "1 produit était indisponible",
-      "unavailableMany": "{{count}} produits étaient indisponibles"
+      "body_one": "{{actor}} : courses terminées, {{bought}} sur {{count}} produit",
+      "body_other": "{{actor}} : courses terminées, {{bought}} sur {{count}} produits",
+      "bodyNoName_one": "Courses terminées, {{bought}} sur {{count}} produit",
+      "bodyNoName_other": "Courses terminées, {{bought}} sur {{count}} produits",
+      "bodyEmpty": "{{actor}} : courses terminées",
+      "bodyEmptyNoName": "Courses terminées"
     },
     "invite": {
-      "title": "{{actor}} vous a invité à {{workspaceName}}",
-      "body": "Rejoignez pour créer des listes de courses ensemble."
+      "title": "Invitation à {{workspaceName}}",
+      "body": "{{actor}} vous invite à partager des listes de courses.",
+      "bodyNoName": "Rejoignez l’espace pour créer des listes de courses ensemble."
+    },
+    "memberJoined": {
+      "body": "Nouvelle personne : {{name}}",
+      "bodyNoName": "Une nouvelle personne a rejoint l’espace"
     }
   },
   "email": {
     "invite": {
       "subject": "Invitation à {{workspaceName}} - Kangur",
       "headline": "{{inviter}} vous invite à",
+      "headlineNoName": "Une invitation à un espace dans Kangur",
       "ctaOpen": "Ouvrir l’invitation",
       "ctaJoin": "Rejoindre l’espace",
       "bodyExisting": "Vous avez déjà un compte - ouvrez l’app pour accepter l’invitation.",
       "bodyNew": "Créez un compte ou connectez-vous pour utiliser des listes de courses partagées.",
-      "expiry": "Ce lien expire dans 7 jours."
+      "expiry": "Ce lien fonctionne une seule fois et expire dans 7 jours."
     }
   }
 }

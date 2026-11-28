@@ -8,6 +8,11 @@ export const ANALYTICS_SCHEMA_VERSION = 1 as const;
 
 export type AiImportSource = "screenshot" | "text" | "clipboard";
 
+export type InviteLinkChannel = "code" | "share";
+
+/** Where the app asked for a name: the invite sheet, the join screen, the members banner, Profile. */
+export type NamePromptPlace = "invite" | "join" | "members" | "profile";
+
 type WorkspaceIdProps = { workspace_id: string };
 type ListIdProps = { list_id: string };
 type RequestIdProps = { request_id?: string };
@@ -57,6 +62,15 @@ export type EventPropsMap = {
   history_merge_cancelled: WorkspaceIdProps & { run_id: string };
   invitation_sent: WorkspaceIdProps;
   invitation_accepted: WorkspaceIdProps;
+  /** A one-time link without an address, for a code on the screen or the share sheet. */
+  invite_link_created: WorkspaceIdProps & { channel: InviteLinkChannel };
+  invite_link_joined: WorkspaceIdProps;
+  /** Joined with an e-mail invitation sent to another address than the account's. */
+  invite_joined_other_email: WorkspaceIdProps & { relay: boolean };
+  /** The name field, asked only where someone else will see the name. */
+  name_prompt_shown: { place: NamePromptPlace };
+  name_saved: { place: NamePromptPlace };
+  name_skipped: { place: NamePromptPlace };
   /** `source` says which entry point opened the paywall (see PremiumSource). */
   paywall_viewed: WorkspaceIdProps & { surface?: string; source?: string };
   checkout_started: WorkspaceIdProps;

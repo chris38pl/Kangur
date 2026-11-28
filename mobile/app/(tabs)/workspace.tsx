@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { getWorkspaceIconEmoji } from "@shared/workspace-icons";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -58,15 +58,7 @@ export default function WorkspaceScreen() {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
   const tabClearance = useTabBarClearance();
-  const {
-    scrollRef,
-    onScroll,
-    bindFieldFocus,
-    setFormBlockRef,
-    keyboardHeight,
-  } = useKeyboardScroll();
-  const emailFieldRef = useRef<View>(null);
-  const emailFocus = bindFieldFocus(emailFieldRef);
+  const { scrollRef, onScroll, keyboardHeight } = useKeyboardScroll();
   const workspacesQuery = useWorkspaces();
   const { activeWorkspace, activeId, setActiveId, hydrated } =
     useActiveWorkspace(workspacesQuery.data);
@@ -329,14 +321,11 @@ export default function WorkspaceScreen() {
         ) : null}
 
         <WorkspaceInviteSection
-          workspaceId={activeWorkspace.id}
+          workspace={activeWorkspace}
           canManage={
             activeWorkspace.role === "owner" ||
             activeWorkspace.role === "admin"
           }
-          emailFieldRef={emailFieldRef}
-          emailFocus={emailFocus}
-          formBlockRef={setFormBlockRef}
         />
 
         <WorkspaceSwitcher

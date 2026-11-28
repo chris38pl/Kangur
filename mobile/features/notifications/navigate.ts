@@ -17,6 +17,12 @@ export function navigateFromNotification(
 ): void {
   const payload = (notification.payload ?? {}) as Record<string, unknown>;
 
+  // Someone joined with an invitation: the members list shows them.
+  if (notification.type === "WORKSPACE_MEMBER_JOINED") {
+    router.replace("/(tabs)/workspace" as never);
+    return;
+  }
+
   switch (notification.payloadType) {
     case "INVITE": {
       const invitationId =
@@ -75,6 +81,8 @@ export function iconForNotification(notification: AppNotification): string {
       return "📝";
     case "SHOPPING_LIST_DELETED":
       return "🗑️";
+    case "WORKSPACE_MEMBER_JOINED":
+      return "🙋";
     default:
       return "🔔";
   }

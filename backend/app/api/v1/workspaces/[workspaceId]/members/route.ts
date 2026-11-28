@@ -4,6 +4,7 @@ import { listWorkspaceMembers } from "@/features/workspace/listWorkspaceMembers"
 import { WorkspaceMemberListResponseSchema } from "@/features/workspace/schemas";
 import { ApiError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
+import { readClientVersion } from "@/lib/clientVersion";
 
 type RouteContext = {
   params: Promise<{ workspaceId: string }>;
@@ -13,7 +14,11 @@ export async function GET(request: Request, context: RouteContext) {
   try {
     const { workspaceId } = await context.params;
     const { user } = await requireUser(request);
-    const members = await listWorkspaceMembers(workspaceId, user.id);
+    const members = await listWorkspaceMembers(
+      workspaceId,
+      user,
+      readClientVersion(request),
+    );
     const body = WorkspaceMemberListResponseSchema.parse({ members });
     return NextResponse.json(body);
   } catch (error) {

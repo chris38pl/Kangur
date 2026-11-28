@@ -20,10 +20,12 @@ export type InviteCopy = {
 };
 
 /**
- * The page the invitation e-mail leads to (lib/email/sendInviteEmail.ts). What really
- * happens: the app opens kangur://invite/<token> (mobile/app/invite/[token].tsx), asks to
- * sign in, and the server accepts only the address the invitation went to, for 7 days
- * (lib/invite/token.ts). Button names in quotes are the app's own, in every language.
+ * The page the invitation e-mail, the code on the inviter's screen and the shared link lead
+ * to (lib/email/sendInviteEmail.ts, lib/marketing/invite.ts). What really happens: with the
+ * app installed the phone opens it right away (app/.well-known); otherwise the button opens
+ * kangur://invite/<token> (mobile/app/invite/[token].tsx). The app asks to sign in with any
+ * account, and the invitation works once, for 7 days (features/workspace/invitationAccess.ts).
+ * It never shows an address. Button names in quotes are the app's own, in every language.
  */
 const COPY: Record<AppLocale, InviteCopy> = {
   pl: {
@@ -42,15 +44,15 @@ const COPY: Record<AppLocale, InviteCopy> = {
     },
     open: {
       title: "Otwórz zaproszenie",
-      body: "Po instalacji wróć tutaj i stuknij przycisk. Możesz też jeszcze raz otworzyć link z e-maila.",
+      body: "Po instalacji wróć tutaj i stuknij przycisk. Możesz też jeszcze raz zeskanować kod albo otworzyć link z zaproszenia.",
       button: "Otwórz zaproszenie w Kangurze",
     },
-    missing: "Nie widzimy tu zaproszenia. Otwórz jeszcze raz link z e-maila.",
+    missing: "Nie widzimy tu zaproszenia. Otwórz jeszcze raz link z zaproszenia albo zeskanuj kod.",
     join: {
       title: "Zaloguj się i stuknij „Dołącz”",
-      body: "Użyj adresu e-mail, na który przyszło zaproszenie. Inny adres go nie otworzy. Przy logowaniu przez Apple nie ukrywaj adresu.",
+      body: "Możesz użyć dowolnego konta: e-maila, Google albo Apple. Nie musi to być adres, na który przyszło zaproszenie.",
     },
-    expiry: "Zaproszenie jest ważne 7 dni. Potem poproś osobę, która Cię zaprasza, o nowe.",
+    expiry: "Zaproszenie działa raz i jest ważne 7 dni. Potem poproś osobę, która Cię zaprasza, o nowe.",
   },
   en: {
     crumb: "Invitation",
@@ -68,15 +70,15 @@ const COPY: Record<AppLocale, InviteCopy> = {
     },
     open: {
       title: "Open the invitation",
-      body: "Come back here after installing and tap the button. You can also open the link in the email again.",
+      body: "Come back here after installing and tap the button. You can also scan the code again or open the invitation link again.",
       button: "Open the invitation in Kangur",
     },
-    missing: "There is no invitation on this page. Open the link in the email again.",
+    missing: "There is no invitation on this page. Open the invitation link again or scan the code.",
     join: {
       title: "Sign in and tap “Join”",
-      body: "Use the email address the invitation was sent to. Another address will not open it. Signing in with Apple? Do not hide your email.",
+      body: "Any account works: email, Google or Apple. It does not have to be the address the invitation came to.",
     },
-    expiry: "The invitation is valid for 7 days. After that, ask the person who invites you for a new one.",
+    expiry: "The invitation works once and is valid for 7 days. After that, ask the person who invites you for a new one.",
   },
   de: {
     crumb: "Einladung",
@@ -94,15 +96,15 @@ const COPY: Record<AppLocale, InviteCopy> = {
     },
     open: {
       title: "Öffne die Einladung",
-      body: "Komm nach der Installation hierher zurück und tippe auf den Button. Du kannst auch den Link in der E-Mail noch einmal öffnen.",
+      body: "Komm nach der Installation hierher zurück und tippe auf den Button. Du kannst auch den Code noch einmal scannen oder den Einladungslink noch einmal öffnen.",
       button: "Einladung in Kangur öffnen",
     },
-    missing: "Auf dieser Seite fehlt die Einladung. Öffne den Link in der E-Mail noch einmal.",
+    missing: "Auf dieser Seite fehlt die Einladung. Öffne den Einladungslink noch einmal oder scanne den Code.",
     join: {
       title: "Melde dich an und tippe auf „Beitreten“",
-      body: "Nimm die E-Mail-Adresse, an die die Einladung ging. Eine andere Adresse öffnet sie nicht. Anmeldung mit Apple? Verbirg deine E-Mail-Adresse nicht.",
+      body: "Jedes Konto geht: E-Mail, Google oder Apple. Es muss nicht die Adresse sein, an die die Einladung ging.",
     },
-    expiry: "Die Einladung gilt 7 Tage. Danach bitte die Person, die dich einlädt, um eine neue.",
+    expiry: "Die Einladung funktioniert einmal und gilt 7 Tage. Danach bitte die Person, die dich einlädt, um eine neue.",
   },
   fr: {
     crumb: "Invitation",
@@ -120,15 +122,15 @@ const COPY: Record<AppLocale, InviteCopy> = {
     },
     open: {
       title: "Ouvrez l’invitation",
-      body: "Après l’installation, revenez ici et touchez le bouton. Vous pouvez aussi rouvrir le lien de l’e-mail.",
+      body: "Après l’installation, revenez ici et touchez le bouton. Vous pouvez aussi scanner à nouveau le code ou rouvrir le lien d’invitation.",
       button: "Ouvrir l’invitation dans Kangur",
     },
-    missing: "Cette page ne contient pas d’invitation. Rouvrez le lien de l’e-mail.",
+    missing: "Cette page ne contient pas d’invitation. Rouvrez le lien d’invitation ou scannez le code.",
     join: {
       title: "Connectez-vous et touchez « Rejoindre »",
-      body: "Utilisez l’adresse e-mail qui a reçu l’invitation. Une autre adresse ne l’ouvrira pas. Connexion avec Apple ? Ne masquez pas votre adresse e-mail.",
+      body: "Tout compte convient : e-mail, Google ou Apple. Ce n’est pas forcément l’adresse qui a reçu l’invitation.",
     },
-    expiry: "L’invitation est valable 7 jours. Ensuite, demandez-en une nouvelle à la personne qui vous invite.",
+    expiry: "L’invitation fonctionne une seule fois et reste valable 7 jours. Ensuite, demandez-en une nouvelle à la personne qui vous invite.",
   },
   es: {
     crumb: "Invitación",
@@ -146,15 +148,15 @@ const COPY: Record<AppLocale, InviteCopy> = {
     },
     open: {
       title: "Abre la invitación",
-      body: "Tras la instalación, vuelve aquí y toca el botón. También puedes abrir otra vez el enlace del correo.",
+      body: "Tras la instalación, vuelve aquí y toca el botón. También puedes escanear otra vez el código o abrir de nuevo el enlace de la invitación.",
       button: "Abrir la invitación en Kangur",
     },
-    missing: "Esta página no trae ninguna invitación. Abre otra vez el enlace del correo.",
+    missing: "Esta página no trae ninguna invitación. Abre otra vez el enlace de la invitación o escanea el código.",
     join: {
       title: "Inicia sesión y toca «Unirse»",
-      body: "Usa la dirección de correo a la que llegó la invitación. Otra dirección no la abrirá. ¿Entras con Apple? No ocultes tu correo.",
+      body: "Sirve cualquier cuenta: correo, Google o Apple. No tiene que ser la dirección a la que llegó la invitación.",
     },
-    expiry: "La invitación vale 7 días. Después, pide una nueva a la persona que te invita.",
+    expiry: "La invitación funciona una vez y vale 7 días. Después, pide una nueva a la persona que te invita.",
   },
   it: {
     crumb: "Invito",
@@ -172,15 +174,15 @@ const COPY: Record<AppLocale, InviteCopy> = {
     },
     open: {
       title: "Apri l’invito",
-      body: "Dopo l’installazione torna qui e tocca il pulsante. Puoi anche riaprire il link dell’email.",
+      body: "Dopo l’installazione torna qui e tocca il pulsante. Puoi anche scansionare di nuovo il codice o riaprire il link dell’invito.",
       button: "Apri l’invito in Kangur",
     },
-    missing: "In questa pagina manca l’invito. Riapri il link dell’email.",
+    missing: "In questa pagina manca l’invito. Riapri il link dell’invito o scansiona il codice.",
     join: {
       title: "Accedi e tocca «Unisciti»",
-      body: "Usa l’indirizzo email a cui è arrivato l’invito. Un altro indirizzo non lo apre. Accedi con Apple? Non nascondere la tua email.",
+      body: "Va bene qualsiasi account: email, Google o Apple. Non deve essere per forza l’indirizzo a cui è arrivato l’invito.",
     },
-    expiry: "L’invito vale 7 giorni. Dopo, chiedine uno nuovo alla persona che ti invita.",
+    expiry: "L’invito funziona una volta e vale 7 giorni. Dopo, chiedine uno nuovo alla persona che ti invita.",
   },
   cs: {
     crumb: "Pozvánka",
@@ -198,15 +200,15 @@ const COPY: Record<AppLocale, InviteCopy> = {
     },
     open: {
       title: "Otevři pozvánku",
-      body: "Po instalaci se sem vrať a klepni na tlačítko. Můžeš taky znovu otevřít odkaz z e-mailu.",
+      body: "Po instalaci se sem vrať a klepni na tlačítko. Můžeš taky znovu naskenovat kód nebo otevřít odkaz z pozvánky.",
       button: "Otevřít pozvánku v Kangurovi",
     },
-    missing: "Na této stránce pozvánka chybí. Otevři znovu odkaz z e-mailu.",
+    missing: "Na této stránce pozvánka chybí. Otevři znovu odkaz z pozvánky nebo naskenuj kód.",
     join: {
       title: "Přihlas se a klepni na „Připojit se“",
-      body: "Použij e-mail, na který pozvánka přišla. Jiná adresa ji neotevře. Přihlašuješ se přes Apple? Neskrývej svůj e-mail.",
+      body: "Hodí se jakýkoli účet: e-mail, Google nebo Apple. Nemusí to být adresa, na kterou pozvánka přišla.",
     },
-    expiry: "Pozvánka platí 7 dní. Potom požádej osobu, která tě zve, o novou.",
+    expiry: "Pozvánka funguje jednou a platí 7 dní. Potom požádej osobu, která tě zve, o novou.",
   },
   ru: {
     crumb: "Приглашение",
@@ -224,15 +226,15 @@ const COPY: Record<AppLocale, InviteCopy> = {
     },
     open: {
       title: "Откройте приглашение",
-      body: "После установки вернитесь сюда и нажмите кнопку. Или ещё раз откройте ссылку из письма.",
+      body: "После установки вернитесь сюда и нажмите кнопку. Или ещё раз отсканируйте код либо откройте ссылку-приглашение.",
       button: "Открыть приглашение в Kangur",
     },
-    missing: "На этой странице нет приглашения. Откройте ссылку из письма ещё раз.",
+    missing: "На этой странице нет приглашения. Откройте ссылку-приглашение ещё раз или отсканируйте код.",
     join: {
       title: "Войдите и нажмите «Присоединиться»",
-      body: "Используйте адрес почты, на который пришло приглашение. С другим адресом оно не откроется. Входите через Apple? Не скрывайте почту.",
+      body: "Подойдёт любой аккаунт: почта, Google или Apple. Это не обязательно адрес, на который пришло приглашение.",
     },
-    expiry: "Приглашение действует 7 дней. Потом попросите новое у человека, который вас приглашает.",
+    expiry: "Приглашение срабатывает один раз и действует 7 дней. Потом попросите новое у человека, который вас приглашает.",
   },
   uk: {
     crumb: "Запрошення",
@@ -250,15 +252,15 @@ const COPY: Record<AppLocale, InviteCopy> = {
     },
     open: {
       title: "Відкрийте запрошення",
-      body: "Після встановлення поверніться сюди й натисніть кнопку. Або ще раз відкрийте посилання з листа.",
+      body: "Після встановлення поверніться сюди й натисніть кнопку. Або ще раз відскануйте код чи відкрийте посилання-запрошення.",
       button: "Відкрити запрошення в Kangur",
     },
-    missing: "На цій сторінці немає запрошення. Відкрийте посилання з листа ще раз.",
+    missing: "На цій сторінці немає запрошення. Відкрийте посилання-запрошення ще раз або відскануйте код.",
     join: {
       title: "Увійдіть і натисніть «Приєднатись»",
-      body: "Використайте адресу пошти, на яку прийшло запрошення. З іншою адресою воно не відкриється. Входите через Apple? Не приховуйте пошту.",
+      body: "Підійде будь-який акаунт: пошта, Google або Apple. Це не обов’язково адреса, на яку прийшло запрошення.",
     },
-    expiry: "Запрошення дійсне 7 днів. Потім попросіть нове в людини, яка вас запрошує.",
+    expiry: "Запрошення спрацьовує один раз і дійсне 7 днів. Потім попросіть нове в людини, яка вас запрошує.",
   },
   be: {
     crumb: "Запрашэнне",
@@ -276,15 +278,15 @@ const COPY: Record<AppLocale, InviteCopy> = {
     },
     open: {
       title: "Адкрыйце запрашэнне",
-      body: "Пасля ўсталёўкі вярніцеся сюды і націсніце кнопку. Або яшчэ раз адкрыйце спасылку з ліста.",
+      body: "Пасля ўсталёўкі вярніцеся сюды і націсніце кнопку. Або яшчэ раз адскануйце код ці адкрыйце спасылку-запрашэнне.",
       button: "Адкрыць запрашэнне ў Kangur",
     },
-    missing: "На гэтай старонцы няма запрашэння. Адкрыйце спасылку з ліста яшчэ раз.",
+    missing: "На гэтай старонцы няма запрашэння. Адкрыйце спасылку-запрашэнне яшчэ раз або адскануйце код.",
     join: {
       title: "Увайдзіце і націсніце «Далучыцца»",
-      body: "Выкарыстайце адрас пошты, на які прыйшло запрашэнне. З іншым адрасам яно не адкрыецца. Уваходзіце праз Apple? Не хавайце пошту.",
+      body: "Падыдзе любы акаўнт: пошта, Google або Apple. Гэта не абавязкова адрас, на які прыйшло запрашэнне.",
     },
-    expiry: "Запрашэнне дзейнічае 7 дзён. Потым папрасіце новае ў чалавека, які вас запрашае.",
+    expiry: "Запрашэнне спрацоўвае адзін раз і дзейнічае 7 дзён. Потым папрасіце новае ў чалавека, які вас запрашае.",
   },
 };
 

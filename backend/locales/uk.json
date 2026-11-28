@@ -1,34 +1,49 @@
 {
+  "names": {
+    "fallback": "Домочадець",
+    "since": "з {{date}}"
+  },
   "notifications": {
     "listCreated": {
-      "title": "{{actor}} створив(ла) список {{listName}}"
+      "body": "{{actor}}: новий список · {{listName}}",
+      "bodyNoName": "Новий список · {{listName}}"
     },
     "listDeleted": {
-      "title": "{{actor}} видалив(ла) список {{listName}}"
+      "body": "{{actor}}: список видалено · {{listName}}",
+      "bodyNoName": "Список видалено · {{listName}}"
     },
     "shoppingStarted": {
-      "title": "{{actor}} почав(ла) покупки"
+      "body": "{{actor}}: покупки розпочато · {{listName}}",
+      "bodyNoName": "Покупки розпочато · {{listName}}"
     },
     "shoppingFinished": {
-      "title": "{{actor}} завершив(ла) покупки",
-      "allBought": "Усі товари куплено",
-      "unavailableOne": "1 товар був недоступний",
-      "unavailableMany": "{{count}} товарів були недоступні"
+      "body_one": "{{actor}}: покупки завершено, {{bought}} з {{count}} товару",
+      "body_other": "{{actor}}: покупки завершено, {{bought}} з {{count}} товарів",
+      "bodyNoName_one": "Покупки завершено, {{bought}} з {{count}} товару",
+      "bodyNoName_other": "Покупки завершено, {{bought}} з {{count}} товарів",
+      "bodyEmpty": "{{actor}}: покупки завершено",
+      "bodyEmptyNoName": "Покупки завершено"
     },
     "invite": {
-      "title": "{{actor}} запросив(ла) вас до {{workspaceName}}",
-      "body": "Приєднуйтесь, щоб разом складати списки покупок."
+      "title": "Запрошення до {{workspaceName}}",
+      "body": "{{actor}} запрошує вас до спільних списків покупок.",
+      "bodyNoName": "Приєднуйтесь, щоб разом складати списки покупок."
+    },
+    "memberJoined": {
+      "body": "Новий учасник: {{name}}",
+      "bodyNoName": "Новий учасник у просторі"
     }
   },
   "email": {
     "invite": {
       "subject": "Вас запросили до {{workspaceName}} - Kangur",
       "headline": "{{inviter}} запрошує вас до",
+      "headlineNoName": "Запрошення до простору в Kangur",
       "ctaOpen": "Відкрити запрошення",
       "ctaJoin": "Приєднатися",
       "bodyExisting": "У вас уже є акаунт - відкрийте додаток, щоб прийняти запрошення.",
       "bodyNew": "Створіть акаунт або увійдіть, щоб користуватися спільними списками покупок.",
-      "expiry": "Посилання дійсне 7 днів."
+      "expiry": "Посилання працює один раз і дійсне 7 днів."
     }
   }
 }
