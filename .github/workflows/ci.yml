@@ -65,3 +65,5 @@ jobs:
       - run: pnpm typecheck
       - name: Invitation links and lists from a newer server
         run: pnpm test:invites
+      - name: Notification panel icons
+        run: pnpm test:notification-icons
