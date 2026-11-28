@@ -72,8 +72,15 @@ export const WorkspaceMemberDTOSchema = z
   .object({
     id: z.string(),
     userId: z.string(),
-    email: z.string().email(),
+    /**
+     * Null when Apple hides the address (app 1.0.9 and newer). Older apps require an
+     * address and never show it, so they get a reserved one instead of the relay address.
+     */
+    email: z.string().email().nullable(),
+    /** The name, "Kasia N." or "Kasia · od 12 listopada" for two of one name, or the fallback word. */
     displayName: z.string(),
+    /** False when displayName is the fallback word ("Domownik"). */
+    hasName: z.boolean(),
     role: WorkspaceRoleSchema,
     joinedAt: z.string().datetime(),
   })
@@ -100,10 +107,17 @@ export const CreateInvitationBodySchema = z
 
 export type CreateInvitationBody = z.infer<typeof CreateInvitationBodySchema>;
 
+export const InvitationKindSchema = z
+  .enum(["email", "link"])
+  .openapi("InvitationKind");
+
 export const InvitationDTOSchema = z
   .object({
     id: z.string(),
-    email: z.string().email(),
+    /** Apps before 1.0.9 get only `email` invitations (lib/clientVersion.ts). */
+    kind: InvitationKindSchema,
+    /** Null for `link` invitations. */
+    email: z.string().email().nullable(),
     role: WorkspaceRoleSchema,
     status: z.enum(["pending", "accepted", "revoked"]),
     expiresAt: z.string().datetime(),
@@ -134,6 +148,38 @@ export const InviteMemberResultSchema = z
 
 export type InviteMemberResult = z.infer<typeof InviteMemberResultSchema>;
 
+/** Where the link goes: shown as a code, or handed to the system share sheet. */
+export const InviteLinkChannelSchema = z
+  .enum(["code", "share"])
+  .openapi("InviteLinkChannel");
+
+export const CreateInviteLinkBodySchema = z
+  .object({
+    channel: InviteLinkChannelSchema.optional(),
+    role: InviteRoleSchema.optional(),
+  })
+  .openapi("CreateInviteLinkBody");
+
+export type CreateInviteLinkBody = z.infer<typeof CreateInviteLinkBodySchema>;
+
+export const InviteLinkResultSchema = z
+  .object({
+    invitation: z.object({
+      id: z.string(),
+      kind: z.literal("link"),
+      role: WorkspaceRoleSchema,
+      expiresAt: z.string().datetime(),
+    }),
+    /**
+     * https://…/invite#t=<token>. Works once, for 7 days. The token rides after "#", so no
+     * server or log on the way sees it. Returned only here, to the person who made it.
+     */
+    url: z.string().url(),
+  })
+  .openapi("InviteLinkResult");
+
+export type InviteLinkResult = z.infer<typeof InviteLinkResultSchema>;
+
 /** Deep-link token XOR invitationId (in-app notification for existing users). */
 export const AcceptInvitationBodySchema = z
   .object({
@@ -159,6 +205,20 @@ export const AcceptInvitationResponseSchema = z
   })
   .openapi("AcceptInvitationResponse");
 
+/** Unauthenticated: the address an e-mail invitation went to, to fill in the sign-in form. */
+export const InvitationPeekBodySchema = z
+  .object({
+    token: z.string().min(1),
+  })
+  .openapi("InvitationPeekBody");
+
+export const InvitationPeekResponseSchema = z
+  .object({
+    /** Null for a link, an invitation that no longer works, or an Apple relay address. */
+    invitedEmail: z.string().email().nullable(),
+  })
+  .openapi("InvitationPeekResponse");
+
 export const InvitationPreviewBodySchema = z
   .object({
     token: z.string().min(1).optional(),
@@ -172,8 +232,21 @@ export const InvitationPreviewBodySchema = z
 export const InvitationPreviewResponseSchema = z
   .object({
     invitationId: z.string(),
+    kind: InvitationKindSchema,
     createdAt: z.string(),
+    /** The inviter's name, or the fallback word when inviterHasName is false. */
     inviterDisplayName: z.string(),
+    inviterHasName: z.boolean(),
+    /**
+     * The invitation went to another real address than the one this account uses. Null for a
+     * link, for the same address, and for an account whose address Apple hides.
+     */
+    differentEmail: z
+      .object({
+        invitedEmail: z.string().email(),
+        accountEmail: z.string().email(),
+      })
+      .nullable(),
     workspace: z.object({
       id: z.string(),
       name: z.string(),

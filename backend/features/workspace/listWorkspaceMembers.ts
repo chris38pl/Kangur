@@ -1,45 +1,33 @@
-import { prisma } from "@/lib/prisma";
 import { authorize } from "@/lib/authorize";
+import type { ClientVersion } from "@/lib/clientVersion";
+import { resolveAppLocale } from "@/lib/locale";
+import { nameWords } from "@/lib/names/words";
+import { prisma } from "@/lib/prisma";
 
+import { presentMembers } from "./presentMembers";
 import type { WorkspaceMemberDTO } from "./schemas";
 
-function displayNameFromEmail(email: string): string {
-  const local = email.split("@")[0]?.trim() || email;
-  if (!local) return email;
-  return local.charAt(0).toUpperCase() + local.slice(1);
-}
+export const MEMBER_USER_SELECT = {
+  id: true,
+  email: true,
+  displayName: true,
+  lastNameInitial: true,
+} as const;
 
 export async function listWorkspaceMembers(
   workspaceId: string,
-  userId: string,
+  viewer: { id: string; locale: string | null },
+  client: ClientVersion,
 ): Promise<WorkspaceMemberDTO[]> {
-  await authorize(workspaceId, userId);
+  await authorize(workspaceId, viewer.id);
 
   const rows = await prisma.workspaceMember.findMany({
     where: { workspaceId },
-    include: { user: { select: { id: true, email: true } } },
+    include: { user: { select: MEMBER_USER_SELECT } },
   });
 
-  // owner → admin → member (Prisma enum order matches)
-  const roleRank: Record<string, number> = {
-    owner: 0,
-    admin: 1,
-    member: 2,
-  };
-
-  return rows
-    .slice()
-    .sort(
-      (a, b) =>
-        (roleRank[a.role] ?? 9) - (roleRank[b.role] ?? 9) ||
-        a.joinedAt.getTime() - b.joinedAt.getTime(),
-    )
-    .map((row) => ({
-      id: row.id,
-      userId: row.userId,
-      email: row.user.email,
-      displayName: displayNameFromEmail(row.user.email),
-      role: row.role,
-      joinedAt: row.joinedAt.toISOString(),
-    }));
+  return presentMembers(rows, {
+    words: nameWords(resolveAppLocale(viewer.locale)),
+    client,
+  });
 }

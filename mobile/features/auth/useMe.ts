@@ -20,6 +20,10 @@ export const MeSchema = z.object({
   email: z.string(),
   locale: AppLocaleSchema.nullable(),
   platformRole: z.enum(["USER", "ADMIN"]).default("USER"),
+  /** What other people see; null when they see "Domownik" (no name yet). */
+  displayName: z.string().nullable().optional().default(null),
+  /** An Apple relay address: show "hidden by Apple", never the address. */
+  emailHidden: z.boolean().optional().default(false),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

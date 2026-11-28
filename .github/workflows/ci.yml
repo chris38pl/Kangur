@@ -32,6 +32,9 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test:marketing
+      - run: pnpm test:unit
+      - name: Names, invitations and the app 1.0.8 contract
+        run: pnpm test:invites
       - env:
           DATABASE_URL: postgresql://user:pass@localhost:5432/kangur?sslmode=require
           DIRECT_URL: postgresql://user:pass@localhost:5432/kangur?sslmode=require
@@ -60,3 +63,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      - name: Invitation links and lists from a newer server
+        run: pnpm test:invites
+      - name: Notification panel icons
+        run: pnpm test:notification-icons

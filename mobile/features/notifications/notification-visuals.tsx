@@ -1,283 +1,74 @@
-import { View } from "react-native";
+import { Image, type ImageSourcePropType, View } from "react-native";
 
+import { radius } from "@/design-system/tokens";
+
+import {
+  NOTIFICATION_TILE_COLORS,
+  notificationIconKind,
+  type NotificationIconKind,
+} from "./notification-icon-kind";
 import type { AppNotification } from "./schemas";
 
-export type NotificationVisual = {
-  background: string;
-  iconColor: string;
-  kind: "cart" | "clipboard" | "invite" | "list";
+/** The coloured tile, the same size as before. */
+export const NOTIFICATION_TILE_SIZE = 44;
+/** How far the Kangur's ears and head reach above the tile. */
+export const NOTIFICATION_ICON_OVERHANG = 12;
+
+/**
+ * Cut from the app's own Kangur drawings: head and body with a prop, a white outline,
+ * the bottom corners rounded like the tile. Each file is 44×56 pt in @2x and @3x.
+ */
+const ICONS: Record<NotificationIconKind, ImageSourcePropType> = {
+  "shopping-started": require("@/assets/notifications/shopping-started.webp"),
+  "shopping-finished": require("@/assets/notifications/shopping-finished.webp"),
+  "shopping-finished-missing": require("@/assets/notifications/shopping-finished-missing.webp"),
+  "workspace-invitation": require("@/assets/notifications/workspace-invitation.webp"),
+  "workspace-member-joined": require("@/assets/notifications/workspace-member-joined.webp"),
+  "shopping-list-created": require("@/assets/notifications/shopping-list-created.webp"),
+  "shopping-list-deleted": require("@/assets/notifications/shopping-list-deleted.webp"),
+  default: require("@/assets/notifications/default.webp"),
 };
 
-/** Soft pastel tiles + white glyphs (notification center mock). */
-export function visualForNotification(
-  notification: AppNotification,
-): NotificationVisual {
-  switch (notification.type) {
-    case "SHOPPING_STARTED":
-      return { background: "#9FE0D0", iconColor: "#FFFFFF", kind: "cart" };
-    case "SHOPPING_FINISHED": {
-      const payload = (notification.payload ?? {}) as {
-        unavailableCount?: unknown;
-      };
-      const unavailable =
-        typeof payload.unavailableCount === "number"
-          ? payload.unavailableCount
-          : 0;
-      if (unavailable > 0) {
-        return {
-          background: "#C5B4E8",
-          iconColor: "#FFFFFF",
-          kind: "clipboard",
-        };
-      }
-      return { background: "#9FE0D0", iconColor: "#FFFFFF", kind: "cart" };
-    }
-    case "WORKSPACE_INVITATION":
-      return { background: "#F0D078", iconColor: "#FFFFFF", kind: "invite" };
-    case "SHOPPING_LIST_CREATED":
-      return { background: "#9BC4E8", iconColor: "#FFFFFF", kind: "list" };
-    case "SHOPPING_LIST_DELETED":
-      return { background: "#F0A8A0", iconColor: "#FFFFFF", kind: "list" };
-    default:
-      return { background: "#9FE0D0", iconColor: "#FFFFFF", kind: "cart" };
-  }
-}
-
+/**
+ * Kangur on a pastel tile. The tile colour tells the type apart at a glance, the
+ * drawing shows what happened, and the Kangur's head sticks out above the tile.
+ */
 export function NotificationTypeIcon({
-  kind,
-  color,
-  size = 22,
+  notification,
 }: {
-  kind: NotificationVisual["kind"];
-  color: string;
-  size?: number;
+  notification: AppNotification;
 }) {
-  switch (kind) {
-    case "cart":
-      return <CartIcon color={color} size={size} />;
-    case "clipboard":
-      return <ClipboardIcon color={color} size={size} />;
-    case "invite":
-      return <InviteIcon color={color} size={size} />;
-    case "list":
-      return <ListIcon color={color} size={size} />;
-  }
-}
+  const kind = notificationIconKind(notification);
+  const height = NOTIFICATION_TILE_SIZE + NOTIFICATION_ICON_OVERHANG;
 
-function CartIcon({ color, size }: { color: string; size: number }) {
-  const stroke = Math.max(1.6, size * 0.09);
-  return (
-    <View style={{ width: size, height: size, alignItems: "center" }}>
-      <View
-        style={{
-          width: size * 0.62,
-          height: size * 0.42,
-          borderWidth: stroke,
-          borderColor: color,
-          borderRadius: 3,
-          marginTop: size * 0.22,
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          top: size * 0.08,
-          left: size * 0.12,
-          width: size * 0.28,
-          height: size * 0.22,
-          borderLeftWidth: stroke,
-          borderTopWidth: stroke,
-          borderColor: color,
-          borderTopLeftRadius: 4,
-          transform: [{ rotate: "-18deg" }],
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: size * 0.22,
-          width: size * 0.14,
-          height: size * 0.14,
-          borderRadius: size * 0.07,
-          backgroundColor: color,
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          right: size * 0.18,
-          width: size * 0.14,
-          height: size * 0.14,
-          borderRadius: size * 0.07,
-          backgroundColor: color,
-        }}
-      />
-    </View>
-  );
-}
-
-function ClipboardIcon({ color, size }: { color: string; size: number }) {
-  const stroke = Math.max(1.6, size * 0.09);
   return (
     <View
-      style={{
-        width: size,
-        height: size,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      style={{ width: NOTIFICATION_TILE_SIZE, height }}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
     >
       <View
         style={{
-          width: size * 0.55,
-          height: size * 0.7,
-          borderWidth: stroke,
-          borderColor: color,
-          borderRadius: 3,
-          alignItems: "center",
-          paddingTop: size * 0.18,
-          gap: size * 0.08,
+          position: "absolute",
+          left: 0,
+          top: NOTIFICATION_ICON_OVERHANG,
+          width: NOTIFICATION_TILE_SIZE,
+          height: NOTIFICATION_TILE_SIZE,
+          borderRadius: radius.sm,
+          backgroundColor: NOTIFICATION_TILE_COLORS[kind],
         }}
-      >
-        <View
-          style={{
-            width: size * 0.28,
-            height: stroke,
-            backgroundColor: color,
-            borderRadius: 1,
-          }}
-        />
-        <View
-          style={{
-            width: size * 0.28,
-            height: stroke,
-            backgroundColor: color,
-            borderRadius: 1,
-          }}
-        />
-      </View>
-      <View
+      />
+      <Image
+        source={ICONS[kind]}
         style={{
           position: "absolute",
-          top: size * 0.06,
-          width: size * 0.28,
-          height: size * 0.14,
-          borderRadius: 2,
-          backgroundColor: color,
+          left: 0,
+          top: 0,
+          width: NOTIFICATION_TILE_SIZE,
+          height,
         }}
+        accessibilityIgnoresInvertColors
       />
-    </View>
-  );
-}
-
-function InviteIcon({ color, size }: { color: string; size: number }) {
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <View
-        style={{
-          width: size * 0.28,
-          height: size * 0.28,
-          borderRadius: size * 0.14,
-          backgroundColor: color,
-          marginBottom: 2,
-          marginRight: size * 0.12,
-        }}
-      />
-      <View
-        style={{
-          width: size * 0.42,
-          height: size * 0.28,
-          borderTopLeftRadius: size * 0.22,
-          borderTopRightRadius: size * 0.22,
-          backgroundColor: color,
-          marginRight: size * 0.12,
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          right: size * 0.08,
-          top: size * 0.28,
-          width: size * 0.28,
-          height: size * 0.28,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <View
-          style={{
-            position: "absolute",
-            width: size * 0.2,
-            height: Math.max(2, size * 0.08),
-            borderRadius: 1,
-            backgroundColor: color,
-          }}
-        />
-        <View
-          style={{
-            position: "absolute",
-            width: Math.max(2, size * 0.08),
-            height: size * 0.2,
-            borderRadius: 1,
-            backgroundColor: color,
-          }}
-        />
-      </View>
-    </View>
-  );
-}
-
-function ListIcon({ color, size }: { color: string; size: number }) {
-  const stroke = Math.max(1.8, size * 0.09);
-  const row = (y: number) => (
-    <View
-      key={y}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: size * 0.1,
-        marginTop: y === 0 ? 0 : size * 0.12,
-      }}
-    >
-      <View
-        style={{
-          width: size * 0.12,
-          height: size * 0.12,
-          borderRadius: size * 0.06,
-          backgroundColor: color,
-        }}
-      />
-      <View
-        style={{
-          width: size * 0.42,
-          height: stroke,
-          borderRadius: 1,
-          backgroundColor: color,
-        }}
-      />
-    </View>
-  );
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {row(0)}
-      {row(1)}
-      {row(2)}
     </View>
   );
 }

@@ -25,6 +25,8 @@ export function prefAllowsType(
 
   switch (type) {
     case "WORKSPACE_INVITATION":
+    // "Workspace invitations" covers both sides: invited, and someone used your invitation.
+    case "WORKSPACE_MEMBER_JOINED":
       return prefs.workspaceInvitations;
     case "SHOPPING_STARTED":
       return prefs.shoppingStarted;

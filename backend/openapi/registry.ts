@@ -53,10 +53,14 @@ import {
   AcceptInvitationBodySchema,
   AcceptInvitationResponseSchema,
   CreateInvitationBodySchema,
+  CreateInviteLinkBodySchema,
   CreateWorkspaceBodySchema,
   InvitationListResponseSchema,
+  InvitationPeekBodySchema,
+  InvitationPeekResponseSchema,
   InvitationPreviewBodySchema,
   InvitationPreviewResponseSchema,
+  InviteLinkResultSchema,
   InviteMemberResultSchema,
   UpdateMemberRoleBodySchema,
   UpdateWorkspaceBodySchema,
@@ -162,7 +166,8 @@ registry.registerPath({
   method: "patch",
   path: "/api/v1/me",
   summary: "Update current user profile",
-  description: "Currently supports updating app language (locale).",
+  description:
+    "App language (locale) and the name other people see (displayName: 1 to 30 characters, not an address; null removes it). The name stays in Kangur and is never written to Clerk. 400 VALIDATION_ERROR with details.reason name_email, name_too_long or name_empty.",
   tags: ["Auth"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -486,6 +491,8 @@ registry.registerPath({
   method: "get",
   path: "/api/v1/workspaces/{workspaceId}/members",
   summary: "List members of a workspace",
+  description:
+    "displayName is the name, told apart for two of one name, or the fallback word (hasName false). Never an Apple relay address: email is null for such a member for apps 1.0.9+, and a reserved address for older apps, which require one and never show it.",
   tags: ["Workspaces"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -602,6 +609,8 @@ registry.registerPath({
   method: "get",
   path: "/api/v1/workspaces/{workspaceId}/invitations",
   summary: "List pending workspace invitations",
+  description:
+    "Link invitations (kind link, email null) only for apps that send X-Kangur-App-Version 1.0.9 or newer. Without the header the list holds e-mail invitations only, as app 1.0.8 expects.",
   tags: ["Workspaces"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -688,6 +697,63 @@ registry.registerPath({
 });
 
 registry.registerPath({
+  method: "post",
+  path: "/api/v1/workspaces/{workspaceId}/invite-links",
+  summary: "Create a one-time invitation link without an address",
+  description:
+    "For a code on the screen or the share sheet. Works once and for 7 days, like an e-mail invitation; owners and admins only; at most 20 links per workspace in 24 hours (429 RATE_LIMITED). The token is only in the returned url, after #.",
+  tags: ["Workspaces"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      workspaceId: z.string(),
+    }),
+    body: {
+      required: false,
+      content: {
+        "application/json": {
+          schema: CreateInviteLinkBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "Link created",
+      content: {
+        "application/json": {
+          schema: InviteLinkResultSchema,
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    401: {
+      description: "Authentication failed",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+    429: {
+      description: "Too many links today",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
   method: "delete",
   path: "/api/v1/workspaces/{workspaceId}/invitations/{invitationId}",
   summary: "Revoke a pending invitation",
@@ -726,6 +792,8 @@ registry.registerPath({
   method: "post",
   path: "/api/v1/invitations/accept",
   summary: "Accept a workspace invitation by token",
+  description:
+    "The token is a one-time key: whoever holds it and is signed in joins, whatever the account address. By invitationId (from an in-app notification) the invitation address must be one of the account addresses verified in Clerk, else 403 email_mismatch, never with an Apple relay address. 404 reasons: expired, revoked, used (someone already joined with this link).",
   tags: ["Workspaces"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -810,7 +878,41 @@ registry.registerPath({
       },
     },
     404: {
-      description: "Expired or revoked",
+      description: "Expired, revoked or used",
+      content: {
+        "application/json": { schema: ApiErrorSchema },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/invitations/peek",
+  summary: "The address an e-mail invitation went to, before sign-in",
+  description:
+    "Public. Fills in the e-mail sign-in form on the invitation path. Null for a link, an invitation that no longer works, or an Apple relay address.",
+  tags: ["Workspaces"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: InvitationPeekBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "The invited address, or null",
+      content: {
+        "application/json": {
+          schema: InvitationPeekResponseSchema,
+        },
+      },
+    },
+    429: {
+      description: "Too many requests",
       content: {
         "application/json": { schema: ApiErrorSchema },
       },
@@ -822,6 +924,8 @@ registry.registerPath({
   method: "get",
   path: "/api/v1/notifications",
   summary: "List notifications for the current user",
+  description:
+    "WORKSPACE_MEMBER_JOINED only for apps that send X-Kangur-App-Version 1.0.9 or newer; unreadCount counts only what the app is sent.",
   tags: ["Notifications"],
   security: [{ bearerAuth: [] }],
   responses: {

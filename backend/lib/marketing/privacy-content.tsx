@@ -21,7 +21,7 @@ export function PrivacyContent({ locale }: Props) {
     return (
       <article className="mkt-legal">
         <h1>Polityka prywatności</h1>
-        <p className="mkt-meta">Ostatnia aktualizacja: 26 listopada 2026</p>
+        <p className="mkt-meta">Ostatnia aktualizacja: 28 listopada 2026</p>
 
         <p>
           Niniejsza polityka opisuje, jak Kangur („my”, „aplikacja”) przetwarza
@@ -38,6 +38,11 @@ export function PrivacyContent({ locale }: Props) {
           <li>
             <strong>Konto:</strong> adres e-mail, identyfikator konta (np.
             Clerk), podstawowe dane profilu potrzebne do logowania.
+          </li>
+          <li>
+            <strong>Imię:</strong> imię, które podasz w Kangurze albo przy
+            logowaniu, widzą osoby w Twoich przestrzeniach. Podanie imienia jest
+            dobrowolne. Usunięcie konta usuwa też imię.
           </li>
           <li>
             <strong>Treści użytkownika:</strong> listy zakupów, pozycje,
@@ -158,7 +163,7 @@ export function PrivacyContent({ locale }: Props) {
     <article className="mkt-legal" lang={locale === lang ? undefined : lang}>
       <h1>Privacy Policy</h1>
       <p className="mkt-meta">
-        Last updated: 26 November 2026
+        Last updated: 28 November 2026
         {locale !== "en" ? <> · English</> : null}
       </p>
 
@@ -179,6 +184,11 @@ export function PrivacyContent({ locale }: Props) {
         <li>
           <strong>Account:</strong> email address, account identifier (e.g.
           Clerk), basic profile data needed to sign in.
+        </li>
+        <li>
+          <strong>Name:</strong> the name you give in Kangur or when signing in
+          is seen by the people in your spaces. Giving a name is optional.
+          Deleting the account deletes the name too.
         </li>
         <li>
           <strong>User content:</strong> shopping lists, items, notes, workspace

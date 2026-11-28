@@ -27,10 +27,7 @@ import {
   type NotificationSectionKey,
 } from "./format-time";
 import { navigateFromNotification } from "./navigate";
-import {
-  NotificationTypeIcon,
-  visualForNotification,
-} from "./notification-visuals";
+import { NotificationTypeIcon } from "./notification-visuals";
 import { refreshNotifications } from "./refreshNotifications";
 import type { AppNotification } from "./schemas";
 import {
@@ -44,7 +41,6 @@ type FilterTab = "all" | "unread";
 
 const SECTION_ORDER: NotificationSectionKey[] = ["today", "earlier"];
 const HEADER_SIDE = 40;
-const ICON_TILE = 44;
 
 export function NotificationCenterScreen() {
   const { t, i18n } = useTranslation();
@@ -413,7 +409,6 @@ function NotificationRow({
 }) {
   const scheme = useColorScheme() ?? "light";
   const theme = colors[scheme];
-  const visual = visualForNotification(notification);
   const unread = notification.status === "UNREAD";
 
   return (
@@ -430,22 +425,7 @@ function NotificationRow({
         alignItems: "flex-start",
       }}
     >
-      <View
-        style={{
-          width: ICON_TILE,
-          height: ICON_TILE,
-          borderRadius: radius.sm,
-          backgroundColor: visual.background,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <NotificationTypeIcon
-          kind={visual.kind}
-          color={visual.iconColor}
-          size={22}
-        />
-      </View>
+      <NotificationTypeIcon notification={notification} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text
           style={{

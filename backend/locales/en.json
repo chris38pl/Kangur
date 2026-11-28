@@ -1,34 +1,50 @@
 {
+  "names": {
+    "fallback": "Household member",
+    "since": "since {{date}}",
+    "hiddenAppleAddress": "an address hidden by Apple"
+  },
   "notifications": {
     "listCreated": {
-      "title": "{{actor}} created list {{listName}}"
+      "body": "{{actor}}: new list · {{listName}}",
+      "bodyNoName": "New list · {{listName}}"
     },
     "listDeleted": {
-      "title": "{{actor}} deleted list {{listName}}"
+      "body": "{{actor}}: list deleted · {{listName}}",
+      "bodyNoName": "List deleted · {{listName}}"
     },
     "shoppingStarted": {
-      "title": "{{actor}} started shopping"
+      "body": "{{actor}}: shopping started · {{listName}}",
+      "bodyNoName": "Shopping started · {{listName}}"
     },
     "shoppingFinished": {
-      "title": "{{actor}} finished shopping",
-      "allBought": "All products purchased",
-      "unavailableOne": "1 product was unavailable",
-      "unavailableMany": "{{count}} products were unavailable"
+      "body_one": "{{actor}}: shopping done, {{bought}} of {{count}} product",
+      "body_other": "{{actor}}: shopping done, {{bought}} of {{count}} products",
+      "bodyNoName_one": "Shopping done, {{bought}} of {{count}} product",
+      "bodyNoName_other": "Shopping done, {{bought}} of {{count}} products",
+      "bodyEmpty": "{{actor}}: shopping done",
+      "bodyEmptyNoName": "Shopping done"
     },
     "invite": {
-      "title": "{{actor}} invited you to {{workspaceName}}",
-      "body": "Join to create shopping lists together."
+      "title": "Invitation to {{workspaceName}}",
+      "body": "{{actor}} invites you to shared shopping lists.",
+      "bodyNoName": "Join to create shopping lists together."
+    },
+    "memberJoined": {
+      "body": "New member: {{name}}",
+      "bodyNoName": "Someone new joined the space"
     }
   },
   "email": {
     "invite": {
       "subject": "You're invited to {{workspaceName}} - Kangur",
-      "headline": "{{inviter}} invited you to",
+      "headline": "{{inviter}} invites you to",
+      "headlineNoName": "An invitation to a space in Kangur",
       "ctaOpen": "Open invitation",
       "ctaJoin": "Join workspace",
       "bodyExisting": "You already have an account - open the app to accept the invite.",
       "bodyNew": "Create an account or sign in to join shared shopping lists.",
-      "expiry": "This link expires in 7 days."
+      "expiry": "This link works once and expires in 7 days."
     }
   }
 }

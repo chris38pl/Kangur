@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   createInvitation,
+  createInviteLink,
   listInvitations,
   removeWorkspaceMember,
   revokeInvitation,
@@ -45,6 +46,25 @@ export function useCreateInvitation(workspaceId: string) {
       });
       void queryClient.invalidateQueries({
         queryKey: ["workspace-members", workspaceId],
+      });
+    },
+  });
+}
+
+/** A one-time link without an address: a code on the screen, or the share sheet. */
+export function useCreateInviteLink(workspaceId: string) {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (channel: "code" | "share") => {
+      const token = await getToken();
+      if (!token) throw new Error("Missing auth token");
+      return createInviteLink(token, workspaceId, channel);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["workspace-invitations", workspaceId],
       });
     },
   });

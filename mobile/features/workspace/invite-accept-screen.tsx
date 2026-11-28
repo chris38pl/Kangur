@@ -1,9 +1,8 @@
 import { getWorkspaceIconEmoji } from "@shared/workspace-icons";
 import { useAuth, useClerk } from "@clerk/clerk-expo";
 import { useQueryClient } from "@tanstack/react-query";
-import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -20,12 +19,17 @@ import { useColorScheme } from "@/components/useColorScheme";
 import { brandAssets } from "@/design-system/brand-assets";
 import { colors, radius, spacing, typography } from "@/design-system/tokens";
 import { BackIcon } from "@/features/auth/auth-icons";
+import { useMe } from "@/features/auth/useMe";
 import { formatNotificationTime } from "@/features/notifications/format-time";
 import {
   listNotifications,
   markNotificationRead,
 } from "@/features/notifications/api";
 import { clearLocalUserData } from "@/features/profile/clearLocalUserData";
+import { nameProblem, normalizeNameInput } from "@/features/profile/display-name";
+import { NameAsLine } from "@/features/profile/name-as-line";
+import { NameField } from "@/features/profile/name-field";
+import { useUpdateDisplayName } from "@/features/profile/useUpdateDisplayName";
 import {
   acceptInvitation,
   previewInvitation,
@@ -33,31 +37,31 @@ import {
 import type { InvitationPreview } from "@/features/workspace/schemas";
 import { useActiveWorkspace } from "@/features/workspace/useActiveWorkspace";
 import { useWorkspaces } from "@/features/workspace/useWorkspaces";
+import { Analytics } from "@/lib/analytics";
 import { ApiClientError } from "@/lib/api/client";
+import {
+  clearPendingInvite,
+  rememberInviteForSignIn,
+} from "@/lib/invite/pending-invite";
 import { isValidInviteRawToken } from "@/lib/invite/token";
 import {
   completeInviteTask,
   dismissInviteTask,
 } from "@/features/workspace/invite-task-intent";
 
+type WorkspaceRef = { id: string; name: string; icon: string };
+
 type ViewState =
   | { kind: "loading" }
   | { kind: "need_auth" }
-  | {
-      kind: "mismatch";
-      currentEmail: string;
-      provider: string;
-    }
+  /** Opened by id from a notification, and the address belongs to another account. */
+  | { kind: "wrong_account" }
   | { kind: "expired" }
+  /** Someone already joined with this one-time link. */
+  | { kind: "used" }
   | { kind: "preview"; preview: InvitationPreview }
-  | {
-      kind: "already";
-      workspace: { id: string; name: string; icon: string };
-    }
-  | {
-      kind: "success";
-      workspace: { id: string; name: string; icon: string };
-    }
+  | { kind: "already"; workspace: WorkspaceRef }
+  | { kind: "success"; workspace: WorkspaceRef }
   | { kind: "error"; message: string }
   | { kind: "joining"; preview: InvitationPreview };
 
@@ -80,10 +84,30 @@ function avatarColors(seed: string) {
   return AVATAR_PALETTE[hash] ?? AVATAR_PALETTE[0];
 }
 
-function providerLabel(provider: string, t: (key: string) => string): string {
-  if (provider === "google") return t("invite.providerGoogle");
-  if (provider === "apple") return t("invite.providerApple");
-  return t("invite.providerEmail");
+/** What the server said, as a screen. The app never shows an address it got in an error. */
+function stateForError(
+  error: unknown,
+  fallback: string,
+  preview?: InvitationPreview,
+): ViewState {
+  if (!(error instanceof ApiClientError)) return { kind: "error", message: fallback };
+  const reason = error.details?.reason;
+  if (reason === "email_mismatch") return { kind: "wrong_account" };
+  if (reason === "used") return { kind: "used" };
+  if (reason === "expired" || reason === "revoked" || error.status === 404) {
+    return { kind: "expired" };
+  }
+  if (reason === "already_member" || reason === "already_accepted") {
+    return {
+      kind: "already",
+      workspace: {
+        id: String(error.details?.workspaceId ?? preview?.workspace.id ?? ""),
+        name: String(error.details?.workspaceName ?? preview?.workspace.name ?? ""),
+        icon: String(error.details?.workspaceIcon ?? preview?.workspace.icon ?? ""),
+      },
+    };
+  }
+  return { kind: "error", message: error.message || fallback };
 }
 
 export function InviteAcceptScreen() {
@@ -128,9 +152,26 @@ export function InviteAcceptScreen() {
   const queryClient = useQueryClient();
   const workspacesQuery = useWorkspaces();
   const { setActiveId } = useActiveWorkspace(workspacesQuery.data);
+  const me = useMe(Boolean(isSignedIn));
+  const nameMutation = useUpdateDisplayName("join");
 
   const [state, setState] = useState<ViewState>({ kind: "loading" });
-  const [emailCopied, setEmailCopied] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [editingName, setEditingName] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const skippedName = useRef(false);
+
+  const authRedirectPath =
+    inviteCapability && "invitationId" in inviteCapability
+      ? `/invite/id/${inviteCapability.invitationId}`
+      : inviteCapability && "inviteToken" in inviteCapability
+        ? `/invite/${inviteCapability.inviteToken}`
+        : "/(tabs)";
+
+  useEffect(() => {
+    // Back from sign-in: the way back has done its job.
+    if (isSignedIn) clearPendingInvite();
+  }, [isSignedIn]);
 
   useEffect(() => {
     let cancelled = false;
@@ -163,28 +204,7 @@ export function InviteAcceptScreen() {
         setState({ kind: "preview", preview });
       } catch (err) {
         if (cancelled) return;
-        if (err instanceof ApiClientError) {
-          const reason = err.details?.reason;
-          if (reason === "email_mismatch") {
-            setState({
-              kind: "mismatch",
-              currentEmail: String(err.details?.currentEmail ?? ""),
-              provider: String(err.details?.provider ?? "email"),
-            });
-            return;
-          }
-          if (
-            reason === "expired" ||
-            reason === "revoked" ||
-            err.status === 404
-          ) {
-            setState({ kind: "expired" });
-            return;
-          }
-          setState({ kind: "error", message: err.message });
-          return;
-        }
-        setState({ kind: "error", message: t("invite.unknownError") });
+        setState(stateForError(err, t("invite.unknownError")));
       }
     };
 
@@ -195,6 +215,12 @@ export function InviteAcceptScreen() {
     // getToken / t are unstable on web - do not depend on them or we loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
   }, [inviteToken, invitationId, isLoaded, isSignedIn]);
+
+  const myName = me.data?.displayName ?? null;
+  const askForName = state.kind === "preview" && me.isSuccess && !myName;
+  useEffect(() => {
+    if (askForName) Analytics.track("name_prompt_shown", { place: "join" });
+  }, [askForName]);
 
   const reloadPreview = useCallback(() => {
     setState({ kind: "loading" });
@@ -220,11 +246,7 @@ export function InviteAcceptScreen() {
         }
         setState({ kind: "preview", preview });
       } catch (err) {
-        if (err instanceof ApiClientError) {
-          setState({ kind: "error", message: err.message });
-          return;
-        }
-        setState({ kind: "error", message: t("invite.unknownError") });
+        setState(stateForError(err, t("invite.unknownError")));
       }
     })();
   }, [inviteCapability, inviteToken, invitationId, isSignedIn, getToken, t]);
@@ -236,14 +258,8 @@ export function InviteAcceptScreen() {
     completeInviteTask();
   };
 
-  const authRedirectPath =
-    inviteCapability && "invitationId" in inviteCapability
-      ? `/invite/id/${inviteCapability.invitationId}`
-      : inviteCapability && "inviteToken" in inviteCapability
-        ? `/invite/${inviteCapability.inviteToken}`
-        : "/(tabs)";
-
   const goAuth = () => {
+    rememberInviteForSignIn(authRedirectPath);
     router.replace({
       pathname: "/(auth)/sign-in",
       params: { redirect: authRedirectPath },
@@ -300,8 +316,41 @@ export function InviteAcceptScreen() {
     dismissInviteTask();
   }, [markInviteNotificationRead]);
 
+  /** A name typed on this screen is saved first; false keeps the person here to fix it. */
+  const saveTypedName = async (): Promise<boolean> => {
+    const showsField = !myName || editingName;
+    if (!showsField) return true;
+    const draft = normalizeNameInput(nameDraft);
+    if (!draft) {
+      if (!myName && !skippedName.current) {
+        skippedName.current = true;
+        Analytics.track("name_skipped", { place: "join" });
+      }
+      return true;
+    }
+    const problem = nameProblem(draft);
+    if (problem) {
+      setNameError(problem === "email" ? t("name.notEmail") : t("name.tooLong"));
+      return false;
+    }
+    if (draft === myName) return true;
+    try {
+      await nameMutation.mutateAsync(draft);
+      setEditingName(false);
+      return true;
+    } catch (failure) {
+      const reason = failure instanceof ApiClientError ? failure.details?.reason : null;
+      setNameError(reason === "name_email" ? t("name.notEmail") : t("name.saveFailed"));
+      return false;
+    }
+  };
+
   const onJoin = async (preview: InvitationPreview) => {
     setState({ kind: "joining", preview });
+    if (!(await saveTypedName())) {
+      setState({ kind: "preview", preview });
+      return;
+    }
     try {
       const token = await getToken();
       if (!token) {
@@ -322,43 +371,7 @@ export function InviteAcceptScreen() {
         setState({ kind: "success", workspace: result.workspace });
       }
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        const reason = err.details?.reason;
-        if (reason === "email_mismatch") {
-          setState({
-            kind: "mismatch",
-            currentEmail: String(err.details?.currentEmail ?? ""),
-            provider: String(err.details?.provider ?? "email"),
-          });
-          return;
-        }
-        if (
-          reason === "expired" ||
-          reason === "revoked" ||
-          err.status === 404
-        ) {
-          setState({ kind: "expired" });
-          return;
-        }
-        if (reason === "already_member" || reason === "already_accepted") {
-          setState({
-            kind: "already",
-            workspace: {
-              id: String(err.details?.workspaceId ?? preview.workspace.id),
-              name: String(
-                err.details?.workspaceName ?? preview.workspace.name,
-              ),
-              icon: String(
-                err.details?.workspaceIcon ?? preview.workspace.icon,
-              ),
-            },
-          });
-          return;
-        }
-        setState({ kind: "error", message: err.message });
-        return;
-      }
-      setState({ kind: "error", message: t("invite.unknownError") });
+      setState(stateForError(err, t("invite.unknownError"), preview));
     }
   };
 
@@ -368,6 +381,51 @@ export function InviteAcceptScreen() {
     paddingVertical: spacing[4],
     alignItems: "center" as const,
   };
+
+  const centeredMessage = (input: {
+    title: string;
+    body: string;
+    primary: { label: string; onPress: () => void };
+    secondary?: { label: string; onPress: () => void };
+  }) => (
+    <View
+      style={{
+        flex: 1,
+        paddingHorizontal: spacing[6],
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Text style={{ ...typography.title, color: theme.text, textAlign: "center" }}>
+        {input.title}
+      </Text>
+      <Text
+        style={{
+          ...typography.body,
+          color: theme.textBody,
+          textAlign: "center",
+          marginTop: spacing[3],
+        }}
+      >
+        {input.body}
+      </Text>
+      <Pressable
+        onPress={input.primary.onPress}
+        style={{ ...pillPrimary, marginTop: spacing[6], alignSelf: "stretch" }}
+      >
+        <Text style={{ ...typography.label, color: theme.onPrimary }}>
+          {input.primary.label}
+        </Text>
+      </Pressable>
+      {input.secondary ? (
+        <Pressable onPress={input.secondary.onPress} style={{ marginTop: spacing[4] }}>
+          <Text style={{ ...typography.label, color: theme.text, textAlign: "center" }}>
+            {input.secondary.label}
+          </Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
 
   const showChrome =
     state.kind === "preview" ||
@@ -458,174 +516,38 @@ export function InviteAcceptScreen() {
         </View>
       ) : null}
 
-      {state.kind === "mismatch" ? (
-        <View
-          style={{
-            flex: 1,
-            paddingHorizontal: spacing[6],
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ ...typography.title, color: theme.text }}>
-            {t("invite.mismatchTitle")}
-          </Text>
-          <Text
-            style={{
-              ...typography.body,
-              color: theme.textBody,
-              marginTop: spacing[4],
-            }}
-          >
-            {t("invite.mismatchBelongsTo")}
-          </Text>
-          <Text
-            style={{
-              ...typography.body,
-              color: theme.textBody,
-              marginTop: spacing[2],
-            }}
-          >
-            {t("invite.mismatchLoggedIn", {
-              email: state.currentEmail,
-              provider: providerLabel(state.provider, t),
-            })}
-          </Text>
-          <Text
-            style={{
-              ...typography.body,
-              color: theme.textBody,
-              marginTop: spacing[2],
-            }}
-          >
-            {t("invite.mismatchHint")}
-          </Text>
-          <Pressable
-            onPress={() => {
-              const email = state.currentEmail.trim();
-              if (!email) return;
-              void Clipboard.setStringAsync(email).then(() => {
-                setEmailCopied(true);
-              });
-            }}
-            style={{ ...pillPrimary, marginTop: spacing[6] }}
-          >
-            <Text style={{ ...typography.label, color: theme.onPrimary }}>
-              {emailCopied ? t("invite.mismatchCopied") : t("invite.mismatchCopy")}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => void switchAccount()}
-            style={{ marginTop: spacing[4] }}
-          >
-            <Text
-              style={{
-                ...typography.label,
-                color: theme.text,
-                textAlign: "center",
-              }}
-            >
-              {t("invite.switchAccount")}
-            </Text>
-          </Pressable>
-          <Pressable onPress={dismissWithoutAccept} style={{ marginTop: spacing[4] }}>
-            <Text
-              style={{
-                ...typography.label,
-                color: theme.text,
-                textAlign: "center",
-              }}
-            >
-              {t("invite.cancel")}
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
+      {state.kind === "wrong_account"
+        ? centeredMessage({
+            title: t("invite.wrongAccountTitle"),
+            body: t("invite.wrongAccountBody"),
+            primary: { label: t("invite.switchAccount"), onPress: () => void switchAccount() },
+            secondary: { label: t("invite.cancel"), onPress: dismissWithoutAccept },
+          })
+        : null}
 
-      {state.kind === "expired" ? (
-        <View
-          style={{
-            flex: 1,
-            paddingHorizontal: spacing[6],
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text
-            style={{
-              ...typography.title,
-              color: theme.text,
-              textAlign: "center",
-            }}
-          >
-            {t("invite.expiredTitle")}
-          </Text>
-          <Text
-            style={{
-              ...typography.body,
-              color: theme.textBody,
-              textAlign: "center",
-              marginTop: spacing[3],
-            }}
-          >
-            {t("invite.expiredBody")}
-          </Text>
-          <Pressable
-            onPress={dismissWithoutAccept}
-            style={{
-              ...pillPrimary,
-              marginTop: spacing[6],
-              alignSelf: "stretch",
-            }}
-          >
-            <Text style={{ ...typography.label, color: theme.onPrimary }}>
-              {t("invite.goHome")}
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
+      {state.kind === "expired"
+        ? centeredMessage({
+            title: t("invite.expiredTitle"),
+            body: t("invite.expiredBody"),
+            primary: { label: t("invite.goHome"), onPress: dismissWithoutAccept },
+          })
+        : null}
 
-      {state.kind === "error" ? (
-        <View
-          style={{
-            flex: 1,
-            paddingHorizontal: spacing[6],
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text
-            style={{
-              ...typography.title,
-              color: theme.text,
-              textAlign: "center",
-            }}
-          >
-            {t("invite.errorTitle")}
-          </Text>
-          <Text
-            style={{
-              ...typography.body,
-              color: theme.danger,
-              textAlign: "center",
-              marginTop: spacing[3],
-            }}
-          >
-            {state.message}
-          </Text>
-          <Pressable
-            onPress={reloadPreview}
-            style={{
-              ...pillPrimary,
-              marginTop: spacing[6],
-              alignSelf: "stretch",
-            }}
-          >
-            <Text style={{ ...typography.label, color: theme.onPrimary }}>
-              {t("auth.retry")}
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
+      {state.kind === "used"
+        ? centeredMessage({
+            title: t("invite.usedTitle"),
+            body: t("invite.usedBody"),
+            primary: { label: t("invite.goHome"), onPress: dismissWithoutAccept },
+          })
+        : null}
+
+      {state.kind === "error"
+        ? centeredMessage({
+            title: t("invite.errorTitle"),
+            body: state.message,
+            primary: { label: t("auth.retry"), onPress: reloadPreview },
+          })
+        : null}
 
       {showChrome &&
       (state.kind === "preview" ||
@@ -633,6 +555,7 @@ export function InviteAcceptScreen() {
         state.kind === "success" ||
         state.kind === "already") ? (
         <ScrollView
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
             paddingHorizontal: spacing[6],
             paddingBottom: spacing[6] + insets.bottom,
@@ -647,6 +570,38 @@ export function InviteAcceptScreen() {
               joining={state.kind === "joining"}
               onJoin={() => void onJoin(state.preview)}
               onDecline={dismissWithoutAccept}
+              onSwitchAccount={() => void switchAccount()}
+              nameBlock={
+                me.isSuccess ? (
+                  <View style={{ alignSelf: "stretch", marginTop: spacing[5] }}>
+                    {!myName || editingName ? (
+                      <>
+                        <NameField
+                          label={t("name.fieldLabelJoin")}
+                          value={nameDraft}
+                          onChangeText={(value) => {
+                            setNameDraft(value);
+                            setNameError(null);
+                          }}
+                        />
+                        {nameError ? (
+                          <Text style={{ ...typography.caption, color: theme.danger }}>
+                            {nameError}
+                          </Text>
+                        ) : null}
+                      </>
+                    ) : (
+                      <NameAsLine
+                        text={t("name.joinAs", { name: myName })}
+                        onChange={() => {
+                          setNameDraft(myName);
+                          setEditingName(true);
+                        }}
+                      />
+                    )}
+                  </View>
+                ) : null
+              }
             />
           )}
 
@@ -749,12 +704,16 @@ function InvitePreviewBody({
   joining,
   onJoin,
   onDecline,
+  onSwitchAccount,
+  nameBlock,
 }: {
   preview: InvitationPreview;
   locale: string;
   joining: boolean;
   onJoin: () => void;
   onDecline: () => void;
+  onSwitchAccount: () => void;
+  nameBlock: ReactNode;
 }) {
   const { t } = useTranslation();
   const scheme = useColorScheme() ?? "light";
@@ -767,7 +726,7 @@ function InvitePreviewBody({
     <View style={{ width: "100%", alignItems: "center", paddingTop: spacing[2] }}>
       <Image
         source={brandAssets.inviteWelcome}
-        style={{ width: 220, height: 220, resizeMode: "contain" }}
+        style={{ width: 200, height: 200, resizeMode: "contain" }}
         accessibilityLabel=""
       />
 
@@ -796,10 +755,12 @@ function InvitePreviewBody({
           paddingHorizontal: spacing[2],
         }}
       >
-        {t("invite.headline", {
-          name: preview.inviterDisplayName,
-          workspace: preview.workspace.name,
-        })}
+        {preview.inviterHasName
+          ? t("invite.headline", {
+              name: preview.inviterDisplayName,
+              workspace: preview.workspace.name,
+            })
+          : t("invite.headlineNoName", { workspace: preview.workspace.name })}
       </Text>
 
       <View
@@ -923,11 +884,35 @@ function InvitePreviewBody({
         {t("invite.previewBody")}
       </Text>
 
+      {nameBlock}
+
+      {preview.differentEmail ? (
+        <View style={{ alignSelf: "stretch", marginTop: spacing[4] }}>
+          <Text style={{ ...typography.caption, color: theme.textMuted, lineHeight: 18 }}>
+            {t("invite.differentEmail", {
+              invited: preview.differentEmail.invitedEmail,
+              account: preview.differentEmail.accountEmail,
+            })}
+          </Text>
+          <Pressable
+            onPress={onSwitchAccount}
+            disabled={joining}
+            hitSlop={8}
+            accessibilityRole="button"
+            style={{ alignSelf: "flex-start", paddingVertical: spacing[1] }}
+          >
+            <Text style={{ ...typography.caption, color: theme.primary, fontWeight: "700" }}>
+              {t("invite.switchAccount")}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
       <Pressable
         onPress={onJoin}
         disabled={joining}
         style={{
-          marginTop: spacing[8],
+          marginTop: spacing[6],
           alignSelf: "stretch",
           backgroundColor: theme.primary,
           borderRadius: radius.full,

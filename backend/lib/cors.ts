@@ -28,7 +28,7 @@ export function corsHeaders(origin: string): HeadersInit {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
     "Access-Control-Allow-Headers":
-      "Authorization, Content-Type, X-Device-Locale, Accept",
+      "Authorization, Content-Type, X-Device-Locale, X-Kangur-App-Version, Accept",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };

@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { authorizeList } from "@/lib/authorize";
-import { displayNameFromEmail } from "@/lib/displayName";
 import { domainEventBus } from "@/lib/events/DomainEventBus";
 import { ensureNotificationHandlersRegistered } from "@/features/notifications/registerHandlers";
 
@@ -29,10 +28,6 @@ export async function archiveShoppingList(
 
   if (!options?.notifyMembers) return;
 
-  const actor = await prisma.user.findUniqueOrThrow({
-    where: { id: userId },
-  });
-
   ensureNotificationHandlersRegistered();
   await domainEventBus.publish({
     type: "ShoppingListDeleted",
@@ -41,6 +36,5 @@ export async function archiveShoppingList(
     listName: list.name,
     listEmoji: list.emoji,
     actorUserId: userId,
-    actorDisplayName: displayNameFromEmail(actor.email),
   });
 }

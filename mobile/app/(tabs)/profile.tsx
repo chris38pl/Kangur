@@ -50,13 +50,6 @@ import i18n, { localeMeta, resolveAppLocale } from "@/lib/i18n";
 import { goRoot } from "@/lib/navigation";
 import { premiumHref } from "@/features/billing/premium-source";
 
-function displayNameFromEmail(email: string | undefined): string {
-  if (!email) return "Kangur";
-  const local = email.split("@")[0]?.trim();
-  if (!local) return "Kangur";
-  return local.charAt(0).toUpperCase() + local.slice(1);
-}
-
 function ProfileMenuRow({
   icon,
   title,
@@ -403,7 +396,7 @@ export default function ProfileScreen() {
                 style={{ ...typography.headline, color: theme.text }}
                 numberOfLines={1}
               >
-                {displayNameFromEmail(me?.email)}
+                {me?.displayName ?? t("name.fallback")}
               </Text>
               {me?.email ? (
                 <Text
@@ -414,7 +407,7 @@ export default function ProfileScreen() {
                   }}
                   numberOfLines={1}
                 >
-                  {me.email}
+                  {me.emailHidden ? t("profile.emailHiddenValue") : me.email}
                 </Text>
               ) : null}
               {isPremium ? (

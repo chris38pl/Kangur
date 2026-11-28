@@ -4,8 +4,13 @@ export type DomainEventType =
   | "ShoppingListDeleted"
   | "ShoppingStarted"
   | "ShoppingFinished"
+  | "WorkspaceMemberJoined"
   | "NotificationCreated";
 
+/**
+ * People are passed by id. Each notification picks the actor's name for its own recipient
+ * (language, two people of one name), so events carry no display names.
+ */
 export type DomainEvent =
   | {
       type: "InvitationCreated";
@@ -13,9 +18,9 @@ export type DomainEvent =
       workspaceName: string;
       workspaceIcon: string;
       invitationId: string;
-      inviteeEmail: string;
+      /** The Kangur account the address belongs to, if any (found in Clerk or Kangur). */
+      inviteeUserId: string | null;
       actorUserId: string;
-      actorDisplayName: string;
     }
   | {
       type: "ShoppingListCreated";
@@ -25,7 +30,6 @@ export type DomainEvent =
       listEmoji: string;
       itemCount: number;
       actorUserId: string;
-      actorDisplayName: string;
     }
   | {
       type: "ShoppingListDeleted";
@@ -34,7 +38,6 @@ export type DomainEvent =
       listName: string;
       listEmoji: string;
       actorUserId: string;
-      actorDisplayName: string;
     }
   | {
       type: "ShoppingStarted";
@@ -46,7 +49,6 @@ export type DomainEvent =
       listEmoji: string;
       sessionId: string;
       actorUserId: string;
-      actorDisplayName: string;
     }
   | {
       type: "ShoppingFinished";
@@ -58,15 +60,25 @@ export type DomainEvent =
       listEmoji: string;
       sessionId: string;
       actorUserId: string;
-      actorDisplayName: string;
       unavailableCount: number;
       boughtCount: number;
       itemCount: number;
     }
   | {
+      /** Someone joined through an invitation: the inviter hears about it (app 1.0.9+). */
+      type: "WorkspaceMemberJoined";
+      workspaceId: string;
+      workspaceName: string;
+      workspaceIcon: string;
+      invitationId: string;
+      inviterUserId: string;
+      memberUserId: string;
+    }
+  | {
       type: "NotificationCreated";
       notificationId: string;
       recipientUserId: string;
+      notificationType: string;
       title: string;
       body: string;
       payloadType: string;

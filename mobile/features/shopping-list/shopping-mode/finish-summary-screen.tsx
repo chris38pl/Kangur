@@ -62,15 +62,6 @@ const TIME = "#E6A817";
 const UNAVAILABLE_BG = "#FDF2F2";
 const UNAVAILABLE_BADGE_BG = "#FCE4E4";
 
-/** First readable word of the e-mail local part: "jan.kowalski@x" gives "Jan". */
-function displayNameFromEmail(email: string): string {
-  const local = email.split("@")[0]?.trim() || email;
-  if (!local) return email;
-  const word =
-    local.split(/[._+\-\d]+/).find((part) => part.length >= 2) ?? local;
-  return word.charAt(0).toUpperCase() + word.slice(1);
-}
-
 function formatDurationMinutes(ms: number, t: TFunction) {
   const totalMin = Math.max(1, Math.round(ms / 60_000));
   if (totalMin < 60) {
@@ -322,12 +313,13 @@ export function FinishSummaryScreen({
   const { user } = useUser();
   const actorName = useMemo(() => {
     if (actorDisplayName) return actorDisplayName;
+    // The name the household sees, never one read from an address (Apple may hide it).
+    const own = me.data?.displayName?.trim();
+    if (own) return own;
     const firstName = user?.firstName?.trim();
     if (firstName) return firstName;
-    const email = me.data?.email;
-    if (!email) return t("shoppingMode.you");
-    return displayNameFromEmail(email);
-  }, [actorDisplayName, user?.firstName, me.data?.email, t]);
+    return t("shoppingMode.you");
+  }, [actorDisplayName, me.data?.displayName, user?.firstName, t]);
 
   const { boughtItems, unavailableItems, remaining } = useMemo(() => {
     const items = (itemsQuery.data ?? []).filter((i) => i.status !== "removed");

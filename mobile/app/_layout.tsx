@@ -8,6 +8,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "expo-router/react-navigation";
+import Constants from "expo-constants";
 import * as SplashScreen from "expo-splash-screen";
 import { type ReactNode, useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -28,6 +29,7 @@ import {
 } from "@/lib/boot-diagnostics";
 import { captureInstallReferrerOnce } from "@/lib/analytics/install-referrer";
 import { getPostHog, isAnalyticsEnabled } from "@/lib/analytics/posthog";
+import { setApiAppVersion } from "@/lib/api/client";
 import { AppQueryProvider } from "@/lib/query/client";
 import { SentryErrorBoundary } from "@/lib/sentry/ErrorBoundary";
 import { initSentry } from "@/lib/sentry/init";
@@ -39,6 +41,8 @@ import "@/lib/i18n";
 
 bootLog("root_layout_module", "app/_layout.tsx evaluating");
 
+// Before any request: the server tells app versions apart by this header.
+setApiAppVersion(Constants.expoConfig?.version);
 suppressClerkDevKeysWarning();
 suppressNestableDragMeasureLayoutWarning();
 initSentry();

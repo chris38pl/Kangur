@@ -1,34 +1,50 @@
 {
+  "names": {
+    "fallback": "Domownik",
+    "since": "od {{date}}",
+    "hiddenAppleAddress": "adres ukryty przez Apple"
+  },
   "notifications": {
     "listCreated": {
-      "title": "{{actor}} utworzył(a) listę {{listName}}"
+      "body": "{{actor}}: nowa lista · {{listName}}",
+      "bodyNoName": "Nowa lista · {{listName}}"
     },
     "listDeleted": {
-      "title": "{{actor}} usunął(a) listę {{listName}}"
+      "body": "{{actor}}: lista usunięta · {{listName}}",
+      "bodyNoName": "Lista usunięta · {{listName}}"
     },
     "shoppingStarted": {
-      "title": "{{actor}} rozpoczął(a) zakupy"
+      "body": "{{actor}}: zakupy rozpoczęte · {{listName}}",
+      "bodyNoName": "Zakupy rozpoczęte · {{listName}}"
     },
     "shoppingFinished": {
-      "title": "{{actor}} zakończył(a) zakupy",
-      "allBought": "Wszystkie produkty kupione",
-      "unavailableOne": "1 produkt był niedostępny",
-      "unavailableMany": "{{count}} produkty były niedostępne"
+      "body_one": "{{actor}}: zakupy zakończone, {{bought}} z {{count}} produktu",
+      "body_other": "{{actor}}: zakupy zakończone, {{bought}} z {{count}} produktów",
+      "bodyNoName_one": "Zakupy zakończone, {{bought}} z {{count}} produktu",
+      "bodyNoName_other": "Zakupy zakończone, {{bought}} z {{count}} produktów",
+      "bodyEmpty": "{{actor}}: zakupy zakończone",
+      "bodyEmptyNoName": "Zakupy zakończone"
     },
     "invite": {
-      "title": "{{actor}} zaprosił Cię do przestrzeni {{workspaceName}}",
-      "body": "Dołącz, aby wspólnie tworzyć listy zakupów."
+      "title": "Zaproszenie do przestrzeni {{workspaceName}}",
+      "body": "{{actor}} zaprasza Cię do wspólnych list zakupów.",
+      "bodyNoName": "Dołącz, aby wspólnie tworzyć listy zakupów."
+    },
+    "memberJoined": {
+      "body": "Nowa osoba: {{name}}",
+      "bodyNoName": "Nowa osoba dołączyła do przestrzeni"
     }
   },
   "email": {
     "invite": {
       "subject": "Zaproszenie do {{workspaceName}} - Kangur",
       "headline": "{{inviter}} zaprasza Cię do",
+      "headlineNoName": "Zaproszenie do przestrzeni w Kangurze",
       "ctaOpen": "Otwórz zaproszenie",
       "ctaJoin": "Dołącz do przestrzeni",
       "bodyExisting": "Masz już konto - otwórz aplikację, aby zaakceptować zaproszenie.",
       "bodyNew": "Utwórz konto lub zaloguj się, aby dołączyć do wspólnych list zakupów.",
-      "expiry": "Link ważny 7 dni."
+      "expiry": "Link działa raz i jest ważny 7 dni."
     }
   }
 }

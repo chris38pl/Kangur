@@ -41,6 +41,13 @@ export const MeResponseSchema = z
     email: z.string().email(),
     locale: AppLocaleSchema.nullable(),
     platformRole: PlatformRoleSchema,
+    /**
+     * What other people see: the name typed in Kangur, the Clerk name, or a name read from
+     * the address. Null when they see the fallback word ("Domownik").
+     */
+    displayName: z.string().nullable(),
+    /** The address is an Apple relay address: the app says "hidden by Apple" instead. */
+    emailHidden: z.boolean(),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
   })
@@ -50,7 +57,15 @@ export type MeResponse = z.infer<typeof MeResponseSchema>;
 
 export const UpdateMeBodySchema = z
   .object({
-    locale: AppLocaleSchema,
+    locale: AppLocaleSchema.optional(),
+    /**
+     * 1 to 30 characters, not an e-mail address. Null removes the name. Stays in Kangur:
+     * nothing is written to Clerk.
+     */
+    displayName: z.string().max(200).nullable().optional(),
+  })
+  .refine((body) => body.locale !== undefined || body.displayName !== undefined, {
+    message: "Provide locale and/or displayName.",
   })
   .openapi("UpdateMeBody");
 
