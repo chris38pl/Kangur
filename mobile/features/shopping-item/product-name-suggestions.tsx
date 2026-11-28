@@ -14,6 +14,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  Platform,
   Pressable,
   Text,
   View,
@@ -51,6 +52,20 @@ type SuggestionsProps = {
 /** Same as a long press on iOS. */
 const HOLD_DELAY_MS = 500;
 const PICK_ACTION = "pickForDetails";
+
+/**
+ * Web only. A mouse press moves focus off the name field, and both screens
+ * hide the list 180 ms after that blur, long before a hold ends. Cancelling
+ * the press's default keeps the focus in the field, as a touch does on a
+ * phone (keyboardShouldPersistTaps="handled"). Taps still get their click.
+ */
+const keepNameFieldFocusOnWeb: object =
+  Platform.OS === "web"
+    ? {
+        onMouseDown: (event: { preventDefault: () => void }) =>
+          event.preventDefault(),
+      }
+    : {};
 
 /**
  * Whether the quiet hold line shows. The count grows only when the user
@@ -204,7 +219,7 @@ export function ProductNameSuggestions({
     : null;
 
   return (
-    <View style={{ marginTop: spacing[2] }}>
+    <View style={{ marginTop: spacing[2] }} {...keepNameFieldFocusOnWeb}>
       <View
         style={{
           borderWidth: 1,
