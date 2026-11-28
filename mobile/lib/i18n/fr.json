@@ -175,6 +175,10 @@
     "categoryOrderMoveDown": "Descendre la catégorie",
     "categoryOrderHintWeb": "Utilisez les flèches pour définir l'ordre des rayons en magasin."
   },
+  "catalogHold": {
+    "hint": "Maintenez appuyé pour ajouter une quantité ou une note",
+    "actionA11y": "Ajouter une quantité ou une note"
+  },
   "shoppingMode": {
     "title": "Courses",
     "categoryTitle": "Rayon",

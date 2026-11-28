@@ -187,6 +187,10 @@
     "categoryOrderMoveDown": "Posunout kategorii dolů",
     "categoryOrderHintWeb": "Použij šipky k nastavení pořadí uliček v obchodě."
   },
+  "catalogHold": {
+    "hint": "Podrž pro doplnění množství nebo poznámky",
+    "actionA11y": "Doplnit množství nebo poznámku"
+  },
   "shoppingMode": {
     "title": "Nákup",
     "categoryTitle": "Ulička",

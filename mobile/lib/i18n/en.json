@@ -175,6 +175,10 @@
     "categoryOrderMoveDown": "Move category down",
     "categoryOrderHintWeb": "Use the arrows to set aisle order for the store."
   },
+  "catalogHold": {
+    "hint": "Hold to add an amount or a note",
+    "actionA11y": "Add an amount or a note"
+  },
   "shoppingMode": {
     "title": "Shopping",
     "categoryTitle": "Aisle",

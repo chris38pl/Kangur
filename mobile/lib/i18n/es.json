@@ -175,6 +175,10 @@
     "categoryOrderMoveDown": "Bajar categoría",
     "categoryOrderHintWeb": "Usa las flechas para definir el orden de pasillos en la tienda."
   },
+  "catalogHold": {
+    "hint": "Mantén pulsado para añadir cantidad o nota",
+    "actionA11y": "Añadir cantidad o nota"
+  },
   "shoppingMode": {
     "title": "Comprando",
     "categoryTitle": "Pasillo",
