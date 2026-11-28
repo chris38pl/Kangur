@@ -12,11 +12,14 @@ export const APPLE_APP_IDS = ["3BLB2XGU95.app.kangur"] as const;
 export const ANDROID_PACKAGE = "app.kangur";
 
 /**
- * SHA-256 of the app signing key: Play Console → Kangur → Test and release → App
- * integrity → App signing key certificate. Not the upload key from EAS. While empty, the
- * file lists nothing and Android opens links in the browser, as before.
+ * SHA-256 of the Google Play app signing key (Play Console → Kangur → App integrity →
+ * App signing key certificate, read 28 XI 2026). Every build from the store and from the
+ * Play test tracks carries it; the EAS upload key does not need to be here. An empty list
+ * would make the file list nothing, and Android open the links in the browser.
  */
-export const ANDROID_CERT_SHA256: readonly string[] = [];
+export const ANDROID_CERT_SHA256: readonly string[] = [
+  "C2:8C:68:A2:EA:E8:A6:0D:57:95:49:A7:F8:BE:75:3D:E8:C5:C6:0E:9F:D9:62:58:3A:74:6D:B1:88:0B:F0:57",
+];
 
 /** `/invite` and the same page in other languages (`/en/invite`). The token is after "#". */
 export const APP_LINK_PATHS = ["/invite", "/*/invite"] as const;
