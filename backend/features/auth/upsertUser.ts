@@ -45,7 +45,9 @@ export async function upsertUser({
     providerName && !existing?.displayNameSource
       ? nameFromProvider(providerName.firstName, providerName.lastName)
       : null;
-  const nameFields = name
+  // Only a real name is written. Without one the source stays null, so the backfill script
+  // can still copy a name that appears in Clerk later.
+  const nameFields = name?.displayName
     ? {
         displayName: name.displayName,
         displayNameSource: "provider" as const,

@@ -1,5 +1,6 @@
 import type { InvitationKind } from "@prisma/client";
 
+import type { ClientVersion } from "@/lib/clientVersion";
 import { normalizeEmail } from "@/lib/email/normalizeEmail";
 import { resolveAppLocale } from "@/lib/locale";
 import {
@@ -62,7 +63,11 @@ export type InvitationViewer = {
  * ("used"), not "you are already here".
  */
 export async function previewInvitation(
-  input: InvitationCapability & { viewer: InvitationViewer },
+  input: InvitationCapability & {
+    viewer: InvitationViewer;
+    /** The asking app (lib/clientVersion.ts); missing means app 1.0.8. */
+    client?: ClientVersion;
+  },
   deps: InvitationDeps = defaultInvitationDeps,
 ): Promise<InvitationPreview> {
   const { via, where } = capabilityOf(input);
@@ -97,6 +102,8 @@ export async function previewInvitation(
     throw wrongAccountError({
       email: viewer.email,
       provider: await deps.authProvider(viewer.clerkId),
+      client: input.client,
+      locale: viewer.locale,
     });
   }
 
@@ -115,7 +122,7 @@ export async function previewInvitation(
     inviterDisplayName:
       labels.get(invitation.invitedByUserId) ?? inviterName ?? words.fallback,
     inviterHasName: inviterName !== null,
-    differentEmail: differentEmail(invitation.email, viewer.email),
+    differentEmail: await differentAccountEmail(invitation.email, viewer, deps),
     workspace: {
       id: invitation.workspace.id,
       name: invitation.workspace.name,
@@ -130,6 +137,21 @@ export async function previewInvitation(
       })),
     alreadyMember: gate.kind === "already_member",
   };
+}
+
+/**
+ * The line about another address, only when the invited address is not this account's at
+ * all: neither its Kangur address nor an extra one verified in Clerk. Clerk is asked only
+ * when the line would otherwise show.
+ */
+async function differentAccountEmail(
+  invitedEmail: string | null,
+  viewer: InvitationViewer,
+  deps: InvitationDeps,
+): Promise<InvitationPreview["differentEmail"]> {
+  const line = differentEmail(invitedEmail, viewer.email);
+  if (!line) return null;
+  return (await accountOwnsAddress(invitedEmail, viewer, deps)) ? null : line;
 }
 
 /**

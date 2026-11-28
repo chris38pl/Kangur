@@ -223,6 +223,58 @@ test("two people with one link at the same moment: one gets in", { skip: !enable
   assert.equal(row.status, "accepted");
 });
 
+test("a member opening someone else's e-mail invitation does not use it up", { skip: !enabled }, async () => {
+  const invited = `kasia2.${RUN}@gmail.com`;
+  const { rawToken, invitation } = await makeInvitation({ kind: "email", email: invited });
+
+  // Forwarded to a member: they see "already here", the invitation keeps waiting.
+  const owner = users[0]!;
+  const forwarded = await acceptInvitation({ rawToken, viewer: viewer(owner) }, deps);
+  assert.equal(forwarded.alreadyMember, true);
+  let row = await prisma.invitation.findUniqueOrThrow({ where: { id: invitation.id } });
+  assert.equal(row.status, "pending");
+
+  // Its own person still gets in.
+  const kasia = await makeUser("kasia2", invited, "Kasia");
+  const joined = await acceptInvitation({ rawToken, viewer: viewer(kasia) }, deps);
+  assert.equal(joined.alreadyMember, false);
+  row = await prisma.invitation.findUniqueOrThrow({ where: { id: invitation.id } });
+  assert.equal(row.status, "accepted");
+});
+
+test("a member's own e-mail invitation is closed when they open it", { skip: !enabled }, async () => {
+  const member = await makeUser("member", `member.${RUN}@gmail.com`, "Piotr");
+  await prisma.workspaceMember.create({ data: { workspaceId, userId: member.id, role: "member" } });
+  const own = await makeInvitation({ kind: "email", email: member.email });
+  const result = await acceptInvitation({ rawToken: own.rawToken, viewer: viewer(member) }, deps);
+  assert.equal(result.alreadyMember, true);
+  const row = await prisma.invitation.findUniqueOrThrow({ where: { id: own.invitation.id } });
+  assert.equal(row.status, "accepted");
+
+  // An extra address verified in Clerk counts as theirs too.
+  const extra = `piotr.extra.${RUN}@gmail.com`;
+  verified.set(member.clerkId, [member.email, extra]);
+  const second = await makeInvitation({ kind: "email", email: extra });
+  await acceptInvitation({ rawToken: second.rawToken, viewer: viewer(member) }, deps);
+  const secondRow = await prisma.invitation.findUniqueOrThrow({ where: { id: second.invitation.id } });
+  assert.equal(secondRow.status, "accepted");
+});
+
+test("no 'another account' line for an address verified in Clerk", { skip: !enabled }, async () => {
+  const invited = `ola.home.${RUN}@gmail.com`;
+  const { rawToken } = await makeInvitation({ kind: "email", email: invited });
+
+  const ola = await makeUser("ola-work", `ola.work.${RUN}@gmail.com`, "Ola");
+  verified.set(ola.clerkId, [ola.email, invited]);
+  const own = await previewInvitation({ rawToken, viewer: viewer(ola) }, deps);
+  assert.equal(own.differentEmail, null);
+
+  const jan = await makeUser("jan-other", `jan.other.${RUN}@gmail.com`, "Jan");
+  verified.set(jan.clerkId, [jan.email]);
+  const other = await previewInvitation({ rawToken, viewer: viewer(jan) }, deps);
+  assert.deepEqual(other.differentEmail, { invitedEmail: invited, accountEmail: jan.email });
+});
+
 test("a member opening a pending link does not use it up", { skip: !enabled }, async () => {
   const { rawToken, invitation } = await makeInvitation({ kind: "link" });
   const owner = users[0]!;

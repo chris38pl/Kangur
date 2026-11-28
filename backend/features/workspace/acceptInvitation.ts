@@ -5,6 +5,7 @@ import { ensureNotificationHandlersRegistered } from "@/features/notifications/r
 import { canCreateInvitation } from "@/features/workspace/canCreateInvitation";
 import { conflict, notFound } from "@/lib/auth/errors";
 import type { AuthProvider } from "@/lib/auth/resolveAuthProvider";
+import type { ClientVersion } from "@/lib/clientVersion";
 import { normalizeEmail } from "@/lib/email/normalizeEmail";
 import { domainEventBus } from "@/lib/events/DomainEventBus";
 import { isPrivateRelayEmail } from "@/lib/names/displayName";
@@ -38,6 +39,8 @@ export type AcceptInvitationResult = {
 
 export type AcceptInvitationInput = InvitationCapability & {
   viewer: InvitationViewer;
+  /** The asking app (lib/clientVersion.ts); missing means app 1.0.8. */
+  client?: ClientVersion;
 };
 
 export type { AuthProvider };
@@ -52,6 +55,8 @@ type Joined = AcceptInvitationResult & {
     email: string | null;
     invitedByUserId: string;
   };
+  /** A member opened an address invitation that still waits (see closeOwnAddressInvitation). */
+  pendingForMember: boolean;
 };
 
 function isSerializationFailure(error: unknown): boolean {
@@ -97,6 +102,8 @@ export async function acceptInvitation(
       throw wrongAccountError({
         email: viewer.email,
         provider: await deps.authProvider(viewer.clerkId),
+        client: input.client,
+        locale: viewer.locale,
       });
     }
   }
@@ -126,7 +133,9 @@ export async function acceptInvitation(
     }
   }
 
-  if (!joined.alreadyMember) {
+  if (joined.alreadyMember) {
+    await closeOwnAddressInvitation(joined, viewer, deps);
+  } else {
     await afterJoin(joined, viewer);
   }
 
@@ -172,15 +181,15 @@ async function joinOnce(
       if (gate.kind === "gone") throw invitationGoneError(gate.reason);
 
       if (gate.kind === "already_member" && membership) {
-        // An address invitation is done once its person is in. A link stays for whoever it
-        // was meant for, even when a member opens it.
-        if (invitation.kind === "email" && invitation.status === "pending") {
-          await tx.invitation.updateMany({
-            where: { id: invitation.id, status: "pending" },
-            data: { status: "accepted", acceptedAt: now },
-          });
-        }
-        return { workspace, role: membership.role, alreadyMember: true, invitation: meta };
+        // Nothing is used up here. A link stays for whoever it was meant for; an address
+        // invitation is closed after the transaction, only if it is this person's address.
+        return {
+          workspace,
+          role: membership.role,
+          alreadyMember: true,
+          invitation: meta,
+          pendingForMember: invitation.kind === "email" && invitation.status === "pending",
+        };
       }
 
       // The same limits as for sending it (Premium caps later), checked again on joining.
@@ -214,10 +223,28 @@ async function joinOnce(
         kind: invitation.kind,
       });
 
-      return { workspace, role, alreadyMember: false, invitation: meta };
+      return { workspace, role, alreadyMember: false, invitation: meta, pendingForMember: false };
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
   );
+}
+
+/**
+ * A member opened an address invitation that still waits. It is theirs (their Kangur
+ * address or one verified in Clerk): done, it leaves the inviter's list. Someone else's,
+ * forwarded to a member: it stays for its person.
+ */
+async function closeOwnAddressInvitation(
+  joined: Joined,
+  viewer: InvitationViewer,
+  deps: InvitationDeps,
+): Promise<void> {
+  if (!joined.pendingForMember) return;
+  if (!(await accountOwnsAddress(joined.invitation.email, viewer, deps))) return;
+  await prisma.invitation.updateMany({
+    where: { id: joined.invitation.id, status: "pending" },
+    data: { status: "accepted", acceptedAt: deps.now() },
+  });
 }
 
 async function afterJoin(joined: Joined, viewer: InvitationViewer): Promise<void> {

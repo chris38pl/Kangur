@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import { inviteTokenFromUrl } from "./invite-url.ts";
 import {
+  PENDING_INVITE_MAX_AGE_MS,
   clearPendingInvite,
   isInviteReturnPath,
   pendingInvitePath,
@@ -49,5 +50,14 @@ describe("after sign-in the app returns to the invitation", () => {
     assert.equal(pendingInvitePath(), null);
     rememberInviteForSignIn("/somewhere");
     assert.equal(pendingInvitePath(), null);
+  });
+
+  it("forgets the way back after half an hour", () => {
+    const t0 = Date.UTC(2026, 10, 28, 12, 0, 0);
+    rememberInviteForSignIn(`/invite/${TOKEN}`, t0);
+    assert.equal(pendingInvitePath(t0 + 29 * 60_000), `/invite/${TOKEN}`);
+    assert.equal(pendingInvitePath(t0 + PENDING_INVITE_MAX_AGE_MS + 1), null);
+    assert.equal(pendingInviteToken(t0 + PENDING_INVITE_MAX_AGE_MS + 1), null);
+    clearPendingInvite();
   });
 });

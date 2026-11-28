@@ -2,6 +2,8 @@
  * One-off: copy names from Clerk to Kangur for accounts made before Kangur kept them
  * (User.displayName). New accounts get the name at the first sign-in (lib/auth/requireUser.ts).
  * Touches only users whose displayNameSource is null and never a name typed in Kangur.
+ * Writes only accounts Clerk has a name for; the others stay null, so the script can be run
+ * again later.
  * Prints counts only, never names or addresses.
  *
  * Dry run (default, writes nothing):

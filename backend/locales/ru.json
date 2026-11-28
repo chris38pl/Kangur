@@ -1,7 +1,8 @@
 {
   "names": {
     "fallback": "Домочадец",
-    "since": "с {{date}}"
+    "since": "с {{date}}",
+    "hiddenAppleAddress": "адрес, скрытый Apple"
   },
   "notifications": {
     "listCreated": {

@@ -157,7 +157,7 @@ model User {
   platformRole PlatformRole @default(USER)
   /** What other people see. Null: lib/names/displayName.ts falls back, never to an Apple relay address. */
   displayName       String?
-  /** Null until Clerk was asked once. A `user` name is never replaced by the Clerk one. */
+  /** Null until a name came from Clerk or was typed in Kangur. A `user` name is never replaced by the Clerk one. */
   displayNameSource DisplayNameSource?
   /** First letter of the Clerk last name, only to tell apart two people of one name. */
   lastNameInitial   String?

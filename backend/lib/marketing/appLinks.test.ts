@@ -37,6 +37,6 @@ test("apple-app-site-association opens only the invitation page", () => {
   const components = appleAppSiteAssociation().applinks.details[0]!.components;
   assert.deepEqual(
     components.map((component) => component["/"]),
-    ["/invite", "/*/invite"],
+    ["/invite", "/invite/", "/*/invite", "/*/invite/"],
   );
 });

@@ -1,7 +1,8 @@
 {
   "names": {
     "fallback": "Člen domácnosti",
-    "since": "od {{date}}"
+    "since": "od {{date}}",
+    "hiddenAppleAddress": "adresa skrytá službou Apple"
   },
   "notifications": {
     "listCreated": {

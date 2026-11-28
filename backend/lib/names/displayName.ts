@@ -145,10 +145,41 @@ const sameName = (name: string) => name.toLocaleLowerCase();
 
 /**
  * Labels for everyone in one workspace. Two people of one name get the initial of the last
- * name ("Kasia N.") or, without it, the day they joined ("Kasia · od 12 listopada").
- * Never an e-mail address.
+ * name ("Kasia N.") or, without it, the day they joined ("Kasia · od 12 listopada"). Labels
+ * that still repeat (same day, two "Domownik") get a number by the order of joining:
+ * "Kasia · od 12 listopada (1)", "(2)". Never an e-mail address.
  */
 export function labelPeople(
+  people: readonly NamedPerson[],
+  words: NameWords,
+): Map<string, string> {
+  return numberRepeats(people, describePeople(people, words));
+}
+
+/** Who joined first, then a stable order for the same moment. */
+const byJoining = (a: NamedPerson, b: NamedPerson) =>
+  a.joinedAt.getTime() - b.joinedAt.getTime() || a.userId.localeCompare(b.userId);
+
+function numberRepeats(
+  people: readonly NamedPerson[],
+  labels: Map<string, string>,
+): Map<string, string> {
+  const groups = new Map<string, NamedPerson[]>();
+  for (const person of people) {
+    const key = sameName(labels.get(person.userId) ?? "");
+    groups.set(key, [...(groups.get(key) ?? []), person]);
+  }
+  const numbered = new Map(labels);
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    [...group].sort(byJoining).forEach((person, index) => {
+      numbered.set(person.userId, `${labels.get(person.userId) ?? ""} (${index + 1})`);
+    });
+  }
+  return numbered;
+}
+
+function describePeople(
   people: readonly NamedPerson[],
   words: NameWords,
 ): Map<string, string> {

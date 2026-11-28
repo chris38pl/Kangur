@@ -245,4 +245,8 @@ test("a different real address is shown, a hidden one never", () => {
 test("errors: the refusal for an id from a notification has no relay address", () => {
   const error = wrongAccountError({ email: RELAY, provider: "apple" }).toJSON();
   noRelay(error, "email_mismatch");
+  // App 1.0.8 builds "you are signed in as …" from currentEmail: it gets words, not a blank.
+  const currentEmail = error.details?.currentEmail;
+  assert.equal(typeof currentEmail, "string");
+  assert.ok(String(currentEmail).length > 0);
 });

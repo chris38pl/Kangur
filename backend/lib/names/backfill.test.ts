@@ -63,11 +63,34 @@ test("apply copies Clerk names, in batches, and never a typed one", async () => 
     c9: { firstName: "Clerk", lastName: null },
   });
   const report = await backfillDisplayNames(deps, { apply: true, batchSize: 2 });
-  assert.deepEqual(report, { scanned: 5, named: 3, withoutName: 1, missingInClerk: 1, written: 4 });
+  assert.deepEqual(report, { scanned: 5, named: 3, withoutName: 1, missingInClerk: 1, written: 3 });
   assert.equal(calls.clerk, 3);
   assert.equal(rows.find((r) => r.id === "1")!.displayName, "Kasia");
   assert.equal(rows.find((r) => r.id === "5")!.source, null);
   assert.equal(rows.find((r) => r.id === "9")!.displayName, "Moje imię");
+  // No name in Clerk: not written, so a name added there later still comes next time.
+  assert.equal(rows.find((r) => r.id === "3")!.source, null);
+});
+
+test("accounts left without a name do not stop the walk through batches", async () => {
+  const rows: Row[] = Array.from({ length: 5 }, (_, i) => ({
+    id: String(i + 1),
+    clerkId: `c${i + 1}`,
+    source: null,
+    displayName: null,
+  }));
+  const nameless = Object.fromEntries(rows.map((r) => [r.clerkId, { firstName: null, lastName: null }]));
+  const { deps, calls } = fakeWorld(rows, nameless);
+  const report = await backfillDisplayNames(deps, { apply: true, batchSize: 2 });
+  assert.deepEqual(report, { scanned: 5, named: 0, withoutName: 5, missingInClerk: 0, written: 0 });
+  assert.equal(calls.clerk, 3);
+  assert.equal(rows.every((r) => r.source === null), true);
+
+  // A name that shows up in Clerk later comes with the next run.
+  nameless.c2 = { firstName: "Ola", lastName: null };
+  const again = await backfillDisplayNames(deps, { apply: true, batchSize: 2 });
+  assert.equal(again.written, 1);
+  assert.equal(rows.find((r) => r.id === "2")!.displayName, "Ola");
 });
 
 test("Clerk's rate limit: wait and try again", async () => {

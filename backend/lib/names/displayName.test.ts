@@ -90,6 +90,35 @@ test("two people of one name: the initial, or the day they joined", () => {
   assert.equal(sameInitial.get("b"), "Kasia · od 20.11");
 });
 
+test("joined on the same day: a number by the order of joining", () => {
+  const morning = new Date("2026-11-12T08:00:00Z");
+  const evening = new Date("2026-11-12T19:00:00Z");
+  const kasie = labelPeople(
+    [
+      { userId: "b", name: "Kasia", lastNameInitial: null, joinedAt: evening },
+      { userId: "a", name: "Kasia", lastNameInitial: null, joinedAt: morning },
+      { userId: "c", name: "Jan", lastNameInitial: null, joinedAt: morning },
+    ],
+    words,
+  );
+  assert.equal(kasie.get("a"), "Kasia · od 12.11 (1)");
+  assert.equal(kasie.get("b"), "Kasia · od 12.11 (2)");
+  assert.equal(kasie.get("c"), "Jan");
+
+  const domownicy = labelPeople(
+    [
+      { userId: "x", name: null, joinedAt: morning },
+      { userId: "y", name: null, joinedAt: morning },
+      { userId: "z", name: "Ola", lastNameInitial: "K", joinedAt: morning },
+    ],
+    words,
+  );
+  assert.equal(domownicy.get("x"), "Domownik · od 12.11 (1)");
+  assert.equal(domownicy.get("y"), "Domownik · od 12.11 (2)");
+  assert.equal(domownicy.get("z"), "Ola");
+  assert.equal(new Set(domownicy.values()).size, 3);
+});
+
 test("two without a name are told apart too, never by address", () => {
   const labels = labelPeople(
     [

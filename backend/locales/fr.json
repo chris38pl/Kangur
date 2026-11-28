@@ -1,7 +1,8 @@
 {
   "names": {
     "fallback": "Membre du foyer",
-    "since": "depuis le {{date}}"
+    "since": "depuis le {{date}}",
+    "hiddenAppleAddress": "une adresse masquée par Apple"
   },
   "notifications": {
     "listCreated": {

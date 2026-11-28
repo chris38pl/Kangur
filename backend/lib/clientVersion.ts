@@ -16,6 +16,8 @@ export const FEATURE_MIN_VERSION = {
   memberJoinedNotifications: "1.0.9",
   /** `email: null` for a member whose address Apple hides. */
   hiddenMemberEmail: "1.0.9",
+  /** The "invitation for another account" screen shows no address, so none is sent. */
+  wrongAccountWithoutAddress: "1.0.9",
 } as const;
 
 export type ClientFeature = keyof typeof FEATURE_MIN_VERSION;

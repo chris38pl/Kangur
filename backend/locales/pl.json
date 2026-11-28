@@ -1,7 +1,8 @@
 {
   "names": {
     "fallback": "Domownik",
-    "since": "od {{date}}"
+    "since": "od {{date}}",
+    "hiddenAppleAddress": "adres ukryty przez Apple"
   },
   "notifications": {
     "listCreated": {

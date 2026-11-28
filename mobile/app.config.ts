@@ -95,9 +95,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             {
               action: "VIEW",
               autoVerify: true,
+              // The same paths as APP_LINK_PATHS in backend/lib/marketing/appLinks.ts.
               data: [
                 { scheme: "https", host: SITE_HOST, path: "/invite" },
+                { scheme: "https", host: SITE_HOST, path: "/invite/" },
                 { scheme: "https", host: SITE_HOST, pathPattern: "/../invite" },
+                { scheme: "https", host: SITE_HOST, pathPattern: "/../invite/" },
               ],
               category: ["BROWSABLE", "DEFAULT"],
             },

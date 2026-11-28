@@ -21,8 +21,11 @@ export const ANDROID_CERT_SHA256: readonly string[] = [
   "C2:8C:68:A2:EA:E8:A6:0D:57:95:49:A7:F8:BE:75:3D:E8:C5:C6:0E:9F:D9:62:58:3A:74:6D:B1:88:0B:F0:57",
 ];
 
-/** `/invite` and the same page in other languages (`/en/invite`). The token is after "#". */
-export const APP_LINK_PATHS = ["/invite", "/*/invite"] as const;
+/**
+ * `/invite` and the same page in other languages (`/en/invite`), with or without a slash at
+ * the end. The token is after "#". Keep in step with `intentFilters` in mobile/app.config.ts.
+ */
+export const APP_LINK_PATHS = ["/invite", "/invite/", "/*/invite", "/*/invite/"] as const;
 
 const FINGERPRINT = /^(?:[0-9A-F]{2}:){31}[0-9A-F]{2}$/;
 

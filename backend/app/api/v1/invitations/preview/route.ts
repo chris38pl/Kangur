@@ -7,6 +7,7 @@ import {
 } from "@/features/workspace/schemas";
 import { ApiError, validationError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/requireUser";
+import { readClientVersion } from "@/lib/clientVersion";
 import { assertRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
       rawToken: parsed.data.token,
       invitationId: parsed.data.invitationId,
       viewer: { id: user.id, email: user.email, locale: user.locale, clerkId },
+      client: readClientVersion(request),
     });
 
     const body = InvitationPreviewResponseSchema.parse(result);

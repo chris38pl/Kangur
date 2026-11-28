@@ -2,7 +2,9 @@ import type { InvitationStatus } from "@prisma/client";
 
 import { forbidden, notFound, type ApiError } from "@/lib/auth/errors";
 import type { AuthProvider } from "@/lib/auth/resolveAuthProvider";
+import { clientSupports, type ClientVersion } from "@/lib/clientVersion";
 import { normalizeEmail } from "@/lib/email/normalizeEmail";
+import { t } from "@/lib/i18n";
 import { isPrivateRelayEmail } from "@/lib/names/displayName";
 
 /**
@@ -56,14 +58,27 @@ export function invitationGoneError(reason: InvitationGoneReason): ApiError {
   return notFound("Invitation expired.", { reason });
 }
 
-/** Never carries an Apple relay address: the person would see it on the screen. */
+/**
+ * Never carries an Apple relay address: the person would see it on the screen. App 1.0.8
+ * prints currentEmail in "you are signed in as …", so for a hidden address it gets a phrase
+ * in the person's language instead ("adres ukryty przez Apple"). From 1.0.9 the app shows
+ * no address on that screen and gets none.
+ */
 export function wrongAccountError(account: {
   email: string;
   provider: AuthProvider;
+  client?: ClientVersion;
+  locale?: string | null;
 }): ApiError {
+  const hidden = isPrivateRelayEmail(account.email);
+  const currentEmail = !hidden
+    ? account.email
+    : clientSupports(account.client, "wrongAccountWithoutAddress")
+      ? null
+      : t(account.locale, "names.hiddenAppleAddress");
   return forbidden("Invitation belongs to a different email.", {
     reason: "email_mismatch",
     provider: account.provider,
-    ...(isPrivateRelayEmail(account.email) ? {} : { currentEmail: account.email }),
+    ...(currentEmail ? { currentEmail } : {}),
   });
 }
